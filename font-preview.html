@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Handwriting Font Preview</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poor+Story&family=Nanum+Pen+Script&family=Hi+Melody&display=swap");
+
+    :root {
+      --bg: #fffef7;
+      --paper: #ffffff;
+      --ink: #000000;
+      --yellow: #ffd400;
+      --blue: #0057ff;
+      --orange: #ff6a00;
+      --line: 4px solid #000000;
+      --max: 1200px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255, 212, 0, 0.28), transparent 16%),
+        radial-gradient(circle at 88% 14%, rgba(0, 87, 255, 0.18), transparent 18%),
+        radial-gradient(circle at 80% 84%, rgba(255, 106, 0, 0.18), transparent 18%),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Arial", sans-serif;
+      padding: 32px 16px 80px;
+    }
+
+    .wrap {
+      width: min(var(--max), 100%);
+      margin: 0 auto;
+    }
+
+    .title {
+      margin: 0 0 10px;
+      font-size: clamp(34px, 5vw, 56px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .desc {
+      margin: 0 0 28px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: var(--line);
+      padding: 22px;
+      min-height: 100%;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 7px 10px 6px;
+      border: var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--yellow);
+    }
+
+    .card:nth-child(2) .badge {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .card:nth-child(3) .badge {
+      background: var(--orange);
+      color: #fff;
+    }
+
+    .font-name {
+      margin: 0 0 14px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .sample-title {
+      margin: 0 0 12px;
+      font-size: 42px;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+
+    .sample-body {
+      margin: 0 0 16px;
+      font-size: 23px;
+      line-height: 1.5;
+    }
+
+    .sample-chip {
+      display: inline-block;
+      padding: 7px 10px 6px;
+      border: var(--line);
+      background: #fff;
+      font-size: 18px;
+    }
+
+    .poor-story {
+      font-family: "Poor Story", cursive;
+    }
+
+    .nanum-pen {
+      font-family: "Nanum Pen Script", cursive;
+    }
+
+    .hi-melody {
+      font-family: "Hi Melody", cursive;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+/* BEGIN GLOBAL NAV STYLES OVERRIDE */
+.nm-nav {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  padding-bottom: 8px !important;
+  box-sizing: border-box !important;
+}
+
+/* 방해되는 기존 손그림 테두리(가상요소) 강제 제거 */
+.nm-nav a::after,
+.nm-nav a::before {
+  display: none !important;
+}
+
+.nm-nav a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 1 auto !important; 
+  box-sizing: border-box !important;
+  
+  min-height: 48px !important;
+  min-width: 0 !important;
+  padding: 10px 14px !important;
+  margin: 0 !important;
+  
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1.05 !important;
+  text-align: center !important;
+  word-break: keep-all !important;
+  white-space: nowrap !important;
+  
+  border: 3px solid var(--ink) !important;
+  box-shadow: 3px 3px 0 0 var(--ink) !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  overflow: visible !important;
+  color: var(--ink) !important;
+}
+
+.nm-nav a:hover,
+.nm-nav a:focus-visible {
+  transform: translateY(-2px) !important;
+  background: #fff !important;
+}
+
+.nm-nav a:nth-child(1),
+.nm-nav a:nth-child(4) {
+  background: var(--yellow) !important;
+}
+
+.nm-nav a:nth-child(2) {
+  background: var(--blue) !important;
+}
+
+.nm-nav a:nth-child(3) {
+  background: var(--orange) !important;
+}
+
+@media (max-width: 640px) {
+  .nm-nav {
+    gap: 5px !important;
+    padding: 0 4px !important;
+    flex-wrap: nowrap !important;
+  }
+  .nm-nav a {
+    flex: 1 1 0 !important;
+    min-height: 42px !important;
+    padding: 0 !important; 
+    font-size: 12px !important;
+    letter-spacing: -0.06em !important;
+    border: 2px solid var(--ink) !important;
+    box-shadow: 2px 2px 0 var(--ink) !important;
+  }
+}
+/* END GLOBAL NAV STYLES OVERRIDE */
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">손글씨 폰트 3종 미리보기</h1>
+    <p class="desc">
+      현재 메인 디자인은 건드리지 않았고, 실제 적용 전에 어떤 분위기인지 비교할 수 있게 같은 문구로 3개 폰트를 나란히 넣어뒀어요.
+    </p>
+
+    <div class="grid">
+      <section class="card">
+        <div class="badge">추천 1</div>
+        <p class="font-name">Poor Story</p>
+        <h2 class="sample-title poor-story">답례품도 선물도,<br>예쁘고 깔끔한 쿠키로 준비해요</h2>
+        <p class="sample-body poor-story">
+          결혼식답례품, 어린이집 선물, 단체 간식까지
+          낫띵메터스의 쿠키를 용도에 맞게 제안해드려요.
+        </p>
+        <span class="sample-chip poor-story">답례품 포장 가능</span>
+      </section>
+
+      <section class="card">
+        <div class="badge">추천 2</div>
+        <p class="font-name">Nanum Pen Script</p>
+        <h2 class="sample-title nanum-pen">답례품도 선물도,<br>예쁘고 깔끔한 쿠키로 준비해요</h2>
+        <p class="sample-body nanum-pen">
+          결혼식답례품, 어린이집 선물, 단체 간식까지
+          낫띵메터스의 쿠키를 용도에 맞게 제안해드려요.
+        </p>
+        <span class="sample-chip nanum-pen">답례품 포장 가능</span>
+      </section>
+
+      <section class="card">
+        <div class="badge">추천 3</div>
+        <p class="font-name">Hi Melody</p>
+        <h2 class="sample-title hi-melody">답례품도 선물도,<br>예쁘고 깔끔한 쿠키로 준비해요</h2>
+        <p class="sample-body hi-melody">
+          결혼식답례품, 어린이집 선물, 단체 간식까지
+          낫띵메터스의 쿠키를 용도에 맞게 제안해드려요.
+        </p>
+        <span class="sample-chip hi-melody">답례품 포장 가능</span>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

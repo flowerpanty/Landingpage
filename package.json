@@ -1,0 +1,9 @@
+{
+  "name": "nothingmatters-landing",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static landing page for nothingmatters",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

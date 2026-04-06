@@ -1,0 +1,62 @@
+# nothingmatters
+
+> nothingmatters is a Korean handcrafted dessert brand focused on cookie favors, event snacks, group orders, and custom brownie cookie orders.
+
+## Canonical site
+- https://nothingmatters.kr/
+- https://nothingmatters.kr/contact/
+- https://nothingmatters.kr/guides/
+- https://nothingmatters.kr/products/brownie-cookie/
+- https://nothingmatters.kr/products/custom-brownie-cookie/
+- https://nothingmatters.kr/products/handmade-cookie/
+- https://nothingmatters.kr/products/lucky-cookie/
+- https://nothingmatters.kr/products/scone/
+- https://nothingmatters.kr/products/terminal-sand-cookie/
+- https://nothingmatters.kr/guides/wedding-favor-cookie/
+- https://nothingmatters.kr/guides/corporate-event-cookie/
+- https://nothingmatters.kr/guides/teacher-snack-gift/
+- https://nothingmatters.kr/guides/farewell-favor-cookie/
+- https://nothingmatters.kr/guides/dessert-gift-set/
+- https://nothingmatters.kr/guides/lucky-cheering-cookie/
+
+## Business facts
+- Brand name: nothingmatters
+- Korean name: 낫띵메터스
+- Contact phone: 010-2866-7976
+- Contact email: eddiefactory@naver.com
+- Pickup address: 서울특별시 성동구 상원12길 19 1층
+- Fulfillment: in-store pickup or vehicle quick consultation
+- Shipping: no general parcel shipping
+
+## Main ordering use cases
+- wedding favors
+- corporate event snacks
+- kindergarten or school birthday gifts
+- retirement, promotion, and celebration gifts
+- custom message dessert orders
+- dessert gift sets and premium cookie gifts
+- lucky or cheering cookie gifts
+
+## Use-case guides
+- guides/: guide hub for wedding favors, corporate event cookies, teacher snack gifts, farewell favors, dessert gift sets, and lucky cheering cookies
+- wedding-favor-cookie: wedding favors, wedding cookie favors, neat favor packaging
+- corporate-event-cookie: corporate event cookies, company favor cookies, office event snacks
+- teacher-snack-gift: kindergarten teacher snacks, daycare snack gifts, light thank-you gifts
+- farewell-favor-cookie: resignation favors, parental leave favors, promotion favors
+- dessert-gift-set: baked gift sets, cookie gift sets, premium dessert gifts
+- lucky-cheering-cookie: fortune cookies, cheering cookies, graduation or thank-you treats
+
+## Product facts
+- Brownie Cookie: basic order and custom order consultation available
+- Custom Brownie Cookie: message sticker and design customization, minimum 12 for custom flow
+- Handmade Cookie: seven flavors and multiple package options
+- Bear Scone: plain or chocolate, minimum 12, strawberry jam option
+- Fortune Cookie: four emotion themes for small gifts and support
+- Terminal Sand Cookie: premium mood-forward gift line
+
+## Inquiry essentials
+- desired pickup date or event date
+- approximate quantity
+- product interest or package type
+- intended use case
+- whether pickup or quick delivery is needed
