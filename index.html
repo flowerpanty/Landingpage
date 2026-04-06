@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>쿠키 답례품 · 행사 간식 · 커스텀 주문 | nothingmatters</title>
-  <meta name="description" content="브라우니쿠키, 수제쿠키, 곰돌이 스콘, 행운쿠키, terminal 샌드쿠키까지. 결혼식 답례품, 행사 간식, 단체 주문, 커스텀 디저트 상담을 한 번에 보는 nothingmatters 랜딩페이지입니다.">
+  <meta name="description" content="브라우니쿠키(브루키), 수제쿠키, 곰돌이 스콘, 행운쿠키, terminal 샌드쿠키까지. 결혼식 답례품, 행사 간식, 단체 주문, 커스텀 디저트 상담을 한 번에 보는 nothingmatters 랜딩페이지입니다.">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <link rel="canonical" href="https://nothingmatters.kr/">
   <meta property="og:type" content="website">
@@ -1030,14 +1030,18 @@ h2 {
 }
 
 .nm-all-products-grid .nm-all-product-link:nth-child(3) .nm-thumb-mini {
-  background-image: url("images/custom-brownie-main.jpg");
+  background-image: url("images/bear-scone-main.jpg");
 }
 
 .nm-all-products-grid .nm-all-product-link:nth-child(4) .nm-thumb-mini {
-  background-image: url("images/lucky-main.png");
+  background-image: url("images/custom-brownie-main.jpg");
 }
 
 .nm-all-products-grid .nm-all-product-link:nth-child(5) .nm-thumb-mini {
+  background-image: url("images/lucky-main.png");
+}
+
+.nm-all-products-grid .nm-all-product-link:nth-child(6) .nm-thumb-mini {
   background-image: url("images/terminal-hero.jpg");
 }
 
@@ -1629,6 +1633,10 @@ h2 {
 .theme-home #all-products .nm-all-product-link:nth-child(3n) .nm-mini-link {
   color: var(--ink);
   background: linear-gradient(transparent 58%, rgba(65, 105, 225, 0.75) 58%);
+}
+
+.theme-home #all-products .nm-all-product-link .nm-mini-link.nm-mini-link--black {
+  color: #000;
 }
 
 .theme-home #order-guide .nm-pick-card {
@@ -2626,17 +2634,8 @@ h2 {
       <section class="nm-section" id="use-case-guide">
         <div class="nm-wrap">
           <div class="nm-heading">
-            <div class="nm-label">USE CASE GUIDE</div>
-            <h2>검색으로 많이 찾는 상황별 가이드를 따로 정리했어요</h2>
-            <p>
-              메인은 브랜드와 제품을 한 번에 보는 허브로 두고,
-              결혼식 답례품 쿠키, 기업행사 쿠키, 유치원선생님간식, 퇴사답례품, 디저트선물세트, 행운쿠키처럼
-              검색 의도가 분명한 경우는 별도 가이드 페이지에서 더 빠르게 고를 수 있게 나눴어요.
-            </p>
-            <div class="nm-button-row">
-              <a class="nm-btn nm-btn--primary" href="guides/index.html">전체 가이드 허브 보기</a>
-              <a class="nm-btn nm-btn--secondary" href="https://thingmattersreserve-production.up.railway.app">무료견적내러가기</a>
-            </div>
+            <div class="nm-label">COOKIE GUIDE</div>
+            <h2>쿠키가이드</h2>
           </div>
 
           <div class="nm-grid-2">
@@ -2648,7 +2647,7 @@ h2 {
                 정갈한 답례 흐름을 찾는 경우를 위한 가이드예요.
               </p>
               <ul class="nm-list">
-                <li>브라우니쿠키 중심 추천</li>
+                <li>브라우니쿠키(브루키) 중심 추천</li>
                 <li>기본형과 문구형 흐름 함께 비교</li>
                 <li>웨딩답례품추천 검색에 맞는 정보 정리</li>
               </ul>
@@ -2663,7 +2662,7 @@ h2 {
                 목적이 분명한 회사 주문 흐름을 위한 가이드예요.
               </p>
               <ul class="nm-list">
-                <li>브라우니쿠키 중심 추천</li>
+                <li>브라우니쿠키(브루키) 중심 추천</li>
                 <li>기본형과 문구형 흐름 함께 비교</li>
                 <li>기업 행사와 회사 답례 흐름에 맞는 정보 정리</li>
               </ul>
@@ -2693,7 +2692,7 @@ h2 {
                 짧은 문구와 기념 포인트가 필요한 경우를 위한 가이드예요.
               </p>
               <ul class="nm-list">
-                <li>커스텀형 브라우니쿠키 중심 추천</li>
+                <li>커스텀형 브라우니쿠키(브루키) 중심 추천</li>
                 <li>문구형 주문 흐름과 최소 수량 안내</li>
                 <li>퇴사선물쿠키 검색 흐름에 맞는 정리</li>
               </ul>
@@ -2737,7 +2736,7 @@ h2 {
         <div class="nm-wrap">
           <div class="nm-heading">
             <div class="nm-label">BEST PICK</div>
-            <h2>먼저, 가장 많이 고르는 제품부터 볼 수 있게</h2>
+            <h2>가장 많이 고르는 제품</h2>
             <p>
               답례품, 기념 주문, 특별한 선물용까지
               많이 찾는 흐름대로 먼저 정리했어요.
@@ -2749,19 +2748,19 @@ h2 {
             <article class="nm-product-card">
               <span class="nm-product-badge">가장 많이 찾는 제품</span>
               <div class="nm-product-thumb">
-                <img src="images/brownie-main-browser.jpg" alt="브라우니쿠키 대표 이미지" loading="lazy" decoding="async" data-fallback-label="Brownie Cookie">
+                <img src="images/brownie-main-browser.jpg" alt="브라우니쿠키(브루키) 대표 이미지" loading="lazy" decoding="async" data-fallback-label="Brownie Cookie">
               </div>
               <div class="nm-product-meta">
                 <span class="nm-tag">답례품</span>
                 <span class="nm-tag">단체 간식</span>
                 <span class="nm-tag">행사 주문</span>
               </div>
-              <h3>브라우니쿠키</h3>
+              <h3>브라우니쿠키(브루키)</h3>
               <p>
                 답례품, 행사, 단체 주문처럼
                 깔끔하고 무난하게 고르기 좋은 대표 제품이에요.
               </p>
-              <a class="nm-btn nm-btn--secondary" href="products/brownie-cookie/index.html">브라우니쿠키 답례품 자세히 보기</a>
+              <a class="nm-btn nm-btn--secondary" href="products/brownie-cookie/index.html">브라우니쿠키(브루키) 답례품 자세히 보기</a>
             </article>
 
             <article class="nm-product-card">
@@ -2822,7 +2821,7 @@ h2 {
             <details class="faq-item">
               <summary>최소 주문 수량이 있나요?</summary>
               <div class="faq-answer answer">
-                제품마다 조금씩 달라요. 기본 라인은 소량 주문도 가능하지만, 스티커나 문구가 들어가는 '커스텀형 브라우니 쿠키'는 12개부터 주문을 부탁드리고 있어요. 정확한 수량이나 구성이 고민되신다면 상담을 통해 꼭 맞는 방법을 찾아드릴게요.
+                제품마다 조금씩 달라요. 기본 라인은 소량 주문도 가능하지만, '브라우니 쿠키 ,스콘 쿠키+1구음료'는 12개부터 주문을 부탁드리고 있어요. 정확한 수량이나 구성이 고민되신다면 상담을 통해 꼭 맞는 방법을 찾아드릴게요.
               </div>
             </details>
 
@@ -2865,9 +2864,9 @@ h2 {
             <a href="products/brownie-cookie/index.html" class="nm-all-product-link">
               <article class="nm-all-product-card">
                 <div class="nm-thumb-mini" aria-hidden="true"></div>
-                <h3>브라우니쿠키</h3>
+                <h3>브라우니쿠키(브루키)</h3>
                 <p>답례품, 행사, 단체 주문에 가장 먼저 보기 좋은 기본 라인</p>
-                <span class="nm-mini-link">브라우니쿠키 답례품 보기</span>
+                <span class="nm-mini-link nm-mini-link--black">브라우니쿠키(브루키) 답례품 보기</span>
               </article>
             </a>
 
@@ -2880,10 +2879,19 @@ h2 {
               </article>
             </a>
 
+            <a href="products/scone/index.html" class="nm-all-product-link">
+              <article class="nm-all-product-card">
+                <div class="nm-thumb-mini" aria-hidden="true"></div>
+                <h3>곰스콘</h3>
+                <p>답례품, 기념일, 선물용으로 귀엽고 감성 있게 고르기 좋은 라인</p>
+                <span class="nm-mini-link">곰스콘 자세히 보기</span>
+              </article>
+            </a>
+
             <a href="products/custom-brownie-cookie/index.html" class="nm-all-product-link" style="display: none;">
               <article class="nm-all-product-card">
                 <div class="nm-thumb-mini" aria-hidden="true"></div>
-                <h3>커스텀형 브라우니쿠키</h3>
+                <h3>커스텀형 브라우니쿠키(브루키)</h3>
                 <p>문구 변경이나 기념 포인트를 넣고 싶은 주문에 추천</p>
                 <span class="nm-mini-link">커스텀 브라우니 보기</span>
               </article>
@@ -2894,7 +2902,7 @@ h2 {
                 <div class="nm-thumb-mini" aria-hidden="true"></div>
                 <h3>행운쿠키</h3>
                 <p>귀엽고 재미있는 느낌을 더하고 싶은 선물용 주문에 잘 어울림</p>
-                <span class="nm-mini-link">행운쿠키 선물 라인 보기</span>
+                <span class="nm-mini-link nm-mini-link--black">행운쿠키 선물 라인 보기</span>
               </article>
             </a>
 
@@ -2930,11 +2938,11 @@ h2 {
                 많은 분께 깔끔하게 나누는 주문에 잘 어울려요.
               </p>
               <ul class="nm-list">
-                <li>가장 먼저 브라우니쿠키 보기</li>
+                <li>가장 먼저 브라우니쿠키(브루키) 보기</li>
                 <li>단체 주문과 답례품 흐름에 잘 맞음</li>
                 <li>부담 없이 고르기 좋은 대표 제품</li>
               </ul>
-              <a class="nm-btn nm-btn--secondary" href="products/brownie-cookie/index.html">답례품용 브라우니쿠키 보기</a>
+              <a class="nm-btn nm-btn--secondary" href="products/brownie-cookie/index.html">답례품용 브라우니쿠키(브루키) 보기</a>
             </article>
 
             <article class="nm-pick-card nm-pick-card--yellow">
