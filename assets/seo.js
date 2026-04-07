@@ -1,6 +1,7 @@
 (() => {
-  const SITE_URL = "https://nothingmatters.kr";
+  const SITE_URL = "https://nothingmatters.co.kr";
   const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+  const LOCAL_BUSINESS_ID = `${SITE_URL}/#localbusiness`;
   const WEBSITE_ID = `${SITE_URL}/#website`;
 
   const cleanText = (value = "") =>
@@ -79,6 +80,35 @@
       },
     ],
     areaServed: ["KR"],
+  };
+
+  const localBusiness = {
+    "@type": "Bakery",
+    "@id": LOCAL_BUSINESS_ID,
+    name: "nothingmatters",
+    alternateName: "낫띵메터스",
+    url: SITE_URL,
+    image: absoluteUrl("/images/home-collage-a.jpg"),
+    email: "eddiefactory@naver.com",
+    telephone: "+82-10-2866-7976",
+    priceRange: "$$",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "상원12길 19 1층",
+      addressLocality: "성동구",
+      addressRegion: "서울특별시",
+      postalCode: "04780",
+      addressCountry: "KR",
+    },
+    areaServed: [
+      {
+        "@type": "Country",
+        name: "KR",
+      },
+    ],
+    parentOrganization: {
+      "@id": ORGANIZATION_ID,
+    },
   };
 
   const website = {
@@ -378,7 +408,7 @@
   const serviceSchema = buildServiceSchema();
   const pageSchema = buildPageSchema(breadcrumbSchema);
 
-  graph.push(organization, website, pageSchema);
+  graph.push(organization, localBusiness, website, pageSchema);
 
   if (breadcrumbSchema) graph.push(breadcrumbSchema);
   if (itemListSchema) graph.push(itemListSchema);

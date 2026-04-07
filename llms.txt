@@ -3,21 +3,21 @@
 > nothingmatters is a Korean handcrafted dessert brand focused on cookie favors, event snacks, group orders, and custom brownie cookie orders.
 
 ## Canonical site
-- https://nothingmatters.kr/
-- https://nothingmatters.kr/contact/
-- https://nothingmatters.kr/guides/
-- https://nothingmatters.kr/products/brownie-cookie/
-- https://nothingmatters.kr/products/custom-brownie-cookie/
-- https://nothingmatters.kr/products/handmade-cookie/
-- https://nothingmatters.kr/products/lucky-cookie/
-- https://nothingmatters.kr/products/scone/
-- https://nothingmatters.kr/products/terminal-sand-cookie/
-- https://nothingmatters.kr/guides/wedding-favor-cookie/
-- https://nothingmatters.kr/guides/corporate-event-cookie/
-- https://nothingmatters.kr/guides/teacher-snack-gift/
-- https://nothingmatters.kr/guides/farewell-favor-cookie/
-- https://nothingmatters.kr/guides/dessert-gift-set/
-- https://nothingmatters.kr/guides/lucky-cheering-cookie/
+- https://nothingmatters.co.kr/
+- https://nothingmatters.co.kr/contact/
+- https://nothingmatters.co.kr/guides/
+- https://nothingmatters.co.kr/products/brownie-cookie/
+- https://nothingmatters.co.kr/products/custom-brownie-cookie/
+- https://nothingmatters.co.kr/products/handmade-cookie/
+- https://nothingmatters.co.kr/products/lucky-cookie/
+- https://nothingmatters.co.kr/products/scone/
+- https://nothingmatters.co.kr/products/terminal-sand-cookie/
+- https://nothingmatters.co.kr/guides/wedding-favor-cookie/
+- https://nothingmatters.co.kr/guides/corporate-event-cookie/
+- https://nothingmatters.co.kr/guides/teacher-snack-gift/
+- https://nothingmatters.co.kr/guides/farewell-favor-cookie/
+- https://nothingmatters.co.kr/guides/dessert-gift-set/
+- https://nothingmatters.co.kr/guides/lucky-cheering-cookie/
 
 ## Business facts
 - Brand name: nothingmatters

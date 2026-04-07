@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nothingmatters.kr/sitemap.xml
+Sitemap: https://nothingmatters.co.kr/sitemap.xml
