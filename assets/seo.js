@@ -58,7 +58,7 @@
     alternateName: "낫띵메터스",
     url: SITE_URL,
     logo: absoluteUrl("/images/heart-badge.png"),
-    image: absoluteUrl("/images/home-collage-a.jpg"),
+    image: absoluteUrl("/images/og-consult-cookie.png"),
     email: "eddiefactory@naver.com",
     telephone: "+82-10-2866-7976",
     address: {
@@ -88,7 +88,7 @@
     name: "nothingmatters",
     alternateName: "낫띵메터스",
     url: SITE_URL,
-    image: absoluteUrl("/images/home-collage-a.jpg"),
+    image: absoluteUrl("/images/og-consult-cookie.png"),
     email: "eddiefactory@naver.com",
     telephone: "+82-10-2866-7976",
     priceRange: "$$",
