@@ -27,8 +27,17 @@ const targets = [
 const STYLE_OPEN = '<style id="nm-inline-site-css">';
 const STYLE_CLOSE = "</style>";
 
-const replaceInlineCss = (html, css) => {
-  const inlineBlock = `${STYLE_OPEN}\n${css}\n  ${STYLE_CLOSE}`;
+const rewriteInlineAssetUrls = (css, target) => {
+  const fromDir = path.dirname(path.join(rootDir, target));
+  const relativeToRoot = path.relative(fromDir, rootDir).split(path.sep).join("/");
+  const assetPrefix = relativeToRoot ? `${relativeToRoot}/` : "";
+
+  return css.replaceAll("../images/", `${assetPrefix}images/`);
+};
+
+const replaceInlineCss = (html, css, target) => {
+  const normalizedCss = rewriteInlineAssetUrls(css, target);
+  const inlineBlock = `${STYLE_OPEN}\n${normalizedCss}\n  ${STYLE_CLOSE}`;
 
   if (html.includes(STYLE_OPEN)) {
     return html.replace(
@@ -50,7 +59,7 @@ const run = async () => {
     targets.map(async (target) => {
       const filePath = path.join(rootDir, target);
       const html = await fs.readFile(filePath, "utf8");
-      const next = replaceInlineCss(html, css);
+      const next = replaceInlineCss(html, css, target);
 
       if (next !== html) {
         await fs.writeFile(filePath, next, "utf8");

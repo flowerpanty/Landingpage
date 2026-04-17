@@ -391,6 +391,15 @@ h6 {
   padding-bottom: 54px;
 }
 
+#mainpage-home,
+#order-guide,
+#featured-products,
+#faq,
+#all-products,
+#guide-links {
+  scroll-margin-top: 124px;
+}
+
 .nm-section--blue {
   background: var(--blue);
 }
@@ -495,6 +504,12 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  margin-top: 28px;
+}
+
+.nm-section-actions {
+  display: flex;
+  justify-content: center;
   margin-top: 28px;
 }
 
@@ -967,6 +982,12 @@ h2 {
   font-size: 16px;
 }
 
+.nm-product-fit {
+  margin-bottom: 10px !important;
+  color: var(--ink) !important;
+  font-size: 15px !important;
+}
+
 .nm-product-card .nm-btn {
   margin-top: auto;
 }
@@ -992,14 +1013,18 @@ h2 {
 }
 
 .nm-all-products-grid .nm-all-product-link:nth-child(3) .nm-thumb-mini {
-  background-image: url("../images/custom-brownie-main.jpg");
+  background-image: url("../images/bear-scone-main.jpg");
 }
 
 .nm-all-products-grid .nm-all-product-link:nth-child(4) .nm-thumb-mini {
-  background-image: url("../images/lucky-main.png");
+  background-image: url("../images/custom-brownie-main.jpg");
 }
 
 .nm-all-products-grid .nm-all-product-link:nth-child(5) .nm-thumb-mini {
+  background-image: url("../images/lucky-main.png");
+}
+
+.nm-all-products-grid .nm-all-product-link:nth-child(6) .nm-thumb-mini {
   background-image: url("../images/terminal-hero.jpg");
 }
 
@@ -1219,6 +1244,27 @@ h2 {
 .nm-pick-card h3,
 .nm-pick-card p {
   width: 100%;
+}
+
+.nm-guide-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.nm-guide-summary-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+  background: #fff;
+}
+
+.nm-guide-summary-card p {
+  margin-bottom: 18px;
+}
+
+.nm-guide-summary-card .nm-btn {
+  align-self: flex-start;
 }
 
 .nm-guide-grid {
@@ -1467,15 +1513,15 @@ h2 {
   background: #fff;
 }
 
-.theme-home .nm-section--hero .nm-pill--pink {
+.theme-home .nm-section--hero .nm-copy-list .nm-pill--pink {
   background: var(--orange);
 }
 
-.theme-home .nm-section--hero .nm-pill--yellow {
+.theme-home .nm-section--hero .nm-copy-list .nm-pill--yellow {
   background: var(--yellow);
 }
 
-.theme-home .nm-section--hero .nm-pill--blue {
+.theme-home .nm-section--hero .nm-copy-list .nm-pill--blue {
   background: var(--blue);
   color: #fff;
 }
@@ -1559,27 +1605,6 @@ h2 {
   color: #fff;
 }
 
-.theme-home #use-case-guide .nm-grid-2 .nm-card:nth-child(n) {
-  background: #fff;
-}
-
-.theme-home #use-case-guide .nm-card small {
-  background: #fff;
-}
-
-.theme-home #use-case-guide .nm-card:nth-child(3n + 1) small {
-  background: var(--orange);
-}
-
-.theme-home #use-case-guide .nm-card:nth-child(3n) small {
-  background: var(--blue);
-  color: #fff;
-}
-
-.theme-home #use-case-guide .nm-card:nth-child(3n + 2) small {
-  background: var(--yellow);
-}
-
 .theme-home #faq .nm-faq details {
   background: #fff;
 }
@@ -1591,6 +1616,19 @@ h2 {
 .theme-home #faq .nm-faq details[open] {
   background: #fff;
   box-shadow: inset 0 8px 0 0 var(--yellow);
+}
+
+.theme-home #guide-links .nm-guide-summary-card:nth-child(1) small {
+  background: var(--orange);
+}
+
+.theme-home #guide-links .nm-guide-summary-card:nth-child(2) small {
+  background: var(--yellow);
+}
+
+.theme-home #guide-links .nm-guide-summary-card:nth-child(3) small {
+  background: var(--blue);
+  color: #fff;
 }
 
 .nm-footer {
@@ -1981,7 +2019,8 @@ h2 {
   .nm-button-row .nm-btn,
   .nm-copy-row .nm-btn,
   .nm-cta-actions .nm-btn,
-  .nm-copy-row .nm-copy-button {
+  .nm-copy-row .nm-copy-button,
+  .nm-section-actions .nm-btn {
     width: 100%;
   }
 
@@ -2289,6 +2328,10 @@ h2 {
   }
 
   .nm-featured-grid {
+    gap: 12px;
+  }
+
+  .nm-guide-summary-grid {
     gap: 12px;
   }
 
