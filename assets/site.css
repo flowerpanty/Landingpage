@@ -2456,19 +2456,50 @@ h2 {
 }
 
 @media (max-width: 640px) {
+  .nm-topbar-inner {
+    gap: 6px;
+    padding: 8px 0 6px;
+  }
+
   .nm-nav {
-    gap: 5px !important;
-    padding: 0 4px !important;
+    gap: 4px !important;
+    padding: 0 2px !important;
     flex-wrap: nowrap !important;
   }
   .nm-nav a {
     flex: 1 1 0 !important;
-    min-height: 42px !important;
-    padding: 0 !important; 
-    font-size: 12px !important;
-    letter-spacing: -0.06em !important;
+    min-height: 36px !important;
+    padding: 0 4px !important;
+    font-size: 11px !important;
+    letter-spacing: -0.07em !important;
+    line-height: 1 !important;
     border: 2px solid var(--ink) !important;
     box-shadow: 2px 2px 0 var(--ink) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .nm-topbar-inner {
+    gap: 5px;
+    padding: 7px 0 5px;
+  }
+
+  .nm-logo {
+    font-size: 24px;
+  }
+
+  .nm-nav {
+    gap: 3px !important;
+    padding: 0 1px !important;
+  }
+
+  .nm-nav a {
+    min-height: 33px !important;
+    padding: 0 3px !important;
+    font-size: 10.5px !important;
+    letter-spacing: -0.08em !important;
+    border-width: 1.5px !important;
+    box-shadow: 1.5px 1.5px 0 var(--ink) !important;
   }
 }
 /* END GLOBAL NAV STYLES OVERRIDE */
