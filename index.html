@@ -1293,6 +1293,27 @@ h2 {
   align-self: flex-start;
 }
 
+.nm-case-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.nm-case-card {
+  background: #fff !important;
+  padding: 18px;
+}
+
+.nm-case-card h3 {
+  margin-top: 14px;
+  margin-bottom: 0;
+  font-size: 24px;
+}
+
+.nm-case-card .nm-media-frame {
+  padding: 8px;
+}
+
 .nm-guide-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
@@ -1655,6 +1676,10 @@ h2 {
 .theme-home #guide-links .nm-guide-summary-card:nth-child(3) small {
   background: var(--blue);
   color: #fff;
+}
+
+.theme-home #actual-cases .nm-case-card {
+  background: #fff;
 }
 
 .nm-footer {
@@ -2361,8 +2386,22 @@ h2 {
     gap: 12px;
   }
 
+  .nm-case-grid {
+    gap: 12px;
+  }
+
   .nm-featured-grid .nm-product-card {
     padding: 16px;
+  }
+
+  .nm-case-card {
+    padding: 14px;
+  }
+
+  .nm-case-card h3 {
+    margin-top: 12px;
+    font-size: 18px;
+    line-height: 1.2;
   }
 
   .nm-featured-grid .nm-product-thumb {
@@ -2585,6 +2624,49 @@ h2 {
               <div class="nm-stage-cookie cookie-c"></div>
               <div class="nm-stage-sticker">cookie</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="nm-section" id="actual-cases">
+        <div class="nm-wrap">
+          <div class="nm-heading">
+            <div class="nm-label">ACTUAL CASE</div>
+            <h2>실제 사례</h2>
+            <p>
+              많이 문의주시는 장면들을
+              실제 작업 이미지로 먼저 볼 수 있게 모아뒀어요.
+            </p>
+          </div>
+
+          <div class="nm-case-grid">
+            <article class="nm-card nm-case-card">
+              <div class="nm-media-frame nm-media-frame--portrait">
+                <img src="images/case-wedding-favor.jpeg" alt="결혼식 답례용 커스텀 쿠키 실제 사례" loading="lazy" decoding="async">
+              </div>
+              <h3>결혼식 답례</h3>
+            </article>
+
+            <article class="nm-card nm-case-card">
+              <div class="nm-media-frame nm-media-frame--portrait">
+                <img src="images/case-corporate-favor.jpeg" alt="기업 답례용 커스텀 쿠키 실제 사례" loading="lazy" decoding="async">
+              </div>
+              <h3>기업 답례</h3>
+            </article>
+
+            <article class="nm-card nm-case-card">
+              <div class="nm-media-frame nm-media-frame--portrait">
+                <img src="images/case-lucky-cookie.jpeg" alt="행운쿠키 실제 사례" loading="lazy" decoding="async">
+              </div>
+              <h3>행운쿠키</h3>
+            </article>
+
+            <article class="nm-card nm-case-card">
+              <div class="nm-media-frame nm-media-frame--portrait">
+                <img src="images/case-handmade-cookie.jpeg" alt="수제쿠키 실제 사례" loading="lazy" decoding="async">
+              </div>
+              <h3>수제쿠키</h3>
+            </article>
           </div>
         </div>
       </section>
