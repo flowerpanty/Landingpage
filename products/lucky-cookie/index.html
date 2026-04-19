@@ -12,7 +12,7 @@
   <meta property="og:title" content="행운쿠키 · 응원쿠키 선물 | nothingmatters">
   <meta property="og:description" content="감사선물, 가벼운선물, 디저트답례품 흐름에 잘 맞는 행운쿠키 라인.">
   <meta property="og:url" content="https://nothingmatters.co.kr/products/lucky-cookie/">
-  <meta property="og:image" content="https://nothingmatters.co.kr/images/lucky-hero-custom-20260406.jpeg">
+  <meta property="og:image" content="https://nothingmatters.co.kr/images/lucky-hero-custom-20260414.jpeg">
   <meta property="og:image:alt" content="nothingmatters 행운쿠키 대표 이미지">
   <link rel="icon" type="image/png" href="../../images/heart-badge.png">
   <link rel="stylesheet" href="../../assets/site.css">
@@ -1923,11 +1923,28 @@ h2 {
 }
 
 #real-cuts .nm-media-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
   object-fit: contain;
+  object-position: center;
+}
+
+#real-cuts .nm-image-grid--two {
+  align-items: start;
+}
+
+#real-cuts .nm-image-grid--two .nm-media-frame {
+  align-self: start;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: auto;
 }
 
 #real-cuts .nm-media-frame--portrait {
-  aspect-ratio: 1 / 1.18;
+  aspect-ratio: auto;
 }
 
 .nm-copy-button {
@@ -1956,7 +1973,6 @@ h2 {
 .nm-image-grid--four .nm-media-frame {
   min-height: 100%;
 }
-
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -2449,7 +2465,8 @@ h2 {
   }
 
   #real-cuts .nm-image-grid--two .nm-media-frame {
-    aspect-ratio: 1 / 0.96;
+    aspect-ratio: auto;
+    min-height: 0;
     padding: 5px;
   }
 
@@ -2520,7 +2537,8 @@ h2 {
   }
 
   #real-cuts .nm-image-grid--two .nm-media-frame {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: auto;
+    min-height: 0;
     padding: 6px;
   }
 
@@ -2777,7 +2795,7 @@ h2 {
 
           <div class="nm-detail-stack">
             <figure class="nm-media-frame nm-media-frame--wide">
-              <img src="../../images/lucky-hero-custom-20260406.jpeg" alt="행운쿠키 대표 이미지">
+              <img src="../../images/lucky-hero-custom-20260414.jpeg" alt="행운쿠키 대표 이미지">
               <figcaption class="nm-media-caption">작은 응원과 기분 좋은 메시지를 함께 전하고 싶을 때 잘 어울리는 라인</figcaption>
             </figure>
             <div class="nm-summary-box">
