@@ -1778,12 +1778,12 @@ h2 {
 
 .nm-float-bubble {
   position: absolute;
-  right: 50%;
-  bottom: calc(100% - 8px);
-  transform: translateX(50%);
+  right: 2px;
+  bottom: calc(100% - 2px);
+  transform: none;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   min-width: max-content;
   padding: 10px 12px 8px;
   background: var(--yellow);
@@ -1793,7 +1793,7 @@ h2 {
   letter-spacing: -0.04em;
   line-height: 1.05;
   white-space: normal;
-  text-align: center;
+  text-align: right;
   box-shadow: var(--shadow);
   animation: floatBubbleBob 1.9s ease-in-out infinite;
 }
@@ -1801,7 +1801,7 @@ h2 {
 .nm-float-bubble::after {
   content: "";
   position: absolute;
-  right: 24px;
+  right: 10px;
   top: calc(100% - 2px);
   width: 18px;
   height: 18px;
@@ -1831,11 +1831,11 @@ h2 {
 @keyframes floatBubbleBob {
   0%,
   100% {
-    transform: translateX(50%) translateY(0);
+    transform: translateY(0);
   }
 
   50% {
-    transform: translateX(50%) translateY(-6px);
+    transform: translateY(-6px);
   }
 }
 
@@ -1923,6 +1923,18 @@ h2 {
 
 .nm-detail-card .nm-list {
   margin-top: 14px;
+}
+
+#real-cuts .nm-media-frame {
+  background: #fff;
+}
+
+#real-cuts .nm-media-frame img {
+  object-fit: contain;
+}
+
+#real-cuts .nm-media-frame--portrait {
+  aspect-ratio: 1 / 1.18;
 }
 
 .nm-copy-button {
@@ -2330,9 +2342,8 @@ h2 {
   }
 
   .nm-float-bubble {
-    right: calc(100% - 18px);
+    right: 0;
     bottom: calc(100% - 2px);
-    transform: none;
     max-width: 148px;
     min-width: 0;
     padding: 7px 9px 6px;
@@ -2342,7 +2353,7 @@ h2 {
   }
 
   .nm-float-bubble::after {
-    right: 12px;
+    right: 10px;
     width: 12px;
     height: 12px;
   }
@@ -2444,6 +2455,11 @@ h2 {
     aspect-ratio: 1 / 1;
   }
 
+  #real-cuts .nm-image-grid--two .nm-media-frame {
+    aspect-ratio: 1 / 0.96;
+    padding: 5px;
+  }
+
   .nm-media-frame--wide,
   .nm-product-thumb,
   .nm-thumb-mini {
@@ -2494,6 +2510,10 @@ h2 {
     gap: 10px;
   }
 
+  #real-cuts .nm-image-grid--two {
+    gap: 8px;
+  }
+
   .nm-image-grid .nm-media-frame,
   .nm-image-grid--four .nm-media-frame {
     max-width: 320px;
@@ -2504,6 +2524,11 @@ h2 {
     max-width: none;
     margin-inline: 0;
     aspect-ratio: 1 / 1.08;
+  }
+
+  #real-cuts .nm-image-grid--two .nm-media-frame {
+    aspect-ratio: 1 / 1;
+    padding: 6px;
   }
 
   .nm-post-visual {
@@ -2656,7 +2681,7 @@ h2 {
   }
 
   .nm-float-bubble {
-    right: calc(100% - 14px);
+    right: -2px;
     bottom: calc(100% - 1px);
     max-width: 126px;
     padding: 6px 7px 5px;
