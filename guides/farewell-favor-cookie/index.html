@@ -1769,6 +1769,38 @@ h2 {
   transition: transform 0.18s ease;
 }
 
+.nm-float-bubble {
+  position: absolute;
+  right: 50%;
+  bottom: calc(100% - 8px);
+  transform: translateX(50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: max-content;
+  padding: 10px 12px 8px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  animation: floatBubbleBob 1.9s ease-in-out infinite;
+}
+
+.nm-float-bubble::after {
+  content: "";
+  position: absolute;
+  right: 24px;
+  top: calc(100% - 2px);
+  width: 18px;
+  height: 18px;
+  background: var(--yellow);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+
 .nm-float-icon.with-bar {
   bottom: calc(98px + env(safe-area-inset-bottom));
 }
@@ -1777,11 +1809,26 @@ h2 {
   transform: translate(-2px, -2px);
 }
 
+.nm-float-icon:hover .nm-float-bubble {
+  animation-play-state: paused;
+}
+
 .nm-float-icon img {
   width: 100%;
   height: auto;
   object-fit: contain;
   filter: drop-shadow(2px 4px 0 rgba(0, 0, 0, 0.22));
+}
+
+@keyframes floatBubbleBob {
+  0%,
+  100% {
+    transform: translateX(50%) translateY(0);
+  }
+
+  50% {
+    transform: translateX(50%) translateY(-6px);
+  }
 }
 
 .nm-detail-hero {
@@ -2270,6 +2317,18 @@ h2 {
     right: max(12px, env(safe-area-inset-right));
   }
 
+  .nm-float-bubble {
+    bottom: calc(100% - 6px);
+    padding: 8px 10px 7px;
+    font-size: 10px;
+  }
+
+  .nm-float-bubble::after {
+    right: 18px;
+    width: 14px;
+    height: 14px;
+  }
+
   .nm-float-icon.with-bar {
     bottom: calc(86px + env(safe-area-inset-bottom));
   }
@@ -2558,6 +2617,11 @@ h2 {
     letter-spacing: -0.08em !important;
     border-width: 1.5px !important;
     box-shadow: 1.5px 1.5px 0 var(--ink) !important;
+  }
+
+  .nm-float-bubble {
+    padding: 7px 9px 6px;
+    font-size: 9.5px;
   }
 }
 /* END GLOBAL NAV STYLES OVERRIDE */

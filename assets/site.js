@@ -115,6 +115,12 @@ if (!document.querySelector("[data-kakao-float]")) {
     icon.src = "/images/consult-icon-browser.png";
   }
 
+  const bubble = document.createElement("span");
+  bubble.className = "nm-float-bubble";
+  bubble.textContent = "채널추가하고 1,000원 쿠폰 받기";
+  bubble.setAttribute("aria-hidden", "true");
+
+  kakaoLink.appendChild(bubble);
   kakaoLink.appendChild(icon);
 
   if (document.querySelector(".nm-float-cta")) {
