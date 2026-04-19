@@ -1918,16 +1918,33 @@ h2 {
   margin-top: 14px;
 }
 
-#real-cuts .nm-media-frame {
+#moments .nm-media-frame {
   background: #fff;
 }
 
-#real-cuts .nm-media-frame img {
+#moments .nm-media-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
   object-fit: contain;
+  object-position: center;
 }
 
-#real-cuts .nm-media-frame--portrait {
-  aspect-ratio: 1 / 1.18;
+#moments .nm-image-grid--two {
+  align-items: start;
+}
+
+#moments .nm-image-grid--two .nm-media-frame {
+  align-self: start;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+#moments .nm-media-frame--portrait {
+  aspect-ratio: auto;
 }
 
 .nm-copy-button {
@@ -2448,8 +2465,9 @@ h2 {
     aspect-ratio: 1 / 1;
   }
 
-  #real-cuts .nm-image-grid--two .nm-media-frame {
-    aspect-ratio: 1 / 0.96;
+  #moments .nm-image-grid--two .nm-media-frame {
+    aspect-ratio: auto;
+    min-height: 0;
     padding: 5px;
   }
 
@@ -2503,7 +2521,7 @@ h2 {
     gap: 10px;
   }
 
-  #real-cuts .nm-image-grid--two {
+  #moments .nm-image-grid--two {
     gap: 8px;
   }
 
@@ -2519,8 +2537,9 @@ h2 {
     aspect-ratio: 1 / 1.08;
   }
 
-  #real-cuts .nm-image-grid--two .nm-media-frame {
-    aspect-ratio: 1 / 1;
+  #moments .nm-image-grid--two .nm-media-frame {
+    aspect-ratio: auto;
+    min-height: 0;
     padding: 6px;
   }
 
