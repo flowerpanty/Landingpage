@@ -1785,7 +1785,8 @@ h2 {
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 1.05;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
   box-shadow: var(--shadow);
   animation: floatBubbleBob 1.9s ease-in-out infinite;
 }
@@ -2319,14 +2320,16 @@ h2 {
 
   .nm-float-bubble {
     bottom: calc(100% - 6px);
-    padding: 8px 10px 7px;
-    font-size: 10px;
+    max-width: 164px;
+    padding: 7px 9px 6px;
+    font-size: 9px;
+    line-height: 1.15;
   }
 
   .nm-float-bubble::after {
-    right: 18px;
-    width: 14px;
-    height: 14px;
+    right: 16px;
+    width: 12px;
+    height: 12px;
   }
 
   .nm-float-icon.with-bar {
@@ -2620,8 +2623,10 @@ h2 {
   }
 
   .nm-float-bubble {
-    padding: 7px 9px 6px;
-    font-size: 9.5px;
+    max-width: 144px;
+    padding: 6px 8px 5px;
+    font-size: 8px;
+    line-height: 1.12;
   }
 }
 /* END GLOBAL NAV STYLES OVERRIDE */
