@@ -7,6 +7,7 @@ const http = require("node:http");
 const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
 const HOST = process.env.HOST || "0.0.0.0";
+const CANONICAL_HOST = "nothingmatters.co.kr";
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -49,6 +50,11 @@ function resolvePath(urlPathname) {
   return filePath;
 }
 
+function getFirstHeaderValue(value) {
+  if (!value) return "";
+  return String(value).split(",")[0].trim();
+}
+
 const server = http.createServer((req, res) => {
   if (req.method !== "GET" && req.method !== "HEAD") {
     res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
@@ -56,7 +62,31 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const requestUrl = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+  const requestUrl = new URL(req.url || "/", "http://localhost");
+  const forwardedHost = getFirstHeaderValue(req.headers["x-forwarded-host"]);
+  const requestHost = (forwardedHost || req.headers.host || "localhost")
+    .split(":")[0]
+    .trim()
+    .toLowerCase();
+  const forwardedProto = getFirstHeaderValue(req.headers["x-forwarded-proto"]);
+  const requestProto = (forwardedProto || "http").trim().toLowerCase();
+  const isProductionHost =
+    requestHost === CANONICAL_HOST || requestHost === `www.${CANONICAL_HOST}`;
+
+  if (isProductionHost && (requestHost !== CANONICAL_HOST || requestProto !== "https")) {
+    const redirectUrl = new URL(
+      `${requestUrl.pathname}${requestUrl.search}`,
+      `https://${CANONICAL_HOST}`
+    );
+
+    res.writeHead(301, {
+      Location: redirectUrl.toString(),
+      "Cache-Control": "public, max-age=3600"
+    });
+    res.end();
+    return;
+  }
+
   const filePath = resolvePath(requestUrl.pathname);
 
   if (!filePath || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
