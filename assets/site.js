@@ -88,6 +88,228 @@ document.querySelectorAll("img[data-fallback-label]").forEach((img) => {
   }
 });
 
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const revealTargets = document.querySelectorAll("[data-reveal]");
+
+if (revealTargets.length) {
+  if (prefersReducedMotion.matches || !("IntersectionObserver" in window)) {
+    revealTargets.forEach((element) => element.classList.add("is-visible"));
+  } else {
+    const revealObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.18, rootMargin: "0px 0px -8% 0px" }
+    );
+
+    revealTargets.forEach((element) => revealObserver.observe(element));
+  }
+}
+
+const heroParallaxImage = document.querySelector("[data-hero-parallax]");
+const mobileMedia = window.matchMedia("(max-width: 760px)");
+
+if (heroParallaxImage && !prefersReducedMotion.matches && !mobileMedia.matches) {
+  let ticking = false;
+
+  const updateHeroParallax = () => {
+    const rect = heroParallaxImage.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || 1;
+    const progress = (viewportHeight - rect.top) / (viewportHeight + rect.height);
+    const shift = Math.max(-18, Math.min(18, (progress - 0.5) * 28));
+
+    heroParallaxImage.style.setProperty("--hero-parallax-shift", `${shift}px`);
+    ticking = false;
+  };
+
+  const requestHeroParallax = () => {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(updateHeroParallax);
+  };
+
+  updateHeroParallax();
+  window.addEventListener("scroll", requestHeroParallax, { passive: true });
+  window.addEventListener("resize", requestHeroParallax);
+}
+
+const homeSearchInput = document.querySelector("#nm-home-search-input");
+const homeSearchResults = document.querySelector("[data-home-search-results]");
+const homeSearchFeedback = document.querySelector("[data-home-search-feedback]");
+const homeSearchGrid = document.querySelector(".nm-home-bento-grid");
+const homeSearchCards = [...document.querySelectorAll("[data-search-card]")];
+
+if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid && homeSearchCards.length) {
+  const searchItems = [
+    {
+      label: "브랜드 행사",
+      aliases: ["브랜드", "기업", "기업 행사", "행사", "단체", "회사", "로고"],
+      targetSelector: '[data-search-card="corporate"]',
+      href: "guides/corporate-event-cookie/index.html"
+    },
+    {
+      label: "무난한 답례품",
+      aliases: ["답례", "답례품", "하객", "감사 답례", "브라우니 답례"],
+      targetSelector: '[data-search-card="favor"]',
+      href: "products/brownie-cookie/index.html"
+    },
+    {
+      label: "특별한 선물",
+      aliases: ["선물", "생일", "생일 선물", "기념일", "감사 선물", "패키지", "수제"],
+      targetSelector: '[data-search-card="gift"]',
+      href: "products/handmade-cookie/index.html"
+    },
+    {
+      label: "승진/퇴사",
+      aliases: ["승진", "퇴사", "이직", "감사", "응원", "축하", "문구", "이름", "날짜", "메시지", "커스텀"],
+      targetSelector: '[data-search-card="message"]',
+      href: "guides/farewell-favor-cookie/index.html"
+    },
+    {
+      label: "결혼식 답례",
+      aliases: ["결혼", "결혼식", "웨딩", "답례", "답례품", "하객 선물"],
+      targetSelector: '[data-search-card="favor"]',
+      href: "guides/wedding-favor-cookie/index.html"
+    },
+    {
+      label: "행운쿠키",
+      aliases: ["행운", "포춘", "포춘쿠키", "문구 쿠키", "메시지 쿠키"],
+      targetSelector: '[data-search-card="message"]',
+      href: "products/lucky-cookie/index.html"
+    },
+    {
+      label: "브라우니쿠키",
+      aliases: ["브라우니", "브루키", "답례 쿠키", "브라우니 답례품"],
+      targetSelector: '[data-search-card="favor"]',
+      href: "products/brownie-cookie/index.html"
+    },
+    {
+      label: "수제쿠키",
+      aliases: ["수제", "캐릭터", "캐릭터 쿠키", "생일 쿠키", "선물 쿠키"],
+      targetSelector: '[data-search-card="gift"]',
+      href: "products/handmade-cookie/index.html"
+    }
+  ];
+
+  const normalizeSearchValue = (value = "") =>
+    value
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .trim();
+
+  const getDefaultResults = () => [
+    {
+      label: "결혼식 답례",
+      targetSelector: '[data-search-card="favor"]',
+      href: "guides/wedding-favor-cookie/index.html"
+    },
+    {
+      label: "기업 행사",
+      targetSelector: '[data-search-card="corporate"]',
+      href: "guides/corporate-event-cookie/index.html"
+    },
+    {
+      label: "생일 선물",
+      targetSelector: '[data-search-card="gift"]',
+      href: "products/handmade-cookie/index.html"
+    },
+    {
+      label: "승진/퇴사",
+      targetSelector: '[data-search-card="message"]',
+      href: "guides/farewell-favor-cookie/index.html"
+    }
+  ];
+
+  const renderSearchResults = (items) => {
+    homeSearchResults.innerHTML = "";
+
+    items.forEach((item) => {
+      const link = document.createElement("a");
+      link.className = "nm-home-search-result";
+      link.href = item.href;
+      link.textContent = item.label;
+      homeSearchResults.appendChild(link);
+    });
+  };
+
+  const clearCardHighlights = () => {
+    homeSearchGrid.classList.remove("is-search-active");
+
+    homeSearchCards.forEach((card) => {
+      card.classList.remove("is-search-match", "is-search-dimmed");
+    });
+  };
+
+  const applyCardHighlights = (items) => {
+    const selectors = [...new Set(items.map((item) => item.targetSelector).filter(Boolean))];
+
+    if (!selectors.length) {
+      clearCardHighlights();
+      return;
+    }
+
+    homeSearchGrid.classList.add("is-search-active");
+
+    homeSearchCards.forEach((card) => {
+      const isMatch = selectors.some((selector) => card.matches(selector));
+      card.classList.toggle("is-search-match", isMatch);
+      card.classList.toggle("is-search-dimmed", !isMatch);
+    });
+  };
+
+  const getMatchedItems = (rawValue) => {
+    const query = normalizeSearchValue(rawValue);
+    const seen = new Set();
+
+    return searchItems
+      .filter((item) => {
+        const terms = [item.label, ...item.aliases].map(normalizeSearchValue);
+        return terms.some((term) => term.includes(query) || query.includes(term));
+      })
+      .filter((item) => {
+        if (seen.has(item.label)) return false;
+        seen.add(item.label);
+        return true;
+      })
+      .slice(0, 4);
+  };
+
+  const updateHomeSearchState = () => {
+    const rawValue = homeSearchInput.value || "";
+    const query = normalizeSearchValue(rawValue);
+
+    if (!query) {
+      homeSearchFeedback.textContent = "아래를 선택해주세요 👇";
+      renderSearchResults(getDefaultResults());
+      clearCardHighlights();
+      return;
+    }
+
+    const matchedItems = getMatchedItems(rawValue);
+
+    if (matchedItems.length) {
+      homeSearchFeedback.textContent = "아래를 선택해주세요 👇";
+      renderSearchResults(matchedItems);
+      applyCardHighlights(matchedItems);
+      return;
+    }
+
+    homeSearchFeedback.textContent = "아래를 선택해주세요 👇";
+    renderSearchResults(getDefaultResults());
+    clearCardHighlights();
+  };
+
+  renderSearchResults(getDefaultResults());
+  clearCardHighlights();
+
+  homeSearchInput.addEventListener("input", updateHomeSearchState);
+  homeSearchInput.addEventListener("search", updateHomeSearchState);
+}
+
 const siteScript =
   document.currentScript ||
   [...document.scripts].find((script) =>
