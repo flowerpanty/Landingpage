@@ -115,7 +115,7 @@
     "@type": "WebSite",
     "@id": WEBSITE_ID,
     url: SITE_URL,
-    name: "nothingmatters",
+    name: "nothingmatters 낫띵메터스",
     inLanguage: "ko-KR",
     publisher: {
       "@id": ORGANIZATION_ID,
@@ -359,7 +359,9 @@
       "@type": typeMap[pageType] || "WebPage",
       "@id": `${pageUrl}#webpage`,
       url: pageUrl,
-      name: cleanText(pageTitle.replace(/\s*\|\s*nothingmatters/i, "")),
+      name: cleanText(
+        pageTitle.replace(/\s*\|\s*nothingmatters/i, "").replace(/^nothingmatters\s+낫띵메터스\s*\/\s*/i, "")
+      ),
       description: cleanText(metaDescription),
       inLanguage: "ko-KR",
       isPartOf: {
