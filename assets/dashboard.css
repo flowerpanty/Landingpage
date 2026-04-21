@@ -1,0 +1,345 @@
+:root {
+  --dashboard-bg: #f4f7ff;
+  --dashboard-panel: #ffffff;
+  --dashboard-ink: #17130f;
+  --dashboard-sub: rgba(23, 19, 15, 0.62);
+  --dashboard-line: rgba(23, 19, 15, 0.1);
+  --dashboard-blue: #0b57ff;
+  --dashboard-orange: #ff6a00;
+  --dashboard-yellow: #ffc72c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255, 199, 44, 0.2), transparent 18%),
+    radial-gradient(circle at 88% 14%, rgba(11, 87, 255, 0.14), transparent 24%),
+    linear-gradient(180deg, #fffdf8 0%, var(--dashboard-bg) 100%);
+  color: var(--dashboard-ink);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
+button,
+input,
+table {
+  font: inherit;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.dashboard-wrap {
+  width: min(1240px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.dashboard-hero {
+  padding: 44px 0 22px;
+}
+
+.dashboard-kicker {
+  margin-bottom: 14px;
+  color: var(--dashboard-sub);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+}
+
+.dashboard-hero-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.dashboard-hero h1 {
+  max-width: 14ch;
+  font-size: clamp(42px, 6vw, 78px);
+  line-height: 0.94;
+  letter-spacing: -0.08em;
+}
+
+.dashboard-hero p {
+  max-width: 44ch;
+  margin-top: 16px;
+  color: var(--dashboard-sub);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.dashboard-range {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-range-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--dashboard-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--dashboard-ink);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.dashboard-range-btn.is-active {
+  background: var(--dashboard-blue);
+  border-color: var(--dashboard-blue);
+  color: #fff;
+}
+
+.dashboard-range-btn:hover,
+.dashboard-range-btn:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 22px rgba(23, 19, 15, 0.1);
+}
+
+.dashboard-content {
+  padding: 0 0 48px;
+}
+
+.dashboard-status {
+  min-height: 28px;
+  margin-bottom: 18px;
+  color: var(--dashboard-sub);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-card,
+.dashboard-panel {
+  background: var(--dashboard-panel);
+  border: 1px solid var(--dashboard-line);
+  border-radius: 28px;
+  box-shadow: 0 22px 36px rgba(23, 19, 15, 0.06);
+}
+
+.dashboard-card {
+  padding: 22px 22px 24px;
+}
+
+.dashboard-card-label {
+  display: block;
+  color: var(--dashboard-sub);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboard-card-value {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.dashboard-panel {
+  padding: 22px;
+}
+
+.dashboard-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.dashboard-panel h2 {
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.dashboard-panel-head span,
+.dashboard-panel-copy,
+.dashboard-notes,
+.dashboard-checklist,
+.dashboard-table td,
+.dashboard-table th {
+  color: var(--dashboard-sub);
+}
+
+.dashboard-panel--setup {
+  padding: 24px;
+}
+
+.dashboard-panel--setup h2 {
+  margin-bottom: 10px;
+}
+
+.dashboard-panel-copy {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.dashboard-checklist,
+.dashboard-notes {
+  margin: 18px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.dashboard-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20px, 1fr));
+  gap: 10px;
+  align-items: end;
+  min-height: 240px;
+}
+
+.dashboard-bar {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  align-self: stretch;
+}
+
+.dashboard-bar-track {
+  display: flex;
+  align-items: end;
+  width: 100%;
+  height: 180px;
+  padding: 10px 0 0;
+}
+
+.dashboard-bar-fill {
+  width: 100%;
+  min-height: 10px;
+  border-radius: 999px 999px 12px 12px;
+  background: linear-gradient(180deg, var(--dashboard-yellow) 0%, var(--dashboard-orange) 100%);
+}
+
+.dashboard-bar-label {
+  color: var(--dashboard-sub);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.dashboard-table-wrap {
+  overflow-x: auto;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table thead th {
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--dashboard-line);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dashboard-table tbody td {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(23, 19, 15, 0.06);
+  font-size: 14px;
+  line-height: 1.5;
+  vertical-align: top;
+}
+
+.dashboard-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dashboard-table strong {
+  color: var(--dashboard-ink);
+}
+
+.dashboard-empty {
+  color: var(--dashboard-sub);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+@media (max-width: 980px) {
+  .dashboard-hero-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-wrap {
+    width: calc(100% - 20px);
+  }
+
+  .dashboard-hero {
+    padding: 28px 0 18px;
+  }
+
+  .dashboard-hero p {
+    font-size: 15px;
+  }
+
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-card,
+  .dashboard-panel {
+    border-radius: 22px;
+  }
+
+  .dashboard-card,
+  .dashboard-panel,
+  .dashboard-panel--setup {
+    padding: 18px;
+  }
+
+  .dashboard-chart {
+    gap: 8px;
+    min-height: 200px;
+  }
+
+  .dashboard-bar-track {
+    height: 150px;
+  }
+
+  .dashboard-table thead th,
+  .dashboard-table tbody td {
+    font-size: 12px;
+  }
+}

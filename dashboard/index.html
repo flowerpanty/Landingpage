@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOTHINGMATTERS Dashboard</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/assets/dashboard.css">
+</head>
+<body>
+  <main class="dashboard-page">
+    <section class="dashboard-hero">
+      <div class="dashboard-wrap">
+        <p class="dashboard-kicker">NOTHINGMATTERS ANALYTICS</p>
+        <div class="dashboard-hero-head">
+          <div>
+            <h1>어디서 들어왔는지, 몇 명 들어왔는지 한 화면에서 봅니다.</h1>
+            <p>
+              Google Analytics 4 와 Search Console 데이터를 묶어서
+              방문수, 유입소스, 랜딩 페이지, 검색어 흐름을 함께 보여주는 관리자 대시보드입니다.
+            </p>
+          </div>
+
+          <div class="dashboard-range" role="group" aria-label="조회 기간">
+            <button class="dashboard-range-btn is-active" type="button" data-range-days="7">7일</button>
+            <button class="dashboard-range-btn" type="button" data-range-days="28">28일</button>
+            <button class="dashboard-range-btn" type="button" data-range-days="90">90일</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-content">
+      <div class="dashboard-wrap">
+        <div class="dashboard-status" data-dashboard-status>데이터를 불러오는 중입니다.</div>
+
+        <section class="dashboard-panel dashboard-panel--setup is-hidden" data-dashboard-setup>
+          <h2>대시보드 연결이 아직 끝나지 않았습니다.</h2>
+          <p class="dashboard-panel-copy" data-dashboard-setup-message></p>
+          <ul class="dashboard-checklist" data-dashboard-setup-missing></ul>
+          <ul class="dashboard-notes" data-dashboard-setup-notes></ul>
+        </section>
+
+        <div class="dashboard-grid is-hidden" data-dashboard-grid>
+          <section class="dashboard-metrics">
+            <article class="dashboard-card">
+              <span class="dashboard-card-label">총 방문 수</span>
+              <strong class="dashboard-card-value" data-metric="sessions">-</strong>
+            </article>
+            <article class="dashboard-card">
+              <span class="dashboard-card-label">활성 사용자</span>
+              <strong class="dashboard-card-value" data-metric="activeUsers">-</strong>
+            </article>
+            <article class="dashboard-card">
+              <span class="dashboard-card-label">참여 세션</span>
+              <strong class="dashboard-card-value" data-metric="engagedSessions">-</strong>
+            </article>
+            <article class="dashboard-card">
+              <span class="dashboard-card-label">참여율</span>
+              <strong class="dashboard-card-value" data-metric="engagementRate">-</strong>
+            </article>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="dashboard-panel-head">
+              <h2>방문 추이</h2>
+              <span data-dashboard-range-label>-</span>
+            </div>
+            <div class="dashboard-chart" data-dashboard-chart></div>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="dashboard-panel-head">
+              <h2>어디서 들어왔는지</h2>
+              <span>GA4 기준</span>
+            </div>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>소스 / 매체</th>
+                    <th>채널</th>
+                    <th>방문 수</th>
+                    <th>활성 사용자</th>
+                  </tr>
+                </thead>
+                <tbody data-table="sources"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="dashboard-panel-head">
+              <h2>어떤 페이지로 들어왔는지</h2>
+              <span>GA4 랜딩 페이지</span>
+            </div>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>랜딩 페이지</th>
+                    <th>방문 수</th>
+                    <th>활성 사용자</th>
+                  </tr>
+                </thead>
+                <tbody data-table="landingPages"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="dashboard-panel-head">
+              <h2>무슨 검색어로 들어왔는지</h2>
+              <span>Search Console 기준</span>
+            </div>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>검색어</th>
+                    <th>클릭</th>
+                    <th>노출</th>
+                    <th>CTR</th>
+                    <th>평균 순위</th>
+                  </tr>
+                </thead>
+                <tbody data-table="queries"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="dashboard-panel-head">
+              <h2>검색 클릭이 많은 페이지</h2>
+              <span data-search-console-site></span>
+            </div>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>페이지</th>
+                    <th>클릭</th>
+                    <th>노출</th>
+                    <th>CTR</th>
+                    <th>평균 순위</th>
+                  </tr>
+                </thead>
+                <tbody data-table="pages"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/dashboard.js"></script>
+</body>
+</html>
