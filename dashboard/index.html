@@ -61,6 +61,17 @@
             </article>
           </section>
 
+          <section class="dashboard-metrics dashboard-metrics--naver">
+            <article class="dashboard-card dashboard-card--naver">
+              <span class="dashboard-card-label">네이버 유입 방문 수</span>
+              <strong class="dashboard-card-value" data-metric="naverSessions">-</strong>
+            </article>
+            <article class="dashboard-card dashboard-card--naver">
+              <span class="dashboard-card-label">네이버 유입 활성 사용자</span>
+              <strong class="dashboard-card-value" data-metric="naverActiveUsers">-</strong>
+            </article>
+          </section>
+
           <section class="dashboard-panel">
             <div class="dashboard-panel-head">
               <h2>방문 추이</h2>
@@ -85,6 +96,25 @@
                   </tr>
                 </thead>
                 <tbody data-table="sources"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="dashboard-panel">
+            <div class="dashboard-panel-head">
+              <h2>네이버에서 들어온 유입</h2>
+              <span>`naver / organic` 중심</span>
+            </div>
+            <div class="dashboard-table-wrap">
+              <table class="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>네이버 유입 랜딩 페이지</th>
+                    <th>방문 수</th>
+                    <th>활성 사용자</th>
+                  </tr>
+                </thead>
+                <tbody data-table="naverLandingPages"></tbody>
               </table>
             </div>
           </section>

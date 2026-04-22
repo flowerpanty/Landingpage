@@ -9,6 +9,14 @@ const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
 const HOST = process.env.HOST || "0.0.0.0";
 const CANONICAL_HOST = "nothingmatters.co.kr";
+const HOME_OG_ROTATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+const HOME_OG_IMAGE_ALT = "nothingmatters 대표 링크 썸네일";
+const HOME_OG_IMAGES = [
+  "/images/og-rotate-01.png",
+  "/images/og-rotate-02.png",
+  "/images/og-rotate-03.png",
+  "/images/og-rotate-04.png"
+];
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GA4_API_BASE = "https://analyticsdata.googleapis.com/v1beta";
 const SEARCH_CONSOLE_API_BASE = "https://www.googleapis.com/webmasters/v3";
@@ -70,6 +78,43 @@ function resolvePath(urlPathname) {
 function getFirstHeaderValue(value) {
   if (!value) return "";
   return String(value).split(",")[0].trim();
+}
+
+function escapeAttribute(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function getRotatingHomeOgImagePath(timestamp = Date.now()) {
+  const slot = Math.floor(timestamp / HOME_OG_ROTATION_WINDOW_MS) % HOME_OG_IMAGES.length;
+  return HOME_OG_IMAGES[slot];
+}
+
+function injectHomePreviewMeta(html, baseOrigin) {
+  const ogImageUrl = new URL(getRotatingHomeOgImagePath(), baseOrigin).toString();
+  const safeImageUrl = escapeAttribute(ogImageUrl);
+  const safeAlt = escapeAttribute(HOME_OG_IMAGE_ALT);
+
+  return html
+    .replace(
+      /<meta property="og:image" content="[^"]*">/,
+      `<meta property="og:image" content="${safeImageUrl}">`
+    )
+    .replace(
+      /<meta property="og:image:alt" content="[^"]*">/,
+      `<meta property="og:image:alt" content="${safeAlt}">`
+    )
+    .replace(
+      /<meta name="twitter:image" content="[^"]*">/,
+      `<meta name="twitter:image" content="${safeImageUrl}">`
+    )
+    .replace(
+      /<meta name="twitter:image:alt" content="[^"]*">/,
+      `<meta name="twitter:image:alt" content="${safeAlt}">`
+    );
 }
 
 function base64UrlEncode(value) {
@@ -276,6 +321,10 @@ function mapGaRows(report = {}) {
   });
 }
 
+function isNaverSource(value = "") {
+  return String(value).toLowerCase().includes("naver");
+}
+
 async function fetchGaReport(accessToken, propertyId, requestBody) {
   const response = await fetch(`${GA4_API_BASE}/properties/${propertyId}:runReport`, {
     method: "POST",
@@ -401,7 +450,32 @@ async function buildDashboardPayload(days, dashboardConfig) {
         date: row.dimensions.date || "",
         sessions: Number(row.metrics.sessions || 0),
         activeUsers: Number(row.metrics.activeUsers || 0)
-      }))
+      })),
+      naver: (() => {
+        const sourceRows = mapGaRows(sourceReport).map((row) => ({
+          sourceMedium: row.dimensions.sessionSourceMedium || "(not set)",
+          channelGroup: row.dimensions.sessionPrimaryChannelGroup || "(not set)",
+          sessions: Number(row.metrics.sessions || 0),
+          activeUsers: Number(row.metrics.activeUsers || 0)
+        }));
+
+        const landingRows = mapGaRows(landingReport).map((row) => ({
+          page: row.dimensions.landingPagePlusQueryString || "/",
+          sessions: Number(row.metrics.sessions || 0),
+          activeUsers: Number(row.metrics.activeUsers || 0)
+        }));
+
+        const naverSources = sourceRows.filter((row) => isNaverSource(row.sourceMedium));
+        const naverSessions = naverSources.reduce((sum, row) => sum + row.sessions, 0);
+        const naverUsers = naverSources.reduce((sum, row) => sum + row.activeUsers, 0);
+
+        return {
+          sessions: naverSessions,
+          activeUsers: naverUsers,
+          sources: naverSources,
+          landingPages: landingRows.filter((row) => row.page)
+        };
+      })()
     },
     searchConsole: {
       siteUrl: dashboardConfig.searchConsoleSiteUrl,
@@ -482,6 +556,9 @@ const server = http.createServer(async (req, res) => {
   const requestProto = (forwardedProto || "http").trim().toLowerCase();
   const isProductionHost =
     requestHost === CANONICAL_HOST || requestHost === `www.${CANONICAL_HOST}`;
+  const responseOrigin = `${isProductionHost ? "https" : requestProto}://${
+    requestHost && requestHost !== "localhost" ? requestHost : CANONICAL_HOST
+  }`;
 
   if (isProductionHost && (requestHost !== CANONICAL_HOST || requestProto !== "https")) {
     const redirectUrl = new URL(
@@ -518,6 +595,29 @@ const server = http.createServer(async (req, res) => {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
   const stat = fs.statSync(filePath);
+
+  const isHomeHtml =
+    ext === ".html" &&
+    path.relative(ROOT, filePath) === "index.html" &&
+    (requestUrl.pathname === "/" || requestUrl.pathname === "/index.html");
+
+  if (isHomeHtml) {
+    const html = fs.readFileSync(filePath, "utf8");
+    const responseBody = injectHomePreviewMeta(html, responseOrigin);
+
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Content-Length": Buffer.byteLength(responseBody)
+    });
+
+    if (req.method === "HEAD") {
+      res.end();
+      return;
+    }
+
+    res.end(responseBody);
+    return;
+  }
 
   res.writeHead(200, {
     "Content-Type": contentType,

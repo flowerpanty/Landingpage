@@ -131,6 +131,10 @@ p {
   gap: 18px;
 }
 
+.dashboard-metrics--naver {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .dashboard-card,
 .dashboard-panel {
   background: var(--dashboard-panel);
@@ -141,6 +145,11 @@ p {
 
 .dashboard-card {
   padding: 22px 22px 24px;
+}
+
+.dashboard-card--naver {
+  background: linear-gradient(180deg, rgba(11, 87, 255, 0.08) 0%, rgba(255, 255, 255, 0.96) 100%);
+  border-color: rgba(11, 87, 255, 0.14);
 }
 
 .dashboard-card-label {
@@ -299,6 +308,10 @@ p {
   .dashboard-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .dashboard-metrics--naver {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
@@ -315,6 +328,10 @@ p {
   }
 
   .dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-metrics--naver {
     grid-template-columns: 1fr;
   }
 

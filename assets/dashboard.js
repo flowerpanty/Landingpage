@@ -12,7 +12,9 @@ const metricFormatters = {
   sessions: (value) => Number(value || 0).toLocaleString("ko-KR"),
   activeUsers: (value) => Number(value || 0).toLocaleString("ko-KR"),
   engagedSessions: (value) => Number(value || 0).toLocaleString("ko-KR"),
-  engagementRate: (value) => `${(Number(value || 0) * 100).toFixed(1)}%`
+  engagementRate: (value) => `${(Number(value || 0) * 100).toFixed(1)}%`,
+  naverSessions: (value) => Number(value || 0).toLocaleString("ko-KR"),
+  naverActiveUsers: (value) => Number(value || 0).toLocaleString("ko-KR")
 };
 
 const formatNumber = (value = 0) => Number(value || 0).toLocaleString("ko-KR");
@@ -182,10 +184,19 @@ function showDashboard(payload) {
   setupPanel?.classList.add("is-hidden");
   dashboardGrid?.classList.remove("is-hidden");
 
-  renderMetrics(payload.ga4?.overview);
+  renderMetrics({
+    ...payload.ga4?.overview,
+    naverSessions: payload.ga4?.naver?.sessions || 0,
+    naverActiveUsers: payload.ga4?.naver?.activeUsers || 0
+  });
   renderChart(payload.ga4?.daily || []);
 
   renderList(document.querySelector('[data-table="sources"]'), payload.ga4?.sources || [], createSourceRow);
+  renderList(
+    document.querySelector('[data-table="naverLandingPages"]'),
+    payload.ga4?.naver?.landingPages || [],
+    createLandingRow
+  );
   renderList(document.querySelector('[data-table="landingPages"]'), payload.ga4?.landingPages || [], createLandingRow);
   renderList(document.querySelector('[data-table="queries"]'), payload.searchConsole?.topQueries || [], createQueryRow);
   renderList(document.querySelector('[data-table="pages"]'), payload.searchConsole?.topPages || [], createPageRow);
