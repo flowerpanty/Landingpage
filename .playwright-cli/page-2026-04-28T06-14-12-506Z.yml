@@ -1,0 +1,144 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - link "nothingmatters 메인으로 이동" [ref=e5] [cursor=pointer]:
+      - /url: "#mainpage-home"
+      - text: NOTHINGMATTERS
+  - main [ref=e6]:
+    - generic [ref=e9]:
+      - paragraph [ref=e10]: nothingmatters cookie atelier
+      - heading "1개부터 가볍게, 여럿에게는 특별하게." [level=1] [ref=e11]:
+        - text: 1개부터 가볍게,
+        - text: 여럿에게는 특별하게.
+      - paragraph [ref=e12]:
+        - text: 소량 선물부터 단체 답례품까지
+        - text: 귀여운 쿠키로 마음을 전해요.
+      - generic "주문 유형 바로가기" [ref=e13]:
+        - link "주문 유형 고르기" [ref=e14] [cursor=pointer]:
+          - /url: "#use-case-guide"
+        - link "소량 선물 보기" [ref=e15] [cursor=pointer]:
+          - /url: products/handmade-cookie/index.html
+    - region "어떤 주문을 찾고 있나요?" [ref=e16]:
+      - generic [ref=e17]:
+        - heading "어떤 주문을 찾고 있나요?" [level=2] [ref=e19]
+        - generic [ref=e20]:
+          - link "소량 선물용 수제쿠키 패키지 small gift 소량 선물 1개부터 부담 없이 소량 선물 보러가기" [ref=e21] [cursor=pointer]:
+            - /url: products/handmade-cookie/index.html
+            - img "소량 선물용 수제쿠키 패키지" [ref=e23]
+            - generic [ref=e24]:
+              - generic [ref=e25]: small gift
+              - heading "소량 선물" [level=3] [ref=e26]
+              - strong [ref=e27]: 1개부터 부담 없이
+              - emphasis [ref=e28]: 소량 선물 보러가기
+          - link "단체 행사 주문용 커스텀 쿠키 bulk order 단체 / 행사 주문 행사일과 수량에 맞춰 상담 단체 / 행사 주문하기" [ref=e29] [cursor=pointer]:
+            - /url: bulk/index.html
+            - img "단체 행사 주문용 커스텀 쿠키" [ref=e31]
+            - generic [ref=e32]:
+              - generic [ref=e33]: bulk order
+              - heading "단체 / 행사 주문" [level=3] [ref=e34]
+              - strong [ref=e35]: 행사일과 수량에 맞춰 상담
+              - emphasis [ref=e36]: 단체 / 행사 주문하기
+    - region "많이 찾는 쿠키를 먼저 만나보세요" [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - paragraph [ref=e40]: popular line up
+          - heading "많이 찾는 쿠키를 먼저 만나보세요" [level=2] [ref=e41]
+          - paragraph [ref=e42]: 처음 오신 분도 무엇을 파는지 바로 알 수 있도록 인기 제품만 간단히 모았어요.
+        - generic [ref=e43]:
+          - link "브라우니쿠키 브라우니쿠키 답례품과 단체 주문에 잘 어울리는 시그니처 쿠키 답례품 / 행사 / 단체주문 제품 보기" [ref=e44] [cursor=pointer]:
+            - /url: products/brownie-cookie/index.html
+            - img "브라우니쿠키" [ref=e46]
+            - generic [ref=e47]:
+              - heading "브라우니쿠키" [level=3] [ref=e48]
+              - paragraph [ref=e49]: 답례품과 단체 주문에 잘 어울리는 시그니처 쿠키
+              - generic [ref=e50]: 답례품 / 행사 / 단체주문
+              - emphasis [ref=e51]: 제품 보기
+          - link "수제쿠키 수제쿠키 1구, 2구, 4구로 다양하게 고를 수 있는 기본 선물 구성 소량선물 / 감사선물 / 답례품 제품 보기" [ref=e52] [cursor=pointer]:
+            - /url: products/handmade-cookie/index.html
+            - img "수제쿠키" [ref=e54]
+            - generic [ref=e55]:
+              - heading "수제쿠키" [level=3] [ref=e56]
+              - paragraph [ref=e57]: 1구, 2구, 4구로 다양하게 고를 수 있는 기본 선물 구성
+              - generic [ref=e58]: 소량선물 / 감사선물 / 답례품
+              - emphasis [ref=e59]: 제품 보기
+          - link "곰스콘 곰스콘 귀엽고 기억에 남는 감성적인 선물용 스콘 생일선물 / 기념일 / 감성선물 제품 보기" [ref=e60] [cursor=pointer]:
+            - /url: products/scone/index.html
+            - img "곰스콘" [ref=e62]
+            - generic [ref=e63]:
+              - heading "곰스콘" [level=3] [ref=e64]
+              - paragraph [ref=e65]: 귀엽고 기억에 남는 감성적인 선물용 스콘
+              - generic [ref=e66]: 생일선물 / 기념일 / 감성선물
+              - emphasis [ref=e67]: 제품 보기
+          - link "행운쿠키 행운쿠키 응원, 감사, 축하의 마음을 전하기 좋은 메시지 쿠키 응원선물 / 감사 / 이벤트 제품 보기" [ref=e68] [cursor=pointer]:
+            - /url: products/lucky-cookie/index.html
+            - img "행운쿠키" [ref=e70]
+            - generic [ref=e71]:
+              - heading "행운쿠키" [level=3] [ref=e72]
+              - paragraph [ref=e73]: 응원, 감사, 축하의 마음을 전하기 좋은 메시지 쿠키
+              - generic [ref=e74]: 응원선물 / 감사 / 이벤트
+              - emphasis [ref=e75]: 제품 보기
+    - region "실제로 이렇게 주문하셨어요" [ref=e76]:
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - paragraph [ref=e79]: actual case
+          - heading "실제로 이렇게 주문하셨어요" [level=2] [ref=e80]
+          - paragraph [ref=e81]: 소량 선물부터 단체 행사까지, 실제 제작 사진으로 분위기를 먼저 확인해보세요.
+        - generic [ref=e82]:
+          - link "소량 선물 구성 소량 선물 구성" [ref=e83] [cursor=pointer]:
+            - /url: products/handmade-cookie/index.html
+            - img "소량 선물 구성" [ref=e84]
+            - generic [ref=e85]: 소량 선물 구성
+          - link "결혼식 답례품 결혼식 답례품" [ref=e86] [cursor=pointer]:
+            - /url: guides/wedding-favor-cookie/index.html
+            - img "결혼식 답례품" [ref=e87]
+            - generic [ref=e88]: 결혼식 답례품
+          - link "브랜드 행사 쿠키 브랜드 행사 쿠키" [ref=e89] [cursor=pointer]:
+            - /url: guides/corporate-event-cookie/index.html
+            - img "브랜드 행사 쿠키" [ref=e90]
+            - generic [ref=e91]: 브랜드 행사 쿠키
+          - link "감사 선물 세트 감사 선물 세트" [ref=e92] [cursor=pointer]:
+            - /url: products/brownie-cookie/index.html
+            - img "감사 선물 세트" [ref=e93]
+            - generic [ref=e94]: 감사 선물 세트
+          - link "선생님 간식 선생님 간식" [ref=e95] [cursor=pointer]:
+            - /url: guides/teacher-snack-gift/index.html
+            - img "선생님 간식" [ref=e96]
+            - generic [ref=e97]: 선생님 간식
+          - link "시즌 선물 패키지 시즌 선물 패키지" [ref=e98] [cursor=pointer]:
+            - /url: guides/dessert-gift-set/index.html
+            - img "시즌 선물 패키지" [ref=e99]
+            - generic [ref=e100]: 시즌 선물 패키지
+    - region "아직 고민 중이라면, 편하게 물어보세요" [ref=e101]:
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - paragraph [ref=e104]: contact / quick help
+          - heading "아직 고민 중이라면, 편하게 물어보세요" [level=2] [ref=e105]:
+            - text: 아직 고민 중이라면,
+            - text: 편하게 물어보세요
+          - paragraph [ref=e106]:
+            - text: 소량 선물도, 단체 주문도 괜찮아요.
+            - text: 행사일, 수량, 용도만 알려주시면
+            - text: 맞는 구성을 추천해드려요.
+          - generic [ref=e107]: 대량 주문이 아니어도 부담 없이 문의할 수 있어요.
+        - generic [ref=e108]:
+          - link "추천받기" [ref=e109] [cursor=pointer]:
+            - /url: https://thingmattersreserve-production.up.railway.app/
+          - link "문의하러 가기" [ref=e110] [cursor=pointer]:
+            - /url: contact/index.html
+    - generic [ref=e112]:
+      - strong [ref=e113]: nothingmatters
+      - text: 귀엽고 특별한 수제쿠키로, 일상과 기념일 사이를 사랑스럽게 연결합니다.
+      - text: 서울특별시 성동구 상원12길 19 1층 · 매장 픽업 / 차량 퀵 상담 ·
+      - link "010-2866-7976" [ref=e114] [cursor=pointer]:
+        - /url: tel:01028667976
+      - text: ·
+      - link "eddiefactory@naver.com" [ref=e115] [cursor=pointer]:
+        - /url: mailto:eddiefactory@naver.com
+      - generic [ref=e116]:
+        - link "주문 선택" [ref=e117] [cursor=pointer]:
+          - /url: "#use-case-guide"
+        - link "인기 제품" [ref=e118] [cursor=pointer]:
+          - /url: "#featured-products"
+        - link "실제 사례" [ref=e119] [cursor=pointer]:
+          - /url: "#actual-cases"
+        - link "추천받기" [ref=e120] [cursor=pointer]:
+          - /url: https://thingmattersreserve-production.up.railway.app/

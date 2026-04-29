@@ -146,22 +146,22 @@ const homeSearchCards = [...document.querySelectorAll("[data-search-card]")];
 if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid && homeSearchCards.length) {
   const searchItems = [
     {
-      label: "브랜드 행사",
+      label: "기업 행사",
       aliases: ["브랜드", "기업", "기업 행사", "행사", "단체", "회사", "로고"],
       targetSelector: '[data-search-card="corporate"]',
       href: "guides/corporate-event-cookie/index.html"
     },
     {
-      label: "무난한 답례품",
+      label: "결혼/답례",
       aliases: ["답례", "답례품", "하객", "감사 답례", "브라우니 답례"],
       targetSelector: '[data-search-card="favor"]',
       href: "products/brownie-cookie/index.html"
     },
     {
-      label: "특별한 선물",
+      label: "생일/선물",
       aliases: ["선물", "생일", "생일 선물", "기념일", "감사 선물", "패키지", "수제"],
       targetSelector: '[data-search-card="gift"]',
-      href: "products/handmade-cookie/index.html"
+      href: "small-gift/index.html"
     },
     {
       label: "승진/퇴사",
@@ -191,7 +191,7 @@ if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid
       label: "수제쿠키",
       aliases: ["수제", "캐릭터", "캐릭터 쿠키", "생일 쿠키", "선물 쿠키"],
       targetSelector: '[data-search-card="gift"]',
-      href: "products/handmade-cookie/index.html"
+      href: "small-gift/index.html"
     }
   ];
 
@@ -200,6 +200,12 @@ if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid
       .toLowerCase()
       .replace(/\s+/g, "")
       .trim();
+
+  const getHomeSearchHref = (href = "") => {
+    if (/^(https?:|mailto:|tel:|#|\/)/i.test(href)) return href;
+    const isNestedHomePage = window.location.pathname.includes("/bulk/");
+    return `${isNestedHomePage ? "../" : ""}${href}`;
+  };
 
   const getDefaultResults = () => [
     {
@@ -215,7 +221,7 @@ if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid
     {
       label: "생일 선물",
       targetSelector: '[data-search-card="gift"]',
-      href: "products/handmade-cookie/index.html"
+      href: "small-gift/index.html"
     },
     {
       label: "승진/퇴사",
@@ -230,7 +236,7 @@ if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid
     items.forEach((item) => {
       const link = document.createElement("a");
       link.className = "nm-home-search-result";
-      link.href = item.href;
+      link.href = getHomeSearchHref(item.href);
       link.textContent = item.label;
       homeSearchResults.appendChild(link);
     });

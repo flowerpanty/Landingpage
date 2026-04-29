@@ -4,6 +4,8 @@
 
 ## Canonical site
 - https://nothingmatters.co.kr/
+- https://nothingmatters.co.kr/bulk/
+- https://nothingmatters.co.kr/small-gift/
 - https://nothingmatters.co.kr/contact/
 - https://nothingmatters.co.kr/guides/
 - https://nothingmatters.co.kr/products/brownie-cookie/
@@ -29,6 +31,7 @@
 - Shipping: no general parcel shipping
 
 ## Main ordering use cases
+- small handmade cookie gifts
 - wedding favors
 - corporate event snacks
 - kindergarten or school birthday gifts
@@ -36,6 +39,11 @@
 - custom message dessert orders
 - dessert gift sets and premium cookie gifts
 - lucky or cheering cookie gifts
+
+## Main page routing
+- home: hub-style main page for choosing between small gifts and bulk/event orders
+- bulk: preserved group-order landing page for wedding favors, corporate event snacks, school or institution snacks, and custom bulk consultation
+- small-gift: small gift hub for choosing handmade cookie, fortune cookie, or bear scone landing pages before ordering
 
 ## Use-case guides
 - guides/: guide hub for wedding favors, corporate event cookies, teacher snack gifts, farewell favors, dessert gift sets, and lucky cheering cookies

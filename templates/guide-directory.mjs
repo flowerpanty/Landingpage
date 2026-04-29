@@ -90,5 +90,5 @@ export const guideHubMeta = {
     "용도별 쿠키 가이드 | 결혼식 · 기업행사 · 선생님 간식 · 퇴사답례 | nothingmatters",
   description:
     "결혼식 답례품 쿠키, 기업행사 쿠키, 유치원선생님간식, 퇴사답례품, 디저트선물세트, 행운쿠키까지 검색 의도별로 바로 고를 수 있는 nothingmatters 가이드 허브입니다.",
-  ogImage: "https://nothingmatters.kr/images/home-collage-a.jpg",
+  ogImage: "https://nothingmatters.co.kr/images/home-collage-a.jpg",
 };

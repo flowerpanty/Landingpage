@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[97367,["/_next/static/chunks/0dbhjjzl8qfwv.js"],"ViewportBoundary"]
+3:I[97367,["/_next/static/chunks/0dbhjjzl8qfwv.js"],"MetadataBoundary"]
+4:"$Sreact.suspense"
+0:{"rsc":["$","$1","h",{"children":[null,["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"NOTHING MATTERS | 곰돌이 스콘"}],["$","meta","1",{"name":"description","content":"고메버터로 바삭하고 촉촉하게 만든 NOTHING MATTERS 곰돌이 스콘 랜딩페이지. 선물, 답례품, 행사 디저트에 잘 어울리는 예약 제작 스콘."}]]}]}]}],null]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"YsvR5hnKcZPMez7GI2srG"}
