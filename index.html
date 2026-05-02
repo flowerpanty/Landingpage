@@ -39,10 +39,10 @@
       <div class="nm-wrap nm-topbar-inner">
         <a class="nm-logo" href="#mainpage-home" aria-label="nothingmatters 메인으로 이동">NOTHINGMATTERS</a>
         <nav class="nm-main-nav" aria-label="메인 섹션">
+          <a href="#ready-order">바로 주문</a>
           <a href="#use-case-guide">주문 선택</a>
-          <a href="#featured-products">제품</a>
           <a href="#actual-cases">사례</a>
-          <a href="#final-cta">문의</a>
+          <a href="#main-faq">FAQ</a>
         </nav>
       </div>
     </header>
@@ -58,14 +58,14 @@
               귀여운 쿠키로 마음을 전해요.
             </p>
             <div class="nm-main-hero-actions" aria-label="주문 유형 바로가기">
-              <a class="nm-main-button nm-main-button--primary" href="#use-case-guide">주문 유형 고르기</a>
-              <a class="nm-main-button nm-main-button--ghost" href="small-gift/index.html">소량 선물 보기</a>
+              <a class="nm-main-button nm-main-button--primary" href="#ready-order">바로 주문 가능한 쿠키</a>
+              <a class="nm-main-button nm-main-button--ghost" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer">단체 답례품 상담하기</a>
             </div>
           </div>
 
           <div class="nm-main-hero-visual" aria-label="nothingmatters 쿠키 패키지 사진">
             <div class="nm-main-hero-photo nm-main-hero-photo--large">
-              <img src="images/case-handmade-cookie.jpeg" alt="nothingmatters 쿠키 선물 패키지" loading="eager" decoding="async" data-hero-parallax>
+              <img src="images/main-hero-terminal-crew.png" alt="nothingmatters 터미널 동물 승무원 캐릭터" loading="eager" decoding="async" data-hero-parallax>
             </div>
             <div class="nm-main-hero-photo nm-main-hero-photo--small" aria-hidden="true">
               <img src="images/case-wedding-favor.jpeg" alt="" loading="eager" decoding="async">
@@ -74,6 +74,69 @@
               <span>small gift</span>
               <strong>1개부터 부담 없이</strong>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="nm-section nm-main-ready-order" id="ready-order" aria-labelledby="nm-main-ready-order-title">
+        <div class="nm-wrap">
+          <div class="nm-main-section-head" data-reveal>
+            <p class="nm-main-label">바로 주문하기</p>
+            <h2 id="nm-main-ready-order-title">지금 바로 고를 수 있는 쿠키</h2>
+            <p>
+              사진을 보고, 수량과 옵션을 고르면<br>
+              상담용 견적서까지 바로 만들 수 있어요.
+            </p>
+          </div>
+
+          <div class="nm-main-order-grid">
+            <a class="nm-main-order-card nm-main-order-card--brookie" href="https://thingmattersreserve-production.up.railway.app/brookie" target="_blank" rel="noopener noreferrer" data-reveal>
+              <div class="nm-main-order-media nm-main-order-media--contain">
+                <img src="images/main-order-brookie-thumb.png" alt="나만의 브루키 만들기 패키지" loading="lazy" decoding="async">
+              </div>
+              <div class="nm-main-order-copy">
+                <span>custom brookie</span>
+                <h3>나만의 브루키 만들기</h3>
+                <p>
+                  캐릭터, 하트 문구, 포장 종이를 골라<br>
+                  나만의 브루키 조합을 만들 수 있어요.
+                </p>
+                <strong>커스텀 문구 가능 · 견적서 생성</strong>
+                <em>브루키 만들기</em>
+              </div>
+            </a>
+
+            <a class="nm-main-order-card nm-main-order-card--cookie" href="https://thingmattersreserve-production.up.railway.app/cookies" target="_blank" rel="noopener noreferrer" data-reveal>
+              <div class="nm-main-order-media nm-main-order-media--contain">
+                <img src="images/main-order-cookie-thumb.png" alt="수제꾸덕쿠키 비닐 포장" loading="lazy" decoding="async">
+              </div>
+              <div class="nm-main-order-copy">
+                <span>handmade cookies</span>
+                <h3>수제꾸덕쿠키 주문하기</h3>
+                <p>
+                  1구, 2구, 4구, 음료세트까지<br>
+                  패키지와 맛을 골라 담을 수 있어요.
+                </p>
+                <strong>맛 선택 · 리본/스티커 옵션 · 견적서 생성</strong>
+                <em>꾸덕쿠키 고르기</em>
+              </div>
+            </a>
+
+            <a class="nm-main-order-card nm-main-order-card--lucky" href="https://thingmattersreserve-production.up.railway.app/lucky" target="_blank" rel="noopener noreferrer" data-reveal>
+              <div class="nm-main-order-media nm-main-order-media--contain">
+                <img src="images/main-order-lucky-thumb.png" alt="행운쿠키 머니 세트" loading="lazy" decoding="async">
+              </div>
+              <div class="nm-main-order-copy">
+                <span>lucky cookie</span>
+                <h3>행운쿠키 주문하기</h3>
+                <p>
+                  HAPPY, RESET, MONEY, UP<br>
+                  네 가지 감정을 담은 행운쿠키 세트예요.
+                </p>
+                <strong>4가지맛 세트 · 수량 선택 · 실물컷 확인</strong>
+                <em>행운쿠키 주문하기</em>
+              </div>
+            </a>
           </div>
         </div>
       </section>
@@ -126,66 +189,45 @@
         </div>
       </section>
 
-      <section class="nm-section nm-main-products" id="featured-products" aria-labelledby="nm-main-products-title">
-        <span class="nm-anchor-sentinel" id="all-products" aria-hidden="true"></span>
+      <section class="nm-section nm-main-faq" id="main-faq" aria-labelledby="nm-main-faq-title">
         <div class="nm-wrap">
           <div class="nm-main-section-head" data-reveal>
-            <p class="nm-main-label">popular line up</p>
-            <h2 id="nm-main-products-title">많이 찾는 쿠키를 먼저 만나보세요</h2>
+            <p class="nm-main-label">FAQ</p>
+            <h2 id="nm-main-faq-title">주문 전에 많이 묻는 질문</h2>
             <p>
-              처음 오신 분도 무엇을 파는지 바로 알 수 있도록
-              인기 제품만 간단히 모았어요.
+              바로 주문할지, 상담이 필요할지 헷갈릴 때
+              먼저 확인하면 좋은 기준만 모았어요.
             </p>
           </div>
 
-          <div class="nm-main-product-grid">
-            <a class="nm-main-product-card" href="products/brownie-cookie/index.html" data-reveal>
-              <div class="nm-main-product-media">
-                <img src="images/brownie-main.jpg" alt="브라우니쿠키" loading="lazy" decoding="async">
+          <div class="faq-wrap nm-main-faq-list" data-reveal>
+            <details class="faq-item" open>
+              <summary>바로 주문 가능한 쿠키는 어떤 제품인가요?</summary>
+              <div class="answer">
+                브루키, 수제꾸덕쿠키, 행운쿠키는 사진을 보면서 수량과 옵션을 직접 고르고 상담용 견적서까지 만들 수 있어요.
               </div>
-              <div class="nm-main-product-copy">
-                <h3>브라우니쿠키</h3>
-                <p>답례품과 단체 주문에 잘 어울리는 시그니처 쿠키</p>
-                <span>답례품 / 행사 / 단체주문</span>
-                <em>제품 보기</em>
-              </div>
-            </a>
+            </details>
 
-            <a class="nm-main-product-card" href="products/handmade-cookie/index.html" data-reveal>
-              <div class="nm-main-product-media">
-                <img src="images/handmade-main.jpg" alt="수제쿠키" loading="lazy" decoding="async">
+            <details class="faq-item">
+              <summary>단체 답례품도 바로 주문하면 되나요?</summary>
+              <div class="answer">
+                수량, 납기, 문구 커스텀, 배송 방식 조율이 필요한 단체 답례품은 카카오 상담으로 먼저 이야기해주시면 가장 안전해요.
               </div>
-              <div class="nm-main-product-copy">
-                <h3>수제쿠키</h3>
-                <p>1구, 2구, 4구로 다양하게 고를 수 있는 기본 선물 구성</p>
-                <span>소량선물 / 감사선물 / 답례품</span>
-                <em>제품 보기</em>
-              </div>
-            </a>
+            </details>
 
-            <a class="nm-main-product-card" href="products/scone/index.html" data-reveal>
-              <div class="nm-main-product-media">
-                <img src="images/bear-scone-main.jpg" alt="곰스콘" loading="lazy" decoding="async">
+            <details class="faq-item">
+              <summary>견적서는 언제 만들어지나요?</summary>
+              <div class="answer">
+                제품, 수량, 포장 옵션을 고르면 상담용 견적서가 만들어지고, 최종 제작 가능 여부는 상담에서 확정됩니다.
               </div>
-              <div class="nm-main-product-copy">
-                <h3>곰스콘</h3>
-                <p>귀엽고 기억에 남는 감성적인 선물용 스콘</p>
-                <span>생일선물 / 기념일 / 감성선물</span>
-                <em>제품 보기</em>
-              </div>
-            </a>
+            </details>
 
-            <a class="nm-main-product-card" href="products/lucky-cookie/index.html" data-reveal>
-              <div class="nm-main-product-media nm-main-product-media--contain">
-                <img src="images/lucky-main.png" alt="행운쿠키" loading="lazy" decoding="async">
+            <details class="faq-item">
+              <summary>픽업이나 퀵 배송도 가능한가요?</summary>
+              <div class="answer">
+                일정과 수량에 따라 매장 픽업, 차량 퀵, 배송 가능 여부를 상담에서 안내해드려요.
               </div>
-              <div class="nm-main-product-copy">
-                <h3>행운쿠키</h3>
-                <p>응원, 감사, 축하의 마음을 전하기 좋은 메시지 쿠키</p>
-                <span>응원선물 / 감사 / 이벤트</span>
-                <em>제품 보기</em>
-              </div>
-            </a>
+            </details>
           </div>
         </div>
       </section>
@@ -243,8 +285,7 @@
             <small>대량 주문이 아니어도 부담 없이 문의할 수 있어요.</small>
           </div>
           <div class="nm-main-contact-actions">
-            <a class="nm-main-button nm-main-button--primary" href="https://thingmattersreserve-production.up.railway.app/">추천받기</a>
-            <a class="nm-main-button nm-main-button--secondary" href="contact/index.html">문의하러 가기</a>
+            <a class="nm-main-button nm-main-button--primary" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer">추천받기</a>
           </div>
         </div>
       </section>
@@ -257,10 +298,11 @@
           귀엽고 특별한 수제쿠키로, 일상과 기념일 사이를 사랑스럽게 연결합니다.<br>
           서울특별시 성동구 상원12길 19 1층 · 매장 픽업 / 차량 퀵 상담 · <a href="tel:01028667976">010-2866-7976</a> · <a href="mailto:eddiefactory@naver.com">eddiefactory@naver.com</a>
           <div class="nm-footer-links">
+            <a href="#ready-order">바로 주문</a>
             <a href="#use-case-guide">주문 선택</a>
-            <a href="#featured-products">인기 제품</a>
             <a href="#actual-cases">실제 사례</a>
-            <a href="https://thingmattersreserve-production.up.railway.app/">추천받기</a>
+            <a href="#main-faq">FAQ</a>
+            <a href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer">추천받기</a>
           </div>
         </div>
       </footer>
@@ -271,15 +313,13 @@
         <strong>무엇을 고를지 고민된다면</strong>
         <span>행사일, 수량, 용도에 맞춰 추천해드려요.</span>
       </div>
-      <a class="nm-btn nm-btn--primary" href="https://thingmattersreserve-production.up.railway.app/">추천받기</a>
+      <a class="nm-btn nm-btn--primary" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer">추천받기</a>
     </div>
 
     <div class="nm-mobile-float-stack" aria-label="모바일 빠른 메뉴">
       <a
         class="nm-mobile-float-link nm-mobile-float-link--order"
-        href="https://thingmattersreserve-production.up.railway.app/"
-        target="_blank"
-        rel="noopener noreferrer"
+        href="#ready-order"
         aria-label="쿠키주문하기"
       >
         <span class="nm-mobile-float-bubble">쿠키주문하기</span>
