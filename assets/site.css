@@ -1908,14 +1908,24 @@ h2 {
 
 #real-cuts .nm-media-frame {
   background: #fff;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #real-cuts .nm-media-frame img {
-  object-fit: contain;
+  object-fit: cover;
 }
 
 #real-cuts .nm-media-frame--portrait {
-  aspect-ratio: 1 / 1.18;
+  aspect-ratio: 4 / 5;
+}
+
+#real-cuts .nm-image-grid .nm-media-frame,
+#real-cuts .nm-image-grid--two .nm-media-frame,
+#real-cuts .nm-image-grid--four .nm-media-frame {
+  min-height: 0;
+  max-width: none;
+  margin-inline: 0;
 }
 
 .nm-copy-button {
@@ -1995,18 +2005,47 @@ h2 {
   }
 
   .nm-grid-2,
+  .nm-info-grid,
+  .nm-choice-grid,
+  .nm-featured-grid,
+  .nm-all-products-grid,
   .nm-image-grid,
-  .nm-image-grid--four {
-    grid-template-columns: 1fr;
-  }
-
-  .nm-image-grid--two {
+  .nm-image-grid--two,
+  .nm-image-grid--four,
+  .nm-picks-grid,
+  .nm-case-grid,
+  .nm-guide-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 
-  .nm-all-products-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  body.theme-lucky #emotion .nm-grid-2 {
+    gap: 10px;
+  }
+
+  body.theme-lucky #emotion .nm-choice-card {
+    padding: 12px;
+  }
+
+  body.theme-lucky #emotion .nm-choice-card .nm-media-frame {
+    max-width: none;
+    min-height: 0;
+    margin-inline: 0;
+    padding: 5px;
+  }
+
+  body.theme-lucky #emotion .nm-choice-card .nm-product-meta {
+    margin-top: 10px !important;
+  }
+
+  body.theme-lucky #emotion .nm-choice-card h3 {
+    font-size: clamp(17px, 4.6vw, 22px);
+    line-height: 1.15;
+  }
+
+  body.theme-lucky #emotion .nm-choice-card p {
+    font-size: 12px;
+    line-height: 1.45;
   }
 
   .nm-nav {
@@ -2349,8 +2388,30 @@ h2 {
     width: min(100% - 18px, 1240px);
   }
 
-  .nm-image-grid--two {
+  .nm-grid-2,
+  .nm-info-grid,
+  .nm-choice-grid,
+  .nm-featured-grid,
+  .nm-all-products-grid,
+  .nm-image-grid,
+  .nm-image-grid--two,
+  .nm-image-grid--four,
+  .nm-picks-grid,
+  .nm-case-grid,
+  .nm-guide-summary-grid {
     gap: 8px;
+  }
+
+  body.theme-lucky #emotion .nm-grid-2 {
+    gap: 8px;
+  }
+
+  body.theme-lucky #emotion .nm-choice-card {
+    padding: 10px;
+  }
+
+  body.theme-lucky #emotion .nm-choice-card p {
+    font-size: 11.5px;
   }
 
   h1 {
@@ -2391,7 +2452,7 @@ h2 {
   .nm-pick-card,
   .nm-side-note,
   .nm-cta-card {
-    padding: 18px;
+    padding: 12px;
   }
 
   .nm-card h3,
@@ -5377,7 +5438,7 @@ body.theme-main {
   }
 
   .nm-small-card-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
   }
 
