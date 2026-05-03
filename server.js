@@ -25,9 +25,41 @@ const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/webmasters.readonly"
 ];
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_DASHBOARD_DAYS = 28;
-const MIN_DASHBOARD_DAYS = 7;
 const MAX_DASHBOARD_DAYS = 90;
+const DASHBOARD_TIME_ZONE = "Asia/Seoul";
+const DEFAULT_DASHBOARD_RANGE_KEY = "today";
+const DASHBOARD_RANGE_PRESETS = {
+  today: { days: 1, label: "오늘" },
+  "7d": { days: 7, label: "7일" },
+  "30d": { days: 30, label: "30일" },
+  "90d": { days: 90, label: "90일" }
+};
+const TRACKED_DASHBOARD_EVENTS = [
+  {
+    name: "consult_kakao_click",
+    label: "카카오 상담",
+    type: "consult",
+    description: "추천받기·단체 상담 버튼 클릭"
+  },
+  {
+    name: "order_brookie_click",
+    label: "브루키 주문",
+    type: "order",
+    description: "나만의 브루키 만들기 클릭"
+  },
+  {
+    name: "order_cookies_click",
+    label: "꾸덕쿠키 주문",
+    type: "order",
+    description: "수제꾸덕쿠키 주문하기 클릭"
+  },
+  {
+    name: "order_lucky_click",
+    label: "행운쿠키 주문",
+    type: "order",
+    description: "행운쿠키 주문하기 클릭"
+  }
+];
 
 let googleTokenCache = {
   accessToken: "",
@@ -187,25 +219,89 @@ function getDashboardConfig() {
   };
 }
 
-function getDashboardDays(requestUrl) {
-  const requestedDays = Number.parseInt(requestUrl.searchParams.get("days") || "", 10);
-  if (Number.isNaN(requestedDays)) return DEFAULT_DASHBOARD_DAYS;
-  return Math.min(MAX_DASHBOARD_DAYS, Math.max(MIN_DASHBOARD_DAYS, requestedDays));
+function formatDateInTimeZone(timestamp = Date.now()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DASHBOARD_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date(timestamp));
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
-function formatDate(date) {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+function getDateSpan(days, offsetDays = 0) {
+  const endTimestamp = Date.now() - offsetDays * DAY_MS;
+  const startTimestamp = Date.now() - (offsetDays + days - 1) * DAY_MS;
 
-function getSearchConsoleDateRange(days) {
-  const end = new Date();
-  const start = new Date(Date.now() - (days - 1) * DAY_MS);
   return {
-    startDate: formatDate(start),
-    endDate: formatDate(end)
+    startDate: formatDateInTimeZone(startTimestamp),
+    endDate: formatDateInTimeZone(endTimestamp)
+  };
+}
+
+function getDashboardRangeFromDays(days, preferredKey = "", preferredLabel = "") {
+  const safeDays = Math.min(MAX_DASHBOARD_DAYS, Math.max(1, Number.parseInt(days, 10) || 1));
+  const isToday = safeDays === 1;
+  const currentDateRange = getDateSpan(safeDays);
+  const previousDateRange = getDateSpan(safeDays, safeDays);
+  const key = preferredKey || (isToday ? "today" : `${safeDays}d`);
+  const label = preferredLabel || (isToday ? "오늘" : `${safeDays}일`);
+
+  return {
+    key,
+    label,
+    days: safeDays,
+    granularity: isToday ? "hour" : "day",
+    isPartial: isToday,
+    comparisonLabel: isToday ? "어제 하루 대비" : "직전 기간 대비",
+    startDate: currentDateRange.startDate,
+    endDate: currentDateRange.endDate,
+    gaDateRange: [
+      isToday
+        ? { startDate: "today", endDate: "today" }
+        : { startDate: `${safeDays - 1}daysAgo`, endDate: "today" }
+    ],
+    previousGaDateRange: [
+      isToday
+        ? { startDate: "yesterday", endDate: "yesterday" }
+        : { startDate: previousDateRange.startDate, endDate: previousDateRange.endDate }
+    ],
+    searchConsoleDateRange: currentDateRange,
+    previousSearchConsoleDateRange: previousDateRange
+  };
+}
+
+function getDashboardRange(requestUrl) {
+  const requestedRange = (requestUrl.searchParams.get("range") || "")
+    .trim()
+    .toLowerCase();
+  const preset = DASHBOARD_RANGE_PRESETS[requestedRange];
+
+  if (preset) {
+    return getDashboardRangeFromDays(preset.days, requestedRange, preset.label);
+  }
+
+  const requestedDays = Number.parseInt(requestUrl.searchParams.get("days") || "", 10);
+  if (!Number.isNaN(requestedDays)) {
+    return getDashboardRangeFromDays(requestedDays);
+  }
+
+  const defaultPreset = DASHBOARD_RANGE_PRESETS[DEFAULT_DASHBOARD_RANGE_KEY];
+  return getDashboardRangeFromDays(
+    defaultPreset.days,
+    DEFAULT_DASHBOARD_RANGE_KEY,
+    defaultPreset.label
+  );
+}
+
+function getSearchConsoleRequest(range, dateRange, options = {}) {
+  return {
+    ...dateRange,
+    ...(range.isPartial && !options.isPrevious ? { dataState: "all" } : {}),
+    ...(options.dimensions ? { dimensions: options.dimensions } : {}),
+    ...(options.rowLimit ? { rowLimit: options.rowLimit } : {})
   };
 }
 
@@ -365,21 +461,279 @@ async function fetchSearchConsoleReport(accessToken, siteUrl, requestBody) {
   return response.json();
 }
 
-async function buildDashboardPayload(days, dashboardConfig) {
-  const accessToken = await getGoogleAccessToken(dashboardConfig.serviceAccount);
-  const gaDateRange = [{ startDate: `${days}daysAgo`, endDate: "today" }];
-  const searchConsoleDateRange = getSearchConsoleDateRange(days);
+function getMetricValue(report = {}, metricIndex = 0) {
+  return Number(report.rows?.[0]?.metricValues?.[metricIndex]?.value || 0);
+}
 
-  const [
-    overviewReport,
-    sourceReport,
-    landingReport,
-    dailyReport,
-    queryReport,
-    pageReport
-  ] = await Promise.all([
-    fetchGaReport(accessToken, dashboardConfig.propertyId, {
-      dateRanges: gaDateRange,
+function getOverviewMetrics(report = {}) {
+  return {
+    sessions: getMetricValue(report, 0),
+    activeUsers: getMetricValue(report, 1),
+    engagedSessions: getMetricValue(report, 2),
+    engagementRate: getMetricValue(report, 3)
+  };
+}
+
+function createDimensionFilter(fieldName, value) {
+  return {
+    filter: {
+      fieldName,
+      stringFilter: {
+        matchType: "CONTAINS",
+        value,
+        caseSensitive: false
+      }
+    }
+  };
+}
+
+function getEventNameFilter() {
+  return {
+    filter: {
+      fieldName: "eventName",
+      inListFilter: {
+        values: TRACKED_DASHBOARD_EVENTS.map((event) => event.name)
+      }
+    }
+  };
+}
+
+function getSourceMeaning(sourceMedium = "", channelGroup = "") {
+  const source = String(sourceMedium).toLowerCase();
+  const channel = String(channelGroup).toLowerCase();
+
+  if (source.includes("naver")) return "네이버 검색/서비스에서 들어온 방문";
+  if (source.includes("google")) return "구글 검색 또는 구글 관련 유입";
+  if (source.includes("instagram")) return "인스타그램 프로필·링크 유입";
+  if (source.includes("(direct)") || source.includes("(none)")) {
+    return "주소 직접 입력 또는 출처 확인 불가";
+  }
+  if (channel.includes("organic")) return "검색 결과에서 들어온 방문";
+  if (channel.includes("referral")) return "다른 사이트 링크를 타고 들어온 방문";
+  if (channel.includes("social")) return "SNS에서 들어온 방문";
+  return "GA4가 분류한 유입 경로";
+}
+
+function mapSourceRows(report = {}, totalSessions = 0) {
+  return mapGaRows(report).map((row) => {
+    const sessions = Number(row.metrics.sessions || 0);
+    const activeUsers = Number(row.metrics.activeUsers || 0);
+    const sourceMedium = row.dimensions.sessionSourceMedium || "(not set)";
+    const channelGroup = row.dimensions.sessionPrimaryChannelGroup || "(not set)";
+
+    return {
+      sourceMedium,
+      channelGroup,
+      sessions,
+      activeUsers,
+      share: totalSessions ? sessions / totalSessions : 0,
+      meaning: getSourceMeaning(sourceMedium, channelGroup)
+    };
+  });
+}
+
+function mapLandingRows(report = {}) {
+  return mapGaRows(report).map((row) => ({
+    page: row.dimensions.landingPagePlusQueryString || "/",
+    sessions: Number(row.metrics.sessions || 0),
+    activeUsers: Number(row.metrics.activeUsers || 0),
+    engagementRate: Number(row.metrics.engagementRate || 0)
+  }));
+}
+
+function buildChannelRows(sources = [], totalSessions = 0) {
+  const channelMap = new Map();
+
+  sources.forEach((source) => {
+    const key = source.channelGroup || "(not set)";
+    const existing = channelMap.get(key) || {
+      channelGroup: key,
+      sessions: 0,
+      activeUsers: 0
+    };
+
+    existing.sessions += source.sessions;
+    existing.activeUsers += source.activeUsers;
+    channelMap.set(key, existing);
+  });
+
+  return [...channelMap.values()]
+    .map((channel) => ({
+      ...channel,
+      share: totalSessions ? channel.sessions / totalSessions : 0
+    }))
+    .sort((a, b) => b.sessions - a.sessions);
+}
+
+function formatSeriesLabel(key = "", granularity = "day") {
+  if (granularity === "hour") {
+    return `${String(key || "0").padStart(2, "0")}시`;
+  }
+
+  if (/^\d{8}$/.test(key)) {
+    return `${Number(key.slice(4, 6))}/${Number(key.slice(6, 8))}`;
+  }
+
+  return key || "-";
+}
+
+function buildSeriesRows(sessionReport = {}, eventSeriesReport = {}, range) {
+  const seriesDimension = range.granularity === "hour" ? "hour" : "date";
+  const seriesMap = new Map();
+
+  const ensurePoint = (key) => {
+    const safeKey = String(key || "");
+    if (!seriesMap.has(safeKey)) {
+      seriesMap.set(safeKey, {
+        key: safeKey,
+        label: formatSeriesLabel(safeKey, range.granularity),
+        sessions: 0,
+        activeUsers: 0,
+        orderClicks: 0,
+        consultClicks: 0,
+        totalActionClicks: 0
+      });
+    }
+
+    return seriesMap.get(safeKey);
+  };
+
+  if (range.granularity === "hour") {
+    Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0")).forEach(ensurePoint);
+  }
+
+  mapGaRows(sessionReport).forEach((row) => {
+    const point = ensurePoint(row.dimensions[seriesDimension]);
+    point.sessions += Number(row.metrics.sessions || 0);
+    point.activeUsers += Number(row.metrics.activeUsers || 0);
+  });
+
+  mapGaRows(eventSeriesReport).forEach((row) => {
+    const eventName = row.dimensions.eventName || "";
+    const point = ensurePoint(row.dimensions[seriesDimension]);
+    const count = Number(row.metrics.eventCount || 0);
+
+    if (eventName.startsWith("order_")) point.orderClicks += count;
+    if (eventName.startsWith("consult_")) point.consultClicks += count;
+    point.totalActionClicks += count;
+  });
+
+  return [...seriesMap.values()].sort((a, b) => a.key.localeCompare(b.key));
+}
+
+function mapEventRows(report = {}) {
+  const counts = new Map(TRACKED_DASHBOARD_EVENTS.map((event) => [event.name, 0]));
+
+  mapGaRows(report).forEach((row) => {
+    const eventName = row.dimensions.eventName || "";
+    counts.set(eventName, (counts.get(eventName) || 0) + Number(row.metrics.eventCount || 0));
+  });
+
+  return TRACKED_DASHBOARD_EVENTS.map((event) => ({
+    ...event,
+    count: counts.get(event.name) || 0
+  }));
+}
+
+function getSearchOverview(report = {}) {
+  const row = report.rows?.[0] || {};
+  return {
+    clicks: Number(row.clicks || 0),
+    impressions: Number(row.impressions || 0),
+    ctr: Number(row.ctr || 0),
+    position: Number(row.position || 0)
+  };
+}
+
+function getSearchInsight(row = {}) {
+  if (row.impressions >= 50 && row.ctr < 0.03) {
+    return "노출은 많은데 클릭률이 낮아요. 제목/설명 개선 후보";
+  }
+  if (row.position <= 5 && row.ctr < 0.08 && row.impressions > 0) {
+    return "상위권에 보이지만 클릭 설득이 약할 수 있어요";
+  }
+  if (row.position > 10 && row.impressions > 0) {
+    return "검색 노출은 있지만 순위 개선이 필요해요";
+  }
+  if (row.clicks > 0) return "실제 유입이 발생한 검색어";
+  return "조금 더 데이터가 쌓이면 판단하기 좋아요";
+}
+
+function mapSearchRows(report = {}, keyName) {
+  return (report.rows || []).map((row) => {
+    const item = {
+      [keyName]: row.keys?.[0] || "(not set)",
+      clicks: Number(row.clicks || 0),
+      impressions: Number(row.impressions || 0),
+      ctr: Number(row.ctr || 0),
+      position: Number(row.position || 0)
+    };
+
+    return {
+      ...item,
+      insight: getSearchInsight(item)
+    };
+  });
+}
+
+function getSearchOpportunities(rows = []) {
+  return rows
+    .filter((row) => row.impressions > 0)
+    .map((row) => ({
+      ...row,
+      opportunityScore: row.impressions * Math.max(0.01, 1 - row.ctr)
+    }))
+    .sort((a, b) => b.opportunityScore - a.opportunityScore)
+    .slice(0, 5);
+}
+
+function getDelta(current = 0, previous = 0) {
+  const currentValue = Number(current || 0);
+  const previousValue = Number(previous || 0);
+
+  return {
+    current: currentValue,
+    previous: previousValue,
+    change: currentValue - previousValue,
+    rate: previousValue ? (currentValue - previousValue) / previousValue : null
+  };
+}
+
+async function settleReports(requests) {
+  const entries = await Promise.all(
+    Object.entries(requests).map(async ([key, request]) => {
+      try {
+        return [key, { data: await request }];
+      } catch (error) {
+        return [key, { error: error.message || "데이터 조회 실패" }];
+      }
+    })
+  );
+
+  return Object.fromEntries(entries);
+}
+
+function getReport(reports, key) {
+  return reports[key]?.data || {};
+}
+
+function getReportErrors(reports) {
+  return Object.entries(reports)
+    .filter(([, result]) => result.error)
+    .map(([source, result]) => ({
+      source,
+      message: result.error
+    }));
+}
+
+async function buildDashboardPayload(range, dashboardConfig) {
+  const accessToken = await getGoogleAccessToken(dashboardConfig.serviceAccount);
+  const seriesDimension = range.granularity === "hour" ? "hour" : "date";
+  const eventFilter = getEventNameFilter();
+
+  const reports = await settleReports({
+    overview: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
       metrics: [
         { name: "sessions" },
         { name: "activeUsers" },
@@ -387,112 +741,232 @@ async function buildDashboardPayload(days, dashboardConfig) {
         { name: "engagementRate" }
       ]
     }),
-    fetchGaReport(accessToken, dashboardConfig.propertyId, {
-      dateRanges: gaDateRange,
+    previousOverview: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.previousGaDateRange,
+      metrics: [
+        { name: "sessions" },
+        { name: "activeUsers" },
+        { name: "engagedSessions" },
+        { name: "engagementRate" }
+      ]
+    }),
+    sources: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
       dimensions: [{ name: "sessionSourceMedium" }, { name: "sessionPrimaryChannelGroup" }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-      limit: 10
+      limit: 16
     }),
-    fetchGaReport(accessToken, dashboardConfig.propertyId, {
-      dateRanges: gaDateRange,
+    landingPages: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
       dimensions: [{ name: "landingPagePlusQueryString" }],
-      metrics: [{ name: "sessions" }, { name: "activeUsers" }],
+      metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "engagementRate" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: 12
+    }),
+    naverLandingPages: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
+      dimensions: [{ name: "landingPagePlusQueryString" }],
+      metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "engagementRate" }],
+      dimensionFilter: createDimensionFilter("sessionSourceMedium", "naver"),
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: 10
     }),
-    fetchGaReport(accessToken, dashboardConfig.propertyId, {
-      dateRanges: gaDateRange,
-      dimensions: [{ name: "date" }],
+    series: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
+      dimensions: [{ name: seriesDimension }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }],
-      orderBys: [{ dimension: { dimensionName: "date", orderType: "ALPHANUMERIC" } }]
+      orderBys: [{ dimension: { dimensionName: seriesDimension, orderType: "ALPHANUMERIC" } }]
     }),
-    fetchSearchConsoleReport(accessToken, dashboardConfig.searchConsoleSiteUrl, {
-      ...searchConsoleDateRange,
-      dimensions: ["query"],
-      rowLimit: 10
+    events: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
+      dimensions: [{ name: "eventName" }],
+      metrics: [{ name: "eventCount" }],
+      dimensionFilter: eventFilter,
+      orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+      limit: TRACKED_DASHBOARD_EVENTS.length
     }),
-    fetchSearchConsoleReport(accessToken, dashboardConfig.searchConsoleSiteUrl, {
-      ...searchConsoleDateRange,
-      dimensions: ["page"],
-      rowLimit: 10
-    })
-  ]);
+    previousEvents: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.previousGaDateRange,
+      dimensions: [{ name: "eventName" }],
+      metrics: [{ name: "eventCount" }],
+      dimensionFilter: eventFilter,
+      limit: TRACKED_DASHBOARD_EVENTS.length
+    }),
+    eventSeries: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
+      dimensions: [{ name: seriesDimension }, { name: "eventName" }],
+      metrics: [{ name: "eventCount" }],
+      dimensionFilter: eventFilter,
+      orderBys: [{ dimension: { dimensionName: seriesDimension, orderType: "ALPHANUMERIC" } }],
+      limit: 500
+    }),
+    devices: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
+      dimensions: [{ name: "deviceCategory" }],
+      metrics: [{ name: "sessions" }, { name: "activeUsers" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: 6
+    }),
+    searchOverview: fetchSearchConsoleReport(
+      accessToken,
+      dashboardConfig.searchConsoleSiteUrl,
+      getSearchConsoleRequest(range, range.searchConsoleDateRange, { rowLimit: 1 })
+    ),
+    previousSearchOverview: fetchSearchConsoleReport(
+      accessToken,
+      dashboardConfig.searchConsoleSiteUrl,
+      getSearchConsoleRequest(range, range.previousSearchConsoleDateRange, {
+        rowLimit: 1,
+        isPrevious: true
+      })
+    ),
+    queries: fetchSearchConsoleReport(
+      accessToken,
+      dashboardConfig.searchConsoleSiteUrl,
+      getSearchConsoleRequest(range, range.searchConsoleDateRange, {
+        dimensions: ["query"],
+        rowLimit: 20
+      })
+    ),
+    pages: fetchSearchConsoleReport(
+      accessToken,
+      dashboardConfig.searchConsoleSiteUrl,
+      getSearchConsoleRequest(range, range.searchConsoleDateRange, {
+        dimensions: ["page"],
+        rowLimit: 20
+      })
+    )
+  });
 
-  const overviewRow = overviewReport.rows?.[0]?.metricValues || [];
+  const overview = getOverviewMetrics(getReport(reports, "overview"));
+  const previousOverview = getOverviewMetrics(getReport(reports, "previousOverview"));
+  const sources = mapSourceRows(getReport(reports, "sources"), overview.sessions);
+  const naverSources = sources.filter((source) => isNaverSource(source.sourceMedium));
+  const landingPages = mapLandingRows(getReport(reports, "landingPages"));
+  const naverLandingPages = mapLandingRows(getReport(reports, "naverLandingPages"));
+  const channels = buildChannelRows(sources, overview.sessions);
+  const series = buildSeriesRows(getReport(reports, "series"), getReport(reports, "eventSeries"), range);
+  const events = mapEventRows(getReport(reports, "events"));
+  const previousEvents = mapEventRows(getReport(reports, "previousEvents"));
+  const searchOverview = getSearchOverview(getReport(reports, "searchOverview"));
+  const previousSearchOverview = getSearchOverview(getReport(reports, "previousSearchOverview"));
+  const queries = mapSearchRows(getReport(reports, "queries"), "query");
+  const pages = mapSearchRows(getReport(reports, "pages"), "page");
+  const searchOpportunities = getSearchOpportunities(queries);
+  const orderClicks = events
+    .filter((event) => event.type === "order")
+    .reduce((sum, event) => sum + event.count, 0);
+  const previousOrderClicks = previousEvents
+    .filter((event) => event.type === "order")
+    .reduce((sum, event) => sum + event.count, 0);
+  const consultClicks = events
+    .filter((event) => event.type === "consult")
+    .reduce((sum, event) => sum + event.count, 0);
+  const previousConsultClicks = previousEvents
+    .filter((event) => event.type === "consult")
+    .reduce((sum, event) => sum + event.count, 0);
+  const totalActionClicks = orderClicks + consultClicks;
+  const previousActionClicks = previousOrderClicks + previousConsultClicks;
+  const naverSessions = naverSources.reduce((sum, row) => sum + row.sessions, 0);
+  const naverActiveUsers = naverSources.reduce((sum, row) => sum + row.activeUsers, 0);
+  const reportErrors = getReportErrors(reports);
+
+  const summary = {
+    ...overview,
+    searchClicks: searchOverview.clicks,
+    searchImpressions: searchOverview.impressions,
+    searchCtr: searchOverview.ctr,
+    averagePosition: searchOverview.position,
+    orderClicks,
+    consultClicks,
+    totalActionClicks,
+    conversionSignalRate: overview.sessions ? totalActionClicks / overview.sessions : 0,
+    naverSessions,
+    naverActiveUsers
+  };
 
   return {
     generatedAt: new Date().toISOString(),
     range: {
-      days,
-      startDate: searchConsoleDateRange.startDate,
-      endDate: searchConsoleDateRange.endDate
+      key: range.key,
+      label: range.label,
+      days: range.days,
+      startDate: range.startDate,
+      endDate: range.endDate,
+      granularity: range.granularity,
+      isPartial: range.isPartial,
+      comparisonLabel: range.comparisonLabel
     },
+    summary,
+    delta: {
+      comparisonLabel: range.comparisonLabel,
+      sessions: getDelta(summary.sessions, previousOverview.sessions),
+      activeUsers: getDelta(summary.activeUsers, previousOverview.activeUsers),
+      searchClicks: getDelta(summary.searchClicks, previousSearchOverview.clicks),
+      searchImpressions: getDelta(summary.searchImpressions, previousSearchOverview.impressions),
+      orderClicks: getDelta(orderClicks, previousOrderClicks),
+      consultClicks: getDelta(consultClicks, previousConsultClicks),
+      totalActionClicks: getDelta(totalActionClicks, previousActionClicks)
+    },
+    series,
+    channels,
+    sources,
+    landingPages,
+    naver: {
+      sessions: naverSessions,
+      activeUsers: naverActiveUsers,
+      sources: naverSources,
+      landingPages: naverLandingPages
+    },
+    devices: mapGaRows(getReport(reports, "devices")).map((row) => ({
+      deviceCategory: row.dimensions.deviceCategory || "(not set)",
+      sessions: Number(row.metrics.sessions || 0),
+      activeUsers: Number(row.metrics.activeUsers || 0),
+      share: summary.sessions ? Number(row.metrics.sessions || 0) / summary.sessions : 0
+    })),
+    events,
+    search: {
+      siteUrl: dashboardConfig.searchConsoleSiteUrl,
+      isPartial: range.isPartial,
+      ...searchOverview,
+      queries,
+      pages,
+      opportunities: searchOpportunities,
+      error:
+        reports.searchOverview?.error ||
+        reports.queries?.error ||
+        reports.pages?.error ||
+        ""
+    },
+    errors: reportErrors,
     ga4: {
-      overview: {
-        sessions: Number(overviewRow[0]?.value || 0),
-        activeUsers: Number(overviewRow[1]?.value || 0),
-        engagedSessions: Number(overviewRow[2]?.value || 0),
-        engagementRate: Number(overviewRow[3]?.value || 0)
-      },
-      sources: mapGaRows(sourceReport).map((row) => ({
-        sourceMedium: row.dimensions.sessionSourceMedium || "(not set)",
-        channelGroup: row.dimensions.sessionPrimaryChannelGroup || "(not set)",
-        sessions: Number(row.metrics.sessions || 0),
-        activeUsers: Number(row.metrics.activeUsers || 0)
-      })),
-      landingPages: mapGaRows(landingReport).map((row) => ({
-        page: row.dimensions.landingPagePlusQueryString || "/",
-        sessions: Number(row.metrics.sessions || 0),
-        activeUsers: Number(row.metrics.activeUsers || 0)
-      })),
-      daily: mapGaRows(dailyReport).map((row) => ({
-        date: row.dimensions.date || "",
-        sessions: Number(row.metrics.sessions || 0),
-        activeUsers: Number(row.metrics.activeUsers || 0)
-      })),
-      naver: (() => {
-        const sourceRows = mapGaRows(sourceReport).map((row) => ({
-          sourceMedium: row.dimensions.sessionSourceMedium || "(not set)",
-          channelGroup: row.dimensions.sessionPrimaryChannelGroup || "(not set)",
-          sessions: Number(row.metrics.sessions || 0),
-          activeUsers: Number(row.metrics.activeUsers || 0)
-        }));
-
-        const landingRows = mapGaRows(landingReport).map((row) => ({
-          page: row.dimensions.landingPagePlusQueryString || "/",
-          sessions: Number(row.metrics.sessions || 0),
-          activeUsers: Number(row.metrics.activeUsers || 0)
-        }));
-
-        const naverSources = sourceRows.filter((row) => isNaverSource(row.sourceMedium));
-        const naverSessions = naverSources.reduce((sum, row) => sum + row.sessions, 0);
-        const naverUsers = naverSources.reduce((sum, row) => sum + row.activeUsers, 0);
-
-        return {
-          sessions: naverSessions,
-          activeUsers: naverUsers,
-          sources: naverSources,
-          landingPages: landingRows.filter((row) => row.page)
-        };
-      })()
+      overview,
+      sources,
+      landingPages,
+      daily: series
+        .filter((point) => range.granularity === "day")
+        .map((point) => ({
+          date: point.key,
+          sessions: point.sessions,
+          activeUsers: point.activeUsers
+        })),
+      naver: {
+        sessions: naverSessions,
+        activeUsers: naverActiveUsers,
+        sources: naverSources,
+        landingPages: naverLandingPages
+      }
     },
     searchConsole: {
       siteUrl: dashboardConfig.searchConsoleSiteUrl,
-      topQueries: (queryReport.rows || []).map((row) => ({
-        query: row.keys?.[0] || "(not set)",
-        clicks: row.clicks || 0,
-        impressions: row.impressions || 0,
-        ctr: row.ctr || 0,
-        position: row.position || 0
-      })),
-      topPages: (pageReport.rows || []).map((row) => ({
-        page: row.keys?.[0] || "(not set)",
-        clicks: row.clicks || 0,
-        impressions: row.impressions || 0,
-        ctr: row.ctr || 0,
-        position: row.position || 0
-      }))
+      topQueries: queries,
+      topPages: pages,
+      error:
+        reports.searchOverview?.error ||
+        reports.queries?.error ||
+        reports.pages?.error ||
+        ""
     }
   };
 }
@@ -525,10 +999,10 @@ async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
     return;
   }
 
-  const days = getDashboardDays(requestUrl);
+  const dashboardRange = getDashboardRange(requestUrl);
 
   try {
-    const payload = await buildDashboardPayload(days, dashboardConfig);
+    const payload = await buildDashboardPayload(dashboardRange, dashboardConfig);
     sendJson(res, 200, payload);
   } catch (error) {
     sendJson(res, 502, {

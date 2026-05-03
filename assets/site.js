@@ -316,6 +316,31 @@ if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid
   homeSearchInput.addEventListener("search", updateHomeSearchState);
 }
 
+const getDashboardEventNameForLink = (link) => {
+  const href = link?.href || "";
+
+  if (href.includes("pf.kakao.com/_QdCaK")) return "consult_kakao_click";
+  if (href.includes("thingmattersreserve-production.up.railway.app/brookie")) return "order_brookie_click";
+  if (href.includes("thingmattersreserve-production.up.railway.app/cookies")) return "order_cookies_click";
+  if (href.includes("thingmattersreserve-production.up.railway.app/lucky")) return "order_lucky_click";
+  return "";
+};
+
+document.addEventListener("click", (event) => {
+  const link = event.target.closest?.("a[href]");
+  const eventName = getDashboardEventNameForLink(link);
+
+  if (!eventName || typeof window.gtag !== "function") return;
+
+  window.gtag("event", eventName, {
+    event_category: "conversion_signal",
+    link_url: link.href,
+    link_text: link.textContent.trim().replace(/\s+/g, " ").slice(0, 80),
+    page_path: window.location.pathname,
+    transport_type: "beacon"
+  });
+});
+
 const siteScript =
   document.currentScript ||
   [...document.scripts].find((script) =>
