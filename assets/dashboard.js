@@ -395,6 +395,80 @@ function renderEvents(events = []) {
   });
 }
 
+function renderFunnel(payload) {
+  const target = document.querySelector("[data-dashboard-funnel]");
+  if (!target) return;
+
+  const summary = payload.summary || {};
+  const sessions = Number(summary.sessions || 0);
+  const orderClicks = Number(summary.orderClicks || 0);
+  const consultClicks = Number(summary.consultClicks || 0);
+  const totalActionClicks = Number(summary.totalActionClicks || 0);
+  const maxValue = Math.max(sessions, orderClicks, consultClicks, totalActionClicks, 1);
+  const steps = [
+    {
+      label: "방문",
+      value: sessions,
+      helper: "사이트에 들어온 전체 방문",
+      rate: 1
+    },
+    {
+      label: "바로주문 클릭",
+      value: orderClicks,
+      helper: "브루키·꾸덕쿠키·행운쿠키 주문 페이지 이동",
+      rate: sessions ? orderClicks / sessions : 0
+    },
+    {
+      label: "카카오 클릭",
+      value: consultClicks,
+      helper: "추천받기·단체 상담 버튼 클릭",
+      rate: sessions ? consultClicks / sessions : 0
+    },
+    {
+      label: "전체 전환 신호",
+      value: totalActionClicks,
+      helper: "주문 페이지 이동 + 상담 클릭 합계",
+      rate: sessions ? totalActionClicks / sessions : 0
+    }
+  ];
+
+  target.innerHTML = "";
+  steps.forEach((step, index) => {
+    const item = document.createElement("article");
+    item.className = "dashboard-funnel-step";
+
+    const head = document.createElement("div");
+    head.className = "dashboard-funnel-head";
+
+    const label = document.createElement("strong");
+    label.textContent = step.label;
+
+    const value = document.createElement("b");
+    value.textContent = formatNumber(step.value);
+
+    head.appendChild(label);
+    head.appendChild(value);
+
+    const track = document.createElement("div");
+    track.className = "dashboard-funnel-track";
+
+    const fill = document.createElement("div");
+    fill.className = "dashboard-funnel-fill";
+    fill.style.width = `${Math.max(step.value ? 6 : 0, Math.round((step.value / maxValue) * 100))}%`;
+
+    track.appendChild(fill);
+
+    const helper = document.createElement("span");
+    helper.textContent =
+      index === 0 ? step.helper : `${step.helper} · 방문 대비 ${formatPercent(step.rate)}`;
+
+    item.appendChild(head);
+    item.appendChild(track);
+    item.appendChild(helper);
+    target.appendChild(item);
+  });
+}
+
 function renderOpportunities(items = [], searchError = "") {
   const target = document.querySelector("[data-dashboard-opportunities]");
   if (!target) return;
@@ -470,6 +544,7 @@ function showDashboard(payload) {
 
   renderMetrics(payload);
   renderInsights(payload);
+  renderFunnel(payload);
   renderChart(payload.series || [], payload.range || {});
   renderEvents(payload.events || []);
   renderOpportunities(payload.search?.opportunities || [], payload.search?.error || "");

@@ -341,6 +341,135 @@ document.addEventListener("click", (event) => {
   });
 });
 
+const smartCtaRoot = document.querySelector(".theme-main");
+
+if (smartCtaRoot) {
+  const smartCtaStates = [
+    {
+      selector: "#mainpage-home",
+      title: "바로 주문 가능한 쿠키부터 보기",
+      subtitle: "사진 보고 고르면 상담용 견적서까지 만들 수 있어요.",
+      button: "바로 주문",
+      href: "#ready-order",
+      order: "바로주문",
+      kakao: "빠른상담"
+    },
+    {
+      selector: "#ready-order",
+      title: "지금 고를 수 있는 쿠키",
+      subtitle: "브루키, 꾸덕쿠키, 행운쿠키 중 먼저 골라보세요.",
+      button: "쿠키 고르기",
+      href: "#ready-order",
+      order: "쿠키고르기",
+      kakao: "상담가능"
+    },
+    {
+      selector: "#use-case-guide",
+      title: "상황에 맞는 쿠키 찾기",
+      subtitle: "생일, 결혼식, 기업 행사, 퇴사 선물 중 골라보세요.",
+      button: "상황별 추천",
+      href: "#use-case-guide",
+      order: "상황별추천",
+      kakao: "문의하기"
+    },
+    {
+      selector: "#actual-cases",
+      title: "비슷한 사례로 상담하기",
+      subtitle: "원하는 분위기와 수량을 카카오로 보내주세요.",
+      button: "비슷하게 상담하기",
+      href: "https://pf.kakao.com/_QdCaK/chat",
+      order: "사례상담",
+      kakao: "비슷하게"
+    },
+    {
+      selector: "#main-faq",
+      title: "헷갈리는 건 바로 물어보기",
+      subtitle: "수량, 일정, 픽업 가능 여부를 빠르게 확인해드려요.",
+      button: "카카오로 물어보기",
+      href: "https://pf.kakao.com/_QdCaK/chat",
+      order: "카카오문의",
+      kakao: "질문하기"
+    },
+    {
+      selector: "#final-cta",
+      title: "내 상황에 맞게 추천받기",
+      subtitle: "행사일, 수량, 용도만 알려주시면 돼요.",
+      button: "추천받기",
+      href: "https://pf.kakao.com/_QdCaK/chat",
+      order: "추천받기",
+      kakao: "빠른상담"
+    }
+  ]
+    .map((state) => ({ ...state, element: document.querySelector(state.selector) }))
+    .filter((state) => state.element);
+
+  const desktopTitle = document.querySelector("[data-smart-cta-title]");
+  const desktopSubtitle = document.querySelector("[data-smart-cta-subtitle]");
+  const desktopButton = document.querySelector(".theme-main .nm-float-cta .nm-btn");
+  const mobileOrderLink = document.querySelector(".nm-mobile-float-link--order");
+  const mobileKakaoLink = document.querySelector(".nm-mobile-float-link--kakao");
+  const mobileOrderLabel = document.querySelector("[data-smart-order-label]");
+  const mobileKakaoLabel = document.querySelector("[data-smart-kakao-label]");
+
+  const applySmartHref = (link, href) => {
+    if (!link || !href) return;
+    link.href = href;
+
+    if (/^https?:\/\//i.test(href)) {
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      return;
+    }
+
+    link.removeAttribute("target");
+    link.removeAttribute("rel");
+  };
+
+  const applySmartCtaState = (state) => {
+    if (!state) return;
+    if (desktopTitle) desktopTitle.textContent = state.title;
+    if (desktopSubtitle) desktopSubtitle.textContent = state.subtitle;
+    if (desktopButton) {
+      desktopButton.textContent = state.button;
+      applySmartHref(desktopButton, state.href);
+    }
+    if (mobileOrderLabel) mobileOrderLabel.textContent = state.order;
+    if (mobileKakaoLabel) mobileKakaoLabel.textContent = state.kakao;
+    if (mobileOrderLink) mobileOrderLink.setAttribute("aria-label", state.order);
+    if (mobileKakaoLink) mobileKakaoLink.setAttribute("aria-label", state.kakao);
+    applySmartHref(mobileOrderLink, state.href);
+  };
+
+  let smartCtaTicking = false;
+  let currentSmartCtaSelector = "";
+
+  const updateSmartCta = () => {
+    const scanLine = (window.innerHeight || 1) * 0.58;
+    const current =
+      smartCtaStates.find((state) => {
+        const rect = state.element.getBoundingClientRect();
+        return rect.top <= scanLine && rect.bottom >= scanLine;
+      }) || smartCtaStates[0];
+
+    if (current && current.selector !== currentSmartCtaSelector) {
+      currentSmartCtaSelector = current.selector;
+      applySmartCtaState(current);
+    }
+
+    smartCtaTicking = false;
+  };
+
+  const requestSmartCtaUpdate = () => {
+    if (smartCtaTicking) return;
+    smartCtaTicking = true;
+    window.requestAnimationFrame(updateSmartCta);
+  };
+
+  updateSmartCta();
+  window.addEventListener("scroll", requestSmartCtaUpdate, { passive: true });
+  window.addEventListener("resize", requestSmartCtaUpdate);
+}
+
 const siteScript =
   document.currentScript ||
   [...document.scripts].find((script) =>

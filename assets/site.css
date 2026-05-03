@@ -4438,6 +4438,46 @@ body.theme-main {
   line-height: 1.35;
 }
 
+.nm-main-trust {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--main-line);
+  border-bottom: 1px solid var(--main-line);
+  background: #ffffff;
+}
+
+.nm-main-trust-inner {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  padding: 0;
+  background: var(--main-line);
+}
+
+.nm-main-trust span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 14px 16px;
+  background: #ffffff;
+  color: var(--main-ink);
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.nm-main-trust span::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  border-radius: 999px;
+  background: var(--main-orange);
+  box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.14);
+}
+
 .nm-main-choice {
   background: rgba(65, 105, 225, 0.08);
 }
@@ -4466,12 +4506,17 @@ body.theme-main {
     border-color 0.24s ease;
 }
 
-.nm-main-choice-card--small {
+.nm-main-choice-card--gift,
+.nm-main-choice-card--farewell {
   border-color: rgba(255, 106, 0, 0.48);
 }
 
-.nm-main-choice-card--bulk {
+.nm-main-choice-card--brand {
   border-color: rgba(65, 105, 225, 0.48);
+}
+
+.nm-main-choice-card--wedding {
+  border-color: rgba(255, 199, 44, 0.7);
 }
 
 .nm-main-choice-card:hover,
@@ -4533,14 +4578,20 @@ body.theme-main {
   text-transform: lowercase;
 }
 
-.nm-main-choice-card--small .nm-main-choice-copy span {
+.nm-main-choice-card--gift .nm-main-choice-copy span,
+.nm-main-choice-card--farewell .nm-main-choice-copy span {
   background: rgba(255, 199, 44, 0.2);
   border-color: rgba(255, 106, 0, 0.34);
 }
 
-.nm-main-choice-card--bulk .nm-main-choice-copy span {
+.nm-main-choice-card--brand .nm-main-choice-copy span {
   background: rgba(65, 105, 225, 0.14);
   border-color: rgba(65, 105, 225, 0.34);
+}
+
+.nm-main-choice-card--wedding .nm-main-choice-copy span {
+  background: rgba(255, 199, 44, 0.28);
+  border-color: rgba(255, 199, 44, 0.5);
 }
 
 .nm-main-product-card:nth-child(1) .nm-main-product-copy span,
@@ -4741,6 +4792,28 @@ body.theme-main {
 
 .nm-main-order-card--lucky .nm-main-order-copy strong {
   color: #9a4d00;
+}
+
+.nm-main-order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.nm-main-order-meta li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--main-ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .nm-main-order-copy em {
@@ -4960,6 +5033,24 @@ body.theme-main {
   color: var(--main-ink);
   font-size: 14px;
   font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.nm-main-case-card small {
+  position: absolute;
+  left: 18px;
+  bottom: 64px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--main-orange);
+  color: #000000;
+  font-size: 12px;
+  font-weight: 950;
   line-height: 1;
   letter-spacing: 0;
 }
@@ -5629,6 +5720,43 @@ body.theme-main {
     display: none;
   }
 
+  .nm-main-trust {
+    overflow: hidden;
+  }
+
+  .nm-main-trust-inner {
+    display: flex;
+    width: calc(100% - 24px);
+    gap: 8px;
+    overflow-x: auto;
+    margin: 0 auto;
+    padding: 10px 0;
+    background: transparent;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .nm-main-trust-inner::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nm-main-trust span {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    min-height: 42px;
+    padding: 10px 13px;
+    border: 1px solid var(--main-line);
+    border-radius: 999px;
+    font-size: 12px;
+    scroll-snap-align: start;
+  }
+
+  .nm-main-trust span::before {
+    width: 6px;
+    height: 6px;
+    margin-right: 8px;
+  }
+
   .nm-small-hero {
     min-height: auto;
   }
@@ -5856,6 +5984,17 @@ body.theme-main {
     line-height: 1.35;
   }
 
+  .nm-main-order-meta {
+    gap: 4px;
+    margin: 10px 0 12px;
+  }
+
+  .nm-main-order-meta li {
+    min-height: 22px;
+    padding: 5px 7px;
+    font-size: 9px;
+  }
+
   .nm-main-order-copy em {
     width: 100%;
     min-height: 34px;
@@ -5925,6 +6064,22 @@ body.theme-main {
     flex: 0 0 78vw;
     min-height: 320px;
     scroll-snap-align: start;
+  }
+
+  .nm-main-case-card small {
+    left: 14px;
+    bottom: 58px;
+    min-height: 26px;
+    padding: 6px 9px;
+    font-size: 10px;
+  }
+
+  .nm-main-case-card span {
+    left: 14px;
+    bottom: 14px;
+    min-height: 34px;
+    padding: 8px 12px;
+    font-size: 12px;
   }
 
   .nm-main-contact-inner {
