@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "Static landing page for nothingmatters",
   "scripts": {
+    "schema:build": "node scripts/generate-jsonld.mjs",
+    "schema:check": "node scripts/generate-jsonld.mjs --check",
     "start": "node server.js"
   }
 }

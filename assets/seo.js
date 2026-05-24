@@ -1,4 +1,8 @@
 (() => {
+  if (document.querySelector('script[type="application/ld+json"][data-nm-schema="static"]')) {
+    return;
+  }
+
   const SITE_URL = "https://nothingmatters.co.kr";
   const ORGANIZATION_ID = `${SITE_URL}/#organization`;
   const LOCAL_BUSINESS_ID = `${SITE_URL}/#localbusiness`;
