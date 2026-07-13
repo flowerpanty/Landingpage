@@ -85,7 +85,13 @@ const MIME_TYPES = {
 };
 
 function resolvePath(urlPathname) {
-  let cleanPath = decodeURIComponent(urlPathname);
+  let cleanPath;
+  try {
+    cleanPath = decodeURIComponent(urlPathname);
+  } catch (error) {
+    return null;
+  }
+
   if (cleanPath.endsWith("/")) {
     cleanPath = `${cleanPath}index.html`;
   }
