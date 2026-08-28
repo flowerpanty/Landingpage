@@ -26,7 +26,8 @@
 - Korean name: 낫띵메터스
 - Contact phone: 010-2866-7976
 - Contact email: eddiefactory@naver.com
-- Pickup address: 서울특별시 성동구 상원12길 19 1층
+- Pickup address: 서울특별시 강서구 송정로 25 1층 낫띵메터스
+- Nearby areas: 공항동, 김포공항, 송정역, 마곡
 - Fulfillment: in-store pickup or vehicle quick consultation
 - Shipping: no general parcel shipping
 
@@ -34,11 +35,13 @@
 - small handmade cookie gifts
 - wedding favors
 - corporate event snacks
+- Magok corporate event gifts and company favors
 - kindergarten or school birthday gifts
 - retirement, promotion, and celebration gifts
 - custom message dessert orders
 - dessert gift sets and premium cookie gifts
 - lucky or cheering cookie gifts
+- Gimpo Airport and Songjeong Station pickup dessert gifts
 
 ## Main page routing
 - home: hub-style main page for choosing between small gifts and bulk/event orders

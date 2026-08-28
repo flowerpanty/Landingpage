@@ -61,6 +61,15 @@ const TRACKED_DASHBOARD_EVENTS = [
   }
 ];
 
+const LEGACY_PRODUCT_REDIRECTS = {
+  "/brookie": "/products/custom-brownie-cookie/",
+  "/brookie.html": "/products/custom-brownie-cookie/",
+  "/cookies": "/products/handmade-cookie/",
+  "/cookies.html": "/products/handmade-cookie/",
+  "/lucky": "/products/lucky-cookie/",
+  "/lucky.html": "/products/lucky-cookie/",
+};
+
 let googleTokenCache = {
   accessToken: "",
   expiresAt: 0
@@ -1049,6 +1058,17 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(301, {
       Location: redirectUrl.toString(),
       "Cache-Control": "public, max-age=3600"
+    });
+    res.end();
+    return;
+  }
+
+  const legacyRedirectPath = LEGACY_PRODUCT_REDIRECTS[requestUrl.pathname];
+  if (legacyRedirectPath) {
+    const redirectUrl = new URL(legacyRedirectPath, `https://${CANONICAL_HOST}`);
+    res.writeHead(301, {
+      Location: redirectUrl.toString(),
+      "Cache-Control": "public, max-age=86400",
     });
     res.end();
     return;

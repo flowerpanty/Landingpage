@@ -7,6 +7,21 @@
   const ORGANIZATION_ID = `${SITE_URL}/#organization`;
   const LOCAL_BUSINESS_ID = `${SITE_URL}/#localbusiness`;
   const WEBSITE_ID = `${SITE_URL}/#website`;
+  const NAVER_MAP_URL =
+    "https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025";
+  const BUSINESS_SAME_AS = [
+    "https://pf.kakao.com/_QdCaK",
+    "https://talk.naver.com/profile/c/nothingmatters",
+    "https://blog.nothingmatters.co.kr/",
+    "https://nothingmatters.kr/",
+  ];
+  const LOCAL_SERVICE_AREAS = [
+    { "@type": "AdministrativeArea", name: "서울특별시 강서구" },
+    { "@type": "Place", name: "공항동" },
+    { "@type": "Place", name: "김포공항" },
+    { "@type": "Place", name: "송정역" },
+    { "@type": "Place", name: "마곡" },
+  ];
 
   const cleanText = (value = "") =>
     value.replace(/\s+/g, " ").replace(/[＋+−]/g, "").trim();
@@ -63,14 +78,15 @@
     url: SITE_URL,
     logo: absoluteUrl("/images/heart-badge.png"),
     image: absoluteUrl("/images/og-consult-cookie.png"),
+    description:
+      "서울 강서구 공항동에서 답례품 쿠키, 디저트 선물, 기업행사 선물과 결혼식 답례쿠키를 예약 제작하는 낫띵메터스입니다.",
     email: "eddiefactory@naver.com",
     telephone: "+82-10-2866-7976",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "상원12길 19 1층",
-      addressLocality: "성동구",
+      streetAddress: "송정로 25 1층",
+      addressLocality: "강서구",
       addressRegion: "서울특별시",
-      postalCode: "04780",
       addressCountry: "KR",
     },
     contactPoint: [
@@ -83,7 +99,8 @@
         availableLanguage: ["ko-KR"],
       },
     ],
-    areaServed: ["KR"],
+    areaServed: LOCAL_SERVICE_AREAS,
+    sameAs: BUSINESS_SAME_AS,
   };
 
   const localBusiness = {
@@ -93,23 +110,21 @@
     alternateName: "낫띵메터스",
     url: SITE_URL,
     image: absoluteUrl("/images/og-consult-cookie.png"),
+    description:
+      "김포공항과 송정역 인근 공항동 수제쿠키 공방으로, 마곡 기업행사와 결혼식 답례품 주문을 상담합니다.",
     email: "eddiefactory@naver.com",
     telephone: "+82-10-2866-7976",
     priceRange: "$$",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "상원12길 19 1층",
-      addressLocality: "성동구",
+      streetAddress: "송정로 25 1층",
+      addressLocality: "강서구",
       addressRegion: "서울특별시",
-      postalCode: "04780",
       addressCountry: "KR",
     },
-    areaServed: [
-      {
-        "@type": "Country",
-        name: "KR",
-      },
-    ],
+    areaServed: LOCAL_SERVICE_AREAS,
+    hasMap: NAVER_MAP_URL,
+    sameAs: BUSINESS_SAME_AS,
     parentOrganization: {
       "@id": ORGANIZATION_ID,
     },
