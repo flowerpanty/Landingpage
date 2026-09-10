@@ -316,7 +316,7 @@ document.addEventListener("click", (event) => {
 
 const mobileBottomNav = document.querySelector(".nm-mobile-bottom-nav");
 const inlineCtaRegions = document.querySelectorAll(
-  ".nm-main-hero-actions, .nm-main-order-card, .nm-main-custom-action"
+  ".nm-main-hero-actions, .nm-main-order-card, .nm-main-custom-action, .showroom-detail-actions, .showroom-final-inner"
 );
 
 if (mobileBottomNav && inlineCtaRegions.length && "IntersectionObserver" in window) {

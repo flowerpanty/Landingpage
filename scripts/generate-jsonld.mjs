@@ -24,10 +24,13 @@ const LOCAL_SERVICE_AREAS = [
 ];
 const STATIC_SCHEMA_REGEX =
   /\n?\s*<script type="application\/ld\+json" data-nm-schema="static">[\s\S]*?<\/script>\n?/;
+const PRODUCT_CATALOG = JSON.parse(
+  fs.readFileSync(path.join(ROOT, "data/products.json"), "utf8")
+);
 
 const isCheckMode = process.argv.includes("--check");
 
-const PRODUCT_META = {
+const LEGACY_PRODUCT_META = {
   "/products/brownie-cookie/": {
     name: "nothingmatters 브루키 / 브라우니쿠키",
     lowPrice: 7800,
@@ -54,11 +57,25 @@ const PRODUCT_META = {
   },
 };
 
+const PRODUCT_META = {
+  ...LEGACY_PRODUCT_META,
+  ...Object.fromEntries(
+    PRODUCT_CATALOG.map((product) => [
+      product.detailPath,
+      {
+        name: `nothingmatters ${product.name}`,
+        price: product.price,
+        lowPrice: product.lowPrice,
+        minOrder: product.minOrder,
+        category: product.category,
+      },
+    ])
+  ),
+};
+
 const ITEM_LISTS = {
   "/": [
-    ["나만의 브루키 만들기", "https://thingmattersreserve-production.up.railway.app/brookie"],
-    ["수제꾸덕쿠키 주문하기", "https://thingmattersreserve-production.up.railway.app/cookies"],
-    ["행운쿠키 주문하기", "https://thingmattersreserve-production.up.railway.app/lucky"],
+    ...PRODUCT_CATALOG.map((product) => [product.name, product.detailPath]),
     ["결혼식 답례품 쿠키 가이드", "/guides/wedding-favor-cookie/"],
     ["기업행사 쿠키 가이드", "/guides/corporate-event-cookie/"],
     ["소량 선물 쿠키 고르기", "/small-gift/"],
@@ -91,7 +108,7 @@ const organization = {
   name: "nothingmatters",
   alternateName: "낫띵메터스",
   url: SITE_URL,
-  logo: `${SITE_URL}/images/heart-badge.png`,
+  logo: `${SITE_URL}/images/nm-bear-mark.svg`,
   image: `${SITE_URL}/images/og-consult-cookie.png`,
   description:
     "서울 강서구 공항동에서 답례품 쿠키, 디저트 선물, 기업행사 선물과 결혼식 답례쿠키를 예약 제작하는 낫띵메터스입니다.",

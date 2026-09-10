@@ -60,6 +60,44 @@ const TRACKED_DASHBOARD_EVENTS = [
     description: "행운쿠키 주문하기 클릭"
   }
 ];
+const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;
+const DEFAULT_GALLERY_ITEMS = [
+  {
+    id: "default-handmade",
+    src: "/images/case-handmade-cookie.jpeg",
+    caption: "귀여운 표정을 고른 작은 선물",
+    href: "/products/handmade-cookie/",
+    userUploaded: false
+  },
+  {
+    id: "default-wedding",
+    src: "/images/case-wedding-favor.jpeg",
+    caption: "결혼식 날 건넨 감사 쿠키",
+    href: "/guides/wedding-favor-cookie/",
+    userUploaded: false
+  },
+  {
+    id: "default-corporate",
+    src: "/images/case-corporate-favor.jpeg",
+    caption: "브랜드 행사에 맞춘 단체 구성",
+    href: "/guides/corporate-event-cookie/",
+    userUploaded: false
+  },
+  {
+    id: "default-lucky",
+    src: "/images/case-lucky-cookie.jpeg",
+    caption: "응원하는 마음을 담은 행운쿠키",
+    href: "/products/lucky-cookie/",
+    userUploaded: false
+  },
+  {
+    id: "default-brownie",
+    src: "/images/work-new-01.jpg",
+    caption: "짧은 문구를 더한 브라우니",
+    href: "/products/brownie-cookie/",
+    userUploaded: false
+  }
+];
 
 const LEGACY_PRODUCT_REDIRECTS = {
   "/brookie": "/products/custom-brownie-cookie/",
@@ -328,6 +366,197 @@ function sendJson(res, statusCode, payload) {
     "Content-Length": Buffer.byteLength(body)
   });
   res.end(body);
+}
+
+function getGalleryStorageDir() {
+  return path.resolve(process.env.GALLERY_DATA_DIR || path.join(ROOT, "data", "gallery"));
+}
+
+function getGalleryManifestPath() {
+  return path.join(getGalleryStorageDir(), "manifest.json");
+}
+
+function ensureGalleryStorage() {
+  fs.mkdirSync(getGalleryStorageDir(), { recursive: true });
+}
+
+function readGalleryManifest() {
+  const manifestPath = getGalleryManifestPath();
+  if (!fs.existsSync(manifestPath)) return [];
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeGalleryManifest(items) {
+  ensureGalleryStorage();
+  const manifestPath = getGalleryManifestPath();
+  const temporaryPath = `${manifestPath}.${process.pid}.tmp`;
+  fs.writeFileSync(temporaryPath, `${JSON.stringify(items, null, 2)}\n`);
+  fs.renameSync(temporaryPath, manifestPath);
+}
+
+function isGalleryAdminAuthorized(req) {
+  const expectedToken = (process.env.GALLERY_ADMIN_TOKEN || "").trim();
+  const suppliedToken = String(req.headers["x-gallery-admin-token"] || "").trim();
+  if (!expectedToken || !suppliedToken || expectedToken.length !== suppliedToken.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expectedToken), Buffer.from(suppliedToken));
+}
+
+function readRequestBody(req, limitBytes) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let totalBytes = 0;
+
+    req.on("data", (chunk) => {
+      totalBytes += chunk.length;
+      if (totalBytes > limitBytes) {
+        reject(new Error("payload_too_large"));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("error", reject);
+  });
+}
+
+function normalizeGalleryHref(value) {
+  const href = String(value || "").trim();
+  if (!href) return "#actual-cases";
+  if (/^(https?:\/\/|\/|#)/i.test(href)) return href.slice(0, 500);
+  return `/${href.replace(/^\.\//, "").slice(0, 498)}`;
+}
+
+function decodeGalleryPathSegment(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch (error) {
+    return "";
+  }
+}
+
+async function handleGalleryApi(req, res, requestUrl) {
+  if (req.method === "GET" && requestUrl.pathname === "/api/gallery") {
+    const customItems = readGalleryManifest();
+    sendJson(res, 200, {
+      items: customItems.length ? [...customItems].reverse() : DEFAULT_GALLERY_ITEMS,
+      customCount: customItems.length,
+      uploadEnabled: Boolean((process.env.GALLERY_ADMIN_TOKEN || "").trim())
+    });
+    return;
+  }
+
+  if (!isGalleryAdminAuthorized(req)) {
+    sendJson(res, process.env.GALLERY_ADMIN_TOKEN ? 403 : 503, {
+      error: process.env.GALLERY_ADMIN_TOKEN ? "gallery_forbidden" : "gallery_not_configured",
+      message: process.env.GALLERY_ADMIN_TOKEN
+        ? "관리자 키가 올바르지 않습니다."
+        : "GALLERY_ADMIN_TOKEN 환경변수를 먼저 설정해주세요."
+    });
+    return;
+  }
+
+  if (req.method === "POST" && requestUrl.pathname === "/api/gallery") {
+    try {
+      const rawBody = await readRequestBody(req, MAX_GALLERY_UPLOAD_BYTES * 1.5);
+      const payload = JSON.parse(rawBody);
+      const match = String(payload.dataUrl || "").match(
+        /^data:image\/(jpeg|png|webp);base64,([a-z0-9+/=]+)$/i
+      );
+
+      if (!match) {
+        sendJson(res, 400, { error: "invalid_image", message: "JPG, PNG, WEBP 이미지만 올릴 수 있어요." });
+        return;
+      }
+
+      const imageBuffer = Buffer.from(match[2], "base64");
+      if (!imageBuffer.length || imageBuffer.length > MAX_GALLERY_UPLOAD_BYTES) {
+        sendJson(res, 413, { error: "image_too_large", message: "이미지는 8MB 이하로 올려주세요." });
+        return;
+      }
+
+      ensureGalleryStorage();
+      const extension = match[1].toLowerCase() === "jpeg" ? "jpg" : match[1].toLowerCase();
+      const filename = `${Date.now()}-${crypto.randomBytes(5).toString("hex")}.${extension}`;
+      const id = crypto.randomUUID();
+      fs.writeFileSync(path.join(getGalleryStorageDir(), filename), imageBuffer);
+
+      const items = readGalleryManifest();
+      const item = {
+        id,
+        filename,
+        src: `/gallery-media/${filename}`,
+        caption: String(payload.caption || "새로 만든 쿠키").trim().slice(0, 80),
+        href: normalizeGalleryHref(payload.href),
+        createdAt: new Date().toISOString(),
+        userUploaded: true
+      };
+      items.push(item);
+      writeGalleryManifest(items);
+      sendJson(res, 201, { item });
+    } catch (error) {
+      const statusCode = error.message === "payload_too_large" ? 413 : 400;
+      sendJson(res, statusCode, {
+        error: error.message === "payload_too_large" ? "payload_too_large" : "invalid_request",
+        message: statusCode === 413 ? "업로드 파일이 너무 큽니다." : "업로드 요청을 확인해주세요."
+      });
+    }
+    return;
+  }
+
+  if (req.method === "DELETE" && requestUrl.pathname.startsWith("/api/gallery/")) {
+    const id = decodeGalleryPathSegment(requestUrl.pathname.slice("/api/gallery/".length));
+    const items = readGalleryManifest();
+    const item = items.find((candidate) => candidate.id === id);
+
+    if (!item) {
+      sendJson(res, 404, { error: "gallery_item_not_found" });
+      return;
+    }
+
+    const nextItems = items.filter((candidate) => candidate.id !== id);
+    const imagePath = path.join(getGalleryStorageDir(), path.basename(item.filename || ""));
+    if (item.filename && fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+    writeGalleryManifest(nextItems);
+    sendJson(res, 200, { deleted: id });
+    return;
+  }
+
+  sendJson(res, 405, { error: "method_not_allowed" });
+}
+
+function handleGalleryMedia(req, res, requestUrl) {
+  const decodedFilename = decodeGalleryPathSegment(
+    requestUrl.pathname.slice("/gallery-media/".length)
+  );
+  const filename = path.basename(decodedFilename);
+  const filePath = path.join(getGalleryStorageDir(), filename);
+
+  if (!filename || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Not Found");
+    return;
+  }
+
+  const stat = fs.statSync(filePath);
+  const contentType = MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
+  res.writeHead(200, {
+    "Content-Type": contentType,
+    "Content-Length": stat.size,
+    "Cache-Control": "public, max-age=31536000, immutable"
+  });
+  if (req.method === "HEAD") {
+    res.end();
+    return;
+  }
+  fs.createReadStream(filePath).pipe(res);
 }
 
 function parseBasicAuthHeader(headerValue) {
@@ -1028,12 +1257,6 @@ async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.method !== "GET" && req.method !== "HEAD") {
-    res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("Method Not Allowed");
-    return;
-  }
-
   const requestUrl = new URL(req.url || "/", "http://localhost");
   const dashboardConfig = getDashboardConfig();
   const forwardedHost = getFirstHeaderValue(req.headers["x-forwarded-host"]);
@@ -1071,6 +1294,25 @@ const server = http.createServer(async (req, res) => {
       "Cache-Control": "public, max-age=86400",
     });
     res.end();
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/gallery" || requestUrl.pathname.startsWith("/api/gallery/")) {
+    await handleGalleryApi(req, res, requestUrl);
+    return;
+  }
+
+  if (
+    requestUrl.pathname.startsWith("/gallery-media/") &&
+    (req.method === "GET" || req.method === "HEAD")
+  ) {
+    handleGalleryMedia(req, res, requestUrl);
+    return;
+  }
+
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Method Not Allowed");
     return;
   }
 

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <base href="../" />
+  <title>NOTHING MATTERS | 브루키</title>
+  <meta name="description" content="꾸덕한 브라우니와 쿠키 식감을 한 번에 즐기는 NOTHING MATTERS 브루키 제품 소개 페이지" />
+  <style>
+    :root{
+      --ink:#111111;
+      --paper:#FFF9EE;
+      --cream:#FFF4CF;
+      --yellow:#FFD75E;
+      --pink:#FF8FB1;
+      --blue:#5EC8FF;
+      --brown:#8B5A3C;
+      --cocoa:#6B3F2D;
+      --line:3px;
+      --shadow:0 9px 0 rgba(17,17,17,.14);
+      --shadow-lg:0 12px 0 rgba(17,17,17,.17);
+      --round:28px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--ink);
+      background:var(--paper);
+      font-family:"Arial Rounded MT Bold","Trebuchet MS","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    }
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+    .paper-dots{
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(17,17,17,.07) 1px, transparent 0),
+        linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0));
+      background-size:18px 18px,100% 100%;
+    }
+    .wrap{width:min(1180px,calc(100% - 40px));margin:0 auto}
+    .breadcrumb{padding:20px 0 14px;font-size:13px;font-weight:800;color:rgba(17,17,17,.6)}
+    .breadcrumb span{margin:0 8px}
+    .hero-shell{padding-bottom:48px}
+    .hero-visual{
+      position:relative;
+      min-height:520px;
+      overflow:hidden;
+      border:var(--line) solid var(--ink);
+      border-radius:30px;
+      background:linear-gradient(135deg,#D7C1A7 0%,#F4E7D8 40%,#A67C62 100%);
+      box-shadow:var(--shadow-lg);
+    }
+    .hero-visual::before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 24% 20%,rgba(255,255,255,.5),transparent 26%),
+        linear-gradient(110deg,rgba(255,255,255,.18),transparent 40%);
+      pointer-events:none;
+    }
+    .photo-slot{position:relative;overflow:hidden;background:#eee}
+    .photo-slot img{width:100%;height:100%;object-fit:cover;display:block}
+    .photo-slot.is-empty::after{
+      content:attr(data-label);
+      position:absolute;inset:0;display:grid;place-items:center;
+      color:rgba(17,17,17,.58);font-size:14px;font-weight:900;letter-spacing:.04em;
+      background:
+        linear-gradient(135deg,rgba(255,255,255,.5),rgba(255,255,255,.05)),
+        repeating-linear-gradient(-45deg,rgba(17,17,17,.04) 0 10px,transparent 10px 20px);
+    }
+    .hero-photo{position:absolute;inset:0}
+    .hero-badge{
+      position:absolute;left:30px;top:28px;z-index:3;
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border:var(--line) solid var(--ink);border-radius:999px;background:white;
+      font-size:12px;font-weight:900;letter-spacing:.12em;box-shadow:0 7px 0 rgba(17,17,17,.13)
+    }
+    .hero-doodle{
+      position:absolute;right:34px;top:34px;z-index:3;
+      color:white;text-align:right;font-size:36px;line-height:.98;font-weight:900;letter-spacing:.02em;
+      transform:rotate(-4deg);text-shadow:0 2px 0 rgba(0,0,0,.08)
+    }
+    .hero-doodle small{font-size:18px;display:block;margin-top:10px}
+    .hero-note{
+      position:absolute;right:36px;bottom:34px;z-index:3;
+      max-width:250px;background:#fff;border:var(--line) solid var(--ink);border-radius:50% 44% 48% 52%;
+      padding:19px 22px;font-size:16px;font-weight:900;line-height:1.35;transform:rotate(3deg);text-align:center;
+      box-shadow:0 7px 0 rgba(17,17,17,.12)
+    }
+    .intro{display:grid;grid-template-columns:1.12fr .88fr;gap:44px;align-items:start;padding:44px 0 18px}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.14em;font-weight:900;color:rgba(17,17,17,.58)}
+    .title-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px}
+    h1{font-size:58px;line-height:.95;letter-spacing:-.06em;margin:0;font-weight:900}
+    .new{display:inline-flex;align-items:center;justify-content:center;padding:8px 13px;border:var(--line) solid var(--ink);border-radius:999px;background:var(--pink);font-size:13px;font-weight:900;box-shadow:0 5px 0 rgba(17,17,17,.12)}
+    .headline{font-size:25px;line-height:1.3;font-weight:900;margin:20px 0 12px;letter-spacing:-.03em}
+    .copy{font-size:17px;line-height:1.75;font-weight:700;color:rgba(17,17,17,.72);margin:0;word-break:keep-all}
+    .intro-card{
+      border:var(--line) solid var(--ink);border-radius:26px;background:var(--cream);padding:24px;box-shadow:var(--shadow);
+    }
+    .price-line{display:flex;justify-content:space-between;gap:14px;align-items:end;padding-bottom:18px;border-bottom:2px dashed rgba(17,17,17,.2)}
+    .price-line span{font-size:13px;font-weight:900;color:rgba(17,17,17,.55)}
+    .price-line strong{font-size:34px;letter-spacing:-.04em}
+    .specs{display:grid;gap:12px;margin-top:18px}
+    .spec{display:flex;justify-content:space-between;gap:20px;font-size:14px;font-weight:900}
+    .spec b{color:rgba(17,17,17,.55)}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 22px;border:var(--line) solid var(--ink);border-radius:999px;font-size:14px;font-weight:900;box-shadow:0 7px 0 rgba(17,17,17,.14);transition:.18s transform}
+    .btn:hover{transform:translateY(-3px)}
+    .btn.dark{background:var(--ink);color:#fff}.btn.white{background:#fff}.btn.pink{background:var(--pink)}
+    .section{padding:76px 0}
+    .section-title{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:32px}
+    .section-title h2{font-size:42px;line-height:1;letter-spacing:-.05em;margin:0;font-weight:900}
+    .section-title p{margin:0;max-width:540px;font-size:16px;line-height:1.6;font-weight:700;color:rgba(17,17,17,.64)}
+    .features{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .feature{border:var(--line) solid var(--ink);border-radius:25px;background:#fff;padding:22px 18px;box-shadow:0 8px 0 rgba(17,17,17,.12);min-height:190px}
+    .feature:nth-child(1){background:#FFF4CF}.feature:nth-child(2){background:#FFE8F1}.feature:nth-child(3){background:#E9F7FF}.feature:nth-child(4){background:#FFF7D1}
+    .iconbox{width:50px;height:50px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:#fff;margin-bottom:16px}
+    .iconbox svg{width:25px;height:25px;stroke-width:2.2}
+    .feature h3{font-size:19px;line-height:1.2;margin:0 0 9px;font-weight:900;letter-spacing:-.03em}
+    .feature p{font-size:14px;line-height:1.55;font-weight:700;margin:0;color:rgba(17,17,17,.65)}
+    .gallery-section{border-top:4px solid var(--ink);border-bottom:4px solid var(--ink);background:var(--yellow)}
+    .moment-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .moment-tabs::-webkit-scrollbar{display:none}
+    .moment-tab{flex:0 0 auto;min-height:44px;padding:0 16px;border:2px solid var(--ink);border-radius:999px;background:#fff;font-size:13px;font-weight:900;letter-spacing:-.03em;box-shadow:0 5px 0 rgba(17,17,17,.12);cursor:pointer;transition:.18s transform,.18s background}
+    .moment-tab:hover{transform:translateY(-2px)}
+    .moment-tab.is-active{background:var(--pink)}
+    .moment-panel{display:none;margin-top:20px}
+    .moment-panel.is-active{display:block}
+    .moment-panel-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:14px}
+    .moment-panel-head h3{margin:0;font-size:26px;line-height:1.08;letter-spacing:-.04em}
+    .moment-panel-head p{margin:0;max-width:620px;font-size:14px;line-height:1.55;font-weight:700;color:rgba(17,17,17,.66)}
+    .moment-slider-shell{position:relative}
+    .moment-slider{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(270px,32%);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding:6px 4px 18px;-webkit-overflow-scrolling:touch}
+    .moment-slider::-webkit-scrollbar{display:none}
+    .moment-card{scroll-snap-align:start;position:relative;border:var(--line) solid var(--ink);border-radius:24px;background:#fff;padding:9px;box-shadow:var(--shadow);overflow:hidden}
+    .moment-card:nth-child(3n+2){transform:rotate(1deg)}
+    .moment-card:nth-child(3n){transform:rotate(-.8deg)}
+    .moment-card .photo-slot{aspect-ratio:4/5;border-radius:17px;background:#eadfd5}
+    .moment-card .caption{padding:12px 6px 5px;font-size:14px;line-height:1.35;font-weight:900;text-align:center;word-break:keep-all}
+    .moment-nav{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+    .moment-arrow{width:44px;height:44px;border:2px solid var(--ink);border-radius:50%;background:#fff;font-size:20px;font-weight:900;box-shadow:0 5px 0 rgba(17,17,17,.12);cursor:pointer;transition:.18s transform}
+    .moment-arrow:hover{transform:translateY(-2px)}
+    .moment-hint{display:none;margin-top:4px;font-size:11px;font-weight:900;color:rgba(17,17,17,.54);text-align:center}
+    .recommend-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+    .checklist{display:grid;gap:14px}
+    .check{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:900}
+    .check i{width:25px;height:25px;border:2px solid var(--ink);border-radius:6px;background:white;display:grid;place-items:center;font-style:normal;box-shadow:0 3px 0 rgba(17,17,17,.1)}
+    .check i::after{content:"✓";font-size:17px}
+    .speech{
+      border:var(--line) solid var(--ink);border-radius:32px;background:white;padding:30px;box-shadow:var(--shadow-lg);position:relative
+    }
+    .speech::after{content:"";position:absolute;right:40px;bottom:-18px;width:30px;height:30px;background:white;border-right:var(--line) solid var(--ink);border-bottom:var(--line) solid var(--ink);transform:rotate(45deg)}
+    .speech b{display:block;font-size:27px;line-height:1.15;letter-spacing:-.04em;margin-bottom:13px}
+    .speech p{margin:0;font-size:15px;line-height:1.65;font-weight:700;color:rgba(17,17,17,.66)}
+    .info-strip{background:var(--ink);color:#fff;border-top:4px solid var(--ink);border-bottom:4px solid var(--ink)}
+    .strip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+    .strip-item{padding:28px 22px;border-right:1px solid rgba(255,255,255,.18)}
+    .strip-item:last-child{border-right:0}
+    .strip-item small{display:block;color:rgba(255,255,255,.55);font-size:11px;font-weight:900;letter-spacing:.14em;margin-bottom:8px}
+    .strip-item strong{font-size:21px;line-height:1.25}
+    .final{background:var(--pink);border-top:4px solid var(--ink)}
+    .final-grid{display:grid;grid-template-columns:1fr .85fr;gap:40px;align-items:center}
+    .final h2{font-size:52px;line-height:.95;letter-spacing:-.06em;margin:0 0 20px}
+    .final p{font-size:17px;line-height:1.7;font-weight:700;color:rgba(17,17,17,.68);margin:0;max-width:620px}
+    .final-card{border:var(--line) solid var(--ink);border-radius:30px;background:white;padding:18px;box-shadow:var(--shadow-lg);transform:rotate(2deg)}
+    .final-card .photo-slot{aspect-ratio:4/3;border-radius:20px;background:#F3E3D6}
+    .final-card .tiny{padding:13px 5px 4px;text-align:center;font-weight:900}
+    .float-stack{position:fixed;right:18px;bottom:18px;z-index:20;display:flex;flex-direction:column;gap:10px}
+    .float{display:flex;align-items:center;justify-content:center;width:54px;height:54px;border:2px solid var(--ink);border-radius:50%;font-size:20px;font-weight:900;background:#fff;box-shadow:0 6px 0 rgba(17,17,17,.15)}
+    .float.order{width:86px;border-radius:999px;background:var(--yellow);font-size:14px;letter-spacing:-.08em;white-space:nowrap}.float.kakao{background:var(--pink)}
+    .mini-label{display:inline-flex;border:2px solid var(--ink);border-radius:999px;padding:7px 11px;background:#fff;font-size:11px;font-weight:900;letter-spacing:.12em;box-shadow:0 4px 0 rgba(17,17,17,.1);margin-bottom:16px}
+    @media(max-width:900px){
+      .wrap{width:min(100% - 28px,760px)}
+      .hero-visual{min-height:390px}.hero-doodle{font-size:28px;right:20px;top:26px}.hero-note{right:18px;bottom:18px;font-size:13px;max-width:190px;padding:14px 16px}
+      .intro{grid-template-columns:1fr;gap:24px;padding-top:34px}h1{font-size:46px}.section-title{display:block}.section-title p{margin-top:12px}.features{grid-template-columns:1fr 1fr}.gallery{grid-template-columns:1fr 1fr}.gallery .card:nth-child(3){grid-column:1/-1;width:50%;justify-self:center}.recommend-grid{grid-template-columns:1fr}.strip-grid{grid-template-columns:1fr 1fr}.strip-item:nth-child(2){border-right:0}.strip-item:nth-child(-n+2){border-bottom:1px solid rgba(255,255,255,.18)}.final-grid{grid-template-columns:1fr}.final-card{max-width:540px}
+    }
+    @media(max-width:560px){
+      .wrap{width:min(100% - 20px,520px)}.breadcrumb{font-size:11px;padding-top:14px}.hero-shell{padding-bottom:28px}.hero-visual{min-height:330px;border-radius:20px}.hero-badge{left:14px;top:14px;font-size:9px;padding:7px 9px}.hero-doodle{font-size:20px;right:14px;top:18px}.hero-doodle small{font-size:12px}.hero-note{font-size:11px;right:12px;bottom:12px;max-width:150px;padding:11px 12px}
+      h1{font-size:39px}.headline{font-size:21px}.copy{font-size:15px}.intro-card{padding:18px}.price-line strong{font-size:29px}.btn{width:100%;min-height:50px}.section{padding:52px 0}.section-title h2{font-size:33px}.features{grid-template-columns:1fr 1fr;gap:10px}.feature{padding:16px 13px;min-height:175px}.feature h3{font-size:16px}.feature p{font-size:12px}.iconbox{width:42px;height:42px;margin-bottom:12px}.iconbox svg{width:21px;height:21px}
+      .moment-tabs{gap:6px;margin-inline:-2px}.moment-tab{min-height:40px;padding:0 13px;font-size:11px}.moment-panel{margin-top:14px}.moment-panel-head{display:block}.moment-panel-head h3{font-size:22px}.moment-panel-head p{margin-top:7px;font-size:12px}.moment-slider{grid-auto-columns:84%;gap:10px;padding-bottom:14px}.moment-card{padding:7px;border-radius:19px;box-shadow:0 6px 0 rgba(17,17,17,.14)}.moment-card .photo-slot{border-radius:13px}.moment-card .caption{font-size:12px;padding:10px 4px 4px}.moment-nav{display:none}.moment-hint{display:block}.check{font-size:15px}.speech{padding:22px}.speech b{font-size:23px}.strip-grid{grid-template-columns:1fr 1fr}.strip-item{padding:20px 15px}.strip-item strong{font-size:17px}.final h2{font-size:38px}.final p{font-size:15px}.float-stack{right:10px;bottom:10px}.float{width:46px;height:46px;font-size:17px}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="wrap breadcrumb">Home <span>›</span> Products <span>›</span> 브루키</div>
+
+    <section class="wrap hero-shell">
+      <div class="hero-visual paper-dots">
+        <div class="hero-photo photo-slot" data-label="브루키 대표 이미지">
+          <img src="images/main-order-brookie-thumb.png" alt="브루키 대표 이미지" />
+        </div>
+        <div class="hero-badge">🍪 NOTHING MATTERS</div>
+        <div class="hero-doodle">BROWNIE<br/>COOKIE<br/>BROOKIE ♡<small>겉바속꾸덕</small></div>
+        <div class="hero-note">쿠키의 바삭함과<br/>브라우니의 꾸덕함을<br/>한 번에 ♡</div>
+      </div>
+
+      <div class="intro">
+        <div>
+          <div class="eyebrow">BROWNIE × COOKIE · PREMIUM GIFT COOKIE</div>
+          <div class="title-row"><h1>브루키</h1><span class="new">BEST</span></div>
+          <div class="headline">꾸덕한 브라우니와 쿠키 식감을 한 번에 즐기는 프리미엄 답례쿠키</div>
+          <p class="copy">
+            브루키는 낫띵메터스에서 단체 주문 비중이 가장 높은 제품 중 하나입니다.<br/>
+            겉은 쿠키 특유의 바삭한 식감이 살아 있고, 안쪽은 브라우니처럼 촉촉하고 꾸덕해서
+            일반 쿠키와는 또 다른 매력을 느낄 수 있어요.
+          </p>
+          <div class="actions">
+            <a class="btn dark" href="https://thingmattersreserve-production.up.railway.app/brookie" target="_blank" rel="noopener">견적 / 주문하기 →</a>
+            <a class="btn white" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener">카카오톡 문의</a>
+          </div>
+        </div>
+
+        <aside class="intro-card">
+          <div class="price-line"><span>기본형 · 1구 기준</span><strong>7,800원</strong></div>
+          <div class="specs">
+            <div class="spec"><b>제품명</b><span>브루키 (브라우니 쿠키)</span></div>
+            <div class="spec"><b>구성</b><span>1구 기본형</span></div>
+            <div class="spec"><b>식감</b><span>겉은 바삭 · 속은 촉촉하고 꾸덕</span></div>
+            <div class="spec"><b>주문</b><span>단체 주문 가능</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-title">
+          <div><span class="mini-label">WHY BROOKIE?</span><h2>이런 점이 특별해요! ✦</h2></div>
+          <p>사진처럼 한눈에 핵심이 들어오도록, 제품의 차이를 네 가지 포인트로 짧고 명확하게 정리했습니다.</p>
+        </div>
+        <div class="features">
+          <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8"/><path d="M8 13c1.2 1.7 2.5 2.5 4 2.5s2.8-.8 4-2.5"/><path d="M9 9h.01M15 9h.01"/></svg></div><h3>두 가지 식감을 한 번에</h3><p>쿠키 특유의 바삭함과 브라우니처럼 촉촉하고 꾸덕한 식감을 같이 즐길 수 있어요.</p></article>
+          <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 17l5-5 3 3 6-7 2 2"/><path d="M4 4h16v16H4z"/></svg></div><h3>일반 쿠키와 다른 존재감</h3><p>한 가지 식감에 머무르지 않아, 답례나 선물용으로 조금 더 특별한 인상을 남기기 좋아요.</p></article>
+          <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 12v8H4v-8"/><path d="M2 8h20v4H2z"/><path d="M12 8v12"/><path d="M12 8H7.5a2.5 2.5 0 110-5c2.8 0 4.5 5 4.5 5zM12 8h4.5a2.5 2.5 0 100-5C13.7 3 12 8 12 8z"/></svg></div><h3>답례용으로 좋은 1구 구성</h3><p>기본형은 1구 구성으로 준비되어 있어 개별 선물이나 답례용으로 활용하기 편합니다.</p></article>
+          <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div><h3>단체 주문 가능</h3><p>행사, 회사, 모임처럼 여러 개가 필요한 경우에도 단체 주문으로 문의할 수 있어요.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section gallery-section paper-dots" id="brookie-moments">
+      <div class="wrap">
+        <div class="section-title">
+          <div><span class="mini-label">BROOKIE MOMENTS</span><h2>상황에 맞춰 골라보는<br/>브루키 모먼트.</h2></div>
+          <p>결혼식부터 기업행사, 연예인 조공, 돌잔치, 어린이집·학교·생일, 승진·퇴사까지. 실제 제작 예시를 상황별 슬라이드로 모아봤어요.</p>
+        </div>
+
+        <div class="moment-tabs" role="tablist" aria-label="브루키 모먼트 카테고리">
+          <button class="moment-tab is-active" type="button" role="tab" aria-selected="true" data-moment-tab="moment-wedding">결혼식</button>
+          <button class="moment-tab" type="button" role="tab" aria-selected="false" data-moment-tab="moment-corporate">기업행사</button>
+          <button class="moment-tab" type="button" role="tab" aria-selected="false" data-moment-tab="moment-celebrity">연예인조공</button>
+          <button class="moment-tab" type="button" role="tab" aria-selected="false" data-moment-tab="moment-firstbirthday">돌잔치</button>
+          <button class="moment-tab" type="button" role="tab" aria-selected="false" data-moment-tab="moment-kids">어린이집/학교생일</button>
+          <button class="moment-tab" type="button" role="tab" aria-selected="false" data-moment-tab="moment-work">승진/퇴사</button>
+        </div>
+
+        <div class="moment-panel is-active" id="moment-wedding" data-moment-panel>
+          <div class="moment-panel-head"><h3>결혼식 답례 브루키</h3><p>이름이나 짧은 문구를 더해 단정하고 깔끔한 답례 분위기로 준비한 예시예요.</p></div>
+          <div class="moment-slider-shell">
+            <div class="moment-slider">
+              <article class="moment-card"><div class="photo-slot" data-label="결혼식 예시 1"><img src="images/wedding-case-03.jpeg" alt="이름 문구 커스텀 결혼식 브루키 예시" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">이름과 답례 문구를 넣은 웨딩 브루키</div></article>
+              <article class="moment-card"><div class="photo-slot" data-label="결혼식 예시 2"><img src="images/wedding-case-02.jpeg" alt="결혼식 커스텀 브루키 예시 2" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">깔끔하고 단정하게 준비한 답례 구성</div></article>
+              <article class="moment-card"><div class="photo-slot" data-label="결혼식 예시 3"><img src="images/wedding-case-01-v2.jpg" alt="결혼식 커스텀 브루키 예시 3" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">화사한 문구 포인트를 더한 기념형</div></article>
+              <article class="moment-card"><div class="photo-slot" data-label="결혼식 예시 4"><img src="images/wedding-case-01.jpeg" alt="결혼식 커스텀 브루키 예시 4" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">고마운 마음을 담아 준비한 웨딩 구성</div></article>
+              <article class="moment-card"><div class="photo-slot" data-label="결혼식 예시 5"><img src="images/wedding-case-04.jpeg" alt="결혼식 커스텀 브루키 예시 5" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">같은 브루키도 분위기에 맞춰 다르게</div></article>
+            </div>
+            <div class="moment-nav"><button class="moment-arrow" type="button" data-slide-prev aria-label="이전 예시">←</button><button class="moment-arrow" type="button" data-slide-next aria-label="다음 예시">→</button></div>
+            <div class="moment-hint">← 옆으로 밀어서 더 많은 예시 보기 →</div>
+          </div>
+        </div>
+
+        <div class="moment-panel" id="moment-corporate" data-moment-panel>
+          <div class="moment-panel-head"><h3>기업행사 브루키</h3><p>브랜드 행사나 사내 이벤트처럼 행사 톤과 목적에 맞춰 준비한 단체 주문 예시예요.</p></div>
+          <div class="moment-slider-shell"><div class="moment-slider">
+            <article class="moment-card"><div class="photo-slot" data-label="기업행사 예시 1"><img src="images/corporate-new-01.jpg" alt="기업행사 커스텀 브루키 예시 1" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">기업 로고와 문구를 살린 행사용 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="기업행사 예시 2"><img src="images/corporate-new-02.jpg" alt="기업행사 커스텀 브루키 예시 2" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">브랜드 행사·부스 배포용 브루키</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="기업행사 예시 3"><img src="images/corporate-new-03.jpg" alt="기업행사 커스텀 브루키 예시 3" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">사내 이벤트와 연말 행사에 맞춘 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="기업행사 예시 4"><img src="images/corporate-new-04.jpg" alt="기업행사 커스텀 브루키 예시 4" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">브랜드 아이덴티티를 살린 심플형</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="기업행사 예시 5"><img src="images/corporate-new-05.jpg" alt="기업행사 커스텀 브루키 예시 5" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">박스와 브루키 디테일까지 맞춘 구성</div></article>
+          </div><div class="moment-nav"><button class="moment-arrow" type="button" data-slide-prev aria-label="이전 예시">←</button><button class="moment-arrow" type="button" data-slide-next aria-label="다음 예시">→</button></div><div class="moment-hint">← 옆으로 밀어서 더 많은 예시 보기 →</div></div>
+        </div>
+
+        <div class="moment-panel" id="moment-celebrity" data-moment-panel>
+          <div class="moment-panel-head"><h3>연예인 조공 브루키</h3><p>이름과 응원 문구, 상징적인 디테일을 더해 촬영장·팬미팅·생일 조공용으로 준비한 예시예요.</p></div>
+          <div class="moment-slider-shell"><div class="moment-slider">
+            <article class="moment-card"><div class="photo-slot" data-label="연예인 조공 예시 1"><img src="images/celebrity-case-01.jpg" alt="연예인 조공 브루키 예시 1" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">맞춤 택과 캐릭터 디테일을 조합한 조공</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="연예인 조공 예시 2"><img src="images/celebrity-case-02.jpg" alt="연예인 조공 브루키 예시 2" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">상징적인 소품과 박스 띠지를 활용한 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="연예인 조공 예시 3"><img src="images/celebrity-case-03.jpg" alt="연예인 조공 브루키 예시 3" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">출연진 이름을 담은 단체 응원 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="연예인 조공 예시 4"><img src="images/celebrity-case-04.jpg" alt="연예인 조공 브루키 예시 4" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">문구와 캐릭터를 담은 스페셜 선물</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="연예인 조공 예시 5"><img src="images/celebrity-case-05.jpg" alt="연예인 조공 브루키 예시 5" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">시그니처 요소를 살린 맞춤형 디자인</div></article>
+          </div><div class="moment-nav"><button class="moment-arrow" type="button" data-slide-prev aria-label="이전 예시">←</button><button class="moment-arrow" type="button" data-slide-next aria-label="다음 예시">→</button></div><div class="moment-hint">← 옆으로 밀어서 더 많은 예시 보기 →</div></div>
+        </div>
+
+        <div class="moment-panel" id="moment-firstbirthday" data-moment-panel>
+          <div class="moment-panel-head"><h3>돌잔치 브루키</h3><p>아이 이름과 기념 문구를 담아 부드럽고 사랑스러운 분위기로 준비한 돌잔치 예시예요.</p></div>
+          <div class="moment-slider-shell"><div class="moment-slider">
+            <article class="moment-card"><div class="photo-slot" data-label="돌잔치 예시 1"><img src="images/firstbirthday-new-01.jpg" alt="돌잔치 브루키 예시 1" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">아이 이름을 담은 밝고 귀여운 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="돌잔치 예시 2"><img src="images/firstbirthday-new-02.jpg" alt="돌잔치 브루키 예시 2" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">숫자와 기념일 포인트를 살린 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="돌잔치 예시 3"><img src="images/firstbirthday-new-03.jpg" alt="돌잔치 브루키 예시 3" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">이름 띠지와 맞춤 토퍼를 함께 기획</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="돌잔치 예시 4"><img src="images/firstbirthday-new-04.jpg" alt="돌잔치 브루키 예시 4" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">첫돌 문구가 잘 보이는 답례형</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="돌잔치 예시 5"><img src="images/firstbirthday-new-05.jpg" alt="돌잔치 브루키 예시 5" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">아이 이름을 하나씩 담은 단체 구성</div></article>
+          </div><div class="moment-nav"><button class="moment-arrow" type="button" data-slide-prev aria-label="이전 예시">←</button><button class="moment-arrow" type="button" data-slide-next aria-label="다음 예시">→</button></div><div class="moment-hint">← 옆으로 밀어서 더 많은 예시 보기 →</div></div>
+        </div>
+
+        <div class="moment-panel" id="moment-kids" data-moment-panel>
+          <div class="moment-panel-head"><h3>어린이집 · 학교 · 생일 브루키</h3><p>어린이집 간식, 학교 행사, 생일 선물처럼 귀엽고 생동감 있는 분위기로 준비한 예시예요.</p></div>
+          <div class="moment-slider-shell"><div class="moment-slider">
+            <article class="moment-card"><div class="photo-slot" data-label="어린이집/학교생일 예시 1"><img src="images/kids-new-01.jpg" alt="어린이집 학교 생일 브루키 예시 1" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">행사 문구와 귀여운 캐릭터를 넣은 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="어린이집/학교생일 예시 2"><img src="images/kids-new-02.jpg" alt="어린이집 학교 생일 브루키 예시 2" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">수료·졸업을 기념하는 축하형 브루키</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="어린이집/학교생일 예시 3"><img src="images/kids-new-03.jpg" alt="어린이집 학교 생일 브루키 예시 3" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">연주회·학원 행사에 맞춘 단체 선물</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="어린이집/학교생일 예시 4"><img src="images/kids-new-04.jpg" alt="어린이집 학교 생일 브루키 예시 4" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">학교 행사 테마를 살린 맞춤 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="어린이집/학교생일 예시 5"><img src="images/kids-new-05.jpg" alt="어린이집 학교 생일 브루키 예시 5" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">생일 파티용 이름 맞춤 단체 구성</div></article>
+          </div><div class="moment-nav"><button class="moment-arrow" type="button" data-slide-prev aria-label="이전 예시">←</button><button class="moment-arrow" type="button" data-slide-next aria-label="다음 예시">→</button></div><div class="moment-hint">← 옆으로 밀어서 더 많은 예시 보기 →</div></div>
+        </div>
+
+        <div class="moment-panel" id="moment-work" data-moment-panel>
+          <div class="moment-panel-head"><h3>승진 · 퇴사 브루키</h3><p>짧은 문구나 가벼운 메시지를 더해 동료에게 센스 있게 건네기 좋은 승진·퇴사 선물 예시예요.</p></div>
+          <div class="moment-slider-shell"><div class="moment-slider">
+            <article class="moment-card"><div class="photo-slot" data-label="승진/퇴사 예시 1"><img src="images/work-new-01.jpg" alt="승진 퇴사 브루키 예시 1" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">Bye 문구를 더한 센스 있는 퇴사 간식</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="승진/퇴사 예시 2"><img src="images/work-new-02.jpg" alt="승진 퇴사 브루키 예시 2" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">동료 이름과 감사 메시지를 담은 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="승진/퇴사 예시 3"><img src="images/work-new-03.jpg" alt="승진 퇴사 브루키 예시 3" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">첫 승진을 유쾌하게 축하하는 구성</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="승진/퇴사 예시 4"><img src="images/work-new-04.jpg" alt="승진 퇴사 브루키 예시 4" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">송별회에 어울리는 심플 타이포형</div></article>
+            <article class="moment-card"><div class="photo-slot" data-label="승진/퇴사 예시 5"><img src="images/work-new-05.jpg" alt="승진 퇴사 브루키 예시 5" onerror="this.style.display='none';this.parentElement.classList.add('is-empty')"></div><div class="caption">감사 문구를 길게 담은 마지막 출근 선물</div></article>
+          </div><div class="moment-nav"><button class="moment-arrow" type="button" data-slide-prev aria-label="이전 예시">←</button><button class="moment-arrow" type="button" data-slide-next aria-label="다음 예시">→</button></div><div class="moment-hint">← 옆으로 밀어서 더 많은 예시 보기 →</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap recommend-grid">
+        <div>
+          <span class="mini-label">RECOMMEND</span>
+          <div class="section-title" style="margin-bottom:26px;display:block"><h2>이런 분들께 추천해요!</h2></div>
+          <div class="checklist">
+            <div class="check"><i></i><span>조금 더 특별한 답례쿠키를 찾는 분</span></div>
+            <div class="check"><i></i><span>꾸덕한 브라우니 식감을 좋아하는 분</span></div>
+            <div class="check"><i></i><span>회사 · 행사 · 모임 단체 선물이 필요한 분</span></div>
+            <div class="check"><i></i><span>1구로 깔끔하게 나눠줄 선물을 찾는 분</span></div>
+          </div>
+        </div>
+        <div class="speech">
+          <b>쿠키냐 브라우니냐<br/>고르기 어려울 때, 브루키 ♡</b>
+          <p>겉은 바삭하고 안은 촉촉하고 꾸덕한 대비가 브루키의 핵심입니다. 한입 안에서 두 가지 디저트의 매력을 같이 느낄 수 있게 제품 소개의 초점을 식감에 맞췄어요.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="info-strip">
+      <div class="wrap strip-grid">
+        <div class="strip-item"><small>PRODUCT</small><strong>브루키<br/>(브라우니 쿠키)</strong></div>
+        <div class="strip-item"><small>PRICE</small><strong>7,800원<br/>기본형 기준</strong></div>
+        <div class="strip-item"><small>PACKAGE</small><strong>1구<br/>기본 구성</strong></div>
+        <div class="strip-item"><small>ORDER</small><strong>단체 주문<br/>문의 가능</strong></div>
+      </div>
+    </section>
+
+    <section class="section final paper-dots">
+      <div class="wrap final-grid">
+        <div>
+          <span class="mini-label">ORDER BROOKIE</span>
+          <h2>특별한 쿠키가<br/>필요하신가요?</h2>
+          <p>답례, 행사, 단체 선물처럼 수량이 필요한 주문은 카카오톡으로 문의해 주세요. 기본형 1구는 7,800원 기준이며, 주문 조건과 구성은 문의 후 안내받을 수 있게 연결했습니다.</p>
+          <div class="actions">
+            <a class="btn dark" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener">카카오톡으로 문의하기 →</a>
+            <a class="btn white" href="https://thingmattersreserve-production.up.railway.app/brookie" target="_blank" rel="noopener">주문 페이지 보기</a>
+          </div>
+        </div>
+        <div class="final-card">
+          <div class="photo-slot" data-label="브루키 선물 이미지"><img src="images/brownie-main.jpg" alt="브루키 선물 이미지"/></div>
+          <div class="tiny">Good Cookies · Good People ♡</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="float-stack" aria-label="빠른 메뉴">
+    <a class="float order" href="https://thingmattersreserve-production.up.railway.app/brookie" target="_blank" rel="noopener" aria-label="브루키 주문하기">쿠키주문</a>
+    <a class="float kakao" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener" aria-label="카카오톡 문의">K</a>
+  </div>
+
+  <script>
+    (() => {
+      const tabs = [...document.querySelectorAll('[data-moment-tab]')];
+      const panels = [...document.querySelectorAll('[data-moment-panel]')];
+
+      const openMoment = (id) => {
+        tabs.forEach((tab) => {
+          const active = tab.dataset.momentTab === id;
+          tab.classList.toggle('is-active', active);
+          tab.setAttribute('aria-selected', String(active));
+        });
+        panels.forEach((panel) => {
+          const active = panel.id === id;
+          panel.classList.toggle('is-active', active);
+          if (active) {
+            const slider = panel.querySelector('.moment-slider');
+            if (slider) slider.scrollLeft = 0;
+          }
+        });
+      };
+
+      tabs.forEach((tab) => tab.addEventListener('click', () => openMoment(tab.dataset.momentTab)));
+
+      document.querySelectorAll('.moment-slider-shell').forEach((shell) => {
+        const slider = shell.querySelector('.moment-slider');
+        const prev = shell.querySelector('[data-slide-prev]');
+        const next = shell.querySelector('[data-slide-next]');
+        if (!slider) return;
+        const step = () => Math.max(260, slider.clientWidth * 0.78);
+        prev?.addEventListener('click', () => slider.scrollBy({ left: -step(), behavior: 'smooth' }));
+        next?.addEventListener('click', () => slider.scrollBy({ left: step(), behavior: 'smooth' }));
+      });
+    })();
+  </script>
+</body>
+</html>

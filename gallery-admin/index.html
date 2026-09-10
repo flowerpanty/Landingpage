@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RECENTLY MADE 사진 관리 | 낫띵메터스</title>
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" type="image/svg+xml" href="../images/nm-bear-mark.svg">
+  <link rel="stylesheet" href="../assets/gallery-admin.css">
+</head>
+<body>
+  <header class="gallery-admin-header">
+    <a href="../index.html"><img src="../images/nm-bear-mark.svg" alt="" width="32" height="32">NOTHINGMATTERS</a>
+    <span>RECENTLY MADE 관리</span>
+  </header>
+
+  <main class="gallery-admin-main">
+    <section class="gallery-admin-intro">
+      <p>PHOTO GALLERY</p>
+      <h1>최근 만든 쿠키 사진을 올려주세요.</h1>
+      <p>사진은 업로드 전에 최대 1,800px WEBP로 자동 정리됩니다.</p>
+    </section>
+
+    <section class="gallery-admin-panel" aria-labelledby="upload-title">
+      <h2 id="upload-title">새 사진 추가</h2>
+      <form data-gallery-form>
+        <label>
+          관리자 키
+          <input type="password" name="token" autocomplete="current-password" required placeholder="Railway의 GALLERY_ADMIN_TOKEN">
+        </label>
+        <label class="gallery-admin-file">
+          사진 선택
+          <input type="file" name="photo" accept="image/*" required>
+          <span data-file-name>휴대폰 사진 가능 · 자동 압축</span>
+        </label>
+        <img class="gallery-admin-preview" data-preview alt="선택한 이미지 미리보기" hidden>
+        <label>
+          사진 설명
+          <input type="text" name="caption" maxlength="80" required placeholder="예: 기업 행사에 맞춘 쿠키 세트">
+        </label>
+        <label>
+          연결할 주소 <small>선택</small>
+          <input type="text" name="href" maxlength="500" placeholder="예: /products/handmade-cookie/">
+        </label>
+        <button type="submit">사진 올리기</button>
+        <p class="gallery-admin-status" data-status aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="gallery-admin-panel" aria-labelledby="current-title">
+      <div class="gallery-admin-panel-heading">
+        <h2 id="current-title">내가 올린 사진</h2>
+        <button type="button" class="gallery-admin-refresh" data-refresh>새로고침</button>
+      </div>
+      <div class="gallery-admin-grid" data-gallery-list>
+        <p>사진을 불러오는 중입니다.</p>
+      </div>
+    </section>
+
+    <aside class="gallery-admin-note">
+      <strong>Railway 영구 저장 설정</strong>
+      <p>Volume을 <code>/data</code>에 연결하고 환경변수 <code>GALLERY_DATA_DIR=/data/nothingmatters-gallery</code>를 추가해야 재배포 후에도 사진이 남습니다.</p>
+    </aside>
+  </main>
+
+  <script src="../assets/gallery-admin.js"></script>
+</body>
+</html>
