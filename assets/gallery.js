@@ -109,6 +109,14 @@ const madeArchiveItems = [
     figure.className = "showroom-made-overlay-item";
     figure.dataset.size = getItemSize(item);
     figure.append(createImage(item));
+
+    if (item.caption) {
+      const caption = document.createElement("span");
+      caption.className = "showroom-made-overlay-caption";
+      caption.textContent = item.caption;
+      figure.append(caption);
+    }
+
     return figure;
   };
 
@@ -189,7 +197,8 @@ const madeArchiveItems = [
           id: item.id,
           filename: item.filename,
           src: item.src,
-          alt: item.caption || "낫띵메터스에서 만든 쿠키"
+          alt: item.caption || "낫띵메터스에서 만든 쿠키",
+          caption: String(item.caption || "").trim()
         }));
     } catch (error) {
       return [];
