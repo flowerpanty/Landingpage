@@ -17,6 +17,14 @@
     <lastmod>2026-08-28</lastmod>
   </url>
   <url>
+    <loc>https://nothingmatters.co.kr/works/</loc>
+    <lastmod>2026-09-11</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/pickup/</loc>
+    <lastmod>2026-09-11</lastmod>
+  </url>
+  <url>
     <loc>https://nothingmatters.co.kr/guides/</loc>
     <lastmod>2026-08-28</lastmod>
   </url>
@@ -69,6 +77,21 @@
     <lastmod>2026-08-28</lastmod>
   </url>
   <!-- NM_GENERATED_PRODUCTS:START -->
-
+  <url>
+    <loc>https://nothingmatters.co.kr/brookie/</loc>
+    <lastmod>2026-09-11</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/out/</loc>
+    <lastmod>2026-09-11</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/out/fortune/</loc>
+    <lastmod>2026-09-11</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/cookie-crew/</loc>
+    <lastmod>2026-09-11</lastmod>
+  </url>
   <!-- NM_GENERATED_PRODUCTS:END -->
 </urlset>

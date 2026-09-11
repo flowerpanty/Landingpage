@@ -26,6 +26,11 @@ async function requestJson(baseUrl, pathname, options = {}) {
   return { response, payload: await response.json() };
 }
 
+async function requestText(baseUrl, pathname) {
+  const response = await fetch(`${baseUrl}${pathname}`);
+  return { response, body: await response.text() };
+}
+
 async function startGalleryServer(storageDir) {
   const port = await reservePort();
   const output = [];
@@ -107,12 +112,21 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.equal(empty.payload.missingReferencedImageCount, 0);
   assert.equal(empty.payload.orphanImageFileCount, 0);
 
+  const emptyWorks = await requestText(baseUrl, "/works/");
+  assert.equal(emptyWorks.response.status, 200);
+  assert.match(emptyWorks.body, /귀여운 표정을 고른 작은 선물/);
+  assert.doesNotMatch(emptyWorks.body, /gallery-storage-test-token|GALLERY_DATA_DIR/);
+
+  const pickup = await requestText(baseUrl, "/pickup/");
+  assert.equal(pickup.response.status, 200);
+  assert.match(pickup.body, /김포공항·송정역 인근/);
+
   const upload = await requestJson(baseUrl, "/api/gallery", {
     method: "POST",
     headers: { ...adminHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({
       dataUrl: `data:image/png;base64,${TINY_PNG}`,
-      caption: "진단용 쿠키 사진",
+      caption: "<strong>진단용 쿠키 사진</strong>",
       href: "/products/handmade-cookie/"
     })
   });
@@ -125,6 +139,12 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.equal(gallery.response.status, 200);
   assert.equal(gallery.payload.customCount, 1);
   assert.equal(gallery.payload.items[0].id, upload.payload.item.id);
+
+  const works = await requestText(baseUrl, "/works/");
+  assert.equal(works.response.status, 200);
+  assert.match(works.body, /&lt;strong&gt;진단용 쿠키 사진&lt;\/strong&gt;/);
+  assert.doesNotMatch(works.body, /<strong>진단용 쿠키 사진<\/strong>/);
+  assert.match(works.body, new RegExp(upload.payload.item.src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
   const media = await fetch(`${baseUrl}${upload.payload.item.src}`);
   assert.equal(media.status, 200);
@@ -161,6 +181,10 @@ await withTemporaryStorage(async ({ storageDir, baseUrl }) => {
   assert.equal(status.payload.galleryImageFileCount, 1);
   assert.equal(status.payload.missingReferencedImageCount, 0);
   assert.equal(status.payload.orphanImageFileCount, 0);
+
+  const works = await requestText(baseUrl, "/works/");
+  assert.equal(works.response.status, 200);
+  assert.match(works.body, /saved-cookie\.webp/);
 });
 
 await withTemporaryStorage(async ({ storageDir, baseUrl }) => {
@@ -202,6 +226,10 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.equal(gallery.response.status, 200);
   assert.equal(gallery.payload.customCount, 0);
   assert.match(output.join(""), /Failed to parse manifest at/);
+
+  const works = await requestText(baseUrl, "/works/");
+  assert.equal(works.response.status, 200);
+  assert.match(works.body, /귀여운 표정을 고른 작은 선물/);
 });
 
 console.log("gallery storage diagnostics: passed");

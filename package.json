@@ -9,7 +9,8 @@
     "schema:build": "node scripts/generate-jsonld.mjs",
     "schema:check": "node scripts/generate-jsonld.mjs --check",
     "site:build": "npm run products:build && npm run schema:build",
-    "site:check": "npm run products:check && npm run schema:check",
+    "public-seo:test": "node scripts/test-public-seo.mjs",
+    "site:check": "npm run products:check && npm run schema:check && npm run public-seo:test",
     "gallery:test": "node scripts/test-gallery-storage.mjs",
     "prestart": "npm run site:build",
     "start": "node server.js"

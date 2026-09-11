@@ -13,7 +13,8 @@
     "orderUrl": "https://thingmattersreserve-production.up.railway.app/brookie",
     "detailPath": "/brookie/",
     "detailPageMode": "existing",
-    "badge": "BROOKIE"
+    "badge": "BROOKIE",
+    "updatedAt": "2026-09-11"
   },
   {
     "name": "수제꾸덕쿠키",
@@ -29,7 +30,8 @@
     "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
     "detailPath": "/out/",
     "detailPageMode": "existing",
-    "badge": "HANDMADE COOKIES"
+    "badge": "HANDMADE COOKIES",
+    "updatedAt": "2026-09-11"
   },
   {
     "name": "행운쿠키",
@@ -45,7 +47,8 @@
     "orderUrl": "https://thingmattersreserve-production.up.railway.app/lucky?step=1",
     "detailPath": "/out/fortune/",
     "detailPageMode": "existing",
-    "badge": "LUCKY COOKIE"
+    "badge": "LUCKY COOKIE",
+    "updatedAt": "2026-09-11"
   },
   {
     "name": "쿠키크루",
@@ -62,6 +65,7 @@
     "orderUrl": "https://pf.kakao.com/_QdCaK/chat",
     "detailPath": "/cookie-crew/",
     "detailPageMode": "existing",
-    "badge": "COOKIE CREW"
+    "badge": "COOKIE CREW",
+    "updatedAt": "2026-09-11"
   }
 ]

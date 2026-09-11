@@ -14,6 +14,7 @@
     "https://talk.naver.com/profile/c/nothingmatters",
     "https://blog.nothingmatters.co.kr/",
     "https://nothingmatters.kr/",
+    "https://instagram.com/nothingmatters_c",
   ];
   const LOCAL_SERVICE_AREAS = [
     { "@type": "AdministrativeArea", name: "서울특별시 강서구" },
@@ -318,15 +319,6 @@
         "@id": ORGANIZATION_ID,
       },
       category: name,
-      offers: {
-        "@type": "Offer",
-        url: pageUrl,
-        availability: "https://schema.org/InStoreOnly",
-        priceCurrency: "KRW",
-        seller: {
-          "@id": ORGANIZATION_ID,
-        },
-      },
     };
 
     if (highlights.length) {

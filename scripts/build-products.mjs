@@ -21,6 +21,7 @@ const requiredFields = [
   "category",
   "orderUrl",
   "detailPath",
+  "updatedAt",
 ];
 
 function escapeHtml(value = "") {
@@ -49,6 +50,21 @@ function validateProducts() {
 
     if (product.detailPageMode === "generated" && !/^\d{4}-\d{2}-\d{2}$/.test(product.updatedAt || "")) {
       errors.push(`products[${index}].updatedAt must use YYYY-MM-DD`);
+    }
+
+    if (!["generated", "existing"].includes(product.detailPageMode)) {
+      errors.push(`products[${index}].detailPageMode must be generated or existing`);
+    }
+
+    if (!/^\/[\w/-]+\/$/.test(product.detailPath)) {
+      errors.push(`products[${index}].detailPath must be a public trailing-slash route`);
+    }
+
+    if (product.detailPageMode === "existing") {
+      const existingPath = path.join(ROOT, product.detailPath.slice(1), "index.html");
+      if (!fs.existsSync(existingPath)) {
+        errors.push(`products[${index}].detailPath does not have an existing HTML page: ${product.detailPath}`);
+      }
     }
 
     if (slugs.has(product.slug)) errors.push(`duplicate slug: ${product.slug}`);
@@ -284,6 +300,70 @@ function stripStaticSchema(html) {
   return html.replace(/\n?\s*<script type="application\/ld\+json" data-nm-schema="static">[\s\S]*?<\/script>\n?/g, "\n");
 }
 
+function getExistingProductMetadata(product) {
+  const canonical = `${SITE_URL}${product.detailPath}`;
+  const image = `${SITE_URL}${product.thumbnail}`;
+  const title = `${product.name} | 낫띵메터스`;
+
+  return `<!-- NM_EXISTING_PRODUCT_META:START -->
+  <meta name="description" content="${escapeHtml(product.description)}">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="naver-site-verification" content="e627e1eaae68060408cb4e512e46d6b98a64401c">
+  <link rel="canonical" href="${escapeHtml(canonical)}">
+  <meta property="og:type" content="product">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(product.description)}">
+  <meta property="og:url" content="${escapeHtml(canonical)}">
+  <meta property="og:image" content="${escapeHtml(image)}">
+  <meta property="og:image:alt" content="${escapeHtml(product.name)} 대표 이미지">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(title)}">
+  <meta name="twitter:description" content="${escapeHtml(product.description)}">
+  <meta name="twitter:image" content="${escapeHtml(image)}">
+  <!-- NM_EXISTING_PRODUCT_META:END -->`;
+}
+
+function upsertExistingProductMetadata(html, product) {
+  const metadata = getExistingProductMetadata(product);
+  const withoutManagedBlock = html.replace(
+    /\s*<!-- NM_EXISTING_PRODUCT_META:START -->[\s\S]*?<!-- NM_EXISTING_PRODUCT_META:END -->/,
+    ""
+  );
+  const title = `${product.name} | 낫띵메터스`;
+  const withoutConflictingTags = withoutManagedBlock
+    .replace(/<title>[\s\S]*?<\/title>/i, "")
+    .replace(/<meta\s+name=["'](?:description|robots|twitter:card|twitter:title|twitter:description|twitter:image)["'][^>]*>/gi, "")
+    .replace(/<meta\s+property=["']og:(?:type|title|description|url|image|image:alt)["'][^>]*>/gi, "")
+    .replace(/<link\s+rel=["']canonical["'][^>]*>/gi, "");
+
+  const withMetadata = withoutConflictingTags.replace(
+    /<head(\s[^>]*)?>/i,
+    (headTag) => `${headTag}\n  <title>${escapeHtml(title)}</title>\n  ${metadata}`
+  );
+
+  return withMetadata.replace(
+    /(<!-- NM_EXISTING_PRODUCT_META:END -->)\s*(?=<(?:meta|base|style|link|script))/i,
+    "$1\n  "
+  );
+}
+
+function buildExistingProductPages() {
+  products
+    .filter((product) => product.detailPageMode === "existing")
+    .forEach((product) => {
+      const outputPath = path.join(ROOT, product.detailPath.slice(1), "index.html");
+      const current = fs.readFileSync(outputPath, "utf8");
+      const expected = upsertExistingProductMetadata(current, product);
+
+      if (isCheckMode) {
+        if (expected !== current) throw new Error(`${product.detailPath} existing product metadata is out of date`);
+        return;
+      }
+
+      if (expected !== current) fs.writeFileSync(outputPath, expected);
+    });
+}
+
 function buildDetailPages() {
   products
     .filter((product) => product.detailPageMode === "generated")
@@ -307,7 +387,10 @@ function buildSitemap() {
   const start = "  <!-- NM_GENERATED_PRODUCTS:START -->";
   const end = "  <!-- NM_GENERATED_PRODUCTS:END -->";
   const entries = products
-    .filter((product) => product.detailPageMode === "generated")
+    .filter((product) => {
+      const outputPath = path.join(ROOT, product.detailPath.slice(1), "index.html");
+      return ["generated", "existing"].includes(product.detailPageMode) && fs.existsSync(outputPath);
+    })
     .map(
       (product) => `  <url>\n    <loc>${SITE_URL}${product.detailPath}</loc>\n    <lastmod>${product.updatedAt}</lastmod>\n  </url>`
     )
@@ -333,6 +416,7 @@ try {
   validateProducts();
   buildHome();
   buildDetailPages();
+  buildExistingProductPages();
   buildSitemap();
   console.log(`products: ${isCheckMode ? "checked" : "built"} ${products.length} products`);
 } catch (error) {

@@ -14,6 +14,7 @@ const BUSINESS_SAME_AS = [
   "https://talk.naver.com/profile/c/nothingmatters",
   "https://blog.nothingmatters.co.kr/",
   "https://nothingmatters.kr/",
+  "https://instagram.com/nothingmatters_c",
 ];
 const LOCAL_SERVICE_AREAS = [
   { "@type": "AdministrativeArea", name: "서울특별시 강서구" },
@@ -99,6 +100,16 @@ const ITEM_LISTS = {
     ["퇴사 · 승진 답례품", "/guides/farewell-favor-cookie/"],
     ["디저트 선물세트", "/guides/dessert-gift-set/"],
     ["행운 · 응원 쿠키", "/guides/lucky-cheering-cookie/"],
+  ],
+  "/works/": [
+    ["실제 제작 사례", "/works/"],
+    ["김포공항·송정역 픽업 안내", "/pickup/"],
+    ["쿠키 라인업", "/#our-cookies"],
+  ],
+  "/pickup/": [
+    ["수제꾸덕쿠키", "/products/handmade-cookie/"],
+    ["결혼식 답례쿠키 주문 가이드", "/guides/wedding-favor-cookie/"],
+    ["실제 제작 사례", "/works/"],
   ],
 };
 
@@ -199,8 +210,27 @@ function cleanText(value = "") {
   );
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function getAttribute(html, pattern) {
   return html.match(pattern)?.[1]?.trim() || "";
+}
+
+function getMetaContent(html, attribute, value) {
+  return getAttribute(
+    html,
+    new RegExp(`<meta[^>]+${attribute}=["']${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]+content=["']([^"']*)["']`, "i")
+  );
+}
+
+function getCanonicalHref(html) {
+  return getAttribute(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
 }
 
 function absoluteUrl(value, base = SITE_URL) {
@@ -218,8 +248,7 @@ function filePathForUrl(loc) {
 
 function getPageData(html, loc) {
   const url = new URL(loc);
-  const canonical =
-    getAttribute(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i) || loc;
+  const canonical = getCanonicalHref(html) || loc;
 
   return {
     loc,
@@ -238,7 +267,7 @@ function getPageData(html, loc) {
 }
 
 function getPageType(pathname) {
-  if (pathname === "/") return "CollectionPage";
+  if (pathname === "/" || pathname === "/works/") return "CollectionPage";
   if (pathname === "/contact/") return "ContactPage";
   if (pathname === "/guides/") return "CollectionPage";
   if (pathname.startsWith("/products/")) return "ProductPage";
@@ -345,26 +374,7 @@ function buildProduct(page) {
   const meta = PRODUCT_META[page.path];
   if (!meta) return null;
 
-  const offer =
-    meta.price != null
-      ? {
-          "@type": "Offer",
-          url: page.pageUrl,
-          price: meta.price,
-          priceCurrency: "KRW",
-          availability: "https://schema.org/InStoreOnly",
-          seller: { "@id": ORGANIZATION_ID },
-        }
-      : {
-          "@type": "AggregateOffer",
-          url: page.pageUrl,
-          lowPrice: meta.lowPrice,
-          priceCurrency: "KRW",
-          availability: "https://schema.org/InStoreOnly",
-          seller: { "@id": ORGANIZATION_ID },
-        };
-
-  return {
+  const product = {
     "@type": "Product",
     "@id": `${page.pageUrl}#product`,
     name: meta.name,
@@ -375,20 +385,41 @@ function buildProduct(page) {
       "@id": ORGANIZATION_ID,
     },
     category: meta.category,
-    offers: offer,
-    additionalProperty: [
-      {
-        "@type": "PropertyValue",
-        name: "주문 기준",
-        value: meta.minOrder,
-      },
-      {
-        "@type": "PropertyValue",
-        name: "수령 방식",
-        value: "강서구 공항동 매장 픽업 또는 차량 퀵 상담",
-      },
-    ],
   };
+
+  if (meta.price != null) {
+    product.offers = {
+      "@type": "Offer",
+      url: page.pageUrl,
+      price: meta.price,
+      priceCurrency: "KRW",
+      availability: "https://schema.org/InStoreOnly",
+      seller: { "@id": ORGANIZATION_ID },
+    };
+  } else if (meta.lowPrice != null) {
+    product.offers = {
+      "@type": "AggregateOffer",
+      url: page.pageUrl,
+      lowPrice: meta.lowPrice,
+      priceCurrency: "KRW",
+      availability: "https://schema.org/InStoreOnly",
+      seller: { "@id": ORGANIZATION_ID },
+    };
+  }
+
+  const properties = [
+    meta.minOrder
+      ? { "@type": "PropertyValue", name: "주문 기준", value: meta.minOrder }
+      : null,
+    {
+      "@type": "PropertyValue",
+      name: "수령 방식",
+      value: "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담",
+    },
+  ].filter(Boolean);
+
+  if (properties.length) product.additionalProperty = properties;
+  return product;
 }
 
 function buildService(page) {
@@ -481,6 +512,29 @@ function insertSchema(html, schema) {
   return html.replace(/<\/head>/i, `${script}</head>`);
 }
 
+function ensureSocialMetadata(html, loc) {
+  const page = getPageData(html, loc);
+  const additions = [];
+  const twitterTitle = getMetaContent(html, "property", "og:title") || page.title;
+  const twitterDescription = getMetaContent(html, "property", "og:description") || page.description;
+
+  if (!getMetaContent(html, "name", "twitter:card")) {
+    additions.push('<meta name="twitter:card" content="summary_large_image">');
+  }
+  if (!getMetaContent(html, "name", "twitter:title") && twitterTitle) {
+    additions.push(`<meta name="twitter:title" content="${escapeHtml(twitterTitle)}">`);
+  }
+  if (!getMetaContent(html, "name", "twitter:description") && twitterDescription) {
+    additions.push(`<meta name="twitter:description" content="${escapeHtml(twitterDescription)}">`);
+  }
+  if (!getMetaContent(html, "name", "twitter:image") && page.ogImage) {
+    additions.push(`<meta name="twitter:image" content="${escapeHtml(page.ogImage)}">`);
+  }
+
+  if (!additions.length) return html;
+  return html.replace(/<\/head>/i, `  ${additions.join("\n  ")}\n</head>`);
+}
+
 function getStaticSchema(html) {
   const match = html.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/);
   if (!match) return null;
@@ -494,6 +548,24 @@ function getGraphTypes(schema) {
 const sitemap = readFile("sitemap.xml");
 const locs = [...sitemap.matchAll(/<loc>(https:\/\/nothingmatters\.co\.kr[^<]+)<\/loc>/g)].map((match) => match[1]);
 const failures = [];
+const seenLocs = new Set();
+
+for (const loc of locs) {
+  if (seenLocs.has(loc)) failures.push(`sitemap.xml: duplicate loc ${loc}`);
+  seenLocs.add(loc);
+
+  const pathname = new URL(loc).pathname;
+  if (/^\/(?:gallery-admin|dashboard|api)(?:\/|$)/.test(pathname)) {
+    failures.push(`sitemap.xml: non-public route included ${pathname}`);
+  }
+}
+
+for (const product of PRODUCT_CATALOG) {
+  const productLoc = `${SITE_URL}${product.detailPath}`;
+  if (!seenLocs.has(productLoc)) {
+    failures.push(`sitemap.xml: missing product route ${product.detailPath}`);
+  }
+}
 
 for (const loc of locs) {
   const relativePath = filePathForUrl(loc);
@@ -519,6 +591,39 @@ for (const loc of locs) {
         if (!types.has(type)) failures.push(`${relativePath}: missing ${type}`);
       }
 
+      const canonical = getCanonicalHref(html);
+      if (!canonical) {
+        failures.push(`${relativePath}: missing canonical`);
+      } else if (absoluteUrl(canonical) !== loc) {
+        failures.push(`${relativePath}: canonical does not match sitemap loc`);
+      }
+
+      if (!cleanText(getAttribute(html, /<title>([\s\S]*?)<\/title>/i))) {
+        failures.push(`${relativePath}: missing title`);
+      }
+      if (!getMetaContent(html, "name", "description")) {
+        failures.push(`${relativePath}: missing description`);
+      }
+      if (!getMetaContent(html, "name", "robots")) {
+        failures.push(`${relativePath}: missing robots`);
+      }
+      for (const property of ["og:title", "og:description", "og:url", "og:image"]) {
+        if (!getMetaContent(html, "property", property)) {
+          failures.push(`${relativePath}: missing ${property}`);
+        }
+      }
+      if (!getMetaContent(html, "name", "twitter:card")) {
+        failures.push(`${relativePath}: missing twitter:card`);
+      }
+      if (!getPageData(html, loc).h1) failures.push(`${relativePath}: missing h1`);
+
+      for (const type of ["Organization", "Bakery"]) {
+        const entity = staticSchema["@graph"].find((entry) => entry["@type"] === type);
+        if (!entity?.sameAs?.includes("https://instagram.com/nothingmatters_c")) {
+          failures.push(`${relativePath}: ${type} missing official Instagram sameAs`);
+        }
+      }
+
       if (new URL(loc).pathname === "/") {
         for (const type of ["CollectionPage", "ItemList", "FAQPage"]) {
           if (!types.has(type)) failures.push(`${relativePath}: missing ${type}`);
@@ -529,17 +634,23 @@ for (const loc of locs) {
         const product = staticSchema["@graph"].find((entry) => entry["@type"] === "Product");
         if (!product) {
           failures.push(`${relativePath}: missing Product`);
-        } else if (!product.offers?.priceCurrency) {
-          failures.push(`${relativePath}: missing Product offers priceCurrency`);
-        } else if (product.offers.price == null && product.offers.lowPrice == null) {
-          failures.push(`${relativePath}: missing Product offer price or lowPrice`);
+        } else {
+          const expectedMeta = PRODUCT_META[new URL(loc).pathname];
+          const hasPrice = expectedMeta.price != null || expectedMeta.lowPrice != null;
+          if (hasPrice && !product.offers?.priceCurrency) {
+            failures.push(`${relativePath}: missing Product offers priceCurrency`);
+          } else if (hasPrice && product.offers.price == null && product.offers.lowPrice == null) {
+            failures.push(`${relativePath}: missing Product offer price or lowPrice`);
+          } else if (!hasPrice && product.offers) {
+            failures.push(`${relativePath}: Product offers present without known price`);
+          }
         }
       }
     } catch (error) {
       failures.push(`${relativePath}: ${error.message}`);
     }
   } else {
-    const nextHtml = insertSchema(html, expectedSchema);
+    const nextHtml = insertSchema(ensureSocialMetadata(html, loc), expectedSchema);
     if (nextHtml !== html) writeFile(relativePath, nextHtml);
     console.log(`schema: wrote ${relativePath}`);
   }

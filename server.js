@@ -173,6 +173,15 @@ function escapeAttribute(value = "") {
     .replace(/>/g, "&gt;");
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function getRotatingHomeOgImagePath(timestamp = Date.now()) {
   const slot = Math.floor(timestamp / HOME_OG_ROTATION_WINDOW_MS) % HOME_OG_IMAGES.length;
   return HOME_OG_IMAGES[slot];
@@ -713,6 +722,80 @@ function handleGalleryMedia(req, res, requestUrl) {
     return;
   }
   fs.createReadStream(filePath).pipe(res);
+}
+
+function getPublicWorkHref(value) {
+  const href = String(value || "").trim();
+  if (href.startsWith("/") && !href.startsWith("//")) return href;
+  if (href.startsWith(`https://${CANONICAL_HOST}/`)) return href;
+  return "";
+}
+
+function formatPublicWorkDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "공개 제작 사례";
+  return `공개 제작 사례 · ${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function getPublicWorkItems() {
+  const savedItems = readGalleryManifest();
+  const savedWorks = savedItems
+    .map((item) => {
+      const filename = path.basename(String(item?.filename || ""));
+      if (!filename) return null;
+      const imagePath = path.join(getGalleryStorageDir(), filename);
+      if (!fs.existsSync(imagePath) || !fs.statSync(imagePath).isFile()) return null;
+
+      return {
+        src: `/gallery-media/${encodeURIComponent(filename)}`,
+        alt: String(item.caption || "낫띵메터스 제작 쿠키").trim().slice(0, 160),
+        caption: String(item.caption || "낫띵메터스 제작 쿠키").trim().slice(0, 160),
+        href: getPublicWorkHref(item.href),
+        createdAt: item.createdAt,
+      };
+    })
+    .filter(Boolean)
+    .reverse();
+
+  if (savedWorks.length) return savedWorks;
+
+  return DEFAULT_GALLERY_ITEMS.map((item) => ({
+    src: item.src,
+    alt: item.caption,
+    caption: item.caption,
+    href: getPublicWorkHref(item.href),
+    createdAt: "",
+  }));
+}
+
+function renderPublicWorkCards() {
+  return getPublicWorkItems()
+    .map((item) => {
+      const action = item.href
+        ? `<a href="${escapeAttribute(item.href)}">관련 페이지 보기 →</a>`
+        : "";
+
+      return `            <article class="nm-work-card">
+              <img src="${escapeAttribute(item.src)}" alt="${escapeAttribute(item.alt)}" loading="lazy" decoding="async">
+              <div class="nm-work-card-copy">
+                <p>${escapeHtml(item.caption)}</p>
+                <small>${escapeHtml(formatPublicWorkDate(item.createdAt))} · 낫띵메터스 공항동 작업실</small>
+                ${action}
+              </div>
+            </article>`;
+    })
+    .join("\n");
+}
+
+function renderWorksPage() {
+  const templatePath = path.join(ROOT, "works", "index.html");
+  const template = fs.readFileSync(templatePath, "utf8");
+  const cards = renderPublicWorkCards();
+
+  return template.replace(
+    /<!-- NM_WORKS_CARDS:START -->[\s\S]*?<!-- NM_WORKS_CARDS:END -->/,
+    `<!-- NM_WORKS_CARDS:START -->\n${cards}\n            <!-- NM_WORKS_CARDS:END -->`
+  );
 }
 
 function parseBasicAuthHeader(headerValue) {
@@ -1479,6 +1562,23 @@ const server = http.createServer(async (req, res) => {
 
   if (requestUrl.pathname.startsWith("/dashboard") && !isDashboardAuthorized(req, dashboardConfig)) {
     requestDashboardAuth(res);
+    return;
+  }
+
+  if (requestUrl.pathname === "/works/") {
+    const responseBody = renderWorksPage();
+    res.writeHead(200, {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+      "Content-Length": Buffer.byteLength(responseBody)
+    });
+
+    if (req.method === "HEAD") {
+      res.end();
+      return;
+    }
+
+    res.end(responseBody);
     return;
   }
 
