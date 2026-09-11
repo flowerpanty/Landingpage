@@ -59,6 +59,9 @@ const madeArchiveItems = [
   const overlayDialog = overlay?.querySelector(".showroom-made-overlay-dialog");
   const overlayGrid = document.querySelector("[data-made-overlay-grid]");
   const closeButton = document.querySelector("[data-made-overlay-close]");
+  const archiveOpenButtons = [...document.querySelectorAll("[data-open-made-overlay]")];
+  const recentOrdersSection = document.querySelector("[data-recent-orders-section]");
+  const recentOrdersGrid = document.querySelector("[data-recent-orders]");
   if (!homeGallery) return;
 
   const validSizes = new Set(["square", "tall", "wide", "large"]);
@@ -131,6 +134,32 @@ const madeArchiveItems = [
     const fragment = document.createDocumentFragment();
     items.forEach((item) => fragment.append(createOverlayItem(item)));
     overlayGrid.replaceChildren(fragment);
+  };
+
+  const renderRecentOrders = (items) => {
+    if (!recentOrdersSection || !recentOrdersGrid) return;
+    const recentItems = items.slice(0, 3);
+    recentOrdersSection.hidden = !recentItems.length;
+    if (!recentItems.length) return;
+
+    const fragment = document.createDocumentFragment();
+    recentItems.forEach((item) => {
+      const article = document.createElement("article");
+      article.className = "showroom-recent-order";
+
+      const image = createImage(item);
+      image.className = "showroom-recent-order-photo";
+      article.append(image);
+
+      const copy = document.createElement("p");
+      copy.className = "showroom-recent-order-caption";
+      copy.textContent = item.caption || "최근 만든 쿠키";
+      article.append(copy);
+      fragment.append(article);
+    });
+
+    recentOrdersGrid.replaceChildren(fragment);
+    recentOrdersSection.querySelectorAll("[data-reveal]").forEach((element) => element.classList.add("is-visible"));
   };
 
   const restoreTriggerFocus = () => {
@@ -206,6 +235,9 @@ const madeArchiveItems = [
   };
 
   closeButton?.addEventListener("click", () => closeOverlay());
+  archiveOpenButtons.forEach((button) => {
+    button.addEventListener("click", () => openOverlay(button));
+  });
   overlay?.addEventListener("click", (event) => {
     if (event.target === overlay) closeOverlay();
   });
@@ -250,5 +282,6 @@ const madeArchiveItems = [
     const overlayItems = uploadedItems.length ? uploadedItems : madeArchiveItems;
     renderHomeArchive(homeItems);
     renderOverlayArchive(overlayItems);
+    renderRecentOrders(uploadedItems);
   });
 })();

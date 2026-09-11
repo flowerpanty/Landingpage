@@ -84,7 +84,7 @@ function renderProductCard(product) {
             </figure>
             <div class="showroom-product-copy">
               <h3>${escapeHtml(product.name)}</h3>
-              <span class="showroom-product-go">GO</span>
+              <span class="showroom-product-go">구경하기 →</span>
             </div>
           </a>`;
 }
@@ -98,7 +98,7 @@ function renderNewArrival(product) {
             <p class="showroom-eyebrow">${escapeHtml(product.badge || product.category)}</p>
             <h2>${escapeHtml(product.name)}</h2>
             <p>${escapeHtml(product.description)}</p>
-            <a class="showroom-button showroom-button--dark" href="${escapeHtml(homeLinkPath(product.detailPath))}">GO</a>
+            <a class="showroom-button showroom-button--dark" href="${escapeHtml(homeLinkPath(product.detailPath))}">구경하기 →</a>
           </div>
           <figure class="showroom-new-photo">
             <img src="${escapeHtml(homeAssetPath(heroImage))}" alt="${escapeHtml(product.name)} 신제품" loading="eager" decoding="async">
