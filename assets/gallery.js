@@ -60,8 +60,6 @@ const madeArchiveItems = [
   const overlayGrid = document.querySelector("[data-made-overlay-grid]");
   const closeButton = document.querySelector("[data-made-overlay-close]");
   const archiveOpenButtons = [...document.querySelectorAll("[data-open-made-overlay]")];
-  const recentOrdersSection = document.querySelector("[data-recent-orders-section]");
-  const recentOrdersGrid = document.querySelector("[data-recent-orders]");
   if (!homeGallery) return;
 
   const validSizes = new Set(["square", "tall", "wide", "large"]);
@@ -114,9 +112,22 @@ const madeArchiveItems = [
     figure.append(createImage(item));
 
     if (item.caption) {
-      const caption = document.createElement("span");
+      const caption = document.createElement("div");
       caption.className = "showroom-made-overlay-caption";
-      caption.textContent = item.caption;
+
+      const captionText = document.createElement("span");
+      captionText.className = "showroom-made-overlay-caption-text";
+      captionText.textContent = item.caption;
+
+      const consultLink = document.createElement("a");
+      consultLink.className = "showroom-made-overlay-consult";
+      consultLink.href = "https://pf.kakao.com/_QdCaK/chat";
+      consultLink.target = "_blank";
+      consultLink.rel = "noopener noreferrer";
+      consultLink.textContent = "비슷하게 문의 →";
+      consultLink.setAttribute("aria-label", `${item.caption}와 비슷한 쿠키 카카오 상담 열기`);
+
+      caption.append(captionText, consultLink);
       figure.append(caption);
     }
 
@@ -126,7 +137,25 @@ const madeArchiveItems = [
   const renderHomeArchive = (items) => {
     const fragment = document.createDocumentFragment();
     items.forEach((item, index) => fragment.append(createHomeItem(item, index)));
+    homeGallery.classList.remove("is-ready");
     homeGallery.replaceChildren(fragment);
+    homeGallery.classList.remove("is-loading");
+    homeGallery.setAttribute("aria-busy", "false");
+    window.requestAnimationFrame(() => homeGallery.classList.add("is-ready"));
+  };
+
+  const renderHomeSkeleton = () => {
+    const fragment = document.createDocumentFragment();
+    Array.from({ length: 4 }, (_, index) => {
+      const skeleton = document.createElement("span");
+      skeleton.className = "showroom-made-skeleton";
+      skeleton.style.setProperty("--made-index", String(index));
+      skeleton.setAttribute("aria-hidden", "true");
+      fragment.append(skeleton);
+    });
+    homeGallery.replaceChildren(fragment);
+    homeGallery.classList.add("is-loading");
+    homeGallery.setAttribute("aria-busy", "true");
   };
 
   const renderOverlayArchive = (items) => {
@@ -134,32 +163,6 @@ const madeArchiveItems = [
     const fragment = document.createDocumentFragment();
     items.forEach((item) => fragment.append(createOverlayItem(item)));
     overlayGrid.replaceChildren(fragment);
-  };
-
-  const renderRecentOrders = (items) => {
-    if (!recentOrdersSection || !recentOrdersGrid) return;
-    const recentItems = items.slice(0, 3);
-    recentOrdersSection.hidden = !recentItems.length;
-    if (!recentItems.length) return;
-
-    const fragment = document.createDocumentFragment();
-    recentItems.forEach((item) => {
-      const article = document.createElement("article");
-      article.className = "showroom-recent-order";
-
-      const image = createImage(item);
-      image.className = "showroom-recent-order-photo";
-      article.append(image);
-
-      const copy = document.createElement("p");
-      copy.className = "showroom-recent-order-caption";
-      copy.textContent = item.caption || "최근 만든 쿠키";
-      article.append(copy);
-      fragment.append(article);
-    });
-
-    recentOrdersGrid.replaceChildren(fragment);
-    recentOrdersSection.querySelectorAll("[data-reveal]").forEach((element) => element.classList.add("is-visible"));
   };
 
   const restoreTriggerFocus = () => {
@@ -196,7 +199,13 @@ const madeArchiveItems = [
     const shouldReturnToHistory = returnToHistory && overlayHistoryEntryActive;
     overlayHistoryEntryActive = false;
     if (shouldReturnToHistory) history.back();
-    if (restoreFocus) restoreTriggerFocus();
+    if (restoreFocus) {
+      if (shouldReturnToHistory) {
+        window.setTimeout(restoreTriggerFocus, 0);
+      } else {
+        restoreTriggerFocus();
+      }
+    }
   };
 
   const openOverlay = (trigger) => {
@@ -218,19 +227,22 @@ const madeArchiveItems = [
   const getUploadedItems = async () => {
     try {
       const response = await fetch("/api/gallery", { headers: { Accept: "application/json" } });
-      if (!response.ok) return [];
+      if (!response.ok) return { items: [], loaded: false };
       const payload = await response.json();
-      return (payload.items || [])
-        .filter((item) => item.userUploaded)
-        .map((item) => ({
-          id: item.id,
-          filename: item.filename,
-          src: item.src,
-          alt: item.caption || "낫띵메터스에서 만든 쿠키",
-          caption: String(item.caption || "").trim()
-        }));
+      return {
+        loaded: true,
+        items: (payload.items || [])
+          .filter((item) => item.userUploaded)
+          .map((item) => ({
+            id: item.id,
+            filename: item.filename,
+            src: item.src,
+            alt: item.caption || "낫띵메터스에서 만든 쿠키",
+            caption: String(item.caption || "").trim()
+          }))
+      };
     } catch (error) {
-      return [];
+      return { items: [], loaded: false };
     }
   };
 
@@ -272,16 +284,15 @@ const madeArchiveItems = [
   });
 
   clearStaleOverlayHistory();
-  renderHomeArchive(madeArchiveItems);
+  renderHomeSkeleton();
   renderOverlayArchive(madeArchiveItems);
 
-  getUploadedItems().then((uploadedItems) => {
+  getUploadedItems().then(({ items: uploadedItems }) => {
     const homeItems = uploadedItems.length
-      ? [...uploadedItems.slice(0, 12), ...madeArchiveItems]
-      : madeArchiveItems;
+      ? uploadedItems.slice(0, 5)
+      : madeArchiveItems.slice(0, 5);
     const overlayItems = uploadedItems.length ? uploadedItems : madeArchiveItems;
     renderHomeArchive(homeItems);
     renderOverlayArchive(overlayItems);
-    renderRecentOrders(uploadedItems);
   });
 })();

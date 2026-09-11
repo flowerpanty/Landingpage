@@ -339,6 +339,126 @@ if (mobileBottomNav && inlineCtaRegions.length && "IntersectionObserver" in wind
   inlineCtaRegions.forEach((element) => bottomNavObserver.observe(element));
 }
 
+const showroomAnchorLinks = [...document.querySelectorAll(".showroom-nav--quick a[href^='#']")];
+
+if (showroomAnchorLinks.length && "IntersectionObserver" in window) {
+  const anchorTargets = showroomAnchorLinks
+    .map((link) => ({ link, target: document.querySelector(link.getAttribute("href")) }))
+    .filter((item) => item.target);
+  const visibleAnchors = new Map();
+
+  const setActiveShowroomAnchor = (target) => {
+    anchorTargets.forEach(({ link, target: candidate }) => {
+      const isActive = candidate === target;
+      link.toggleAttribute("aria-current", isActive);
+      if (isActive) link.setAttribute("aria-current", "location");
+    });
+  };
+
+  const resolveActiveShowroomAnchor = () => {
+    const active = [...visibleAnchors.entries()]
+      .filter(([, entry]) => entry.isIntersecting)
+      .sort(([, a], [, b]) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
+    if (active.length) setActiveShowroomAnchor(active[0][0]);
+  };
+
+  const anchorObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => visibleAnchors.set(entry.target, entry));
+      resolveActiveShowroomAnchor();
+    },
+    { threshold: [0.25, 0.55], rootMargin: "-18% 0px -48% 0px" }
+  );
+
+  anchorTargets.forEach(({ target }) => anchorObserver.observe(target));
+  window.addEventListener("hashchange", () => {
+    const target = document.querySelector(window.location.hash);
+    if (target) setActiveShowroomAnchor(target);
+  });
+}
+
+const floatingOrderCta = document.querySelector("[data-mobile-order-cta]");
+const floatingOrderLabel = document.querySelector("[data-mobile-order-label]");
+
+if (floatingOrderCta && floatingOrderLabel && "IntersectionObserver" in window) {
+  const defaultOrderCta = {
+    key: "default",
+    label: "쿠키 주문하기",
+    href: "https://thingmattersreserve-production.up.railway.app"
+  };
+  const ctaContexts = [
+    {
+      selector: "#our-cookies, #featured-products",
+      ...defaultOrderCta
+    },
+    {
+      selector: "#use-case-guide",
+      key: "gift",
+      label: "선물 주문하기",
+      href: "https://thingmattersreserve-production.up.railway.app"
+    },
+    {
+      selector: "#local-pickup",
+      key: "group",
+      label: "단체 주문 상담",
+      href: "https://pf.kakao.com/_QdCaK/chat"
+    },
+    {
+      selector: "#actual-cases",
+      key: "made",
+      label: "이런 쿠키 문의하기",
+      href: "https://pf.kakao.com/_QdCaK/chat"
+    }
+  ];
+  const mobileMedia = window.matchMedia("(max-width: 760px)");
+  const ctaEntries = new Map();
+  let activeCtaKey = "";
+
+  const applyFloatingOrderCta = (context) => {
+    if (!mobileMedia.matches) {
+      floatingOrderLabel.textContent = "주문하기";
+      floatingOrderCta.href = defaultOrderCta.href;
+      floatingOrderCta.setAttribute("aria-label", "주문하기");
+      activeCtaKey = "desktop";
+      return;
+    }
+
+    if (activeCtaKey === context.key) return;
+    activeCtaKey = context.key;
+    floatingOrderLabel.textContent = context.label;
+    floatingOrderCta.href = context.href;
+    floatingOrderCta.setAttribute("aria-label", context.label);
+  };
+
+  const resolveFloatingOrderCta = () => {
+    const active = [...ctaEntries.entries()]
+      .filter(([, entry]) => entry.isIntersecting)
+      .sort(([, a], [, b]) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
+    applyFloatingOrderCta(active.length ? active[0][0] : defaultOrderCta);
+  };
+
+  const ctaObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => ctaEntries.set(entry.target.__nmCtaContext, entry));
+      resolveFloatingOrderCta();
+    },
+    { threshold: [0.08, 0.35], rootMargin: "-12% 0px -24% 0px" }
+  );
+
+  ctaContexts.forEach((context) => {
+    document.querySelectorAll(context.selector).forEach((element) => {
+      element.__nmCtaContext = context;
+      ctaObserver.observe(element);
+    });
+  });
+
+  mobileMedia.addEventListener("change", () => {
+    activeCtaKey = "";
+    resolveFloatingOrderCta();
+  });
+  resolveFloatingOrderCta();
+}
+
 const siteScript =
   document.currentScript ||
   [...document.scripts].find((script) =>

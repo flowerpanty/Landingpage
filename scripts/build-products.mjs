@@ -99,7 +99,10 @@ function renderProductCard(product) {
               <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">${status}
             </figure>
             <div class="showroom-product-copy">
-              <h3>${escapeHtml(product.name)}</h3>
+              <div class="showroom-product-text">
+                <h3>${escapeHtml(product.name)}</h3>
+                <p>${escapeHtml(product.description)}</p>
+              </div>
               <span class="showroom-product-go">구경하기 →</span>
             </div>
           </a>`;

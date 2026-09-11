@@ -235,6 +235,38 @@
         "mainEntity": [
           {
             "@type": "Question",
+            "name": "김포공항 근처에서 쿠키 픽업이 가능한가요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "네. 낫띵메터스는 김포공항과 송정역 인근 공항동에 있으며 예약 픽업을 안내합니다."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "기업 행사 단체 주문이 가능한가요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "가능합니다. 행사 날짜와 수량을 알려주시면 쿠키 구성과 포장 방향을 함께 안내합니다."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "결혼식 답례쿠키를 주문할 수 있나요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "가능합니다. 답례품 수량과 일정, 필요한 문구를 먼저 알려주시면 상담이 빠릅니다."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "수제쿠키를 소량으로 주문할 수 있나요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "가능한 제품은 사진과 구성을 먼저 보고 고를 수 있습니다. 필요한 수량은 주문 페이지 또는 카카오 상담에서 확인해주세요."
+            }
+          },
+          {
+            "@type": "Question",
             "name": "바로 주문 가능한 쿠키는 어떤 제품인가요?",
             "acceptedAnswer": {
               "@type": "Answer",
@@ -319,6 +351,18 @@
         </div>
       </div>
 
+      <section class="showroom-quick-selector" aria-label="쿠키 빠른 선택">
+        <div class="showroom-wrap showroom-quick-selector-inner">
+          <p>어떤 쿠키를 찾고 있나요?</p>
+          <nav>
+            <a href="#our-cookies">그냥 맛있는 쿠키</a>
+            <a href="guides/wedding-favor-cookie/">결혼·답례</a>
+            <a href="bulk/">회사·단체</a>
+            <a href="#actual-cases">귀여운 캐릭터</a>
+          </nav>
+        </div>
+      </section>
+
       <section class="showroom-section showroom-section--new-arrival" id="featured-products" data-scene="01" aria-labelledby="new-arrival-title">
         <div class="showroom-wrap">
           <div class="showroom-section-heading" data-reveal>
@@ -360,7 +404,10 @@
               <img src="images/main-order-brookie-thumb.png" alt="브루키" loading="lazy" decoding="async">
             </figure>
             <div class="showroom-product-copy">
-              <h3>브루키</h3>
+              <div class="showroom-product-text">
+                <h3>브루키</h3>
+                <p>캐릭터와 문구를 골라 만드는 나만의 브루키.</p>
+              </div>
               <span class="showroom-product-go">구경하기 →</span>
             </div>
           </a>
@@ -369,7 +416,10 @@
               <img src="images/handmade-cookie-flavor-lineup.png" alt="수제꾸덕쿠키" loading="lazy" decoding="async">
             </figure>
             <div class="showroom-product-copy">
-              <h3>수제꾸덕쿠키</h3>
+              <div class="showroom-product-text">
+                <h3>수제꾸덕쿠키</h3>
+                <p>맛과 패키지를 골라 담는 수제 꾸덕쿠키.</p>
+              </div>
               <span class="showroom-product-go">구경하기 →</span>
             </div>
           </a>
@@ -378,7 +428,10 @@
               <img src="images/lucky-hero-custom-20260414.jpeg" alt="행운쿠키" loading="lazy" decoding="async">
             </figure>
             <div class="showroom-product-copy">
-              <h3>행운쿠키</h3>
+              <div class="showroom-product-text">
+                <h3>행운쿠키</h3>
+                <p>HAPPY, RESET, MONEY, UP 네 가지 마음을 담은 쿠키.</p>
+              </div>
               <span class="showroom-product-go">구경하기 →</span>
             </div>
           </a>
@@ -388,7 +441,10 @@
               <span class="showroom-product-badge">NEW</span>
             </figure>
             <div class="showroom-product-copy">
-              <h3>쿠키크루</h3>
+              <div class="showroom-product-text">
+                <h3>쿠키크루</h3>
+                <p>작은 쿠키가 전하는 특별한 마음, COOKIE CREW.</p>
+              </div>
               <span class="showroom-product-go">구경하기 →</span>
             </div>
           </a>
@@ -429,20 +485,6 @@
         </div>
       </section>
 
-      <section class="showroom-section showroom-section--recent-orders" data-recent-orders-section hidden aria-labelledby="recent-orders-title">
-        <div class="showroom-wrap">
-          <header class="showroom-recent-orders-header" data-reveal>
-            <div>
-              <p class="showroom-eyebrow">RECENTLY MADE</p>
-              <h2 id="recent-orders-title">요즘 만든 쿠키예요.</h2>
-              <p>관리자가 직접 올린 실제 제작 사진입니다.</p>
-            </div>
-            <button class="showroom-made-open showroom-made-open--orders" type="button" data-open-made-overlay>전체 작업 보기 →</button>
-          </header>
-          <div class="showroom-recent-orders-grid" data-recent-orders aria-label="최근 제작 사진"></div>
-        </div>
-      </section>
-
       <section class="showroom-section showroom-section--made" id="actual-cases" data-scene="04" aria-labelledby="recent-title">
         <div class="showroom-wrap">
           <header class="showroom-made-header" data-reveal>
@@ -471,55 +513,37 @@
       </div>
 
       <section class="showroom-section showroom-visit showroom-section--service" id="local-pickup" data-scene="05" aria-label="픽업 및 단체 주문 안내">
-        <div class="showroom-wrap showroom-visit-grid" data-reveal>
-          <article class="showroom-visit-card">
-            <p class="showroom-eyebrow">PICKUP</p>
-            <h2>김포공항·송정역 가까운 공항동 픽업</h2>
-            <p>서울 강서구 송정로 25 1층 작업실에서 예약한 쿠키를 픽업할 수 있어요.</p>
-            <a class="showroom-button showroom-button--paper" href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer">네이버 지도 보기</a>
-          </article>
-          <article class="showroom-visit-card">
-            <p class="showroom-eyebrow">GROUP ORDER</p>
-            <h2>회사 행사와 단체 선물도 함께 만들어요.</h2>
-            <p>날짜, 수량, 문구를 알려주시면 포장 구성과 차량 퀵 가능 여부를 안내해드려요.</p>
-            <a class="showroom-button showroom-button--dark" href="https://thingmattersreserve-production.up.railway.app" target="_blank" rel="noopener noreferrer">주문 상담하기</a>
-          </article>
-        </div>
-      </section>
-
-      <section class="showroom-section showroom-section--local-facts" id="visit-nothingmatters" aria-labelledby="visit-facts-title">
         <div class="showroom-wrap">
-          <header class="showroom-local-facts-header" data-reveal>
+          <header class="showroom-visit-order-header" data-reveal>
             <div>
-              <p class="showroom-eyebrow">ABOUT / VISIT NOTHINGMATTERS</p>
-              <h2 id="visit-facts-title">공항동에서 쿠키를 만들어요.</h2>
+              <p class="showroom-eyebrow">VISIT &amp; ORDER</p>
+              <h2>공항동 픽업과 주문 안내</h2>
             </div>
-            <p>픽업과 단체 주문처럼 방문 전 확인이 필요한 정보를 한곳에 모았습니다.</p>
+            <p>위치, 예약 픽업, 단체 주문 상담처럼 방문 전 필요한 정보만 간단히 정리했어요.</p>
           </header>
-          <div class="showroom-local-facts-grid" data-reveal>
-            <article><strong>작업실 위치</strong><p>서울특별시 강서구 송정로 25 1층, 김포공항·송정역 인근의 공항동 작업실입니다.</p></article>
-            <article><strong>준비하는 쿠키</strong><p>수제쿠키, 답례품, 기업·단체 주문을 예약 제작합니다.</p></article>
-            <article><strong>수령과 상담</strong><p>예약 픽업을 안내하며, 일정과 수량에 따라 차량 퀵 가능 여부를 카카오로 상담합니다.</p></article>
+          <div class="showroom-visit-grid" data-reveal>
+            <article class="showroom-visit-card">
+              <p class="showroom-eyebrow">PICKUP</p>
+              <h2>김포공항·송정역 가까운 공항동 픽업</h2>
+              <p>서울 강서구 송정로 25 1층 작업실에서 예약한 쿠키를 픽업할 수 있어요.</p>
+              <a class="showroom-button showroom-button--paper" href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer">네이버 지도 보기</a>
+            </article>
+            <article class="showroom-visit-card">
+              <p class="showroom-eyebrow">GROUP ORDER</p>
+              <h2>회사 행사와 단체 선물도 함께 만들어요.</h2>
+              <p>날짜, 수량, 문구를 알려주시면 포장 구성과 차량 퀵 가능 여부를 안내해드려요.</p>
+              <a class="showroom-button showroom-button--dark" href="https://thingmattersreserve-production.up.railway.app" target="_blank" rel="noopener noreferrer">주문 상담하기</a>
+            </article>
           </div>
-          <div class="showroom-local-facts-links" data-reveal>
-            <a href="pickup/">김포공항·송정역 픽업 안내 →</a>
+          <div class="showroom-visit-order-facts" data-reveal>
+            <p><strong>작업실</strong> 서울특별시 강서구 송정로 25 1층 · 김포공항·송정역 인근</p>
+            <p><strong>준비하는 쿠키</strong> 수제쿠키 · 답례품 · 기업·단체 주문</p>
+            <p><strong>수령과 상담</strong> 예약 픽업 · 일정과 수량에 따른 차량 퀵 상담 · 카카오 상담</p>
+          </div>
+          <div class="showroom-visit-order-links" data-reveal>
+            <a href="pickup/">픽업 상세 안내 →</a>
             <a href="works/">실제 제작 사례 보기 →</a>
             <a href="https://instagram.com/nothingmatters_c" target="_blank" rel="noopener noreferrer">Instagram @nothingmatters_c ↗</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="showroom-section showroom-section--quick-answers" aria-labelledby="quick-answers-title">
-        <div class="showroom-wrap">
-          <header class="showroom-quick-answers-header" data-reveal>
-            <p class="showroom-eyebrow">QUICK ANSWERS</p>
-            <h2 id="quick-answers-title">주문 전에 바로 확인하세요.</h2>
-          </header>
-          <div class="showroom-quick-answers-grid" data-reveal>
-            <article><h3>김포공항 근처에서 쿠키 픽업이 가능한가요?</h3><p>네. 낫띵메터스는 김포공항과 송정역 인근 공항동에 있으며 예약 픽업을 안내합니다.</p></article>
-            <article><h3>기업 행사 단체 주문이 가능한가요?</h3><p>가능합니다. 행사 날짜와 수량을 알려주시면 쿠키 구성과 포장 방향을 함께 안내합니다.</p></article>
-            <article><h3>결혼식 답례쿠키를 주문할 수 있나요?</h3><p>가능합니다. 답례품 수량과 일정, 필요한 문구를 먼저 알려주시면 상담이 빠릅니다.</p></article>
-            <article><h3>수제쿠키를 소량으로 주문할 수 있나요?</h3><p>가능한 제품은 사진과 구성을 먼저 보고 고를 수 있습니다. 필요한 수량은 주문 페이지 또는 카카오 상담에서 확인해주세요.</p></article>
           </div>
         </div>
       </section>
@@ -534,6 +558,10 @@
             <p>아직 정하지 못한 내용이 있어도 괜찮아요. 필요한 기준부터 함께 정리해드릴게요.</p>
           </div>
           <div class="showroom-faq-list" data-reveal>
+            <details><summary>김포공항 근처에서 쿠키 픽업이 가능한가요?</summary><div class="showroom-faq-answer">네. 낫띵메터스는 김포공항과 송정역 인근 공항동에 있으며 예약 픽업을 안내합니다.</div></details>
+            <details><summary>기업 행사 단체 주문이 가능한가요?</summary><div class="showroom-faq-answer">가능합니다. 행사 날짜와 수량을 알려주시면 쿠키 구성과 포장 방향을 함께 안내합니다.</div></details>
+            <details><summary>결혼식 답례쿠키를 주문할 수 있나요?</summary><div class="showroom-faq-answer">가능합니다. 답례품 수량과 일정, 필요한 문구를 먼저 알려주시면 상담이 빠릅니다.</div></details>
+            <details><summary>수제쿠키를 소량으로 주문할 수 있나요?</summary><div class="showroom-faq-answer">가능한 제품은 사진과 구성을 먼저 보고 고를 수 있습니다. 필요한 수량은 주문 페이지 또는 카카오 상담에서 확인해주세요.</div></details>
             <details><summary>바로 주문 가능한 쿠키는 어떤 제품인가요?</summary><div class="showroom-faq-answer">브루키, 꾸덕쿠키, 행운쿠키는 사진을 보면서 수량과 옵션을 고르고 상담용 견적서까지 만들 수 있어요.</div></details>
             <details><summary>단체 답례품도 바로 주문하면 되나요?</summary><div class="showroom-faq-answer">수량, 납기, 문구, 배송 방식 조율이 필요한 단체 주문은 카카오 상담으로 먼저 이야기해주시면 가장 안전해요.</div></details>
             <details><summary>픽업이나 퀵 배송도 가능한가요?</summary><div class="showroom-faq-answer">강서구 송정로 25 1층에서 예약 픽업할 수 있어요. 일정과 수량에 따라 마곡을 포함한 차량 퀵 가능 여부도 안내합니다.</div></details>
@@ -574,8 +602,8 @@
     </footer>
 
     <aside class="nm-floating-actions" aria-label="빠른 주문 및 문의">
-      <a class="nm-floating-action nm-floating-action--order" href="https://thingmattersreserve-production.up.railway.app" target="_blank" rel="noopener noreferrer" aria-label="주문하기">
-        <span>주문하기</span><span class="nm-floating-order-arrow" aria-hidden="true">→</span>
+      <a class="nm-floating-action nm-floating-action--order" data-mobile-order-cta href="https://thingmattersreserve-production.up.railway.app" target="_blank" rel="noopener noreferrer" aria-label="주문하기">
+        <span data-mobile-order-label>주문하기</span><span class="nm-floating-order-arrow" aria-hidden="true">→</span>
       </a>
       <a class="nm-floating-action nm-floating-action--kakao" data-kakao-float="true" href="https://pf.kakao.com/_QdCaK" target="_blank" rel="noopener noreferrer" aria-label="카카오톡 채널">
         <span class="nm-floating-thumb nm-floating-thumb--kakao" aria-hidden="true"><img src="images/og-consult-cookie.png" alt="" width="64" height="64" decoding="async"></span>
