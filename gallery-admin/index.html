@@ -47,6 +47,19 @@
       </form>
     </section>
 
+    <section class="gallery-admin-panel" aria-labelledby="storage-title">
+      <div class="gallery-admin-panel-heading">
+        <div>
+          <h2 id="storage-title">저장소 상태</h2>
+          <p class="gallery-admin-storage-note">사진이 사라졌을 때 현재 저장 위치와 manifest 상태를 먼저 확인하세요.</p>
+        </div>
+        <button type="button" class="gallery-admin-refresh" data-storage-refresh>상태 새로고침</button>
+      </div>
+      <div class="gallery-admin-storage-grid" data-gallery-storage-status aria-live="polite">
+        <p class="gallery-admin-empty">관리자 키를 입력하면 저장소 상태를 확인할 수 있어요.</p>
+      </div>
+    </section>
+
     <section class="gallery-admin-panel" aria-labelledby="current-title">
       <div class="gallery-admin-panel-heading">
         <h2 id="current-title">내가 올린 사진</h2>

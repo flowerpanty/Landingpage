@@ -117,6 +117,27 @@ input { font: inherit; }
 .gallery-admin-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
 .gallery-admin-panel-heading h2 { margin: 0; }
 .gallery-admin-panel .gallery-admin-refresh { min-height: 38px; background: var(--paper); color: var(--ink); }
+.gallery-admin-storage-note { margin: 7px 0 0; color: #5d574e; font-size: 13px; font-weight: 500; }
+
+.gallery-admin-storage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.gallery-admin-storage-item {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--ink);
+  border-radius: 12px 15px 11px 16px;
+  background: #fff;
+}
+
+.gallery-admin-storage-item--wide { grid-column: 1 / -1; }
+.gallery-admin-storage-item strong { display: block; margin-bottom: 5px; font-size: 12px; }
+.gallery-admin-storage-item span { display: block; overflow-wrap: anywhere; color: #5d574e; font-size: 14px; line-height: 1.4; }
+.gallery-admin-storage-item.is-warning { border-color: var(--orange); background: #fff8f3; }
 
 .gallery-admin-grid {
   display: grid;
@@ -159,4 +180,7 @@ input { font: inherit; }
   .gallery-admin-status,
   .gallery-admin-panel form > button { grid-column: 1; }
   .gallery-admin-grid { grid-template-columns: repeat(2, 1fr); }
+  .gallery-admin-storage-grid { grid-template-columns: 1fr; }
+  .gallery-admin-storage-item--wide { grid-column: 1; }
+  .gallery-admin-panel-heading { align-items: flex-start; }
 }

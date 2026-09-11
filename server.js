@@ -380,16 +380,154 @@ function ensureGalleryStorage() {
   fs.mkdirSync(getGalleryStorageDir(), { recursive: true });
 }
 
-function readGalleryManifest() {
+function getGalleryManifestModifiedAt(manifestPath) {
+  try {
+    return fs.statSync(manifestPath).mtime.toISOString();
+  } catch (error) {
+    return null;
+  }
+}
+
+function readGalleryManifestState() {
   const manifestPath = getGalleryManifestPath();
-  if (!fs.existsSync(manifestPath)) return [];
+  if (!fs.existsSync(manifestPath)) {
+    return {
+      items: [],
+      manifestPath,
+      manifestExists: false,
+      manifestStatus: "missing",
+      manifestModifiedAt: null
+    };
+  }
+
+  let source;
+  try {
+    source = fs.readFileSync(manifestPath, "utf8");
+  } catch (error) {
+    console.error(`[gallery] Failed to read manifest at ${manifestPath}`, error);
+    return {
+      items: [],
+      manifestPath,
+      manifestExists: true,
+      manifestStatus: "read_error",
+      manifestModifiedAt: getGalleryManifestModifiedAt(manifestPath)
+    };
+  }
 
   try {
-    const parsed = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(source);
+    if (!Array.isArray(parsed)) {
+      console.error(`[gallery] Manifest must contain an array at ${manifestPath}`);
+      return {
+        items: [],
+        manifestPath,
+        manifestExists: true,
+        manifestStatus: "invalid_format",
+        manifestModifiedAt: getGalleryManifestModifiedAt(manifestPath)
+      };
+    }
+
+    return {
+      items: parsed,
+      manifestPath,
+      manifestExists: true,
+      manifestStatus: "ok",
+      manifestModifiedAt: getGalleryManifestModifiedAt(manifestPath)
+    };
   } catch (error) {
-    return [];
+    console.error(`[gallery] Failed to parse manifest at ${manifestPath}`, error);
+    return {
+      items: [],
+      manifestPath,
+      manifestExists: true,
+      manifestStatus: "parse_error",
+      manifestModifiedAt: getGalleryManifestModifiedAt(manifestPath)
+    };
   }
+}
+
+function readGalleryManifest() {
+  return readGalleryManifestState().items;
+}
+
+function isGalleryImageFile(filename) {
+  return /\.(?:avif|gif|jpe?g|png|webp)$/i.test(filename);
+}
+
+function getGalleryStorageStatus() {
+  const storagePath = getGalleryStorageDir();
+  const galleryDataDirConfigured = Boolean(String(process.env.GALLERY_DATA_DIR || "").trim());
+  let storageDirectoryExists = false;
+  let storageDirectoryWritable = false;
+  let galleryImageFileCount = 0;
+  let galleryImageFilenames = null;
+
+  try {
+    storageDirectoryExists = fs.statSync(storagePath).isDirectory();
+  } catch (error) {
+    storageDirectoryExists = false;
+  }
+
+  if (storageDirectoryExists) {
+    try {
+      fs.accessSync(storagePath, fs.constants.W_OK);
+      storageDirectoryWritable = true;
+    } catch (error) {
+      storageDirectoryWritable = false;
+    }
+
+    try {
+      galleryImageFilenames = new Set(
+        fs.readdirSync(storagePath, { withFileTypes: true })
+          .filter((entry) => entry.isFile() && isGalleryImageFile(entry.name))
+          .map((entry) => entry.name)
+      );
+      galleryImageFileCount = galleryImageFilenames.size;
+    } catch (error) {
+      console.error(`[gallery] Failed to count image files at ${storagePath}`, error);
+      galleryImageFileCount = null;
+    }
+  }
+
+  const manifest = readGalleryManifestState();
+  let missingReferencedImageCount = 0;
+  let orphanImageFileCount = 0;
+
+  if (galleryImageFilenames && manifest.manifestStatus === "ok") {
+    const referencedFilenames = new Set();
+    manifest.items.forEach((item) => {
+      const filename = path.basename(String(item?.filename || ""));
+      if (!filename) {
+        missingReferencedImageCount += 1;
+        return;
+      }
+      referencedFilenames.add(filename);
+      if (!galleryImageFilenames.has(filename)) missingReferencedImageCount += 1;
+    });
+    orphanImageFileCount = [...galleryImageFilenames]
+      .filter((filename) => !referencedFilenames.has(filename))
+      .length;
+  } else if (galleryImageFilenames && manifest.manifestStatus === "missing") {
+    // A missing manifest cannot account for any files that still remain on disk.
+    orphanImageFileCount = galleryImageFilenames.size;
+  } else if (!galleryImageFilenames) {
+    missingReferencedImageCount = null;
+    orphanImageFileCount = null;
+  }
+
+  return {
+    storagePath,
+    galleryDataDirConfigured,
+    storageDirectoryExists,
+    storageDirectoryWritable,
+    manifestExists: manifest.manifestExists,
+    manifestStatus: manifest.manifestStatus,
+    manifestItemCount: manifest.items.length,
+    galleryImageFileCount,
+    missingReferencedImageCount,
+    orphanImageFileCount,
+    manifestModifiedAt: manifest.manifestModifiedAt
+  };
 }
 
 function writeGalleryManifest(items) {
@@ -405,6 +543,16 @@ function isGalleryAdminAuthorized(req) {
   const suppliedToken = String(req.headers["x-gallery-admin-token"] || "").trim();
   if (!expectedToken || !suppliedToken || expectedToken.length !== suppliedToken.length) return false;
   return crypto.timingSafeEqual(Buffer.from(expectedToken), Buffer.from(suppliedToken));
+}
+
+function sendGalleryAuthorizationError(res) {
+  const galleryConfigured = Boolean(String(process.env.GALLERY_ADMIN_TOKEN || "").trim());
+  sendJson(res, galleryConfigured ? 403 : 503, {
+    error: galleryConfigured ? "gallery_forbidden" : "gallery_not_configured",
+    message: galleryConfigured
+      ? "관리자 키가 올바르지 않습니다."
+      : "GALLERY_ADMIN_TOKEN 환경변수를 먼저 설정해주세요."
+  });
 }
 
 function readRequestBody(req, limitBytes) {
@@ -443,6 +591,16 @@ function decodeGalleryPathSegment(value) {
 }
 
 async function handleGalleryApi(req, res, requestUrl) {
+  if (req.method === "GET" && requestUrl.pathname === "/api/gallery/status") {
+    if (!isGalleryAdminAuthorized(req)) {
+      sendGalleryAuthorizationError(res);
+      return;
+    }
+
+    sendJson(res, 200, getGalleryStorageStatus());
+    return;
+  }
+
   if (req.method === "GET" && requestUrl.pathname === "/api/gallery") {
     const customItems = readGalleryManifest();
     sendJson(res, 200, {
@@ -454,12 +612,7 @@ async function handleGalleryApi(req, res, requestUrl) {
   }
 
   if (!isGalleryAdminAuthorized(req)) {
-    sendJson(res, process.env.GALLERY_ADMIN_TOKEN ? 403 : 503, {
-      error: process.env.GALLERY_ADMIN_TOKEN ? "gallery_forbidden" : "gallery_not_configured",
-      message: process.env.GALLERY_ADMIN_TOKEN
-        ? "관리자 키가 올바르지 않습니다."
-        : "GALLERY_ADMIN_TOKEN 환경변수를 먼저 설정해주세요."
-    });
+    sendGalleryAuthorizationError(res);
     return;
   }
 
@@ -500,6 +653,9 @@ async function handleGalleryApi(req, res, requestUrl) {
       };
       items.push(item);
       writeGalleryManifest(items);
+      console.info(
+        `[gallery] Saved upload filename=${filename} path=${path.join(getGalleryStorageDir(), filename)} manifestItems=${items.length}`
+      );
       sendJson(res, 201, { item });
     } catch (error) {
       const statusCode = error.message === "payload_too_large" ? 413 : 400;

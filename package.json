@@ -10,6 +10,7 @@
     "schema:check": "node scripts/generate-jsonld.mjs --check",
     "site:build": "npm run products:build && npm run schema:build",
     "site:check": "npm run products:check && npm run schema:check",
+    "gallery:test": "node scripts/test-gallery-storage.mjs",
     "prestart": "npm run site:build",
     "start": "node server.js"
   }

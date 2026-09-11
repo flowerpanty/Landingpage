@@ -54,39 +54,128 @@ const madeArchiveItems = [
 ];
 
 (() => {
-  const gallery = document.querySelector("[data-recent-gallery]");
-  if (!gallery) return;
+  const homeGallery = document.querySelector("[data-recent-gallery]");
+  const overlay = document.querySelector("[data-made-overlay]");
+  const overlayDialog = overlay?.querySelector(".showroom-made-overlay-dialog");
+  const overlayGrid = document.querySelector("[data-made-overlay-grid]");
+  const closeButton = document.querySelector("[data-made-overlay-close]");
+  if (!homeGallery) return;
 
   const validSizes = new Set(["square", "tall", "wide", "large"]);
-  const uploadedSizes = ["large", "square", "tall", "wide"];
+  const uploadedSizes = ["large", "tall", "wide", "square"];
+  let lastTrigger = null;
+  let overlayOpen = false;
+  let overlayHistoryEntryActive = false;
 
-  const makeItem = (item, index) => {
-    const figure = document.createElement("figure");
-    figure.className = "showroom-made-item is-visible";
-    figure.dataset.size = validSizes.has(item.size) ? item.size : "square";
+  const stableHash = (value) => [...String(value || "made-photo")]
+    .reduce((total, character) => ((total * 31) + character.charCodeAt(0)) >>> 0, 7);
 
+  const getItemSize = (item) => {
+    if (validSizes.has(item.size)) return item.size;
+    return uploadedSizes[stableHash(item.id || item.filename || item.src) % uploadedSizes.length];
+  };
+
+  const createImage = (item) => {
     const image = document.createElement("img");
     image.src = item.src;
     image.alt = item.alt || "낫띵메터스에서 만든 쿠키";
     image.loading = "lazy";
     image.decoding = "async";
-    figure.append(image);
+    return image;
+  };
+
+  const createHomeItem = (item, index) => {
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "showroom-made-item showroom-made-item--trigger is-visible";
+    trigger.dataset.size = getItemSize(item);
+    trigger.style.setProperty("--made-index", String(index));
+    trigger.setAttribute("aria-label", `${item.alt || "작업 사진"} 전체 아카이브로 보기`);
+    trigger.append(createImage(item));
 
     if (item.title) {
-      const caption = document.createElement("figcaption");
+      const caption = document.createElement("span");
       caption.className = "showroom-made-caption";
       caption.textContent = item.title;
-      figure.append(caption);
+      trigger.append(caption);
     }
 
-    figure.style.setProperty("--made-index", String(index));
+    trigger.addEventListener("click", () => openOverlay(trigger));
+    return trigger;
+  };
+
+  const createOverlayItem = (item) => {
+    const figure = document.createElement("figure");
+    figure.className = "showroom-made-overlay-item";
+    figure.dataset.size = getItemSize(item);
+    figure.append(createImage(item));
     return figure;
   };
 
-  const renderArchive = (items) => {
+  const renderHomeArchive = (items) => {
     const fragment = document.createDocumentFragment();
-    items.forEach((item, index) => fragment.append(makeItem(item, index)));
-    gallery.replaceChildren(fragment);
+    items.forEach((item, index) => fragment.append(createHomeItem(item, index)));
+    homeGallery.replaceChildren(fragment);
+  };
+
+  const renderOverlayArchive = (items) => {
+    if (!overlayGrid) return;
+    const fragment = document.createDocumentFragment();
+    items.forEach((item) => fragment.append(createOverlayItem(item)));
+    overlayGrid.replaceChildren(fragment);
+  };
+
+  const restoreTriggerFocus = () => {
+    if (lastTrigger?.isConnected) lastTrigger.focus({ preventScroll: true });
+    lastTrigger = null;
+  };
+
+  const getOverlayFocusableElements = () => {
+    if (!overlayDialog) return [];
+    return [...overlayDialog.querySelectorAll(
+      "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])"
+    )].filter((element) => !element.hidden && element.getClientRects().length);
+  };
+
+  const clearStaleOverlayHistory = () => {
+    if (!history.state?.nmMadeOverlay) return;
+    const { nmMadeOverlay, ...previousState } = history.state;
+    const currentUrl = new URL(window.location.href);
+    if (currentUrl.hash === "#made-gallery") currentUrl.hash = "";
+    history.replaceState(previousState, "", `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+  };
+
+  const closeOverlay = ({ restoreFocus = true, returnToHistory = true } = {}) => {
+    if (!overlayOpen || !overlay) return;
+    overlayOpen = false;
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("is-made-overlay-open");
+
+    window.setTimeout(() => {
+      if (!overlayOpen) overlay.hidden = true;
+    }, 180);
+
+    const shouldReturnToHistory = returnToHistory && overlayHistoryEntryActive;
+    overlayHistoryEntryActive = false;
+    if (shouldReturnToHistory) history.back();
+    if (restoreFocus) restoreTriggerFocus();
+  };
+
+  const openOverlay = (trigger) => {
+    if (!overlay || !overlayDialog) return;
+    lastTrigger = trigger;
+    overlayOpen = true;
+    overlay.hidden = false;
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("is-made-overlay-open");
+    window.requestAnimationFrame(() => overlay.classList.add("is-open"));
+
+    history.pushState({ ...(history.state || {}), nmMadeOverlay: true }, "", "#made-gallery");
+    overlayHistoryEntryActive = true;
+
+    const [firstFocusableElement] = getOverlayFocusableElements();
+    (firstFocusableElement || overlayDialog).focus({ preventScroll: true });
   };
 
   const getUploadedItems = async () => {
@@ -94,24 +183,63 @@ const madeArchiveItems = [
       const response = await fetch("/api/gallery", { headers: { Accept: "application/json" } });
       if (!response.ok) return [];
       const payload = await response.json();
-
       return (payload.items || [])
         .filter((item) => item.userUploaded)
-        .slice(0, 12)
-        .map((item, index) => ({
+        .map((item) => ({
+          id: item.id,
+          filename: item.filename,
           src: item.src,
-          alt: item.caption || "낫띵메터스에서 만든 쿠키",
-          title: index % 4 === 0 ? "new from our kitchen" : "",
-          size: uploadedSizes[index % uploadedSizes.length]
+          alt: item.caption || "낫띵메터스에서 만든 쿠키"
         }));
     } catch (error) {
       return [];
     }
   };
 
-  renderArchive(madeArchiveItems);
+  closeButton?.addEventListener("click", () => closeOverlay());
+  overlay?.addEventListener("click", (event) => {
+    if (event.target === overlay) closeOverlay();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (!overlayOpen) return;
+    if (event.key === "Escape") {
+      closeOverlay();
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const focusableElements = getOverlayFocusableElements();
+    if (!focusableElements.length) {
+      event.preventDefault();
+      overlayDialog?.focus({ preventScroll: true });
+      return;
+    }
+
+    const firstFocusableElement = focusableElements[0];
+    const lastFocusableElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+    if (event.shiftKey && (activeElement === firstFocusableElement || !overlayDialog?.contains(activeElement))) {
+      event.preventDefault();
+      lastFocusableElement.focus({ preventScroll: true });
+    } else if (!event.shiftKey && (activeElement === lastFocusableElement || !overlayDialog?.contains(activeElement))) {
+      event.preventDefault();
+      firstFocusableElement.focus({ preventScroll: true });
+    }
+  });
+  window.addEventListener("popstate", () => {
+    if (overlayOpen) closeOverlay({ returnToHistory: false });
+  });
+
+  clearStaleOverlayHistory();
+  renderHomeArchive(madeArchiveItems);
+  renderOverlayArchive(madeArchiveItems);
 
   getUploadedItems().then((uploadedItems) => {
-    if (uploadedItems.length) renderArchive([...uploadedItems, ...madeArchiveItems]);
+    const homeItems = uploadedItems.length
+      ? [...uploadedItems.slice(0, 12), ...madeArchiveItems]
+      : madeArchiveItems;
+    const overlayItems = uploadedItems.length ? uploadedItems : madeArchiveItems;
+    renderHomeArchive(homeItems);
+    renderOverlayArchive(overlayItems);
   });
 })();

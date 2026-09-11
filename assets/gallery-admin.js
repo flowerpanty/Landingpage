@@ -3,6 +3,8 @@
   const list = document.querySelector("[data-gallery-list]");
   const status = document.querySelector("[data-status]");
   const refreshButton = document.querySelector("[data-refresh]");
+  const storageStatus = document.querySelector("[data-gallery-storage-status]");
+  const storageRefreshButton = document.querySelector("[data-storage-refresh]");
   const preview = document.querySelector("[data-preview]");
   const fileName = document.querySelector("[data-file-name]");
   const tokenStorageKey = "nm_gallery_admin_token";
@@ -16,6 +18,83 @@
   const setStatus = (message, isError = false) => {
     status.textContent = message;
     status.classList.toggle("is-error", isError);
+  };
+
+  const manifestStatusLabels = {
+    ok: "정상",
+    missing: "없음",
+    read_error: "읽기 오류",
+    parse_error: "JSON 오류",
+    invalid_format: "형식 오류"
+  };
+
+  const renderStorageMessage = (message, isError = false) => {
+    if (!storageStatus) return;
+    storageStatus.innerHTML = "";
+    const item = document.createElement("p");
+    item.className = `gallery-admin-empty${isError ? " is-error" : ""}`;
+    item.textContent = message;
+    storageStatus.append(item);
+  };
+
+  const addStorageItem = (label, value, options = {}) => {
+    const item = document.createElement("article");
+    item.className = "gallery-admin-storage-item";
+    if (options.wide) item.classList.add("gallery-admin-storage-item--wide");
+    if (options.warning) item.classList.add("is-warning");
+    const title = document.createElement("strong");
+    title.textContent = label;
+    const content = document.createElement("span");
+    content.textContent = value;
+    item.append(title, content);
+    storageStatus.append(item);
+  };
+
+  const formatTimestamp = (value) => {
+    if (!value) return "-";
+    const timestamp = new Date(value);
+    return Number.isNaN(timestamp.getTime()) ? "확인 불가" : timestamp.toLocaleString("ko-KR");
+  };
+
+  const renderStorageStatus = (data) => {
+    if (!storageStatus) return;
+    storageStatus.innerHTML = "";
+    const manifestStatus = manifestStatusLabels[data.manifestStatus] || "확인 불가";
+    const missingReferencedImages = data.missingReferencedImageCount;
+    const emptyStorage = data.manifestStatus === "missing" && data.galleryImageFileCount === 0;
+    const storageHealthy = data.storageDirectoryExists && data.storageDirectoryWritable &&
+      ((data.manifestStatus === "ok" && missingReferencedImages === 0) || emptyStorage);
+    const storageLabel = storageHealthy
+      ? (emptyStorage ? "정상 · 빈 저장소" : "정상")
+      : "확인 필요";
+
+    addStorageItem("저장소", storageLabel, { warning: !storageHealthy });
+    addStorageItem("manifest", `${manifestStatus} · ${data.manifestItemCount ?? 0}개 항목`, {
+      warning: !["ok", "missing"].includes(data.manifestStatus)
+    });
+    addStorageItem("실제 이미지 파일", `${data.galleryImageFileCount ?? "확인 불가"}개`);
+    addStorageItem(
+      "참조 이미지 누락",
+      `${missingReferencedImages ?? "확인 불가"}개`,
+      { warning: Boolean(missingReferencedImages) }
+    );
+    addStorageItem(
+      "고아 이미지 파일",
+      `${data.orphanImageFileCount ?? "확인 불가"}개`,
+      { warning: Boolean(data.orphanImageFileCount) }
+    );
+    addStorageItem("manifest 수정 시각", formatTimestamp(data.manifestModifiedAt));
+    addStorageItem("저장 경로", data.storagePath || "확인 불가", { wide: true });
+    addStorageItem(
+      "GALLERY_DATA_DIR",
+      data.galleryDataDirConfigured ? "설정됨" : "미설정 · 기본 경로 사용 중",
+      { warning: !data.galleryDataDirConfigured }
+    );
+    addStorageItem(
+      "쓰기 권한",
+      data.storageDirectoryWritable ? "쓰기 가능" : "쓰기 불가",
+      { warning: !data.storageDirectoryWritable }
+    );
   };
 
   const blobToDataUrl = (blob) =>
@@ -83,7 +162,7 @@
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.message || "삭제하지 못했습니다.");
       setStatus("사진을 삭제했습니다.");
-      await loadGallery();
+      await Promise.all([loadGallery(), loadStorageStatus()]);
     } catch (error) {
       setStatus(error.message, true);
     } finally {
@@ -130,6 +209,26 @@
     renderList(payload.items || []);
   };
 
+  const loadStorageStatus = async () => {
+    if (!storageStatus) return;
+    const token = tokenInput.value.trim();
+    if (!token) {
+      renderStorageMessage("관리자 키를 입력하면 저장소 상태를 확인할 수 있어요.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/gallery/status", {
+        headers: { "X-Gallery-Admin-Token": token }
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message || "저장소 상태를 불러오지 못했습니다.");
+      renderStorageStatus(payload);
+    } catch (error) {
+      renderStorageMessage(error.message || "저장소 상태를 불러오지 못했습니다.", true);
+    }
+  };
+
   fileInput.addEventListener("change", () => {
     const file = fileInput.files?.[0];
     if (!file) return;
@@ -139,8 +238,11 @@
   });
 
   refreshButton?.addEventListener("click", () => {
-    loadGallery().catch((error) => setStatus(error.message, true));
+    Promise.all([loadGallery(), loadStorageStatus()]).catch((error) => setStatus(error.message, true));
   });
+
+  storageRefreshButton?.addEventListener("click", () => loadStorageStatus());
+  tokenInput.addEventListener("change", () => loadStorageStatus());
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -181,7 +283,7 @@
       preview.hidden = true;
       fileName.textContent = "휴대폰 사진 가능 · 자동 압축";
       setStatus("홈 RECENTLY MADE에 사진을 추가했습니다.");
-      await loadGallery();
+      await Promise.all([loadGallery(), loadStorageStatus()]);
     } catch (error) {
       setStatus(error.message || "업로드하지 못했습니다.", true);
     } finally {
@@ -190,4 +292,5 @@
   });
 
   loadGallery().catch((error) => setStatus(error.message, true));
+  loadStorageStatus();
 })();
