@@ -90,23 +90,37 @@ document.querySelectorAll("img[data-fallback-label]").forEach((img) => {
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const revealTargets = document.querySelectorAll("[data-reveal]");
+const revealElement = (element, { immediate = false } = {}) => {
+  element.classList.add("is-visible");
+  if (immediate) element.style.transition = "none";
+  element.style.opacity = "1";
+  element.style.transform = "translateY(0)";
+};
 
 if (revealTargets.length) {
   if (prefersReducedMotion.matches || !("IntersectionObserver" in window)) {
-    revealTargets.forEach((element) => element.classList.add("is-visible"));
+    revealTargets.forEach((element) => revealElement(element, { immediate: true }));
   } else {
     const revealObserver = new IntersectionObserver(
       (entries, observer) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
+          revealElement(entry.target);
           observer.unobserve(entry.target);
         });
       },
       { threshold: 0.18, rootMargin: "0px 0px -8% 0px" }
     );
 
-    revealTargets.forEach((element) => revealObserver.observe(element));
+    revealTargets.forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      const isInitiallyVisible = Boolean(element.closest(".showroom-hero")) || (rect.top < window.innerHeight * 0.95 && rect.bottom > 0);
+      if (isInitiallyVisible) {
+        revealElement(element, { immediate: true });
+      } else {
+        revealObserver.observe(element);
+      }
+    });
   }
 }
 
@@ -289,7 +303,10 @@ if (homeSearchInput && homeSearchResults && homeSearchFeedback && homeSearchGrid
   homeSearchInput.addEventListener("search", updateHomeSearchState);
 }
 
-const getDashboardEventNameForLink = (link) => {
+const normalizeAnalyticsText = (value = "") =>
+  String(value).trim().replace(/\s+/g, " ").slice(0, 80);
+
+const getLegacyDashboardEventNameForLink = (link) => {
   const href = link?.href || "";
 
   if (href.includes("pf.kakao.com/_QdCaK")) return "consult_kakao_click";
@@ -299,18 +316,88 @@ const getDashboardEventNameForLink = (link) => {
   return "";
 };
 
+const getDataAnalyticsEventName = (target) => {
+  const analyticsTarget = target?.closest?.("[data-analytics-event]");
+  return analyticsTarget?.dataset.analyticsEvent || "";
+};
+
+const getBehaviorAnalyticsEventNames = (link, clickedElement) => {
+  const href = link?.href || "";
+  const pathname = (() => {
+    try {
+      return new URL(href).pathname;
+    } catch (error) {
+      return "";
+    }
+  })();
+  const className = `${link?.className || ""} ${clickedElement?.className || ""}`;
+  const events = [];
+
+  if (/\/(?:products|brookie|out|cookie-crew)\//.test(pathname) || link?.closest?.(".showroom-product-card, .nm-all-product-link, .nm-small-card")) {
+    events.push("product_click");
+  }
+
+  if (href.includes("thingmattersreserve-production.up.railway.app")) {
+    events.push("order_start");
+  }
+
+  if (href.includes("pf.kakao.com/_QdCaK")) {
+    events.push("consult_click");
+  }
+
+  if (pathname.includes("/guides/")) {
+    events.push("guide_click");
+  }
+
+  if (link?.closest?.("[data-home-search-results]") || className.includes("nm-home-search-result")) {
+    events.push("quick_selector_click");
+  }
+
+  return events;
+};
+
+const getDashboardEventNamesForClick = (event) => {
+  const clickedElement = event.target;
+  const link = clickedElement.closest?.("a[href]");
+  const trigger = clickedElement.closest?.("a[href], button, [role='button'], [data-analytics-event]");
+  const eventNames = new Set();
+  const dataEventName = getDataAnalyticsEventName(trigger || clickedElement);
+  const legacyEventName = getLegacyDashboardEventNameForLink(link);
+
+  if (dataEventName) eventNames.add(dataEventName);
+  if (link) {
+    getBehaviorAnalyticsEventNames(link, clickedElement).forEach((eventName) => eventNames.add(eventName));
+    if (legacyEventName) eventNames.add(legacyEventName);
+  }
+  if ((trigger || clickedElement).closest?.("[data-open-made-overlay]")) eventNames.add("gallery_open");
+
+  return {
+    eventNames: [...eventNames],
+    link,
+    trigger: trigger || link || clickedElement,
+  };
+};
+
 document.addEventListener("click", (event) => {
-  const link = event.target.closest?.("a[href]");
-  const eventName = getDashboardEventNameForLink(link);
+  if (typeof window.gtag !== "function") return;
 
-  if (!eventName || typeof window.gtag !== "function") return;
+  const { eventNames, link, trigger } = getDashboardEventNamesForClick(event);
+  if (!eventNames.length) return;
 
-  window.gtag("event", eventName, {
-    event_category: "conversion_signal",
-    link_url: link.href,
-    link_text: link.textContent.trim().replace(/\s+/g, " ").slice(0, 80),
-    page_path: window.location.pathname,
-    transport_type: "beacon"
+  const analyticsTarget = trigger?.closest?.("[data-analytics-event]");
+  const eventLabel =
+    analyticsTarget?.dataset.analyticsLabel ||
+    normalizeAnalyticsText(trigger?.textContent || link?.textContent || "");
+
+  eventNames.forEach((eventName) => {
+    window.gtag("event", eventName, {
+      event_category: eventName.endsWith("_click") || eventName === "order_start" ? "conversion_signal" : "site_interaction",
+      event_label: eventLabel,
+      link_url: link?.href || "",
+      link_text: normalizeAnalyticsText(link?.textContent || trigger?.textContent || ""),
+      page_path: window.location.pathname,
+      transport_type: "beacon"
+    });
   });
 });
 

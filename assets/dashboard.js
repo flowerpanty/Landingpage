@@ -38,6 +38,59 @@ const deviceLabels = {
   smarttv: "스마트TV"
 };
 
+const dashboardEventMetadata = {
+  product_click: {
+    label: "상품 클릭",
+    type: "browse",
+    description: "상품 상세 또는 상품 카드 클릭"
+  },
+  order_start: {
+    label: "주문 시작",
+    type: "order",
+    description: "외부 주문 페이지로 이동"
+  },
+  consult_click: {
+    label: "상담 클릭",
+    type: "consult",
+    description: "카카오 상담 또는 상담 CTA 클릭"
+  },
+  gallery_open: {
+    label: "갤러리 열기",
+    type: "browse",
+    description: "제작 사례 갤러리 오버레이 열기"
+  },
+  guide_click: {
+    label: "가이드 클릭",
+    type: "browse",
+    description: "용도별 가이드 이동"
+  },
+  quick_selector_click: {
+    label: "빠른 선택 클릭",
+    type: "browse",
+    description: "홈 빠른 선택 결과 클릭"
+  },
+  consult_kakao_click: {
+    label: "카카오 상담",
+    type: "consult",
+    description: "추천받기·단체 상담 버튼 클릭"
+  },
+  order_brookie_click: {
+    label: "브루키 주문",
+    type: "order",
+    description: "나만의 브루키 만들기 클릭"
+  },
+  order_cookies_click: {
+    label: "꾸덕쿠키 주문",
+    type: "order",
+    description: "수제꾸덕쿠키 주문하기 클릭"
+  },
+  order_lucky_click: {
+    label: "행운쿠키 주문",
+    type: "order",
+    description: "행운쿠키 주문하기 클릭"
+  }
+};
+
 function formatNumber(value = 0) {
   return Number(value || 0).toLocaleString("ko-KR");
 }
@@ -366,7 +419,20 @@ function renderEvents(events = []) {
   if (!target) return;
   target.innerHTML = "";
 
-  if (!events.length) {
+  const normalizedEvents = events.reduce((items, event) => {
+    if (!event?.name || items.some((item) => item.name === event.name)) return items;
+    const metadata = dashboardEventMetadata[event.name] || {};
+    items.push({
+      ...event,
+      ...metadata,
+      label: metadata.label || event.label || event.name,
+      description: metadata.description || event.description || "GA4 이벤트",
+      type: metadata.type || event.type || "interaction"
+    });
+    return items;
+  }, []);
+
+  if (!normalizedEvents.length) {
     const empty = document.createElement("p");
     empty.className = "dashboard-empty";
     empty.textContent = "추적할 클릭 이벤트가 아직 없습니다.";
@@ -374,7 +440,7 @@ function renderEvents(events = []) {
     return;
   }
 
-  events.forEach((event) => {
+  normalizedEvents.forEach((event) => {
     const item = document.createElement("div");
     item.className = "dashboard-event-item";
 

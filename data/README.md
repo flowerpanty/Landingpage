@@ -1,9 +1,8 @@
-# Product catalog
+# Public site registry
 
-`products.json` is the homepage product source.
+`site-pages.json` is the canonical registry for public routes, redirects, indexing, sitemap inclusion, product primary URLs, product order URLs, and product schema metadata. Build and SEO checks consume it directly; do not add a second product metadata map in scripts.
 
-- `status: "new"` adds the product to `NEW ARRIVAL`.
-- Every product is added to `OUR COOKIES`.
+- `cardStatus: "new"` adds a product to `NEW ARRIVAL`; every registry product is added to `OUR COOKIES`.
 - `detailPageMode: "generated"` creates `/products/{slug}/index.html` from the shared template.
 - `detailPageMode: "existing"` keeps the current hand-written product page.
 - Update `updatedAt` when a generated product changes.

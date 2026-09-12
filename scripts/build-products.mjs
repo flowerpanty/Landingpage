@@ -3,14 +3,30 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PRODUCT_DATA_PATH = path.join(ROOT, "data/products.json");
+const SITE_PAGE_DATA_PATH = path.join(ROOT, "data/site-pages.json");
 const HOME_PATH = path.join(ROOT, "index.html");
 const SITEMAP_PATH = path.join(ROOT, "sitemap.xml");
 const SITE_URL = "https://nothingmatters.co.kr";
 const KAKAO_URL = "https://pf.kakao.com/_QdCaK/chat";
 const isCheckMode = process.argv.includes("--check");
+const IMAGE_OPTIMIZATIONS = {
+  "/images/main-order-brookie-thumb.png": {
+    optimized: "/images/main-order-brookie-thumb-optimized.jpg",
+    width: 1024,
+    height: 1536
+  },
+  "/images/handmade-cookie-flavor-lineup.png": {
+    optimized: "/images/handmade-cookie-flavor-lineup-optimized.jpg",
+    width: 1064,
+    height: 798
+  }
+};
 
-const products = JSON.parse(fs.readFileSync(PRODUCT_DATA_PATH, "utf8"));
+const sitePageData = JSON.parse(fs.readFileSync(SITE_PAGE_DATA_PATH, "utf8"));
+const products = (sitePageData.products || []).map((product) => ({
+  ...product,
+  detailPath: product.primaryUrl
+}));
 const requiredFields = [
   "name",
   "slug",
@@ -90,13 +106,17 @@ function detailAssetPath(value) {
 }
 
 function renderProductCard(product) {
-  const status = product.status === "new"
+  const status = product.cardStatus === "new"
     ? '\n              <span class="showroom-product-badge">NEW</span>'
     : "";
+  const imageOptimization = IMAGE_OPTIMIZATIONS[product.thumbnail];
+  const thumbnail = imageOptimization
+    ? `              <picture>\n                <source srcset="${escapeHtml(homeAssetPath(imageOptimization.optimized))}" type="image/jpeg">\n                <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" width="${imageOptimization.width}" height="${imageOptimization.height}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">\n              </picture>`
+    : `              <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">`;
 
-  return `          <a class="showroom-product-card" href="${escapeHtml(homeLinkPath(product.detailPath))}" data-reveal>
+  return `          <a class="showroom-product-card" href="${escapeHtml(homeLinkPath(product.detailPath))}" data-reveal data-analytics-event="product_click" data-analytics-label="${escapeHtml(product.name)}">
             <figure class="showroom-product-photo">
-              <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">${status}
+${thumbnail}${status}
             </figure>
             <div class="showroom-product-copy">
               <div class="showroom-product-text">
@@ -117,7 +137,7 @@ function renderNewArrival(product) {
             <p class="showroom-eyebrow">${escapeHtml(product.badge || product.category)}</p>
             <h2>${escapeHtml(product.name)}</h2>
             <p>${escapeHtml(product.description)}</p>
-            <a class="showroom-button showroom-button--dark" href="${escapeHtml(homeLinkPath(product.detailPath))}">구경하기 →</a>
+            <a class="showroom-button showroom-button--dark" href="${escapeHtml(homeLinkPath(product.detailPath))}" data-analytics-event="product_click" data-analytics-label="${escapeHtml(product.name)}">구경하기 →</a>
           </div>
           <figure class="showroom-new-photo">
             <img src="${escapeHtml(homeAssetPath(heroImage))}" alt="${escapeHtml(product.name)} 신제품" loading="eager" decoding="async">
@@ -198,7 +218,12 @@ function renderProductPage(product) {
           <img src="../../images/nm-bear-mark.svg" alt="" width="34" height="34">
           <span>NOTHINGMATTERS</span>
         </a>
-        <a class="showroom-header-cta" data-kakao-float="true" href="${KAKAO_URL}" target="_blank" rel="noopener noreferrer">주문·문의</a>
+        <nav class="showroom-nav" aria-label="주요 메뉴">
+          <a href="../../index.html#our-cookies">쿠키</a>
+          <a href="../../works/">제작 사례</a>
+          <a href="../../pickup/">픽업</a>
+        </nav>
+        <a class="showroom-header-cta" data-kakao-float="true" href="${KAKAO_URL}" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click">주문·문의</a>
       </div>
     </header>
 
@@ -225,7 +250,7 @@ function renderProductPage(product) {
 ${features}
             </ul>
             <div class="showroom-detail-actions">
-              <a class="showroom-button showroom-button--dark" href="${escapeHtml(product.orderUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(product.ctaLabel || "견적·주문하기")}</a>
+              <a class="showroom-button showroom-button--dark" href="${escapeHtml(product.orderUrl)}" target="_blank" rel="noopener noreferrer" data-analytics-event="${product.orderUrl === KAKAO_URL ? "consult_click" : "order_start"}">${escapeHtml(product.ctaLabel || "견적·주문하기")}</a>
               ${secondaryAction}
             </div>
           </div>
@@ -264,7 +289,7 @@ ${recommendations}
             <h2>수량과 날짜만 알려주세요.</h2>
             <p>가능한 구성과 제작 일정을 빠르게 안내해드릴게요.</p>
           </div>
-          <a class="showroom-button showroom-button--dark" href="${escapeHtml(product.orderUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(product.ctaLabel || "견적·주문하기")}</a>
+          <a class="showroom-button showroom-button--dark" href="${escapeHtml(product.orderUrl)}" target="_blank" rel="noopener noreferrer" data-analytics-event="${product.orderUrl === KAKAO_URL ? "consult_click" : "order_start"}">${escapeHtml(product.ctaLabel || "견적·주문하기")}</a>
         </div>
       </section>
     </main>
@@ -285,7 +310,7 @@ ${recommendations}
 
 function buildHome() {
   const home = fs.readFileSync(HOME_PATH, "utf8");
-  const newProducts = products.filter((product) => product.status === "new");
+  const newProducts = products.filter((product) => product.cardStatus === "new");
   const next = replaceManagedBlock(
     replaceManagedBlock(home, "NM_NEW_ARRIVAL", newProducts.map(renderNewArrival).join("\n")),
     "NM_PRODUCT_GRID",
@@ -387,28 +412,36 @@ function buildDetailPages() {
 }
 
 function buildSitemap() {
-  const start = "  <!-- NM_GENERATED_PRODUCTS:START -->";
-  const end = "  <!-- NM_GENERATED_PRODUCTS:END -->";
-  const entries = products
+  const staticEntries = sitePageData.pages
+    .filter((page) => page.sitemap && page.indexing === "index")
+    .map((page) => ({
+      loc: `${SITE_URL}${page.path}`,
+      lastmod: page.lastmod,
+    }));
+  const productEntries = products
     .filter((product) => {
       const outputPath = path.join(ROOT, product.detailPath.slice(1), "index.html");
       return ["generated", "existing"].includes(product.detailPageMode) && fs.existsSync(outputPath);
     })
-    .map(
-      (product) => `  <url>\n    <loc>${SITE_URL}${product.detailPath}</loc>\n    <lastmod>${product.updatedAt}</lastmod>\n  </url>`
-    )
+    .map((product) => ({
+      loc: `${SITE_URL}${product.detailPath}`,
+      lastmod: product.updatedAt,
+    }));
+  const entries = [...staticEntries, ...productEntries];
+  const seen = new Set();
+  const body = entries
+    .filter((entry) => {
+      if (seen.has(entry.loc)) return false;
+      seen.add(entry.loc);
+      return true;
+    })
+    .map((entry) => `  <url>\n    <loc>${entry.loc}</loc>\n    <lastmod>${entry.lastmod}</lastmod>\n  </url>`)
     .join("\n");
-  let sitemap = fs.readFileSync(SITEMAP_PATH, "utf8");
-
-  if (!sitemap.includes(start)) {
-    sitemap = sitemap.replace("</urlset>", `${start}\n${end}\n</urlset>`);
-  }
-
-  const next = sitemap.replace(new RegExp(`${start}[\\s\\S]*?${end}`), `${start}\n${entries}\n${end}`);
+  const next = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
 
   if (isCheckMode) {
     if (next !== fs.readFileSync(SITEMAP_PATH, "utf8")) {
-      throw new Error("sitemap.xml generated product URLs are out of date");
+      throw new Error("sitemap.xml is out of date with data/site-pages.json and products");
     }
   } else {
     fs.writeFileSync(SITEMAP_PATH, next);

@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
 const crypto = require("node:crypto");
+const zlib = require("node:zlib");
 
 const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -58,6 +59,42 @@ const TRACKED_DASHBOARD_EVENTS = [
     label: "행운쿠키 주문",
     type: "order",
     description: "행운쿠키 주문하기 클릭"
+  },
+  {
+    name: "product_click",
+    label: "상품 클릭",
+    type: "browse",
+    description: "상품 카드 또는 상세페이지 이동"
+  },
+  {
+    name: "order_start",
+    label: "주문 시작",
+    type: "order",
+    description: "외부 주문 페이지로 이동"
+  },
+  {
+    name: "consult_click",
+    label: "상담 클릭",
+    type: "consult",
+    description: "카카오 상담 또는 상담 CTA 클릭"
+  },
+  {
+    name: "gallery_open",
+    label: "갤러리 열기",
+    type: "browse",
+    description: "제작 사례 갤러리 오버레이 열기"
+  },
+  {
+    name: "guide_click",
+    label: "가이드 클릭",
+    type: "browse",
+    description: "용도별 가이드로 이동"
+  },
+  {
+    name: "quick_selector_click",
+    label: "빠른 선택 클릭",
+    type: "browse",
+    description: "홈 빠른 선택 결과 클릭"
   }
 ];
 const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;
@@ -130,6 +167,246 @@ const MIME_TYPES = {
   ".woff": "font/woff",
   ".woff2": "font/woff2"
 };
+const TEXT_RESPONSE_EXTENSIONS = new Set([
+  ".html",
+  ".css",
+  ".js",
+  ".json",
+  ".xml",
+  ".txt",
+  ".svg"
+]);
+const HTML_CACHE_CONTROL = "public, max-age=0, must-revalidate";
+const ASSET_CACHE_CONTROL = "public, max-age=86400";
+const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
+const NOT_FOUND_PAGE_PATH = path.join(ROOT, "404.html");
+
+function getStaticCacheControl(ext) {
+  return ext === ".html" ? HTML_CACHE_CONTROL : ASSET_CACHE_CONTROL;
+}
+
+function createFileEtag(stat) {
+  return `"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
+}
+
+function createBufferEtag(buffer) {
+  return `"${crypto.createHash("sha1").update(buffer).digest("hex")}"`;
+}
+
+function isRequestFresh(req, etag, lastModified) {
+  const ifNoneMatch = String(req.headers["if-none-match"] || "").trim();
+  if (ifNoneMatch) {
+    return ifNoneMatch === "*" || ifNoneMatch.split(",").map((value) => value.trim()).includes(etag);
+  }
+
+  const ifModifiedSince = String(req.headers["if-modified-since"] || "").trim();
+  if (!ifModifiedSince || !lastModified) return false;
+
+  const requestTime = Date.parse(ifModifiedSince);
+  const modifiedTime = Date.parse(lastModified);
+  return !Number.isNaN(requestTime) && !Number.isNaN(modifiedTime) && modifiedTime <= requestTime;
+}
+
+function sendNotModified(req, res, headers) {
+  res.writeHead(304, headers);
+  res.end();
+}
+
+function getAcceptedContentEncoding(req) {
+  const header = String(req.headers["accept-encoding"] || "").toLowerCase();
+  const accepted = new Set(
+    header
+      .split(",")
+      .map((value) => value.trim().split(";")[0])
+      .filter(Boolean)
+  );
+  if (accepted.has("br")) return "br";
+  if (accepted.has("gzip")) return "gzip";
+  return "";
+}
+
+function encodeBody(buffer, encoding) {
+  if (encoding === "br") return zlib.brotliCompressSync(buffer);
+  if (encoding === "gzip") return zlib.gzipSync(buffer);
+  return buffer;
+}
+
+function parseRangeHeader(rangeHeader, size) {
+  const match = String(rangeHeader || "").match(/^bytes=(\d*)-(\d*)$/);
+  if (!match) return null;
+
+  const [, startValue, endValue] = match;
+  if (!startValue && !endValue) return null;
+
+  let start;
+  let end;
+
+  if (!startValue) {
+    const suffixLength = Number.parseInt(endValue, 10);
+    if (!Number.isFinite(suffixLength) || suffixLength <= 0) return null;
+    start = Math.max(size - suffixLength, 0);
+    end = size - 1;
+  } else {
+    start = Number.parseInt(startValue, 10);
+    end = endValue ? Number.parseInt(endValue, 10) : size - 1;
+  }
+
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(end) ||
+    start < 0 ||
+    end < start ||
+    start >= size
+  ) {
+    return null;
+  }
+
+  return {
+    start,
+    end: Math.min(end, size - 1)
+  };
+}
+
+function sendRangeNotSatisfiable(res, size, headers) {
+  res.writeHead(416, {
+    ...headers,
+    "Content-Range": `bytes */${size}`,
+    "Content-Length": 0
+  });
+  res.end();
+}
+
+function sendBufferResponse(req, res, statusCode, body, options) {
+  const rawBody = Buffer.isBuffer(body) ? body : Buffer.from(String(body));
+  const ext = options.ext || "";
+  const etag = options.etag || createBufferEtag(rawBody);
+  const lastModified = options.lastModified || new Date().toUTCString();
+  const baseHeaders = {
+    "Content-Type": options.contentType,
+    "Cache-Control": options.cacheControl,
+    ETag: etag,
+    "Last-Modified": lastModified,
+    ...(options.allowRange ? { "Accept-Ranges": "bytes" } : {})
+  };
+
+  if (isRequestFresh(req, etag, lastModified)) {
+    sendNotModified(req, res, baseHeaders);
+    return;
+  }
+
+  if (options.allowRange && req.headers.range) {
+    const range = parseRangeHeader(req.headers.range, rawBody.length);
+    if (!range) {
+      sendRangeNotSatisfiable(res, rawBody.length, baseHeaders);
+      return;
+    }
+
+    const chunk = rawBody.subarray(range.start, range.end + 1);
+    res.writeHead(206, {
+      ...baseHeaders,
+      "Content-Range": `bytes ${range.start}-${range.end}/${rawBody.length}`,
+      "Content-Length": chunk.length
+    });
+    res.end(req.method === "HEAD" ? undefined : chunk);
+    return;
+  }
+
+  const encoding = TEXT_RESPONSE_EXTENSIONS.has(ext) ? getAcceptedContentEncoding(req) : "";
+  const responseBody = encodeBody(rawBody, encoding);
+  const headers = {
+    ...baseHeaders,
+    ...(encoding ? { "Content-Encoding": encoding, Vary: "Accept-Encoding" } : {}),
+    "Content-Length": responseBody.length
+  };
+
+  res.writeHead(statusCode, headers);
+  res.end(req.method === "HEAD" ? undefined : responseBody);
+}
+
+function sendFileResponse(req, res, filePath, options = {}) {
+  const stat = fs.statSync(filePath);
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] || "application/octet-stream";
+  const cacheControl = options.cacheControl || getStaticCacheControl(ext);
+  const etag = createFileEtag(stat);
+  const lastModified = stat.mtime.toUTCString();
+  const baseHeaders = {
+    "Content-Type": contentType,
+    "Cache-Control": cacheControl,
+    ETag: etag,
+    "Last-Modified": lastModified,
+    "Accept-Ranges": "bytes"
+  };
+
+  if (isRequestFresh(req, etag, lastModified)) {
+    sendNotModified(req, res, baseHeaders);
+    return;
+  }
+
+  if (req.headers.range) {
+    const range = parseRangeHeader(req.headers.range, stat.size);
+    if (!range) {
+      sendRangeNotSatisfiable(res, stat.size, baseHeaders);
+      return;
+    }
+
+    res.writeHead(206, {
+      ...baseHeaders,
+      "Content-Range": `bytes ${range.start}-${range.end}/${stat.size}`,
+      "Content-Length": range.end - range.start + 1
+    });
+    if (req.method === "HEAD") {
+      res.end();
+      return;
+    }
+    fs.createReadStream(filePath, { start: range.start, end: range.end }).pipe(res);
+    return;
+  }
+
+  if (TEXT_RESPONSE_EXTENSIONS.has(ext)) {
+    sendBufferResponse(req, res, 200, fs.readFileSync(filePath), {
+      contentType,
+      cacheControl,
+      etag,
+      lastModified,
+      ext,
+      allowRange: true
+    });
+    return;
+  }
+
+  res.writeHead(200, {
+    ...baseHeaders,
+    "Content-Length": stat.size
+  });
+  if (req.method === "HEAD") {
+    res.end();
+    return;
+  }
+  fs.createReadStream(filePath).pipe(res);
+}
+
+function getNotFoundHtml() {
+  if (fs.existsSync(NOT_FOUND_PAGE_PATH)) {
+    return fs.readFileSync(NOT_FOUND_PAGE_PATH, "utf8");
+  }
+  return "<!doctype html><title>404 | NOTHINGMATTERS</title><h1>404</h1>";
+}
+
+function sendNotFound(req, res) {
+  const body = Buffer.from(getNotFoundHtml());
+  let lastModified = new Date().toUTCString();
+  if (fs.existsSync(NOT_FOUND_PAGE_PATH)) {
+    lastModified = fs.statSync(NOT_FOUND_PAGE_PATH).mtime.toUTCString();
+  }
+  sendBufferResponse(req, res, 404, body, {
+    contentType: MIME_TYPES[".html"],
+    cacheControl: HTML_CACHE_CONTROL,
+    lastModified,
+    ext: ".html",
+    allowRange: false
+  });
+}
 
 function resolvePath(urlPathname) {
   let cleanPath;
@@ -705,23 +982,13 @@ function handleGalleryMedia(req, res, requestUrl) {
   const filePath = path.join(getGalleryStorageDir(), filename);
 
   if (!filename || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("Not Found");
+    sendNotFound(req, res);
     return;
   }
 
-  const stat = fs.statSync(filePath);
-  const contentType = MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
-  res.writeHead(200, {
-    "Content-Type": contentType,
-    "Content-Length": stat.size,
-    "Cache-Control": "public, max-age=31536000, immutable"
+  sendFileResponse(req, res, filePath, {
+    cacheControl: IMMUTABLE_CACHE_CONTROL
   });
-  if (req.method === "HEAD") {
-    res.end();
-    return;
-  }
-  fs.createReadStream(filePath).pipe(res);
 }
 
 function getPublicWorkHref(value) {
@@ -1567,26 +1834,19 @@ const server = http.createServer(async (req, res) => {
 
   if (requestUrl.pathname === "/works/") {
     const responseBody = renderWorksPage();
-    res.writeHead(200, {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-store",
-      "Content-Length": Buffer.byteLength(responseBody)
+    sendBufferResponse(req, res, 200, responseBody, {
+      contentType: MIME_TYPES[".html"],
+      cacheControl: HTML_CACHE_CONTROL,
+      ext: ".html",
+      allowRange: false
     });
-
-    if (req.method === "HEAD") {
-      res.end();
-      return;
-    }
-
-    res.end(responseBody);
     return;
   }
 
   const filePath = resolvePath(requestUrl.pathname);
 
   if (!filePath || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("Not Found");
+    sendNotFound(req, res);
     return;
   }
 
@@ -1602,32 +1862,17 @@ const server = http.createServer(async (req, res) => {
   if (isHomeHtml) {
     const html = fs.readFileSync(filePath, "utf8");
     const responseBody = injectHomePreviewMeta(html, responseOrigin);
-
-    res.writeHead(200, {
-      "Content-Type": contentType,
-      "Content-Length": Buffer.byteLength(responseBody)
+    sendBufferResponse(req, res, 200, responseBody, {
+      contentType,
+      cacheControl: HTML_CACHE_CONTROL,
+      lastModified: stat.mtime.toUTCString(),
+      ext,
+      allowRange: false
     });
-
-    if (req.method === "HEAD") {
-      res.end();
-      return;
-    }
-
-    res.end(responseBody);
     return;
   }
 
-  res.writeHead(200, {
-    "Content-Type": contentType,
-    "Content-Length": stat.size
-  });
-
-  if (req.method === "HEAD") {
-    res.end();
-    return;
-  }
-
-  fs.createReadStream(filePath).pipe(res);
+  sendFileResponse(req, res, filePath);
 });
 
 server.listen(PORT, HOST, () => {

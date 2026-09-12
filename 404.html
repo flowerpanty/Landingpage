@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <title>404 | NOTHINGMATTERS</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #111;
+      --paper: #fff9ee;
+      --cream: #fff4cf;
+      --pink: #ff8fb1;
+      --blue: #5ec8ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(255, 143, 177, .26), transparent 24rem),
+        radial-gradient(circle at 85% 12%, rgba(94, 200, 255, .24), transparent 22rem),
+        var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(100% - 32px, 760px);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      padding: 48px 0;
+    }
+
+    .card {
+      width: 100%;
+      padding: clamp(30px, 7vw, 64px);
+      border: 4px solid var(--ink);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, .78);
+      box-shadow: 0 14px 0 rgba(17, 17, 17, .14);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 12px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--cream);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .14em;
+    }
+
+    h1 {
+      margin: 22px 0 0;
+      font-size: clamp(48px, 15vw, 118px);
+      line-height: .88;
+      letter-spacing: 0;
+    }
+
+    p {
+      max-width: 560px;
+      margin: 22px 0 0;
+      color: rgba(17, 17, 17, .72);
+      font-size: clamp(17px, 3.7vw, 22px);
+      font-weight: 800;
+      line-height: 1.55;
+      word-break: keep-all;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      color: var(--ink);
+      background: #fff;
+      font-weight: 900;
+      text-decoration: none;
+      transition: transform .16s ease;
+    }
+
+    a:first-child {
+      background: var(--pink);
+    }
+
+    a:nth-child(2) {
+      background: var(--blue);
+    }
+
+    a:focus-visible {
+      outline: 4px solid var(--ink);
+      outline-offset: 4px;
+    }
+
+    @media (hover: hover) {
+      a:hover {
+        transform: translateY(-2px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card" aria-labelledby="not-found-title">
+      <span class="eyebrow">NOTHINGMATTERS 404</span>
+      <h1 id="not-found-title">길을 잃은 페이지예요.</h1>
+      <p>주소가 바뀌었거나 아직 공개되지 않은 페이지입니다. 쿠키, 제작 사례, 주문 상담 중 필요한 길로 바로 이동해 주세요.</p>
+      <nav aria-label="404 빠른 이동">
+        <a href="/products/handmade-cookie/">쿠키 보러가기</a>
+        <a href="/works/">제작 사례</a>
+        <a href="/contact/">주문 상담</a>
+      </nav>
+    </section>
+  </main>
+</body>
+</html>

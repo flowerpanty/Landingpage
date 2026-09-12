@@ -87,7 +87,8 @@
           "https://pf.kakao.com/_QdCaK",
           "https://talk.naver.com/profile/c/nothingmatters",
           "https://blog.nothingmatters.co.kr/",
-          "https://nothingmatters.kr/"
+          "https://nothingmatters.kr/",
+          "https://instagram.com/nothingmatters_c"
         ]
       },
       {
@@ -135,7 +136,8 @@
           "https://pf.kakao.com/_QdCaK",
           "https://talk.naver.com/profile/c/nothingmatters",
           "https://blog.nothingmatters.co.kr/",
-          "https://nothingmatters.kr/"
+          "https://nothingmatters.kr/",
+          "https://instagram.com/nothingmatters_c"
         ],
         "parentOrganization": {
           "@id": "https://nothingmatters.co.kr/#organization"
@@ -170,9 +172,6 @@
         },
         "breadcrumb": {
           "@id": "https://nothingmatters.co.kr/products/cookie-flight/#breadcrumb"
-        },
-        "about": {
-          "@id": "https://nothingmatters.co.kr/products/cookie-flight/#product"
         }
       },
       {
@@ -198,48 +197,19 @@
             "item": "https://nothingmatters.co.kr/products/cookie-flight/"
           }
         ]
-      },
-      {
-        "@type": "Product",
-        "@id": "https://nothingmatters.co.kr/products/cookie-flight/#product",
-        "name": "nothingmatters 쿠키 플라이트",
-        "description": "여행의 설렘을 담아 골라 먹는 쿠키 셀렉션.",
-        "image": [
-          "https://nothingmatters.co.kr/images/main-order-cookie-thumb.png"
-        ],
-        "url": "https://nothingmatters.co.kr/products/cookie-flight/",
-        "brand": {
-          "@id": "https://nothingmatters.co.kr/#organization"
-        },
-        "category": "쿠키 셀렉션",
-        "offers": {
-          "@type": "AggregateOffer",
-          "url": "https://nothingmatters.co.kr/products/cookie-flight/",
-          "lowPrice": 4500,
-          "priceCurrency": "KRW",
-          "availability": "https://schema.org/InStoreOnly",
-          "seller": {
-            "@id": "https://nothingmatters.co.kr/#organization"
-          }
-        },
-        "additionalProperty": [
-          {
-            "@type": "PropertyValue",
-            "name": "주문 기준",
-            "value": "1구부터"
-          },
-          {
-            "@type": "PropertyValue",
-            "name": "수령 방식",
-            "value": "강서구 공항동 매장 픽업 또는 차량 퀵 상담"
-          }
-        ]
       }
     ]
   }
   </script>
+<style data-nm-accessibility>
+  .nm-skip-link { position: fixed; z-index: 10000; top: -80px; left: 12px; min-height: 44px; padding: 11px 16px; color: #111; background: #fff4cf; border: 3px solid #111; border-radius: 999px; font: 800 14px/1.2 system-ui, sans-serif; text-decoration: none; transition: top .16s ease; }
+  .nm-skip-link:focus { top: 12px; }
+  :focus-visible { outline: 3px solid #111; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+</style>
 </head>
 <body class="theme-showroom theme-showroom-detail">
+<a data-nm-skip-link class="nm-skip-link" href="#main-content">본문으로 건너뛰기</a>
   <div class="showroom-page">
     <header class="showroom-header">
       <div class="showroom-wrap showroom-header-inner">
@@ -251,7 +221,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <nav class="showroom-wrap showroom-breadcrumb" aria-label="현재 위치">
         <a href="../../index.html">HOME</a><span aria-hidden="true">/</span><a href="../../index.html#our-cookies">OUR COOKIES</a><span aria-hidden="true">/</span><strong>쿠키 플라이트</strong>
       </nav>
@@ -259,7 +229,10 @@
       <section class="showroom-detail-hero">
         <div class="showroom-wrap showroom-detail-hero-grid">
           <figure class="showroom-detail-main-photo" data-reveal>
-            <img src="../../images/main-order-cookie-thumb.png" alt="쿠키 플라이트" loading="eager" fetchpriority="high" decoding="async">
+            <picture>
+              <source srcset="../../images/main-order-cookie-thumb-optimized.jpg" type="image/jpeg">
+              <img src="../../images/main-order-cookie-thumb.png" width="1086" height="1448" alt="쿠키 플라이트" loading="eager" fetchpriority="high" decoding="async">
+            </picture>
           </figure>
           <div class="showroom-detail-copy" data-reveal>
 
@@ -292,7 +265,10 @@
           </div>
           <div class="showroom-detail-gallery">
           <figure class="showroom-detail-gallery-item">
-            <img src="../../images/main-order-cookie-thumb.png" alt="쿠키 플라이트 1" loading="eager" fetchpriority="high" decoding="async">
+            <picture>
+              <source srcset="../../images/main-order-cookie-thumb-optimized.jpg" type="image/jpeg">
+              <img src="../../images/main-order-cookie-thumb.png" width="1086" height="1448" alt="쿠키 플라이트 1" loading="lazy" decoding="async">
+            </picture>
           </figure>
           <figure class="showroom-detail-gallery-item">
             <img src="../../images/handmade-hero.jpg" alt="쿠키 플라이트 2" loading="lazy"  decoding="async">

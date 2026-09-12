@@ -1,0 +1,154 @@
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
+import http from "node:http";
+import net from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function reservePort() {
+  const probe = net.createServer();
+  await new Promise((resolve) => probe.listen(0, "127.0.0.1", resolve));
+  const { port } = probe.address();
+  await new Promise((resolve) => probe.close(resolve));
+  return port;
+}
+
+function request(baseUrl, pathname, options = {}) {
+  const url = new URL(pathname, baseUrl);
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: url.hostname,
+        port: url.port,
+        path: `${url.pathname}${url.search}`,
+        method: options.method || "GET",
+        headers: options.headers || {}
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (chunk) => chunks.push(chunk));
+        res.on("end", () => {
+          resolve({
+            status: res.statusCode,
+            headers: res.headers,
+            body: Buffer.concat(chunks)
+          });
+        });
+      }
+    );
+    req.on("error", reject);
+    req.end(options.body || undefined);
+  });
+}
+
+async function startServer() {
+  const port = await reservePort();
+  const output = [];
+  const serverProcess = spawn(process.execPath, ["server.js"], {
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      HOST: "127.0.0.1",
+      PORT: String(port)
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+
+  serverProcess.stdout.on("data", (chunk) => output.push(chunk.toString()));
+  serverProcess.stderr.on("data", (chunk) => output.push(chunk.toString()));
+
+  const baseUrl = `http://127.0.0.1:${port}`;
+  let ready = false;
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    try {
+      const response = await request(baseUrl, "/");
+      if (response.status === 200) {
+        ready = true;
+        break;
+      }
+    } catch (error) {
+      // The server may still be starting.
+    }
+    await sleep(60);
+  }
+
+  if (!ready) {
+    serverProcess.kill("SIGTERM");
+    throw new Error(`HTTP test server did not start: ${output.join("")}`);
+  }
+
+  return { process: serverProcess, baseUrl };
+}
+
+async function stopServer(server) {
+  if (server.process.exitCode !== null) return;
+  server.process.kill("SIGTERM");
+  await Promise.race([once(server.process, "exit"), sleep(2000)]);
+  if (server.process.exitCode === null) server.process.kill("SIGKILL");
+}
+
+const server = await startServer();
+
+try {
+  const asset = await request(server.baseUrl, "/assets/site.css");
+  assert.equal(asset.status, 200);
+  assert.match(asset.headers["cache-control"], /public, max-age=86400/);
+  assert.ok(asset.headers.etag, "asset response should include ETag");
+  assert.ok(asset.headers["last-modified"], "asset response should include Last-Modified");
+  assert.equal(asset.headers["accept-ranges"], "bytes");
+
+  const fresh = await request(server.baseUrl, "/assets/site.css", {
+    headers: { "If-None-Match": asset.headers.etag }
+  });
+  assert.equal(fresh.status, 304);
+  assert.equal(fresh.body.length, 0);
+
+  const compressed = await request(server.baseUrl, "/assets/site.css", {
+    headers: { "Accept-Encoding": "br, gzip" }
+  });
+  assert.equal(compressed.status, 200);
+  assert.equal(compressed.headers["content-encoding"], "br");
+  assert.equal(compressed.headers.vary, "Accept-Encoding");
+  assert.ok(Number(compressed.headers["content-length"]) < Number(asset.headers["content-length"]));
+
+  const ranged = await request(server.baseUrl, "/assets/site.css", {
+    headers: { Range: "bytes=0-99", "Accept-Encoding": "br, gzip" }
+  });
+  assert.equal(ranged.status, 206);
+  assert.equal(ranged.headers["content-range"], `bytes 0-99/${asset.body.length}`);
+  assert.equal(ranged.headers["content-length"], "100");
+  assert.equal(ranged.headers["content-encoding"], undefined);
+  assert.equal(ranged.body.length, 100);
+
+  const head = await request(server.baseUrl, "/assets/site.css", { method: "HEAD" });
+  assert.equal(head.status, 200);
+  assert.equal(head.headers["content-length"], asset.headers["content-length"]);
+  assert.equal(head.body.length, 0);
+
+  const home = await request(server.baseUrl, "/");
+  assert.equal(home.status, 200);
+  assert.match(home.headers["cache-control"], /max-age=0, must-revalidate/);
+  assert.ok(home.headers.etag);
+
+  const notFound = await request(server.baseUrl, "/does-not-exist");
+  assert.equal(notFound.status, 404);
+  assert.match(notFound.headers["content-type"], /text\/html/);
+  assert.match(notFound.headers["cache-control"], /max-age=0, must-revalidate/);
+  assert.match(notFound.body.toString("utf8"), /쿠키 보러가기/);
+  assert.match(notFound.body.toString("utf8"), /제작 사례/);
+  assert.match(notFound.body.toString("utf8"), /주문 상담/);
+
+  const legacy = await request(server.baseUrl, "/cookies");
+  assert.equal(legacy.status, 301);
+  assert.equal(legacy.headers.location, "https://nothingmatters.co.kr/products/handmade-cookie/");
+  assert.match(legacy.headers["cache-control"], /max-age=86400/);
+} finally {
+  await stopServer(server);
+}
+
+console.log("server HTTP delivery checks: passed");

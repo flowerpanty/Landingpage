@@ -1,0 +1,35 @@
+{
+  "siteUrl": "https://nothingmatters.co.kr",
+  "canonicalHost": "nothingmatters.co.kr",
+  "brandName": "nothingmatters",
+  "alternateName": "낫띵메터스",
+  "logo": "/images/nm-bear-mark.svg",
+  "image": "/images/og-consult-cookie.png",
+  "email": "eddiefactory@naver.com",
+  "telephone": "+82-10-2866-7976",
+  "priceRange": "$$",
+  "description": "서울 강서구 공항동에서 답례품 쿠키, 디저트 선물, 기업행사 선물과 결혼식 답례쿠키를 예약 제작하는 낫띵메터스입니다.",
+  "localBusinessDescription": "김포공항과 송정역 인근 공항동 수제쿠키 공방으로, 마곡 기업행사와 결혼식 답례품 주문을 상담합니다.",
+  "address": {
+    "streetAddress": "송정로 25 1층",
+    "addressLocality": "강서구",
+    "addressRegion": "서울특별시",
+    "addressCountry": "KR"
+  },
+  "publicAddress": "서울특별시 강서구 송정로 25 1층",
+  "naverMapUrl": "https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025",
+  "sameAs": [
+    "https://pf.kakao.com/_QdCaK",
+    "https://talk.naver.com/profile/c/nothingmatters",
+    "https://blog.nothingmatters.co.kr/",
+    "https://nothingmatters.kr/",
+    "https://instagram.com/nothingmatters_c"
+  ],
+  "areaServed": [
+    { "@type": "AdministrativeArea", "name": "서울특별시 강서구" },
+    { "@type": "Place", "name": "공항동" },
+    { "@type": "Place", "name": "김포공항" },
+    { "@type": "Place", "name": "송정역" },
+    { "@type": "Place", "name": "마곡" }
+  ]
+}

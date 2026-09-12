@@ -3,63 +3,27 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SITE_URL = "https://nothingmatters.co.kr";
+const BUSINESS_FACTS = JSON.parse(fs.readFileSync(path.join(ROOT, "data/business.json"), "utf8"));
+const SITE_URL = BUSINESS_FACTS.siteUrl;
 const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 const LOCAL_BUSINESS_ID = `${SITE_URL}/#localbusiness`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
-const NAVER_MAP_URL =
-  "https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025";
-const BUSINESS_SAME_AS = [
-  "https://pf.kakao.com/_QdCaK",
-  "https://talk.naver.com/profile/c/nothingmatters",
-  "https://blog.nothingmatters.co.kr/",
-  "https://nothingmatters.kr/",
-  "https://instagram.com/nothingmatters_c",
-];
-const LOCAL_SERVICE_AREAS = [
-  { "@type": "AdministrativeArea", name: "서울특별시 강서구" },
-  { "@type": "Place", name: "공항동" },
-  { "@type": "Place", name: "김포공항" },
-  { "@type": "Place", name: "송정역" },
-  { "@type": "Place", name: "마곡" },
-];
 const STATIC_SCHEMA_REGEX =
   /\n?\s*<script type="application\/ld\+json" data-nm-schema="static">[\s\S]*?<\/script>\n?/;
-const PRODUCT_CATALOG = JSON.parse(
-  fs.readFileSync(path.join(ROOT, "data/products.json"), "utf8")
-);
+const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site-pages.json"), "utf8"));
+const PRODUCT_CATALOG = (SITE_PAGE_DATA.products || []).map((product) => ({
+  ...product,
+  detailPath: product.primaryUrl
+}));
 
 const isCheckMode = process.argv.includes("--check");
 
-const LEGACY_PRODUCT_META = {
-  "/products/brownie-cookie/": {
-    name: "nothingmatters 브루키 / 브라우니쿠키",
-    lowPrice: 7800,
-    minOrder: "최소 주문 수량 12개",
-    category: "브라우니쿠키 답례품",
-  },
-  "/products/custom-brownie-cookie/": {
-    name: "nothingmatters 커스텀 브라우니쿠키",
-    lowPrice: 7800,
-    minOrder: "보통 12개 이상 상담",
-    category: "커스텀 브라우니쿠키",
-  },
-  "/products/handmade-cookie/": {
-    name: "nothingmatters 수제꾸덕쿠키",
-    lowPrice: 4500,
-    minOrder: "대부분 최소 수량 없음",
-    category: "수제쿠키 선물세트",
-  },
-  "/products/lucky-cookie/": {
-    name: "nothingmatters 행운쿠키 4가지맛 세트",
-    price: 15000,
-    minOrder: "최소 1세트",
-    category: "행운쿠키 선물세트",
-  },
-};
-
 const PRODUCT_META = {
-  ...LEGACY_PRODUCT_META,
+  ...Object.fromEntries(
+    (SITE_PAGE_DATA.pages || [])
+      .filter((page) => page.product)
+      .map((page) => [page.path, page.product])
+  ),
   ...Object.fromEntries(
     PRODUCT_CATALOG.map((product) => [
       product.detailPath,
@@ -116,51 +80,46 @@ const ITEM_LISTS = {
 const organization = {
   "@type": "Organization",
   "@id": ORGANIZATION_ID,
-  name: "nothingmatters",
-  alternateName: "낫띵메터스",
+  name: BUSINESS_FACTS.brandName,
+  alternateName: BUSINESS_FACTS.alternateName,
   url: SITE_URL,
-  logo: `${SITE_URL}/images/nm-bear-mark.svg`,
-  image: `${SITE_URL}/images/og-consult-cookie.png`,
-  description:
-    "서울 강서구 공항동에서 답례품 쿠키, 디저트 선물, 기업행사 선물과 결혼식 답례쿠키를 예약 제작하는 낫띵메터스입니다.",
-  email: "eddiefactory@naver.com",
-  telephone: "+82-10-2866-7976",
+  logo: absoluteUrl(BUSINESS_FACTS.logo),
+  image: absoluteUrl(BUSINESS_FACTS.image),
+  description: BUSINESS_FACTS.description,
+  email: BUSINESS_FACTS.email,
+  telephone: BUSINESS_FACTS.telephone,
   address: {
     "@type": "PostalAddress",
-    streetAddress: "송정로 25 1층",
-    addressLocality: "강서구",
-    addressRegion: "서울특별시",
-    addressCountry: "KR",
+    ...BUSINESS_FACTS.address,
   },
   contactPoint: [
     {
       "@type": "ContactPoint",
       contactType: "customer service",
-      telephone: "+82-10-2866-7976",
-      email: "eddiefactory@naver.com",
+      telephone: BUSINESS_FACTS.telephone,
+      email: BUSINESS_FACTS.email,
       availableLanguage: ["ko-KR"],
     },
   ],
-  areaServed: LOCAL_SERVICE_AREAS,
-  sameAs: BUSINESS_SAME_AS,
+  areaServed: BUSINESS_FACTS.areaServed,
+  sameAs: BUSINESS_FACTS.sameAs,
 };
 
 const localBusiness = {
   "@type": "Bakery",
   "@id": LOCAL_BUSINESS_ID,
-  name: "nothingmatters",
-  alternateName: "낫띵메터스",
+  name: BUSINESS_FACTS.brandName,
+  alternateName: BUSINESS_FACTS.alternateName,
   url: SITE_URL,
-  image: `${SITE_URL}/images/og-consult-cookie.png`,
-  description:
-    "김포공항과 송정역 인근 공항동 수제쿠키 공방으로, 마곡 기업행사와 결혼식 답례품 주문을 상담합니다.",
-  email: "eddiefactory@naver.com",
-  telephone: "+82-10-2866-7976",
-  priceRange: "$$",
+  image: absoluteUrl(BUSINESS_FACTS.image),
+  description: BUSINESS_FACTS.localBusinessDescription,
+  email: BUSINESS_FACTS.email,
+  telephone: BUSINESS_FACTS.telephone,
+  priceRange: BUSINESS_FACTS.priceRange,
   address: organization.address,
-  areaServed: LOCAL_SERVICE_AREAS,
-  hasMap: NAVER_MAP_URL,
-  sameAs: BUSINESS_SAME_AS,
+  areaServed: BUSINESS_FACTS.areaServed,
+  hasMap: BUSINESS_FACTS.naverMapUrl,
+  sameAs: BUSINESS_FACTS.sameAs,
   parentOrganization: {
     "@id": ORGANIZATION_ID,
   },
@@ -440,7 +399,7 @@ function buildService(page) {
         serviceUrl: page.pageUrl,
         servicePhone: {
           "@type": "ContactPoint",
-          telephone: "+82-10-2866-7976",
+          telephone: BUSINESS_FACTS.telephone,
         },
       },
     ],

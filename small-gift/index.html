@@ -223,12 +223,19 @@
     ]
   }
   </script>
+<style data-nm-accessibility>
+  .nm-skip-link { position: fixed; z-index: 10000; top: -80px; left: 12px; min-height: 44px; padding: 11px 16px; color: #111; background: #fff4cf; border: 3px solid #111; border-radius: 999px; font: 800 14px/1.2 system-ui, sans-serif; text-decoration: none; transition: top .16s ease; }
+  .nm-skip-link:focus { top: 12px; }
+  :focus-visible { outline: 3px solid #111; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+</style>
 </head>
 <body class="theme-home theme-main theme-small-gift">
+<a data-nm-skip-link class="nm-skip-link" href="#main-content">본문으로 건너뛰기</a>
   <div class="nm-site">
     <header class="nm-topbar">
       <div class="nm-wrap nm-topbar-inner">
-        <a class="nm-logo" href="../index.html#mainpage-home" aria-label="nothingmatters 메인으로 이동">NOTHINGMATTERS</a>
+        <a class="nm-logo" href="../index.html" aria-label="nothingmatters 메인으로 이동">NOTHINGMATTERS</a>
         <nav class="nm-main-nav" aria-label="소량 선물 빠른 이동">
           <a href="#small-gift-cards">선물 고르기</a>
           <a href="../index.html#featured-products">인기 제품</a>
@@ -237,7 +244,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <section class="nm-section nm-small-hero" id="small-gift-home">
         <div class="nm-wrap nm-small-hero-inner">
           <div class="nm-small-hero-copy">
