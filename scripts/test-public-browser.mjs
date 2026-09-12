@@ -206,12 +206,20 @@ try {
   for (const width of MOBILE_WIDTHS) {
     await setViewport(cdp, width);
     await navigate(cdp, `${server.baseUrl}/pickup/`);
-    const pickupLayout = await evaluate(cdp, "() => { const selectors = ['.nm-pickup-hero .nm-seo-actions', '.nm-pickup-address-card', '.nm-pickup-sticky']; const bounds = Object.fromEntries(selectors.map((selector) => { const node = document.querySelector(selector); const rect = node?.getBoundingClientRect(); return [selector, rect ? { left: rect.left, right: rect.right, width: rect.width, height: rect.height, display: getComputedStyle(node).display } : null]; })); return { viewport: window.innerWidth, bounds, sitePaddingBottom: Number.parseFloat(getComputedStyle(document.querySelector('.nm-site')).paddingBottom) || 0 }; }");
+    const pickupLayout = await evaluate(cdp, "() => { const selectors = ['.nm-pickup-hero .nm-seo-actions', '.nm-pickup-address-card', '.nm-pickup-sticky']; const bounds = Object.fromEntries(selectors.map((selector) => { const node = document.querySelector(selector); const rect = node?.getBoundingClientRect(); return [selector, rect ? { left: rect.left, right: rect.right, width: rect.width, height: rect.height, display: getComputedStyle(node).display } : null]; })); const heroImage = document.querySelector('.nm-pickup-hero img'); const heroRect = heroImage?.getBoundingClientRect(); const floatingDisplays = ['.nm-floating-actions', '.nm-float-icon', '.nm-float-cta', '.nm-mobile-float-stack'].map((selector) => { const node = document.querySelector(selector); return node ? getComputedStyle(node).display : 'none'; }); return { viewport: window.innerWidth, bounds, heroSrc: heroImage?.getAttribute('src') || '', heroObjectFit: heroImage ? getComputedStyle(heroImage).objectFit : '', heroNaturalRatio: heroImage ? heroImage.naturalWidth / heroImage.naturalHeight : 0, heroRenderedRatio: heroRect ? heroRect.width / heroRect.height : 0, heroHeight: heroRect?.height || 0, hasCopyTrigger: Boolean(document.querySelector('[data-copy-target=\"#pickup-address\"]')), hasBlogLink: Boolean(document.querySelector('a[href=\"https://blog.nothingmatters.co.kr/\"]')), hasPickupFaq: Boolean(document.querySelector('.nm-pickup-faq-list details')), floatingDisplays, sitePaddingBottom: Number.parseFloat(getComputedStyle(document.querySelector('.nm-site')).paddingBottom) || 0 }; }");
     assert.ok(pickupLayout.bounds['.nm-pickup-hero .nm-seo-actions'].right <= pickupLayout.viewport, `pickup hero CTA overflows at ${width}px`);
     assert.ok(pickupLayout.bounds['.nm-pickup-address-card'].right <= pickupLayout.viewport, `pickup address card overflows at ${width}px`);
     assert.equal(pickupLayout.bounds['.nm-pickup-sticky'].display, "grid", `pickup sticky action should be visible at ${width}px`);
     assert.ok(pickupLayout.bounds['.nm-pickup-sticky'].left >= 0 && pickupLayout.bounds['.nm-pickup-sticky'].right <= pickupLayout.viewport, `pickup sticky action overflows at ${width}px`);
     assert.ok(pickupLayout.sitePaddingBottom >= 78, `pickup content needs sticky action clearance at ${width}px`);
+    assert.equal(pickupLayout.heroSrc, "../images/pickup-cookie-lineup.png", `pickup hero should use the pickup cookie lineup image at ${width}px`);
+    assert.equal(pickupLayout.heroObjectFit, "contain", `pickup hero should not crop flavor labels at ${width}px`);
+    assert.ok(Math.abs(pickupLayout.heroNaturalRatio - pickupLayout.heroRenderedRatio) < 0.02, `pickup hero should preserve its natural ratio at ${width}px`);
+    assert.ok(pickupLayout.heroHeight >= 200 && pickupLayout.heroHeight <= 240, `pickup hero should stay compact at ${width}px`);
+    assert.equal(pickupLayout.hasCopyTrigger, true, "pickup address copy trigger should exist");
+    assert.equal(pickupLayout.hasBlogLink, true, "pickup BLOG link should remain available");
+    assert.equal(pickupLayout.hasPickupFaq, true, "pickup FAQ should remain available");
+    assert.equal(pickupLayout.floatingDisplays.every((display) => display === "none"), true, "pickup sticky action should be the only mobile floating CTA");
   }
 
   await setViewport(cdp, 390);
@@ -238,6 +246,8 @@ try {
   const pickupEvents = await evaluate(cdp, "() => window.__pickupEvents.map((entry) => entry[1])");
   assert.equal(pickupEvents.filter((name) => name === "pickup_map_click").length, 1, "pickup map click should fire once");
   assert.equal(pickupEvents.filter((name) => name === "pickup_consult_click").length, 1, "pickup consult click should fire once");
+  const pickupFaqOpen = await evaluate(cdp, "() => { const details = document.querySelector('.nm-pickup-faq-list details'); details.querySelector('summary').click(); return details.open; }");
+  assert.equal(pickupFaqOpen, true, "pickup FAQ should open on activation");
   await setViewport(cdp, 390);
   const pickupScreenshot = await cdp.command("Page.captureScreenshot", { format: "png" });
   fs.writeFileSync("/private/tmp/nothingmatters-pickup-mobile.png", pickupScreenshot.data, "base64");

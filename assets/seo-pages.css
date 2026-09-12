@@ -673,3 +673,189 @@
     background: var(--seo-yellow);
   }
 }
+
+/* Final pickup polish: warm cocoa, cream, butter, and apricot only within this page. */
+.nm-pickup-page {
+  --seo-ink: #5a4032;
+  --seo-line: rgba(90, 64, 50, 0.72);
+  --seo-paper: #fffdf7;
+  --seo-cream: #fff9ee;
+  --seo-yellow: #ffd766;
+  --seo-orange: #e8865b;
+  background: #fff9ee;
+}
+
+.nm-pickup-page .nm-site,
+.nm-pickup-page .nm-seo-section,
+.nm-pickup-page .nm-pickup-directions {
+  background: #fff9ee;
+}
+
+.nm-pickup-page .nm-topbar {
+  border-color: rgba(90, 64, 50, 0.24);
+  background: #fffdf7;
+}
+
+.nm-pickup-page .nm-seo-hero {
+  background: #fff2d9;
+}
+
+.nm-pickup-page .nm-seo-hero-photo {
+  border-color: var(--seo-line);
+  border-radius: 22px 28px 20px 25px;
+  background: #f4dfc1;
+  box-shadow: 7px 7px 0 rgba(121, 96, 82, 0.22);
+}
+
+.nm-pickup-page .nm-pickup-hero .nm-seo-hero-photo img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center center;
+}
+
+.nm-pickup-page .nm-seo-lead,
+.nm-pickup-page .nm-pickup-steps p,
+.nm-pickup-page .nm-pickup-check-grid p,
+.nm-pickup-page .nm-pickup-directions-grid > div > p:not(.nm-seo-kicker),
+.nm-pickup-page .nm-pickup-links span,
+.nm-pickup-page .nm-pickup-faq-list p {
+  color: #796052;
+}
+
+.nm-pickup-page .nm-seo-button {
+  border-color: #5a4032;
+  color: #5a4032;
+  box-shadow: 3px 3px 0 #5a4032;
+}
+
+.nm-pickup-page .nm-seo-button--paper {
+  background: #fffdf7;
+}
+
+.nm-pickup-page .nm-pickup-address-section {
+  background: #f4dfb7;
+}
+
+.nm-pickup-page .nm-pickup-address-card {
+  border-color: #5a4032;
+  color: #5a4032;
+  background: #fff9ee;
+  box-shadow: 7px 7px 0 rgba(121, 96, 82, 0.25);
+}
+
+.nm-pickup-page .nm-pickup-address-card .nm-seo-kicker {
+  color: #5a4032;
+  background: #fffdf7;
+}
+
+.nm-pickup-page .nm-pickup-address {
+  color: #c46745;
+}
+
+.nm-pickup-page .nm-pickup-address-note {
+  color: #796052;
+}
+
+.nm-pickup-page .nm-pickup-steps li {
+  border-color: #5a4032;
+  background: #fffdf7;
+}
+
+.nm-pickup-page .nm-pickup-check-grid,
+.nm-pickup-page .nm-pickup-check-grid article,
+.nm-pickup-page .nm-pickup-faq-list details,
+.nm-pickup-page .nm-pickup-links a {
+  border-color: var(--seo-line);
+  background: #fffdf7;
+}
+
+.nm-pickup-page .nm-pickup-direction-note {
+  border-color: #5a4032;
+  background: #f6ca76;
+  box-shadow: 6px 6px 0 #b98367;
+}
+
+.nm-pickup-page .nm-pickup-links a:hover,
+.nm-pickup-page .nm-pickup-links a:focus-visible {
+  box-shadow: 4px 4px 0 #b98367;
+}
+
+.nm-pickup-page .nm-pickup-links figure {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  margin: -19px -19px 4px;
+  border-bottom: 1px solid var(--seo-line);
+  background: #f4dfc1;
+}
+
+.nm-pickup-page .nm-pickup-links figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 180ms ease;
+}
+
+.nm-pickup-page .nm-pickup-links a:hover figure img,
+.nm-pickup-page .nm-pickup-links a:focus-visible figure img {
+  transform: scale(1.025);
+}
+
+.nm-pickup-page .nm-pickup-final {
+  color: #5a4032;
+  background: #f3b58e;
+}
+
+.nm-pickup-page .nm-pickup-final p:not(.nm-seo-kicker) {
+  color: #795b49;
+}
+
+.nm-pickup-page .nm-pickup-final .nm-seo-kicker {
+  color: #5a4032;
+  background: #fff9ee;
+}
+
+.nm-pickup-page .nm-pickup-sticky {
+  border-color: rgba(90, 64, 50, 0.34);
+  background: rgba(255, 249, 238, 0.96);
+  box-shadow: 0 8px 24px rgba(121, 96, 82, 0.22);
+}
+
+.nm-pickup-page .nm-pickup-sticky a {
+  border-color: #5a4032;
+  color: #5a4032;
+  background: #fffdf7;
+}
+
+@media (max-width: 760px) {
+  .nm-pickup-page .nm-pickup-hero .nm-seo-hero-photo {
+    width: min(100%, 310px);
+    height: auto;
+    margin-inline: auto;
+  }
+
+  .nm-pickup-page .nm-pickup-links a {
+    grid-template-columns: 118px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    column-gap: 12px;
+    align-items: start;
+  }
+
+  .nm-pickup-page .nm-pickup-links figure {
+    grid-row: 1 / span 3;
+    height: 100%;
+    min-height: 116px;
+    margin: -12px 0 -12px -12px;
+    border-right: 1px solid var(--seo-line);
+    border-bottom: 0;
+  }
+
+  .nm-pickup-page .nm-floating-actions,
+  .nm-pickup-page .nm-float-icon,
+  .nm-pickup-page .nm-float-cta,
+  .nm-pickup-page .nm-mobile-float-stack {
+    display: none !important;
+  }
+}
