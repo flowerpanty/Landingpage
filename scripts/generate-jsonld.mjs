@@ -72,7 +72,7 @@ const ITEM_LISTS = {
   ],
   "/pickup/": [
     ["수제꾸덕쿠키", "/products/handmade-cookie/"],
-    ["결혼식 답례쿠키 주문 가이드", "/guides/wedding-favor-cookie/"],
+    ["답례·단체 주문", "/bulk/"],
     ["실제 제작 사례", "/works/"],
   ],
 };

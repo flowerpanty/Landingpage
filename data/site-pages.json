@@ -89,7 +89,7 @@
     { "path": "/small-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/contact/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },
     { "path": "/works/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },
-    { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },
+    { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-13" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },
     { "path": "/products/custom-brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 커스텀 브라우니쿠키", "lowPrice": 7800, "minOrder": "보통 12개 이상 상담", "category": "커스텀 브라우니쿠키", "primaryUrl": "/products/custom-brownie-cookie/" } },

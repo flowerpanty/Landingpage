@@ -84,6 +84,16 @@ const dashboardEventMetadata = {
     type: "browse",
     description: "푸터 블로그 링크 클릭"
   },
+  pickup_map_click: {
+    label: "픽업 지도 클릭",
+    type: "pickup",
+    description: "네이버 지도에서 픽업 주소 확인"
+  },
+  pickup_consult_click: {
+    label: "픽업 상담 클릭",
+    type: "consult",
+    description: "픽업 일정과 수령 방식 상담"
+  },
   consult_kakao_click: {
     label: "카카오 상담",
     type: "consult",

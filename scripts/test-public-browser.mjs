@@ -203,6 +203,17 @@ try {
     }
   }
 
+  for (const width of MOBILE_WIDTHS) {
+    await setViewport(cdp, width);
+    await navigate(cdp, `${server.baseUrl}/pickup/`);
+    const pickupLayout = await evaluate(cdp, "() => { const selectors = ['.nm-pickup-hero .nm-seo-actions', '.nm-pickup-address-card', '.nm-pickup-sticky']; const bounds = Object.fromEntries(selectors.map((selector) => { const node = document.querySelector(selector); const rect = node?.getBoundingClientRect(); return [selector, rect ? { left: rect.left, right: rect.right, width: rect.width, height: rect.height, display: getComputedStyle(node).display } : null]; })); return { viewport: window.innerWidth, bounds, sitePaddingBottom: Number.parseFloat(getComputedStyle(document.querySelector('.nm-site')).paddingBottom) || 0 }; }");
+    assert.ok(pickupLayout.bounds['.nm-pickup-hero .nm-seo-actions'].right <= pickupLayout.viewport, `pickup hero CTA overflows at ${width}px`);
+    assert.ok(pickupLayout.bounds['.nm-pickup-address-card'].right <= pickupLayout.viewport, `pickup address card overflows at ${width}px`);
+    assert.equal(pickupLayout.bounds['.nm-pickup-sticky'].display, "grid", `pickup sticky action should be visible at ${width}px`);
+    assert.ok(pickupLayout.bounds['.nm-pickup-sticky'].left >= 0 && pickupLayout.bounds['.nm-pickup-sticky'].right <= pickupLayout.viewport, `pickup sticky action overflows at ${width}px`);
+    assert.ok(pickupLayout.sitePaddingBottom >= 78, `pickup content needs sticky action clearance at ${width}px`);
+  }
+
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/`);
   const runtimeErrors = cdp.events.filter((event) => event.method === "Runtime.exceptionThrown");
@@ -222,6 +233,16 @@ try {
   }
   assert.ok(analytics.find((entry) => entry.name === "blog_card_click")?.params.post_title, "blog card event should include post_title");
 
+  await navigate(cdp, `${server.baseUrl}/pickup/`);
+  await evaluate(cdp, "() => { window.__pickupEvents = []; window.gtag = (...args) => window.__pickupEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"pickup_map_click\"]'); click('[data-analytics-event=\"pickup_consult_click\"]'); return true; }");
+  const pickupEvents = await evaluate(cdp, "() => window.__pickupEvents.map((entry) => entry[1])");
+  assert.equal(pickupEvents.filter((name) => name === "pickup_map_click").length, 1, "pickup map click should fire once");
+  assert.equal(pickupEvents.filter((name) => name === "pickup_consult_click").length, 1, "pickup consult click should fire once");
+  await setViewport(cdp, 390);
+  const pickupScreenshot = await cdp.command("Page.captureScreenshot", { format: "png" });
+  fs.writeFileSync("/private/tmp/nothingmatters-pickup-mobile.png", pickupScreenshot.data, "base64");
+
+  await navigate(cdp, `${server.baseUrl}/`);
   await evaluate(cdp, "() => { const trigger = document.querySelector('[data-open-made-overlay]'); trigger.focus(); trigger.click(); return true; }");
   await wait(300);
   const opened = await evaluate(cdp, "() => ({ visible: !document.querySelector('[data-made-overlay]').hidden, focused: document.activeElement?.matches('[data-made-overlay-close]') || false })");

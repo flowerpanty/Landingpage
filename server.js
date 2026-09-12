@@ -114,6 +114,18 @@ const TRACKED_DASHBOARD_EVENTS = [
     label: "블로그 푸터 클릭",
     type: "browse",
     description: "푸터 블로그 링크 클릭"
+  },
+  {
+    name: "pickup_map_click",
+    label: "픽업 지도 클릭",
+    type: "pickup",
+    description: "네이버 지도에서 픽업 주소 확인"
+  },
+  {
+    name: "pickup_consult_click",
+    label: "픽업 상담 클릭",
+    type: "consult",
+    description: "픽업 일정과 수령 방식 상담"
   }
 ];
 const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;

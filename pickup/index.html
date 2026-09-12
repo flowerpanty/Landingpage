@@ -201,14 +201,44 @@
           {
             "@type": "ListItem",
             "position": 2,
-            "name": "결혼식 답례쿠키 주문 가이드",
-            "url": "https://nothingmatters.co.kr/guides/wedding-favor-cookie/"
+            "name": "답례·단체 주문",
+            "url": "https://nothingmatters.co.kr/bulk/"
           },
           {
             "@type": "ListItem",
             "position": 3,
             "name": "실제 제작 사례",
             "url": "https://nothingmatters.co.kr/works/"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://nothingmatters.co.kr/pickup/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "예약 없이 바로 구매할 수 있나요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "픽업은 예약 제작 기준으로 안내하므로, 방문 전 주문과 픽업 일정을 먼저 확인해주세요."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "차량 퀵도 가능한가요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "차량 퀵 가능 여부는 일정과 수량에 따라 상담으로 함께 확인합니다."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "어떤 주문을 픽업할 수 있나요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "쿠키 선물, 답례품, 기업·단체 주문을 상담하고 예약한 일정에 맞춰 픽업할 수 있습니다."
+            }
           }
         ]
       }
@@ -222,7 +252,7 @@
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
 </head>
-<body class="theme-contact nm-seo-page">
+<body class="theme-contact nm-seo-page nm-pickup-page">
 <a data-nm-skip-link class="nm-skip-link" href="#main-content">본문으로 건너뛰기</a>
   <div class="nm-site">
     <header class="nm-topbar">
@@ -236,41 +266,107 @@
       </div>
     </header>
     <main id="main-content" tabindex="-1">
-      <section class="nm-seo-hero">
+      <section class="nm-seo-hero nm-pickup-hero">
         <div class="nm-wrap nm-seo-hero-grid">
           <div>
             <p class="nm-seo-kicker">PICKUP IN GONGHANG-DONG</p>
             <h1>김포공항·송정역 인근<br>쿠키 픽업 안내</h1>
-            <p class="nm-seo-lead">낫띵메터스는 서울 강서구 공항동에 있는 수제쿠키 작업실입니다. 쿠키 선물, 답례품, 기업·단체 주문을 예약 픽업으로 준비합니다.</p>
+            <p class="nm-seo-lead">서울 강서구 송정로 25 1층 작업실에서, 예약한 쿠키 선물과 답례품을 픽업할 수 있어요. 방문 전 주문과 픽업 일정을 먼저 확인해주세요.</p>
             <div class="nm-seo-actions">
-              <a class="nm-seo-button" href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer">지도 보기</a>
-              <a class="nm-seo-button nm-seo-button--paper" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer">카카오 상담하기</a>
+              <a class="nm-seo-button" href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_map_click">네이버 지도에서 보기</a>
+              <a class="nm-seo-button nm-seo-button--paper" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_consult_click">픽업 상담하기</a>
             </div>
           </div>
           <figure class="nm-seo-hero-photo"><img src="../images/contact-hero.jpg" alt="낫띵메터스 공항동 쿠키 작업실 픽업 안내" width="960" height="1280" fetchpriority="high" decoding="async"></figure>
         </div>
       </section>
-      <section class="nm-seo-section nm-seo-section--cream">
+      <section class="nm-pickup-address-section" aria-labelledby="pickup-address-title">
         <div class="nm-wrap">
-          <div class="nm-seo-section-head"><div><p class="nm-seo-kicker">VISIT FACTS</p><h2>방문 전에 확인하세요.</h2></div></div>
-          <div class="nm-fact-grid">
-            <article class="nm-fact-card"><h3>작업실 위치</h3><p>서울특별시 강서구 송정로 25 1층에 있습니다. 김포공항과 송정역 인근의 공항동 작업실입니다.</p></article>
-            <article class="nm-fact-card"><h3>예약 픽업</h3><p>픽업은 예약 제작 기준으로 안내합니다. 수령 날짜와 시간을 먼저 확인해주세요.</p></article>
-            <article class="nm-fact-card"><h3>주문 상담</h3><p>수제쿠키, 답례품, 기업·단체 주문을 상담합니다. 일정과 수량에 따라 차량 퀵 가능 여부도 함께 확인합니다.</p></article>
+          <div class="nm-pickup-address-card">
+            <div>
+              <p class="nm-seo-kicker">QUICK LOCATION</p>
+              <h2 id="pickup-address-title">바로 확인할 주소</h2>
+              <p id="pickup-address" class="nm-pickup-address">서울 강서구 송정로 25 1층</p>
+              <p class="nm-pickup-address-note">공항동 작업실에서 예약한 주문을 픽업하는 방식입니다.</p>
+            </div>
+            <div class="nm-pickup-address-actions">
+              <button class="nm-seo-button nm-seo-button--paper" type="button" data-copy-template data-copy-target="#pickup-address">주소 복사</button>
+              <a class="nm-seo-button" href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_map_click">지도 열기</a>
+            </div>
           </div>
         </div>
       </section>
-      <section class="nm-seo-section">
+      <section class="nm-seo-section nm-pickup-flow" aria-labelledby="pickup-flow-title">
         <div class="nm-wrap">
-          <div class="nm-seo-section-head"><div><p class="nm-seo-kicker">WHAT TO EXPLORE</p><h2>주문 전에 둘러보기</h2></div></div>
-          <div class="nm-fact-grid">
-            <article class="nm-fact-card"><h3><a href="../products/handmade-cookie/">수제꾸덕쿠키</a></h3><p>맛과 패키지를 고르는 수제쿠키를 확인하세요.</p></article>
-            <article class="nm-fact-card"><h3><a href="../guides/wedding-favor-cookie/">결혼식 답례쿠키</a></h3><p>답례품 주문 전 확인할 기준을 가이드로 정리했습니다.</p></article>
-            <article class="nm-fact-card"><h3><a href="../works/">실제 제작 사례</a></h3><p>공개된 사진과 설명으로 작업 분위기를 먼저 볼 수 있어요.</p></article>
+          <div class="nm-seo-section-head"><div><p class="nm-seo-kicker">HOW TO PICK UP</p><h2 id="pickup-flow-title">픽업은 이렇게 진행돼요.</h2></div></div>
+          <ol class="nm-pickup-steps">
+            <li><span>01</span><div><h3>주문 또는 상담</h3><p>원하는 쿠키와 필요한 수량, 날짜를 먼저 알려주세요.</p></div></li>
+            <li><span>02</span><div><h3>픽업 일정 확정</h3><p>제작 가능 일정과 수령할 날짜·시간을 함께 확인합니다.</p></div></li>
+            <li><span>03</span><div><h3>예약한 일정에 방문·수령</h3><p>확정한 일정에 공항동 작업실로 방문해 주문을 받아가세요.</p></div></li>
+          </ol>
+        </div>
+      </section>
+      <section class="nm-seo-section nm-seo-section--cream" aria-labelledby="pickup-check-title">
+        <div class="nm-wrap">
+          <div class="nm-seo-section-head"><div><p class="nm-seo-kicker">VISIT CHECK</p><h2 id="pickup-check-title">방문 전에 이 세 가지만 확인하세요.</h2></div></div>
+          <div class="nm-pickup-check-grid">
+            <article><h3>예약 제작 기준</h3><p>픽업은 예약한 주문을 기준으로 안내합니다. 방문 전 일정 확인이 필요해요.</p></article>
+            <article><h3>수령 일정 확인</h3><p>제작과 수령이 연결되므로 필요한 날짜와 시간을 먼저 알려주세요.</p></article>
+            <article><h3>차량 퀵은 상담</h3><p>차량 퀵 가능 여부는 일정과 수량에 따라 함께 확인합니다.</p></article>
           </div>
+        </div>
+      </section>
+      <section class="nm-seo-section nm-pickup-directions" aria-labelledby="pickup-directions-title">
+        <div class="nm-wrap">
+          <div class="nm-pickup-directions-grid">
+            <div>
+              <p class="nm-seo-kicker">FIND THE STUDIO</p>
+              <h2 id="pickup-directions-title">찾아오는 길</h2>
+              <p>낫띵메터스는 김포공항과 송정역 인근, 서울 강서구 공항동에 있습니다. 방문 전에는 주소를 지도에서 확인하고 예약한 픽업 일정에 맞춰 와주세요.</p>
+              <div class="nm-seo-actions">
+                <a class="nm-seo-button" href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_map_click">네이버 지도에서 보기</a>
+                <a class="nm-seo-button nm-seo-button--paper" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_consult_click">픽업 상담하기</a>
+              </div>
+            </div>
+            <aside class="nm-pickup-direction-note" aria-label="작업실 위치 요약">
+              <strong>서울 강서구 송정로 25 1층</strong>
+              <span>김포공항 · 송정역 인근</span>
+              <span>예약 픽업 기준</span>
+            </aside>
+          </div>
+        </div>
+      </section>
+      <section class="nm-seo-section nm-pickup-explore" aria-labelledby="pickup-explore-title">
+        <div class="nm-wrap">
+          <div class="nm-seo-section-head"><div><p class="nm-seo-kicker">PICKUP ORDERS</p><h2 id="pickup-explore-title">픽업 가능한 주문 둘러보기</h2></div></div>
+          <div class="nm-pickup-links">
+            <a href="../products/handmade-cookie/"><strong>수제꾸덕쿠키</strong><span>맛과 패키지를 고르는 쿠키 선물</span><em>보기 →</em></a>
+            <a href="../bulk/"><strong>답례·단체 주문</strong><span>행사일과 수량을 먼저 확인하는 주문</span><em>보기 →</em></a>
+            <a href="../works/"><strong>실제 제작 사례</strong><span>공개된 사진으로 작업 분위기 보기</span><em>보기 →</em></a>
+          </div>
+        </div>
+      </section>
+      <section class="nm-seo-section nm-seo-section--cream nm-pickup-faq" aria-labelledby="pickup-faq-title">
+        <div class="nm-wrap">
+          <div class="nm-seo-section-head"><div><p class="nm-seo-kicker">PICKUP FAQ</p><h2 id="pickup-faq-title">픽업 전 자주 묻는 질문</h2></div></div>
+          <div class="nm-pickup-faq-list">
+            <details><summary>예약 없이 바로 구매할 수 있나요?</summary><p>픽업은 예약 제작 기준으로 안내하므로, 방문 전 주문과 픽업 일정을 먼저 확인해주세요.</p></details>
+            <details><summary>차량 퀵도 가능한가요?</summary><p>차량 퀵 가능 여부는 일정과 수량에 따라 상담으로 함께 확인합니다.</p></details>
+            <details><summary>어떤 주문을 픽업할 수 있나요?</summary><p>쿠키 선물, 답례품, 기업·단체 주문을 상담하고 예약한 일정에 맞춰 픽업할 수 있습니다.</p></details>
+          </div>
+        </div>
+      </section>
+      <section class="nm-pickup-final" aria-labelledby="pickup-final-title">
+        <div class="nm-wrap nm-pickup-final-inner">
+          <div><p class="nm-seo-kicker">PICKUP READY</p><h2 id="pickup-final-title">픽업 일정을 먼저 확인해볼까요?</h2><p>날짜와 수량을 알려주시면 예약 픽업 흐름부터 안내해드릴게요.</p></div>
+          <div class="nm-seo-actions"><a class="nm-seo-button" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_consult_click">픽업 일정 상담하기 →</a><a class="nm-seo-button nm-seo-button--paper" href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_map_click">지도 다시 보기</a></div>
         </div>
       </section>
     </main>
+    <aside class="nm-pickup-sticky" aria-label="픽업 빠른 이동">
+      <a href="https://map.naver.com/p/search/서울특별시%20강서구%20송정로%2025" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_map_click">지도</a>
+      <a href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="pickup_consult_click">상담</a>
+    </aside>
     <footer class="nm-seo-footer"><div class="nm-wrap">NOTHINGMATTERS · 서울특별시 강서구 송정로 25 1층 · <a href="https://instagram.com/nothingmatters_c" target="_blank" rel="noopener noreferrer">Instagram @nothingmatters_c</a></div></footer>
   </div>
   <script src="../assets/site.js"></script>
