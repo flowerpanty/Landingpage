@@ -212,9 +212,15 @@ try {
   assert.equal(skipState.skipFocused, true, "first keyboard stop should be the skip link");
   assert.ok(skipState.skipTarget.startsWith("#"), "skip link must target main content");
 
-  await evaluate(cdp, "() => { window.__nmEvents = []; window.gtag = (...args) => window.__nmEvents.push(args); const card = document.querySelector('[data-analytics-event=\"product_click\"]'); card.addEventListener('click', (event) => event.preventDefault(), { once: true }); card.click(); return true; }");
-  const analytics = await evaluate(cdp, "() => window.__nmEvents.map((entry) => entry[1])");
-  assert.equal(analytics.filter((name) => name === "product_click").length, 1, "product click should fire once");
+  const journalState = await evaluate(cdp, "() => ({ section: Boolean(document.querySelector('#journal')), list: Boolean(document.querySelector('[data-journal-list]')), header: Boolean(document.querySelector('[data-analytics-event=\"blog_header_click\"]')), footer: Boolean(document.querySelector('[data-analytics-event=\"blog_footer_click\"]')) })");
+  assert.deepEqual(journalState, { section: true, list: true, header: true, footer: true });
+
+  await evaluate(cdp, "() => { window.__nmEvents = []; window.gtag = (...args) => window.__nmEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"product_click\"]'); click('[data-analytics-event=\"blog_header_click\"]'); click('[data-analytics-event=\"blog_card_click\"]'); click('[data-analytics-event=\"blog_footer_click\"]'); return true; }");
+  const analytics = await evaluate(cdp, "() => window.__nmEvents.map((entry) => ({ name: entry[1], params: entry[2] || {} }))");
+  for (const eventName of ["product_click", "blog_header_click", "blog_card_click", "blog_footer_click"]) {
+    assert.equal(analytics.filter((entry) => entry.name === eventName).length, 1, `${eventName} should fire once`);
+  }
+  assert.ok(analytics.find((entry) => entry.name === "blog_card_click")?.params.post_title, "blog card event should include post_title");
 
   await evaluate(cdp, "() => { const trigger = document.querySelector('[data-open-made-overlay]'); trigger.focus(); trigger.click(); return true; }");
   await wait(300);

@@ -16,6 +16,7 @@
     "gallery:test": "node scripts/test-gallery-storage.mjs",
     "server:test": "node scripts/test-server-http.mjs",
     "browser:test": "node scripts/test-public-browser.mjs",
+    "journal:test": "node scripts/test-wordpress-journal.mjs",
     "prestart": "npm run site:build",
     "start": "node server.js"
   }

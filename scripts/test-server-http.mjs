@@ -54,7 +54,8 @@ async function startServer() {
     env: {
       ...process.env,
       HOST: "127.0.0.1",
-      PORT: String(port)
+      PORT: String(port),
+      WORDPRESS_JOURNAL_OFFLINE: "1"
     },
     stdio: ["ignore", "pipe", "pipe"]
   });
@@ -134,6 +135,12 @@ try {
   assert.equal(home.status, 200);
   assert.match(home.headers["cache-control"], /max-age=0, must-revalidate/);
   assert.ok(home.headers.etag);
+
+  const journal = await request(server.baseUrl, "/api/journal");
+  assert.equal(journal.status, 200);
+  const journalPayload = JSON.parse(journal.body.toString("utf8"));
+  assert.equal(journalPayload.source, "fallback");
+  assert.deepEqual(journalPayload.items, []);
 
   const notFound = await request(server.baseUrl, "/does-not-exist");
   assert.equal(notFound.status, 404);

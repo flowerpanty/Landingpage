@@ -6,6 +6,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_PAGES = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site-pages.json"), "utf8"));
 const SKIP_MARKER = "data-nm-skip-link";
 const STYLE_MARKER = "data-nm-accessibility";
+const BLOG_URL = "https://blog.nothingmatters.co.kr/";
 const SKIP_STYLE = `<style ${STYLE_MARKER}>
   .nm-skip-link { position: fixed; z-index: 10000; top: -80px; left: 12px; min-height: 44px; padding: 11px 16px; color: #111; background: #fff4cf; border: 3px solid #111; border-radius: 999px; font: 800 14px/1.2 system-ui, sans-serif; text-decoration: none; transition: top .16s ease; }
   .nm-skip-link:focus { top: 12px; }
@@ -91,6 +92,18 @@ function addAccessibilityContract(html, filePath) {
     /(<a\b[^>]*class=["'][^"']*\bnm-logo\b[^"']*["'][^>]*\bhref=["'][^"']*)#mainpage-home(["'])/gi,
     `$1$2`
   );
+  if (pathnameFor(filePath) !== "/cookie-crew/") {
+    next = next.replace(
+      /(<nav\b[^>]*class=["'][^"']*\b(?:nm-nav|showroom-nav)\b[^"']*["'][^>]*>)([\s\S]*?)(<\/nav>)/gi,
+      (match, openingTag, contents, closingTag) => {
+        const normalizedContents = contents
+          .replace(/\n[ \t]*\n(?=<a[^>]*data-analytics-event=["']blog_header_click)/g, "\n")
+          .replace(/(?:\n[ \t]*)+$/, "\n");
+        if (normalizedContents.includes(BLOG_URL)) return `${openingTag}${normalizedContents}${closingTag}`;
+        return `${openingTag}${normalizedContents}          <a href="${BLOG_URL}" target="_blank" rel="noopener noreferrer" data-analytics-event="blog_header_click">BLOG</a>\n${closingTag}`;
+      }
+    );
+  }
 
   return next;
 }

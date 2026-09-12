@@ -5,6 +5,7 @@ const path = require("node:path");
 const http = require("node:http");
 const crypto = require("node:crypto");
 const zlib = require("node:zlib");
+const { createWordpressJournalService } = require("./lib/wordpress-journal.js");
 
 const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -95,9 +96,32 @@ const TRACKED_DASHBOARD_EVENTS = [
     label: "빠른 선택 클릭",
     type: "browse",
     description: "홈 빠른 선택 결과 클릭"
+  },
+  {
+    name: "blog_header_click",
+    label: "블로그 헤더 클릭",
+    type: "browse",
+    description: "헤더 BLOG 진입점 클릭"
+  },
+  {
+    name: "blog_card_click",
+    label: "블로그 글 클릭",
+    type: "browse",
+    description: "JOURNAL 최신 글 카드 클릭"
+  },
+  {
+    name: "blog_footer_click",
+    label: "블로그 푸터 클릭",
+    type: "browse",
+    description: "푸터 블로그 링크 클릭"
   }
 ];
 const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;
+const wordpressJournal = createWordpressJournalService({
+  fetchImpl: process.env.WORDPRESS_JOURNAL_OFFLINE === "1"
+    ? async () => { throw new Error("wordpress_offline"); }
+    : global.fetch
+});
 const DEFAULT_GALLERY_ITEMS = [
   {
     id: "default-handmade",
@@ -1762,6 +1786,16 @@ async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
   }
 }
 
+async function handleJournalFeed(req, res) {
+  if (req.method !== "GET") {
+    res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Method Not Allowed");
+    return;
+  }
+
+  sendJson(res, 200, await wordpressJournal.getLatestPosts());
+}
+
 const server = http.createServer(async (req, res) => {
   const requestUrl = new URL(req.url || "/", "http://localhost");
   const dashboardConfig = getDashboardConfig();
@@ -1805,6 +1839,11 @@ const server = http.createServer(async (req, res) => {
 
   if (requestUrl.pathname === "/api/gallery" || requestUrl.pathname.startsWith("/api/gallery/")) {
     await handleGalleryApi(req, res, requestUrl);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/journal") {
+    await handleJournalFeed(req, res);
     return;
   }
 

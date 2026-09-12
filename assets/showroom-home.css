@@ -2125,6 +2125,216 @@ body.is-made-overlay-open {
   display: none;
 }
 
+/* JOURNAL is a lightweight bridge to the separate WordPress channel. */
+.theme-showroom .showroom-journal {
+  padding: 82px 0;
+  border-top: 1px solid rgba(23, 21, 18, 0.14);
+  border-bottom: 1px solid rgba(23, 21, 18, 0.14);
+  background: #f8f4ec;
+}
+
+.theme-showroom .showroom-journal-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.62fr);
+  gap: 42px;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.theme-showroom .showroom-journal-header h2 {
+  margin: 13px 0 0;
+  font-size: clamp(38px, 4.2vw, 62px);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+
+.theme-showroom .showroom-journal-header > div:last-child {
+  display: grid;
+  gap: 14px;
+  color: #55504a;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.theme-showroom .showroom-journal-header > div:last-child p {
+  margin: 0;
+}
+
+.theme-showroom .showroom-journal-all,
+.theme-showroom .showroom-journal-fallback a {
+  width: max-content;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-bottom: 2px solid #171512;
+  color: #171512;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.theme-showroom .showroom-journal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.theme-showroom .showroom-journal-card,
+.theme-showroom .showroom-journal-card > a {
+  min-width: 0;
+}
+
+.theme-showroom .showroom-journal-card > a {
+  display: grid;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(23, 21, 18, 0.22);
+  border-radius: 18px;
+  background: #fffdf9;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.theme-showroom .showroom-journal-card > a:hover,
+.theme-showroom .showroom-journal-card > a:focus-visible {
+  box-shadow: 5px 5px 0 #171512;
+  transform: translate(-2px, -2px);
+}
+
+.theme-showroom .showroom-journal-media {
+  aspect-ratio: 16 / 10;
+  margin: 0;
+  overflow: hidden;
+  background: #e9e1d4;
+}
+
+.theme-showroom .showroom-journal-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 260ms ease;
+}
+
+.theme-showroom .showroom-journal-card > a:hover .showroom-journal-media img,
+.theme-showroom .showroom-journal-card > a:focus-visible .showroom-journal-media img {
+  transform: scale(1.035);
+}
+
+.theme-showroom .showroom-journal-media.is-empty {
+  display: grid;
+  place-items: center;
+  background: #dbeef3;
+}
+
+.theme-showroom .showroom-journal-placeholder {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.theme-showroom .showroom-journal-copy,
+.theme-showroom .showroom-journal-fallback {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  padding: 19px;
+}
+
+.theme-showroom .showroom-journal-category {
+  margin: 0;
+  color: #ab5b44;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.theme-showroom .showroom-journal-title,
+.theme-showroom .showroom-journal-fallback h3 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+}
+
+.theme-showroom .showroom-journal-excerpt,
+.theme-showroom .showroom-journal-fallback p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #5d5751;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.theme-showroom .showroom-journal-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  color: #6b655e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.theme-showroom .showroom-journal-read {
+  color: #171512;
+}
+
+.theme-showroom .showroom-journal-fallback {
+  grid-column: 1 / -1;
+  min-height: 164px;
+  border: 1px dashed rgba(23, 21, 18, 0.34);
+  border-radius: 18px;
+  background: rgba(255, 253, 249, 0.64);
+}
+
+@media (max-width: 760px) {
+  .theme-showroom .showroom-journal {
+    padding: 54px 0;
+  }
+
+  .theme-showroom .showroom-journal-header {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .theme-showroom .showroom-journal-header h2 {
+    font-size: 40px;
+  }
+
+  .theme-showroom .showroom-journal-grid {
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+
+  .theme-showroom .showroom-journal-card > a {
+    grid-template-columns: 118px minmax(0, 1fr);
+  }
+
+  .theme-showroom .showroom-journal-media {
+    height: 100%;
+    min-height: 132px;
+    aspect-ratio: auto;
+  }
+
+  .theme-showroom .showroom-journal-copy {
+    padding: 15px;
+  }
+
+  .theme-showroom .showroom-journal-title {
+    font-size: 18px;
+  }
+
+  .theme-showroom .showroom-journal-excerpt {
+    -webkit-line-clamp: 2;
+  }
+}
+
 .theme-showroom .showroom-made-overlay {
   position: fixed;
   z-index: 1200;

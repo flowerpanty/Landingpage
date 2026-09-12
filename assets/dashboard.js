@@ -69,6 +69,21 @@ const dashboardEventMetadata = {
     type: "browse",
     description: "홈 빠른 선택 결과 클릭"
   },
+  blog_header_click: {
+    label: "블로그 헤더 클릭",
+    type: "browse",
+    description: "헤더 또는 공통 메뉴의 BLOG 진입점 클릭"
+  },
+  blog_card_click: {
+    label: "블로그 글 클릭",
+    type: "browse",
+    description: "JOURNAL 최신 글 카드 클릭"
+  },
+  blog_footer_click: {
+    label: "블로그 푸터 클릭",
+    type: "browse",
+    description: "푸터 블로그 링크 클릭"
+  },
   consult_kakao_click: {
     label: "카카오 상담",
     type: "consult",

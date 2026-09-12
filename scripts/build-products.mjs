@@ -222,6 +222,7 @@ function renderProductPage(product) {
           <a href="../../index.html#our-cookies">쿠키</a>
           <a href="../../works/">제작 사례</a>
           <a href="../../pickup/">픽업</a>
+          <a href="https://blog.nothingmatters.co.kr/" target="_blank" rel="noopener noreferrer" data-analytics-event="blog_header_click">BLOG</a>
         </nav>
         <a class="showroom-header-cta" data-kakao-float="true" href="${KAKAO_URL}" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click">주문·문의</a>
       </div>

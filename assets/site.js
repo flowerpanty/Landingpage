@@ -388,6 +388,7 @@ document.addEventListener("click", (event) => {
   const eventLabel =
     analyticsTarget?.dataset.analyticsLabel ||
     normalizeAnalyticsText(trigger?.textContent || link?.textContent || "");
+  const postTitle = normalizeAnalyticsText(analyticsTarget?.dataset.analyticsPostTitle || "");
 
   eventNames.forEach((eventName) => {
     window.gtag("event", eventName, {
@@ -396,6 +397,7 @@ document.addEventListener("click", (event) => {
       link_url: link?.href || "",
       link_text: normalizeAnalyticsText(link?.textContent || trigger?.textContent || ""),
       page_path: window.location.pathname,
+      ...(eventName === "blog_card_click" && postTitle ? { post_title: postTitle } : {}),
       transport_type: "beacon"
     });
   });
