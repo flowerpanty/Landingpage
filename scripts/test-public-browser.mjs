@@ -212,7 +212,7 @@ try {
     assert.equal(pickupLayout.bounds['.nm-pickup-sticky'].display, "grid", `pickup sticky action should be visible at ${width}px`);
     assert.ok(pickupLayout.bounds['.nm-pickup-sticky'].left >= 0 && pickupLayout.bounds['.nm-pickup-sticky'].right <= pickupLayout.viewport, `pickup sticky action overflows at ${width}px`);
     assert.ok(pickupLayout.sitePaddingBottom >= 78, `pickup content needs sticky action clearance at ${width}px`);
-    assert.equal(pickupLayout.heroSrc, "../images/pickup-cookie-lineup.png", `pickup hero should use the pickup cookie lineup image at ${width}px`);
+    assert.equal(pickupLayout.heroSrc, "../images/pickup-cookie-lineup-optimized.jpg", `pickup hero should use the optimized pickup cookie lineup image at ${width}px`);
     assert.equal(pickupLayout.heroObjectFit, "contain", `pickup hero should not crop flavor labels at ${width}px`);
     assert.ok(Math.abs(pickupLayout.heroNaturalRatio - pickupLayout.heroRenderedRatio) < 0.02, `pickup hero should preserve its natural ratio at ${width}px`);
     assert.ok(pickupLayout.heroHeight >= 200 && pickupLayout.heroHeight <= 240, `pickup hero should stay compact at ${width}px`);
