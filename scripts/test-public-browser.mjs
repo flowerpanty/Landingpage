@@ -14,6 +14,10 @@ const CRITICAL_PATHS = [
   "/",
   "/products/scone/",
   "/products/cookie-flight/",
+  "/brookie/",
+  "/products/handmade-cookie/",
+  "/products/lucky-cookie/",
+  "/magok-cookie/",
   "/guides/",
   "/guides/cookie-storage/",
   "/works/",
@@ -206,13 +210,77 @@ try {
   }
 
   await setViewport(cdp, 390);
+  await navigate(cdp, `${server.baseUrl}/magok-cookie/`);
+  const magokState = await evaluate(cdp, "() => ({ h1: document.querySelector('h1')?.textContent.trim() || '', cards: document.querySelectorAll('#cookies .magok-product-card').length, corporate: [...document.querySelectorAll('a[href]')].some((link) => new URL(link.href).pathname === '/guides/corporate-event-cookie/'), pickup: [...document.querySelectorAll('a[href]')].some((link) => new URL(link.href).pathname === '/pickup/'), kakao: [...document.querySelectorAll('a[href]')].some((link) => link.href.includes('pf.kakao.com/_QdCaK/chat')), faq: document.querySelectorAll('#faq .magok-faq-list details').length, quickNav: Boolean(document.querySelector('.magok-quick-nav')), floats: document.querySelectorAll('.magok-float-stack a').length, address: document.body.textContent.includes('서울특별시 강서구 송정로 25 1층'), locationContext: document.body.textContent.includes('마곡 인근') })");
+  assert.deepEqual(magokState, { h1: "마곡 쿠키·답례품 찾고 있다면공항동에서 만들어 가까이 전해드려요", cards: 5, corporate: true, pickup: true, kakao: true, faq: 6, quickNav: true, floats: 2, address: true, locationContext: true }, "magok cookie hub should expose the local ordering path");
+  for (const [pathname, expectedTarget] of [
+    ["/", "/magok-cookie/"],
+    ["/guides/", "/magok-cookie/"],
+    ["/guides/corporate-event-cookie/", "/magok-cookie/"],
+    ["/pickup/", "/magok-cookie/"]
+  ]) {
+    await navigate(cdp, `${server.baseUrl}${pathname}`);
+    const hasMagokLink = await evaluate(cdp, `() => [...document.querySelectorAll('a[href]')].some((link) => new URL(link.href).pathname === '${expectedTarget}')`);
+    assert.equal(hasMagokLink, true, `${pathname} should link to the magok cookie hub`);
+  }
+
+  for (const width of MOBILE_WIDTHS) {
+    await setViewport(cdp, width);
+    await navigate(cdp, `${server.baseUrl}/magok-cookie/`);
+    const magokMobile = await evaluate(cdp, "() => { const rect = (node) => { const value = node?.getBoundingClientRect(); return value ? { left: value.left, right: value.right, top: value.top, bottom: value.bottom, width: value.width, height: value.height } : null; }; const columns = (selector) => getComputedStyle(document.querySelector(selector)).gridTemplateColumns.trim().split(/\\s+/).length; const h1 = document.querySelector('.magok-hero-copy h1'); const heroImage = document.querySelector('.magok-hero-image'); const heroCopy = document.querySelector('.magok-hero-copy'); const heroStamp = document.querySelector('.magok-hero-stamp'); const heroActions = [...document.querySelectorAll('.magok-hero-actions .magok-button')].map(rect); const productCards = [...document.querySelectorAll('.magok-product-card')].map((card) => ({ rect: rect(card), titleFits: (card.querySelector('h3')?.scrollWidth || 0) <= (card.querySelector('h3')?.clientWidth || 0), linkFits: (card.querySelector('a')?.scrollWidth || 0) <= (card.querySelector('a')?.clientWidth || 0) })); const visibleNav = [...document.querySelectorAll('.magok-header-nav a')].filter((link) => getComputedStyle(link).display !== 'none').map((link) => link.textContent.trim()); const logo = rect(document.querySelector('.magok-brand')); const nav = rect(document.querySelector('.magok-header-nav')); const quickNav = document.querySelector('.magok-quick-nav-inner'); return { h1Size: Number.parseFloat(getComputedStyle(h1).fontSize), h1Rect: rect(h1), heroFit: getComputedStyle(heroImage).objectFit, heroNaturalRatio: heroImage.naturalWidth / heroImage.naturalHeight, heroRenderedRatio: heroImage.getBoundingClientRect().width / heroImage.getBoundingClientRect().height, heroCopy: rect(heroCopy), heroStamp: rect(heroStamp), heroActions, productColumns: columns('.magok-product-grid'), productCards, favorColumns: columns('.magok-favor-grid'), businessColumns: columns('.magok-business-grid'), pickupColumns: columns('.magok-pickup-grid'), answerColumns: columns('.magok-answer-grid'), finalColumns: columns('.magok-final-grid'), faqCount: document.querySelectorAll('.magok-faq-list details').length, visibleNav, logoCenter: logo ? logo.top + logo.height / 2 : 0, navCenter: nav ? nav.top + nav.height / 2 : 0, quickOverflow: getComputedStyle(quickNav).overflowX, quickScrollable: quickNav.scrollWidth >= quickNav.clientWidth }; }");
+    assert.ok(magokMobile.h1Size >= 36 && magokMobile.h1Size <= 40, `magok hero h1 should use the mobile editorial scale at ${width}px`);
+    assert.ok(magokMobile.h1Rect.left >= 0 && magokMobile.h1Rect.right <= width, `magok hero copy should fit the viewport at ${width}px`);
+    assert.equal(magokMobile.heroFit, 'contain', `magok hero image should avoid an excessive crop at ${width}px`);
+    assert.ok(Math.abs(magokMobile.heroNaturalRatio - magokMobile.heroRenderedRatio) < 0.02, `magok hero should preserve its natural ratio at ${width}px`);
+    assert.ok(magokMobile.heroStamp.bottom <= magokMobile.heroCopy.top, `magok hero stamp should not overlap copy at ${width}px: ${JSON.stringify({ stamp: magokMobile.heroStamp, copy: magokMobile.heroCopy })}`);
+    assert.equal(magokMobile.quickOverflow, 'auto', `magok quick navigation should scroll internally at ${width}px`);
+    assert.equal(magokMobile.quickScrollable, true, `magok quick navigation should remain usable at ${width}px`);
+    assert.deepEqual(magokMobile.visibleNav, ['픽업 안내', '주문'], `magok header should simplify to pickup and order at ${width}px`);
+    assert.ok(Math.abs(magokMobile.logoCenter - magokMobile.navCenter) <= 2, `magok logo and nav should remain on one row at ${width}px`);
+    assert.equal(magokMobile.heroActions.length, 3, `magok hero should keep three CTA buttons at ${width}px`);
+    assert.ok(magokMobile.heroActions.every((button) => button.left >= 0 && button.right <= width && button.height >= 44), `magok hero CTAs should fit the viewport at ${width}px`);
+    assert.ok(magokMobile.heroActions.every((button) => Math.abs(button.width - magokMobile.heroActions[0].width) < 1), `magok hero CTAs should use one full-width column at ${width}px`);
+    assert.equal(magokMobile.productCards.length, 5, `magok page should keep five product cards at ${width}px`);
+    assert.equal(magokMobile.productColumns, 2, `magok product cards should use two visual columns at ${width}px`);
+    assert.ok(magokMobile.productCards.every((card) => card.rect.right <= width && card.titleFits && card.linkFits), `magok product card content should fit at ${width}px`);
+    assert.ok(magokMobile.productCards.at(-1).rect.width >= magokMobile.productCards[0].rect.width * 1.8, `magok fifth product card should use a wide mobile layout at ${width}px`);
+    assert.equal(magokMobile.favorColumns, 2, `magok favor cards should use two compact columns at ${width}px`);
+    assert.equal(magokMobile.businessColumns, 1, `magok business section should stack at ${width}px`);
+    assert.equal(magokMobile.pickupColumns, 1, `magok pickup board should stack at ${width}px`);
+    assert.equal(magokMobile.answerColumns, 1, `magok quick answers should use one column at ${width}px`);
+    assert.equal(magokMobile.finalColumns, 1, `magok final CTA should stack at ${width}px`);
+    assert.equal(magokMobile.faqCount, 6, `magok FAQ count should remain six at ${width}px`);
+    const magokFaqOpen = await evaluate(cdp, "() => { const details = document.querySelector('.magok-faq-list details'); details.querySelector('summary').click(); return details.open; }");
+    assert.equal(magokFaqOpen, true, `magok FAQ should open on activation at ${width}px`);
+    await cdp.command('Runtime.evaluate', { expression: "document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.documentElement.scrollHeight)" });
+    await wait(100);
+    const magokFooter = await evaluate(cdp, "() => { const footer = document.querySelector('.magok-footer')?.getBoundingClientRect(); const floating = document.querySelector('.magok-float-stack')?.getBoundingClientRect(); return { footerBottom: footer?.bottom || 0, floatTop: floating?.top || Infinity, floatWidth: floating?.width || 0, floatHeight: floating?.height || 0 }; }");
+    assert.ok(magokFooter.footerBottom <= magokFooter.floatTop, `magok floating actions should not cover the footer at ${width}px: ${JSON.stringify(magokFooter)}`);
+    assert.ok(magokFooter.floatWidth <= 140 && magokFooter.floatHeight <= 56, `magok floating actions should remain compact at ${width}px`);
+  }
+
+  await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/`);
-  const cookieStorageGuide = await evaluate(cdp, "() => ({ cards: document.querySelectorAll('.product-card').length, active: document.querySelector('.product-card.active')?.dataset.product || '', guideTitle: document.querySelector('#guide-title')?.textContent.trim() || '', faqCount: document.querySelectorAll('#faq details').length, imageSourcesLocal: [...document.querySelectorAll('main img')].every((image) => image.getAttribute('src')?.startsWith('../../images/')) })");
-  assert.deepEqual(cookieStorageGuide, { cards: 3, active: "crew", guideTitle: "COOKIE CREW", faqCount: 6, imageSourcesLocal: true }, "cookie storage guide should render its initial content");
-  const selectedProduct = await evaluate(cdp, "() => { document.querySelector('[data-product=\"terminal\"]').click(); return { active: document.querySelector('.product-card.active')?.dataset.product || '', pressed: document.querySelector('[data-product=\"terminal\"]')?.getAttribute('aria-pressed') || '', title: document.querySelector('#guide-title')?.textContent.trim() || '' }; }");
-  assert.deepEqual(selectedProduct, { active: "terminal", pressed: "true", title: "TERMINAL SAND COOKIE" }, "cookie storage guide should update when a product is selected");
+  const cookieStorageGuide = await evaluate(cdp, "() => ({ cards: document.querySelectorAll('.product-card').length, active: document.querySelector('.product-card.active')?.dataset.product || '', guideTitle: document.querySelector('#guide-title')?.textContent.trim() || '', faqCount: document.querySelectorAll('#faq details').length, discoverCards: document.querySelectorAll('.discover-card').length, hasKakaoFloat: Boolean(document.querySelector('[data-kakao-float]')), hasKakaoBubble: Boolean(document.querySelector('.nm-float-bubble')), hasLegacyPng: [...document.images].some((image) => image.getAttribute('src')?.includes('main-order-cookie-thumb.png')), hasLegacyText: document.documentElement.textContent.includes('소비기한'), imageSourcesLocal: [...document.querySelectorAll('main img')].every((image) => image.getAttribute('src')?.startsWith('../../images/')) })");
+  assert.deepEqual(cookieStorageGuide, { cards: 4, active: "crew", guideTitle: "쿠키크루 보관방법", faqCount: 8, discoverCards: 4, hasKakaoFloat: false, hasKakaoBubble: false, hasLegacyPng: false, hasLegacyText: false, imageSourcesLocal: true }, "cookie storage guide should render its four-product initial content");
+  for (const [key, expectedTitle, expectedContent] of [
+    ["brookie", "브루키 보관방법", "브루키는 버터쿠키와 브라우니를 함께 구운 제품이에요."],
+    ["handmade", "수제 꾸덕쿠키 보관방법", "수령 후 바로 밀봉하여 냉동 보관해주시고 2주 이내"],
+    ["lucky", "행운쿠키 보관방법", "실온 보관 시 수령일 포함 7일 이내"]
+  ]) {
+    const selectedProduct = await evaluate(cdp, `() => { document.querySelector('[data-product="${key}"]').click(); return { active: document.querySelector('.product-card.active')?.dataset.product || '', pressed: document.querySelector('[data-product="${key}"]')?.getAttribute('aria-pressed') || '', title: document.querySelector('#guide-title')?.textContent.trim() || '', content: document.querySelector('#info-list')?.textContent.includes(${JSON.stringify(expectedContent)}) || false }; }`);
+    assert.deepEqual(selectedProduct, { active: key, pressed: "true", title: expectedTitle, content: true }, `cookie storage ${key} selection should render its product-specific guidance`);
+  }
   const storageFaqOpen = await evaluate(cdp, "() => { const details = document.querySelector('#faq details'); details.querySelector('summary').click(); return details.open; }");
   assert.equal(storageFaqOpen, true, "cookie storage guide FAQ should open on activation");
+
+  const discoverProducts = await evaluate(cdp, "() => [...document.querySelectorAll('.discover-card')].map((card) => ({ title: card.querySelector('h3')?.textContent.trim() || '', href: card.querySelector('a')?.getAttribute('href') || '', event: card.querySelector('a')?.dataset.analyticsEvent || '', label: card.querySelector('a')?.dataset.analyticsLabel || '' }))");
+  assert.deepEqual(discoverProducts, [
+    { title: "쿠키크루", href: "https://nothingmatters.co.kr/cookie-crew/?utm_source=cookie-care&utm_medium=owned&utm_campaign=aftercare", event: "cookie_care_product_discover_click", label: "쿠키크루" },
+    { title: "브루키", href: "https://nothingmatters.co.kr/brookie/?utm_source=cookie-care&utm_medium=owned&utm_campaign=aftercare", event: "cookie_care_product_discover_click", label: "브루키" },
+    { title: "수제 꾸덕쿠키", href: "https://nothingmatters.co.kr/products/handmade-cookie/?utm_source=cookie-care&utm_medium=owned&utm_campaign=aftercare", event: "cookie_care_product_discover_click", label: "수제 꾸덕쿠키" },
+    { title: "행운쿠키", href: "https://nothingmatters.co.kr/products/lucky-cookie/?utm_source=cookie-care&utm_medium=owned&utm_campaign=aftercare", event: "cookie_care_product_discover_click", label: "행운쿠키" }
+  ], "cookie storage AFTER COOKIE CARE should contain the four operating products");
 
   await evaluate(cdp, "() => { window.__cookieCareEvents = []; window.gtag = (...args) => window.__cookieCareEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"cookie_care_find_product_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_subscribe_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_question_click\"]'); click('[data-analytics-event=\"cookie_care_product_discover_click\"]'); return true; }");
   const cookieCareEvents = await evaluate(cdp, "() => window.__cookieCareEvents.map((entry) => entry[1])");
@@ -220,7 +288,7 @@ try {
     assert.equal(cookieCareEvents.filter((name) => name === eventName).length, 1, `${eventName} should fire once`);
   }
 
-  for (const [hash, expected] of Object.entries({ crew: "COOKIE CREW", terminal: "TERMINAL SAND COOKIE", flight: "COOKIE FLIGHT" })) {
+  for (const [hash, expected] of Object.entries({ crew: "쿠키크루 보관방법", brookie: "브루키 보관방법", handmade: "수제 꾸덕쿠키 보관방법", lucky: "행운쿠키 보관방법" })) {
     await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/?deep-link=${hash}#${hash}`);
     const deepLinkState = await evaluate(cdp, "() => { const active = document.querySelector('.product-card.active'); return { active: active?.dataset.product || '', pressed: active?.getAttribute('aria-pressed') || '', title: document.querySelector('#guide-title')?.textContent.trim() || '' }; }");
     assert.deepEqual(deepLinkState, { active: hash, pressed: "true", title: expected }, `cookie storage ${hash} deep link should select the matching product`);
@@ -231,20 +299,31 @@ try {
     await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/`);
     await cdp.command("Runtime.evaluate", { expression: "document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.documentElement.scrollHeight)" });
     await wait(100);
-    const guideMobileCta = await evaluate(cdp, "() => { const cta = document.querySelector('.mobile-cta'); const footer = document.querySelector('.footer-inner'); const ctaRect = cta?.getBoundingClientRect(); const footerRect = footer?.getBoundingClientRect(); return { visible: cta ? getComputedStyle(cta).display !== 'none' : false, ctaTop: ctaRect?.top || 0, footerBottom: footerRect?.bottom || 0 }; }");
+    const guideMobileCta = await evaluate(cdp, "() => { const cta = document.querySelector('.mobile-cta'); const footer = document.querySelector('.footer-inner'); const ctaRect = cta?.getBoundingClientRect(); const footerRect = footer?.getBoundingClientRect(); return { visible: cta ? getComputedStyle(cta).display !== 'none' : false, ctaTop: ctaRect?.top || 0, footerBottom: footerRect?.bottom || 0, hasKakaoFloat: Boolean(document.querySelector('[data-kakao-float]')), hasKakaoBubble: Boolean(document.querySelector('.nm-float-bubble')) }; }");
     assert.equal(guideMobileCta.visible, true, `cookie storage mobile CTA should be visible at ${width}px`);
+    assert.equal(guideMobileCta.hasKakaoFloat, false, `cookie storage should opt out of the common Kakao float at ${width}px`);
+    assert.equal(guideMobileCta.hasKakaoBubble, false, `cookie storage should not render the common Kakao bubble at ${width}px`);
     assert.ok(guideMobileCta.footerBottom <= guideMobileCta.ctaTop, `cookie storage mobile CTA should not cover footer content at ${width}px: ${JSON.stringify(guideMobileCta)}`);
   }
 
-  for (const [pathname, href] of [
-    ["/cookie-crew/", "../guides/cookie-storage/#crew"],
-    ["/products/terminal-sand-cookie/", "../../guides/cookie-storage/#terminal"],
-    ["/products/cookie-flight/", "../../guides/cookie-storage/#flight"]
+  for (const [pathname, href, expectedLabel] of [
+    ["/cookie-crew/", "../guides/cookie-storage/#crew", "쿠키크루"],
+    ["/brookie/", "../guides/cookie-storage/#brookie", "브루키"],
+    ["/products/handmade-cookie/", "../../guides/cookie-storage/#handmade", "수제 꾸덕쿠키"],
+    ["/products/lucky-cookie/", "../../guides/cookie-storage/#lucky", "행운쿠키"]
   ]) {
     await navigate(cdp, `${server.baseUrl}${pathname}`);
     const entryLink = await evaluate(cdp, `() => { const link = document.querySelector('[data-analytics-event="cookie_care_entry_click"]'); return { href: link?.getAttribute('href') || '', label: link?.dataset.analyticsLabel || '' }; }`);
     assert.equal(entryLink.href, href, `${pathname} should link to its cookie storage deep link`);
-    assert.ok(entryLink.label, `${pathname} cookie storage link should retain its product analytics label`);
+    assert.equal(entryLink.label, expectedLabel, `${pathname} cookie storage link should retain its product analytics label`);
+    const entryAnalytics = await evaluate(cdp, "() => { const link = document.querySelector('[data-analytics-event=\"cookie_care_entry_click\"]'); const available = typeof window.gtag === 'function'; window.__cookieCareEntryEvents = []; if (available) { window.gtag = (...args) => window.__cookieCareEntryEvents.push(args); link.addEventListener('click', (event) => event.preventDefault(), { once: true }); link.click(); } return { available, eventCount: window.__cookieCareEntryEvents.filter((entry) => entry[1] === 'cookie_care_entry_click').length }; }");
+    assert.equal(entryAnalytics.available, true, `${pathname} should expose the GA4 gtag bootstrap`);
+    assert.equal(entryAnalytics.eventCount, 1, `${pathname} cookie storage entry should send exactly one cookie_care_entry_click event`);
+  }
+
+  for (const pathname of ["/products/terminal-sand-cookie/", "/products/cookie-flight/"]) {
+    await navigate(cdp, `${server.baseUrl}${pathname}`);
+    assert.equal(await evaluate(cdp, "() => Boolean(document.querySelector('[data-analytics-event=\"cookie_care_entry_click\"]'))"), false, `${pathname} should not link to an unavailable cookie storage product`);
   }
 
   for (const width of MOBILE_WIDTHS) {

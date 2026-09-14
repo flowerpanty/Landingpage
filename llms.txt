@@ -9,6 +9,7 @@
 - https://nothingmatters.co.kr/contact/
 - https://nothingmatters.co.kr/works/
 - https://nothingmatters.co.kr/pickup/
+- https://nothingmatters.co.kr/magok-cookie/
 - https://nothingmatters.co.kr/guides/
 - https://nothingmatters.co.kr/products/brownie-cookie/
 - https://nothingmatters.co.kr/products/custom-brownie-cookie/
@@ -36,6 +37,10 @@
 - Nearby areas: 공항동, 김포공항, 송정역, 마곡
 - Fulfillment: in-store pickup or vehicle quick consultation
 - Consultation: Kakao channel and reservation order flow
+- Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
+- Nearby/service area: 김포공항, 송정역, 마곡
+- Magok: 마곡 인근 공항동 작업실 / 일정·수량에 따른 차량 퀵 상담
+- Magok cookie & favor hub: https://nothingmatters.co.kr/magok-cookie/
 
 ## Main ordering use cases
 - small handmade cookie gifts

@@ -554,7 +554,10 @@ const siteScript =
     /\/assets\/site\.js(?:\?|$)/.test(script.src)
   );
 
-if (!document.querySelector("[data-kakao-float]")) {
+if (
+  !document.body.hasAttribute("data-disable-kakao-float") &&
+  !document.querySelector("[data-kakao-float]")
+) {
   const kakaoLink = document.createElement("a");
   kakaoLink.className = "nm-float-icon";
   kakaoLink.href = "https://pf.kakao.com/_QdCaK";

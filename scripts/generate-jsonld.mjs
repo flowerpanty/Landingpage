@@ -44,6 +44,7 @@ const ITEM_LISTS = {
     ["결혼식 답례품 쿠키 가이드", "/guides/wedding-favor-cookie/"],
     ["기업행사 쿠키 가이드", "/guides/corporate-event-cookie/"],
     ["소량 선물 쿠키 고르기", "/small-gift/"],
+    ["마곡 쿠키·답례품", "/magok-cookie/"],
   ],
   "/bulk/": [
     ["결혼식 답례품 쿠키 가이드", "/guides/wedding-favor-cookie/"],
@@ -58,7 +59,8 @@ const ITEM_LISTS = {
     ["소량 선물 상담", "/contact/"],
   ],
   "/guides/": [
-    ["쿠키 보관법·소비기한 확인", "/guides/cookie-storage/"],
+    ["쿠키 보관방법·맛있게 드시는 기간", "/guides/cookie-storage/"],
+    ["마곡 쿠키·답례품", "/magok-cookie/"],
     ["결혼식 답례품 쿠키", "/guides/wedding-favor-cookie/"],
     ["기업행사 쿠키", "/guides/corporate-event-cookie/"],
     ["선생님 간식 선물", "/guides/teacher-snack-gift/"],
@@ -75,6 +77,15 @@ const ITEM_LISTS = {
     ["수제꾸덕쿠키", "/products/handmade-cookie/"],
     ["답례·단체 주문", "/bulk/"],
     ["실제 제작 사례", "/works/"],
+  ],
+  "/magok-cookie/": [
+    ["브루키", "/brookie/"],
+    ["쿠키크루", "/cookie-crew/"],
+    ["수제꾸덕쿠키", "/products/handmade-cookie/"],
+    ["행운쿠키", "/products/lucky-cookie/"],
+    ["터미널 샌드쿠키", "/products/terminal-sand-cookie/"],
+    ["마곡 기업행사 쿠키", "/guides/corporate-event-cookie/"],
+    ["공항동 픽업 안내", "/pickup/"],
   ],
 };
 
@@ -469,9 +480,9 @@ function renderSchemaScript(schema) {
 function insertSchema(html, schema) {
   const script = renderSchemaScript(schema);
   if (STATIC_SCHEMA_REGEX.test(html)) {
-    return html.replace(STATIC_SCHEMA_REGEX, `\n${script}`);
+    return html.replace(STATIC_SCHEMA_REGEX, () => `\n${script}`);
   }
-  return html.replace(/<\/head>/i, `${script}</head>`);
+  return html.replace(/<\/head>/i, () => `${script}</head>`);
 }
 
 function ensureSocialMetadata(html, loc) {

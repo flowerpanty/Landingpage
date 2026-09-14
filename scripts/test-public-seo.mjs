@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_URL = "https://nothingmatters.co.kr";
 const INSTAGRAM_URL = "https://instagram.com/nothingmatters_c";
+const businessFacts = JSON.parse(fs.readFileSync(path.join(ROOT, "data/business.json"), "utf8"));
 const sitePages = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site-pages.json"), "utf8"));
 const products = (sitePages.products || []).map((product) => ({
   ...product,
@@ -262,13 +263,57 @@ assert.match(
   /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-14<\/lastmod>/,
   "guides sitemap lastmod should reflect the cookie storage guide entry"
 );
+for (const pathname of ["/", "/pickup/", "/guides/corporate-event-cookie/"]) {
+  assert.match(
+    sitemap,
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>2026-09-14<\\/lastmod>`),
+    `${pathname} sitemap lastmod should reflect its current content`
+  );
+}
 
 const cookieStorageSchema = getStaticSchema(readHtml(filePathForPathname("/guides/cookie-storage/")));
 const cookieStorageBreadcrumb = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
 assert.equal(
   cookieStorageBreadcrumb?.itemListElement?.at(-1)?.name,
-  "쿠키 보관법·소비기한 확인",
+  "쿠키 보관방법·맛있게 드시는 기간",
   "cookie storage breadcrumb should use its search-intent name"
 );
+
+const magokPath = "/magok-cookie/";
+const magokEntry = registryEntries.get(magokPath);
+assert.deepEqual(
+  { status: magokEntry?.status, indexing: magokEntry?.indexing, sitemap: magokEntry?.sitemap },
+  { status: "active", indexing: "index", sitemap: true },
+  "magok cookie hub should be an indexable sitemap page"
+);
+const magokHtml = readHtml(filePathForPathname(magokPath));
+assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 쿠키/);
+assert.match(getMeta(magokHtml, "name", "description"), /쿠키|답례품/);
+assert.match(magokHtml, /<h1\b[^>]*>/i, "magok cookie hub should have an h1");
+const magokSchema = getStaticSchema(magokHtml);
+const magokGraph = magokSchema["@graph"] || [];
+for (const type of ["Organization", "Bakery", "WebSite", "WebPage", "BreadcrumbList", "ItemList", "FAQPage"]) {
+  assert.ok(magokGraph.some((entry) => entry["@type"] === type), `magok cookie hub missing ${type} schema`);
+}
+const magokBreadcrumb = magokGraph.find((entry) => entry["@type"] === "BreadcrumbList");
+assert.equal(magokBreadcrumb?.itemListElement?.at(-1)?.name, "마곡 쿠키·답례품");
+const magokBusiness = magokGraph.find((entry) => entry["@type"] === "Bakery");
+assert.deepEqual(magokBusiness?.address, {
+  "@type": "PostalAddress",
+  streetAddress: "송정로 25 1층",
+  addressLocality: "강서구",
+  addressRegion: "서울특별시",
+  addressCountry: "KR"
+});
+assert.ok(magokBusiness?.areaServed?.some((area) => area.name === "마곡"), "magok areaServed should include 마곡");
+assert.equal(magokBusiness?.priceRange, businessFacts.priceRange, "magok Bakery priceRange should match data/business.json");
+assert.equal(locs.includes(`${SITE_URL}${magokPath}`), true, "sitemap should include magok cookie hub");
+for (const forbidden of ["마곡 매장", "마곡동 매장", "마곡에 위치", "마곡 쿠키 전문점"]) {
+  assert.equal(magokHtml.includes(forbidden), false, `magok cookie hub contains forbidden location claim: ${forbidden}`);
+}
+
+const guidesSchema = getStaticSchema(readHtml(filePathForPathname("/guides/")));
+const guidesItemList = guidesSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
+assert.ok(guidesItemList?.itemListElement?.some((item) => item.url === `${SITE_URL}/magok-cookie/`), "guides ItemList should include magok cookie hub");
 
 console.log(`public SEO checks: passed ${locs.length} sitemap URLs, ${sourceHtmlEntries.length} discovered public HTML files`);
