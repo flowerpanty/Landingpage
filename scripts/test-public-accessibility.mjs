@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const excludedDirectories = new Set([".git", ".playwright-cli", "node_modules", "dashboard", "gallery-admin"]);
+const excludedDirectories = new Set([".git", ".playwright-cli", "node_modules", "dashboard", "gallery-admin", "_handoff"]);
 
 function discover(directory = ROOT, relativePath = "") {
   const files = [];

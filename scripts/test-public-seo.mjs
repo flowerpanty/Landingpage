@@ -68,7 +68,7 @@ function discoverSourceHtmlEntries() {
 
   function walk(directory) {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      if (entry.name === ".git" || entry.name === ".playwright-cli" || entry.name === "node_modules") continue;
+      if ([".git", ".playwright-cli", "node_modules", "_handoff"].includes(entry.name)) continue;
       const entryPath = path.join(directory, entry.name);
       if (entry.isDirectory()) {
         walk(entryPath);
@@ -250,5 +250,25 @@ for (const product of products) {
 for (const requiredRoute of ["/works/", "/pickup/"]) {
   assert.ok(locs.includes(`${SITE_URL}${requiredRoute}`), `sitemap missing route: ${requiredRoute}`);
 }
+
+assert.equal(
+  sourceHtmlEntries.some((entry) => entry.pathname.startsWith("/_handoff/")),
+  false,
+  "handoff source files must not be discovered as public pages"
+);
+assert.match(fs.readFileSync(path.join(ROOT, ".gitignore"), "utf8"), /^_handoff\/$/m, "handoff files must stay out of deploy commits");
+assert.match(
+  sitemap,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-14<\/lastmod>/,
+  "guides sitemap lastmod should reflect the cookie storage guide entry"
+);
+
+const cookieStorageSchema = getStaticSchema(readHtml(filePathForPathname("/guides/cookie-storage/")));
+const cookieStorageBreadcrumb = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
+assert.equal(
+  cookieStorageBreadcrumb?.itemListElement?.at(-1)?.name,
+  "쿠키 보관법·소비기한 확인",
+  "cookie storage breadcrumb should use its search-intent name"
+);
 
 console.log(`public SEO checks: passed ${locs.length} sitemap URLs, ${sourceHtmlEntries.length} discovered public HTML files`);

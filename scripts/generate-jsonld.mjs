@@ -58,6 +58,7 @@ const ITEM_LISTS = {
     ["소량 선물 상담", "/contact/"],
   ],
   "/guides/": [
+    ["쿠키 보관법·소비기한 확인", "/guides/cookie-storage/"],
     ["결혼식 답례품 쿠키", "/guides/wedding-favor-cookie/"],
     ["기업행사 쿠키", "/guides/corporate-event-cookie/"],
     ["선생님 간식 선물", "/guides/teacher-snack-gift/"],
@@ -208,6 +209,7 @@ function filePathForUrl(loc) {
 function getPageData(html, loc) {
   const url = new URL(loc);
   const canonical = getCanonicalHref(html) || loc;
+  const registryPage = (SITE_PAGE_DATA.pages || []).find((entry) => entry.path === url.pathname);
 
   return {
     loc,
@@ -222,6 +224,7 @@ function getPageData(html, loc) {
         "/images/heart-badge.png"
     ),
     h1: cleanText(getAttribute(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i)),
+    breadcrumbName: registryPage?.breadcrumbName || "",
   };
 }
 
@@ -246,7 +249,7 @@ function buildBreadcrumb(page) {
   }
 
   items.push({
-    name: page.h1 || page.title.replace(/\s*\|\s*nothingmatters.*$/i, ""),
+    name: page.breadcrumbName || page.h1 || page.title.replace(/\s*\|\s*nothingmatters.*$/i, ""),
     item: page.pageUrl,
   });
 

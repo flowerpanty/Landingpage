@@ -15,7 +15,7 @@ const SKIP_STYLE = `<style ${STYLE_MARKER}>
 </style>`;
 
 function shouldSkipDirectory(name, relativePath) {
-  if ([".git", ".playwright-cli", "node_modules", "dashboard", "gallery-admin"].includes(name)) return true;
+  if ([".git", ".playwright-cli", "node_modules", "dashboard", "gallery-admin", "_handoff"].includes(name)) return true;
   return relativePath === "out/_next" || relativePath === "out/_not-found";
 }
 

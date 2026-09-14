@@ -3,6 +3,7 @@ node_modules
 npm-debug.log*
 .omx/
 .playwright-cli/
+_handoff/
 output/playwright/
 data/gallery/
 cookie-crew/index 복사본.html

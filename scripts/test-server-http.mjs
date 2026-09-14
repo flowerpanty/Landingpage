@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import http from "node:http";
@@ -7,6 +8,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const cookieCareDashboardEvents = [
+  "cookie_care_entry_click",
+  "cookie_care_find_product_click",
+  "cookie_care_kakao_subscribe_click",
+  "cookie_care_kakao_question_click",
+  "cookie_care_product_discover_click"
+];
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
@@ -96,6 +104,13 @@ async function stopServer(server) {
 const server = await startServer();
 
 try {
+  const serverSource = fs.readFileSync(path.join(ROOT, "server.js"), "utf8");
+  const dashboardSource = fs.readFileSync(path.join(ROOT, "assets/dashboard.js"), "utf8");
+  for (const eventName of cookieCareDashboardEvents) {
+    assert.match(serverSource, new RegExp(`name: "${eventName}"`), `${eventName} must be tracked by the dashboard server`);
+    assert.match(dashboardSource, new RegExp(`${eventName}: \\{`), `${eventName} must have dashboard metadata`);
+  }
+
   const asset = await request(server.baseUrl, "/assets/site.css");
   assert.equal(asset.status, 200);
   assert.match(asset.headers["cache-control"], /public, max-age=86400/);

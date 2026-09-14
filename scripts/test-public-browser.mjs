@@ -15,6 +15,7 @@ const CRITICAL_PATHS = [
   "/products/scone/",
   "/products/cookie-flight/",
   "/guides/",
+  "/guides/cookie-storage/",
   "/works/",
   "/pickup/",
   "/contact/",
@@ -204,6 +205,48 @@ try {
     }
   }
 
+  await setViewport(cdp, 390);
+  await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/`);
+  const cookieStorageGuide = await evaluate(cdp, "() => ({ cards: document.querySelectorAll('.product-card').length, active: document.querySelector('.product-card.active')?.dataset.product || '', guideTitle: document.querySelector('#guide-title')?.textContent.trim() || '', faqCount: document.querySelectorAll('#faq details').length, imageSourcesLocal: [...document.querySelectorAll('main img')].every((image) => image.getAttribute('src')?.startsWith('../../images/')) })");
+  assert.deepEqual(cookieStorageGuide, { cards: 3, active: "crew", guideTitle: "COOKIE CREW", faqCount: 6, imageSourcesLocal: true }, "cookie storage guide should render its initial content");
+  const selectedProduct = await evaluate(cdp, "() => { document.querySelector('[data-product=\"terminal\"]').click(); return { active: document.querySelector('.product-card.active')?.dataset.product || '', pressed: document.querySelector('[data-product=\"terminal\"]')?.getAttribute('aria-pressed') || '', title: document.querySelector('#guide-title')?.textContent.trim() || '' }; }");
+  assert.deepEqual(selectedProduct, { active: "terminal", pressed: "true", title: "TERMINAL SAND COOKIE" }, "cookie storage guide should update when a product is selected");
+  const storageFaqOpen = await evaluate(cdp, "() => { const details = document.querySelector('#faq details'); details.querySelector('summary').click(); return details.open; }");
+  assert.equal(storageFaqOpen, true, "cookie storage guide FAQ should open on activation");
+
+  await evaluate(cdp, "() => { window.__cookieCareEvents = []; window.gtag = (...args) => window.__cookieCareEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"cookie_care_find_product_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_subscribe_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_question_click\"]'); click('[data-analytics-event=\"cookie_care_product_discover_click\"]'); return true; }");
+  const cookieCareEvents = await evaluate(cdp, "() => window.__cookieCareEvents.map((entry) => entry[1])");
+  for (const eventName of ["cookie_care_find_product_click", "cookie_care_kakao_subscribe_click", "cookie_care_kakao_question_click", "cookie_care_product_discover_click"]) {
+    assert.equal(cookieCareEvents.filter((name) => name === eventName).length, 1, `${eventName} should fire once`);
+  }
+
+  for (const [hash, expected] of Object.entries({ crew: "COOKIE CREW", terminal: "TERMINAL SAND COOKIE", flight: "COOKIE FLIGHT" })) {
+    await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/?deep-link=${hash}#${hash}`);
+    const deepLinkState = await evaluate(cdp, "() => { const active = document.querySelector('.product-card.active'); return { active: active?.dataset.product || '', pressed: active?.getAttribute('aria-pressed') || '', title: document.querySelector('#guide-title')?.textContent.trim() || '' }; }");
+    assert.deepEqual(deepLinkState, { active: hash, pressed: "true", title: expected }, `cookie storage ${hash} deep link should select the matching product`);
+  }
+
+  for (const width of MOBILE_WIDTHS) {
+    await setViewport(cdp, width);
+    await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/`);
+    await cdp.command("Runtime.evaluate", { expression: "document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.documentElement.scrollHeight)" });
+    await wait(100);
+    const guideMobileCta = await evaluate(cdp, "() => { const cta = document.querySelector('.mobile-cta'); const footer = document.querySelector('.footer-inner'); const ctaRect = cta?.getBoundingClientRect(); const footerRect = footer?.getBoundingClientRect(); return { visible: cta ? getComputedStyle(cta).display !== 'none' : false, ctaTop: ctaRect?.top || 0, footerBottom: footerRect?.bottom || 0 }; }");
+    assert.equal(guideMobileCta.visible, true, `cookie storage mobile CTA should be visible at ${width}px`);
+    assert.ok(guideMobileCta.footerBottom <= guideMobileCta.ctaTop, `cookie storage mobile CTA should not cover footer content at ${width}px: ${JSON.stringify(guideMobileCta)}`);
+  }
+
+  for (const [pathname, href] of [
+    ["/cookie-crew/", "../guides/cookie-storage/#crew"],
+    ["/products/terminal-sand-cookie/", "../../guides/cookie-storage/#terminal"],
+    ["/products/cookie-flight/", "../../guides/cookie-storage/#flight"]
+  ]) {
+    await navigate(cdp, `${server.baseUrl}${pathname}`);
+    const entryLink = await evaluate(cdp, `() => { const link = document.querySelector('[data-analytics-event="cookie_care_entry_click"]'); return { href: link?.getAttribute('href') || '', label: link?.dataset.analyticsLabel || '' }; }`);
+    assert.equal(entryLink.href, href, `${pathname} should link to its cookie storage deep link`);
+    assert.ok(entryLink.label, `${pathname} cookie storage link should retain its product analytics label`);
+  }
+
   for (const width of MOBILE_WIDTHS) {
     await setViewport(cdp, width);
     await navigate(cdp, `${server.baseUrl}/pickup/`);
@@ -262,6 +305,7 @@ try {
   assert.equal(opened.focused, true, "gallery overlay should move focus inside");
   await press(cdp, "Escape", 27);
   await waitFor(cdp, "() => !location.hash.includes('made-gallery')", "Escape did not restore the previous history entry");
+  await waitFor(cdp, "() => document.querySelector('[data-made-overlay]').hidden", "Escape did not close the gallery overlay");
   const escaped = await evaluate(cdp, "() => ({ hidden: document.querySelector('[data-made-overlay]').hidden, restored: document.activeElement?.matches('[data-open-made-overlay]') || false })");
   assert.equal(escaped.hidden, true, "Escape should close gallery overlay");
   assert.equal(escaped.restored, true, "Escape should restore trigger focus");
@@ -273,9 +317,10 @@ try {
   assert.equal(await evaluate(cdp, "() => document.querySelector('[data-made-overlay]').hidden"), true, "Back should close gallery overlay");
 
   await navigate(cdp, `${server.baseUrl}/cookie-crew/`);
-  const cookieCrew = await evaluate(cdp, "() => { const images = [...document.images]; return { count: images.length, base64: images.filter((image) => image.currentSrc.startsWith('data:image/')).length, loaded: images.filter((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0).length }; }");
-  assert.equal(cookieCrew.base64, 19, "Cookie Crew should retain all Base64 images");
-  assert.equal(cookieCrew.loaded, 19, "Cookie Crew Base64 images should render");
+  const cookieCrew = await evaluate(cdp, "() => { const images = [...document.images]; return { count: images.length, base64: images.filter((image) => image.currentSrc.startsWith('data:image/')).length, local: images.filter((image) => image.getAttribute('src')?.startsWith('../images/cookie-crew/')).length, loaded: images.filter((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0).length }; }");
+  assert.equal(cookieCrew.base64, 0, "Cookie Crew should not retain embedded Base64 images");
+  assert.equal(cookieCrew.local, 19, "Cookie Crew should reference its extracted local images");
+  assert.equal(cookieCrew.loaded, 19, "Cookie Crew extracted images should render");
 
   await setViewport(cdp, 1440, 1000);
   await navigate(cdp, `${server.baseUrl}/?qa=desktop`);

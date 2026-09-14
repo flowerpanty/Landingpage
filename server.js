@@ -126,6 +126,36 @@ const TRACKED_DASHBOARD_EVENTS = [
     label: "픽업 상담 클릭",
     type: "consult",
     description: "픽업 일정과 수령 방식 상담"
+  },
+  {
+    name: "cookie_care_entry_click",
+    label: "보관 가이드 진입",
+    type: "browse",
+    description: "제품 상세에서 보관 가이드로 이동"
+  },
+  {
+    name: "cookie_care_find_product_click",
+    label: "보관 제품 찾기",
+    type: "browse",
+    description: "보관 가이드에서 제품 선택 시작"
+  },
+  {
+    name: "cookie_care_kakao_subscribe_click",
+    label: "보관 가이드 채널 추가",
+    type: "consult",
+    description: "보관 가이드에서 카카오채널 추가"
+  },
+  {
+    name: "cookie_care_kakao_question_click",
+    label: "보관 문의",
+    type: "consult",
+    description: "보관 가이드에서 카카오 문의"
+  },
+  {
+    name: "cookie_care_product_discover_click",
+    label: "보관 후 상품 탐색",
+    type: "browse",
+    description: "보관 가이드에서 상품 상세로 이동"
   }
 ];
 const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;
