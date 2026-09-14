@@ -360,12 +360,12 @@
 .magok-business-card p { margin: 0; font-size: clamp(24px, 2.7vw, 38px); font-weight: 900; letter-spacing: -0.06em; line-height: 1.15; }
 .magok-business-card small { display: block; margin-top: 14px; font-size: 14px; font-weight: 700; line-height: 1.6; }
 
-.magok-pickup { border-block: 3px solid var(--magok-ink); color: var(--magok-white); background: var(--magok-ink); }
-.magok-pickup .magok-label { color: var(--magok-ink); background: var(--magok-cream); }
+.magok-pickup { border-block: 3px solid var(--magok-ink); color: var(--magok-ink); background: var(--magok-cream); }
+.magok-pickup .magok-label { color: var(--magok-ink); background: var(--magok-white); }
 .magok-pickup-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr); gap: clamp(24px, 6vw, 82px); align-items: center; }
-.magok-pickup .magok-section-title { color: var(--magok-white); }
-.magok-pickup-copy > p { margin: 18px 0 0; color: rgba(255,255,255,.78); font-size: 17px; font-weight: 700; line-height: 1.65; }
-.magok-pickup-note { margin-top: 14px; color: var(--magok-cream); font-size: 14px; font-weight: 900; }
+.magok-pickup .magok-section-title { color: var(--magok-ink); }
+.magok-pickup-copy > p { margin: 18px 0 0; color: rgba(17,17,17,.7); font-size: 17px; font-weight: 700; line-height: 1.65; }
+.magok-pickup-note { margin-top: 14px; color: #9a5d31; font-size: 14px; font-weight: 900; }
 .magok-board { overflow: hidden; border: 2.5px solid var(--magok-white); border-radius: 22px; background: #171717; }
 .magok-board-row { display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px 18px; border-bottom: 1px dashed rgba(255,255,255,.46); }
 .magok-board-row:last-child { border-bottom: 0; }
