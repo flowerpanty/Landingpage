@@ -91,6 +91,10 @@ function getAttribute(html, pattern) {
   return html.match(pattern)?.[1]?.trim() || "";
 }
 
+function cleanText(value = "") {
+  return String(value).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function getMeta(html, attribute, value) {
   return getAttribute(
     html,
@@ -263,13 +267,18 @@ assert.match(
   /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-14<\/lastmod>/,
   "guides sitemap lastmod should reflect the cookie storage guide entry"
 );
-for (const pathname of ["/", "/pickup/", "/guides/corporate-event-cookie/"]) {
+for (const pathname of ["/", "/guides/corporate-event-cookie/"]) {
   assert.match(
     sitemap,
     new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>2026-09-14<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
+assert.match(
+  sitemap,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-15<\/lastmod>/,
+  "pickup sitemap lastmod should reflect the reservation update"
+);
 
 const cookieStorageSchema = getStaticSchema(readHtml(filePathForPathname("/guides/cookie-storage/")));
 const cookieStorageBreadcrumb = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
@@ -315,5 +324,48 @@ for (const forbidden of ["마곡 매장", "마곡동 매장", "마곡에 위치"
 const guidesSchema = getStaticSchema(readHtml(filePathForPathname("/guides/")));
 const guidesItemList = guidesSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
 assert.ok(guidesItemList?.itemListElement?.some((item) => item.url === `${SITE_URL}/magok-cookie/`), "guides ItemList should include magok cookie hub");
+
+const pickupPath = "/pickup/";
+const pickupEntry = registryEntries.get(pickupPath);
+assert.equal(pickupEntry?.lastmod, "2026-09-15", "pickup registry lastmod should reflect the reservation update");
+const pickupHtml = readHtml(filePathForPathname(pickupPath));
+assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /김포공항/);
+assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /디저트/);
+assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /답례품/);
+assert.match(getMeta(pickupHtml, "name", "description"), /김포공항/);
+assert.match(getMeta(pickupHtml, "name", "description"), /예약 픽업/);
+assert.match(getMeta(pickupHtml, "name", "description"), /디저트 선물|쿠키 선물/);
+assert.match(getAttribute(pickupHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /김포공항/);
+assert.match(getAttribute(pickupHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /픽업/);
+const pickupSchema = getStaticSchema(pickupHtml);
+const pickupItemList = pickupSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
+assert.deepEqual(
+  pickupItemList?.itemListElement?.map((item) => [item.name, item.url]),
+  [
+    ["브루키", `${SITE_URL}/brookie/`],
+    ["수제꾸덕쿠키", `${SITE_URL}/out/`],
+    ["행운쿠키", `${SITE_URL}/out/fortune/`],
+    ["쿠키크루", `${SITE_URL}/cookie-crew/`]
+  ],
+  "pickup ItemList should match the four pickup order products"
+);
+const pickupFaq = pickupSchema["@graph"].find((entry) => entry["@type"] === "FAQPage");
+assert.equal(pickupFaq?.mainEntity?.length, 6, "pickup FAQPage should contain six AEO questions");
+const reservationQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "예약 없이 바로 구매할 수 있나요?");
+assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 픽업 전용/);
+assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 없이 방문/);
+assert.match(pickupHtml, /예약 픽업 전용 작업실/);
+assert.match(pickupHtml, /예약 없이 방문하면 현장 구매가 어렵습니다/);
+for (const forbidden of ["김포공항 매장", "김포공항점", "공항 내 매장", "김포공항 안에"]) {
+  assert.equal(pickupHtml.includes(forbidden), false, `pickup page contains forbidden location claim: ${forbidden}`);
+}
+const pickupFaqMarkup = pickupHtml.match(/<div class="nm-pickup-faq-list">([\s\S]*?)<\/div>/)?.[1] || "";
+const pickupVisibleFaq = [...pickupFaqMarkup.matchAll(/<details><summary>([\s\S]*?)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)]
+  .map((match) => ({ name: cleanText(match[1]), text: cleanText(match[2]) }));
+assert.deepEqual(
+  pickupVisibleFaq,
+  pickupFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
+  "pickup visible FAQ and FAQPage should remain synchronized"
+);
 
 console.log(`public SEO checks: passed ${locs.length} sitemap URLs, ${sourceHtmlEntries.length} discovered public HTML files`);

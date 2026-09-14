@@ -27,6 +27,7 @@ const CRITICAL_PATHS = [
 ];
 const MOBILE_WIDTHS = [320, 375, 430];
 const PICKUP_MAP_URL = "https://map.naver.com/p/entry/place/1547319276?lng=126.8115357&lat=37.557402&placePath=%2Fhome%3Ffrom%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202609131310%26locale%3Dko%26svcName%3Dmap_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh";
+const PICKUP_RESERVATION_URL = "https://m.place.naver.com/restaurant/1547319276/home?utm_source=nothingmatters.co.kr&utm_medium=owned&utm_campaign=pickup_reservation";
 
 async function reservePort() {
   const probe = net.createServer();
@@ -344,6 +345,32 @@ try {
     assert.equal(pickupLayout.hasBlogLink, true, "pickup BLOG link should remain available");
     assert.equal(pickupLayout.hasPickupFaq, true, "pickup FAQ should remain available");
     assert.equal(pickupLayout.floatingDisplays.every((display) => display === "none"), true, "pickup sticky action should be the only mobile floating CTA");
+    const pickupOrders = await evaluate(cdp, "() => { const cards = [...document.querySelectorAll('.nm-pickup-links a')].map((link) => { const image = link.querySelector('img'); const figure = link.querySelector('figure')?.getBoundingClientRect(); const title = link.querySelector('strong')?.getBoundingClientRect(); const description = link.querySelector('span')?.getBoundingClientRect(); const action = link.querySelector('em')?.getBoundingClientRect(); const rect = link.getBoundingClientRect(); return { title: link.querySelector('strong')?.textContent.trim() || '', href: new URL(link.href).pathname, imageLoaded: Boolean(image?.naturalWidth && image?.naturalHeight), right: rect.right, figureRight: figure?.right || 0, textLeft: Math.min(title?.left || Infinity, description?.left || Infinity, action?.left || Infinity), titleFits: (link.querySelector('strong')?.scrollWidth || 0) <= (link.querySelector('strong')?.clientWidth || 0), actionFits: (link.querySelector('em')?.scrollWidth || 0) <= (link.querySelector('em')?.clientWidth || 0) }; }); const reservationLinks = [...document.querySelectorAll('[data-analytics-event=\"pickup_reservation_click\"]')].map((link) => ({ href: link.href, label: link.dataset.analyticsLabel || '', height: link.getBoundingClientRect().height })); const sticky = document.querySelector('.nm-pickup-sticky a:last-child'); const callout = document.querySelector('.nm-pickup-reservation-callout'); const reservationFaq = [...document.querySelectorAll('.nm-pickup-faq-list details')].find((details) => details.querySelector('summary')?.textContent.includes('예약 없이 바로 구매할 수 있나요?'))?.textContent || ''; return { hasGtag: typeof window.gtag === 'function', cards, reservationLinks, stickyText: sticky?.textContent.trim() || '', stickyHref: sticky?.href || '', stickyHeight: sticky?.getBoundingClientRect().height || 0, calloutText: callout?.textContent || '', reservationFaq, aeoCards: document.querySelectorAll('.nm-pickup-aeo-grid article').length, faqCards: document.querySelectorAll('.nm-pickup-faq-list details').length, pageText: document.body.textContent }; }");
+    assert.deepEqual(
+      pickupOrders.cards.map((card) => [card.title, card.href]),
+      [["브루키", "/brookie/"], ["수제꾸덕쿠키", "/out/"], ["행운쿠키", "/out/fortune/"], ["쿠키크루", "/cookie-crew/"]],
+      `pickup orders should match the four cookie products at ${width}px`
+    );
+    assert.equal(pickupOrders.hasGtag, true, `pickup should expose the GA4 gtag bootstrap at ${width}px`);
+    assert.ok(pickupOrders.cards.every((card) => card.imageLoaded && card.right <= width && card.figureRight <= card.textLeft && card.titleFits && card.actionFits), `pickup order cards should remain readable without image overlap at ${width}px`);
+    assert.deepEqual(pickupOrders.reservationLinks.map((link) => link.label), ["pickup_hero", "pickup_orders", "pickup_sticky"], `pickup reservation CTAs should be labeled at ${width}px`);
+    assert.ok(pickupOrders.reservationLinks.every((link) => link.href === PICKUP_RESERVATION_URL && link.height >= 44), `pickup reservation CTAs should use the official Naver destination at ${width}px: ${JSON.stringify(pickupOrders.reservationLinks)}`);
+    assert.equal(pickupOrders.stickyText, "예약", `pickup sticky action should prioritize reservation at ${width}px`);
+    assert.equal(pickupOrders.stickyHref, PICKUP_RESERVATION_URL, `pickup sticky reservation should use the official Naver destination at ${width}px`);
+    assert.ok(pickupOrders.stickyHeight >= 44, `pickup sticky reservation should remain tappable at ${width}px`);
+    assert.match(pickupOrders.calloutText, /예약 픽업 전용 작업실/);
+    assert.match(pickupOrders.reservationFaq, /예약 픽업 전용/);
+    assert.match(pickupOrders.reservationFaq, /예약 없이 방문/);
+    assert.equal(pickupOrders.aeoCards, 3, `pickup should keep three Gimpo Airport quick answers at ${width}px`);
+    assert.equal(pickupOrders.faqCards, 6, `pickup should keep six AEO FAQ items at ${width}px`);
+    assert.match(pickupOrders.pageText, /김포공항/);
+    assert.match(pickupOrders.pageText, /디저트 선물/);
+    assert.match(pickupOrders.pageText, /답례품/);
+    assert.match(pickupOrders.pageText, /예약 픽업 전용/);
+    await cdp.command("Runtime.evaluate", { expression: "document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.documentElement.scrollHeight)" });
+    await wait(100);
+    const pickupFooterClearance = await evaluate(cdp, "() => { const footer = document.querySelector('.nm-pickup-page .nm-seo-footer')?.getBoundingClientRect(); const sticky = document.querySelector('.nm-pickup-sticky')?.getBoundingClientRect(); return { footerBottom: footer?.bottom || 0, stickyTop: sticky?.top || 0 }; }");
+    assert.ok(pickupFooterClearance.footerBottom <= pickupFooterClearance.stickyTop, `pickup sticky reservation should not cover the footer at ${width}px: ${JSON.stringify(pickupFooterClearance)}`);
   }
 
   await setViewport(cdp, 390);
@@ -366,10 +393,11 @@ try {
   assert.ok(analytics.find((entry) => entry.name === "blog_card_click")?.params.post_title, "blog card event should include post_title");
 
   await navigate(cdp, `${server.baseUrl}/pickup/`);
-  await evaluate(cdp, "() => { window.__pickupEvents = []; window.gtag = (...args) => window.__pickupEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"pickup_map_click\"]'); click('[data-analytics-event=\"pickup_consult_click\"]'); return true; }");
+  await evaluate(cdp, "() => { window.__pickupEvents = []; window.gtag = (...args) => window.__pickupEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"pickup_map_click\"]'); click('[data-analytics-event=\"pickup_consult_click\"]'); click('[data-analytics-event=\"pickup_reservation_click\"]'); return true; }");
   const pickupEvents = await evaluate(cdp, "() => window.__pickupEvents.map((entry) => entry[1])");
   assert.equal(pickupEvents.filter((name) => name === "pickup_map_click").length, 1, "pickup map click should fire once");
   assert.equal(pickupEvents.filter((name) => name === "pickup_consult_click").length, 1, "pickup consult click should fire once");
+  assert.equal(pickupEvents.filter((name) => name === "pickup_reservation_click").length, 1, "pickup reservation click should fire once");
   const pickupFaqOpen = await evaluate(cdp, "() => { const details = document.querySelector('.nm-pickup-faq-list details'); details.querySelector('summary').click(); return details.open; }");
   assert.equal(pickupFaqOpen, true, "pickup FAQ should open on activation");
   await setViewport(cdp, 390);

@@ -74,9 +74,10 @@ const ITEM_LISTS = {
     ["쿠키 라인업", "/#our-cookies"],
   ],
   "/pickup/": [
-    ["수제꾸덕쿠키", "/products/handmade-cookie/"],
-    ["답례·단체 주문", "/bulk/"],
-    ["실제 제작 사례", "/works/"],
+    ["브루키", "/brookie/"],
+    ["수제꾸덕쿠키", "/out/"],
+    ["행운쿠키", "/out/fortune/"],
+    ["쿠키크루", "/cookie-crew/"],
   ],
   "/magok-cookie/": [
     ["브루키", "/brookie/"],

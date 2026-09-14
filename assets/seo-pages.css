@@ -366,6 +366,18 @@
   max-width: 610px;
 }
 
+.nm-pickup-reservation-note {
+  display: inline-block;
+  margin: 15px 0 0;
+  padding: 8px 11px;
+  border: 2px solid #5a4032;
+  border-radius: 10px;
+  color: #5a4032;
+  background: #f4dfb7;
+  font-size: 14px;
+  font-weight: 900;
+}
+
 .nm-pickup-page .nm-seo-hero-photo {
   border-color: var(--seo-line);
   border-radius: 22px 28px 20px 25px;
@@ -507,6 +519,37 @@
   border-left: 1px solid var(--seo-line);
 }
 
+.nm-pickup-aeo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nm-pickup-aeo-grid article {
+  min-height: 184px;
+  padding: 22px;
+  border: 1px solid var(--seo-line);
+  border-radius: 14px 18px 13px 16px;
+  background: #fffdf7;
+}
+
+.nm-pickup-aeo-grid article:nth-child(2) { background: #f4dfb7; }
+.nm-pickup-aeo-grid article:nth-child(3) { background: #fff2d9; }
+
+.nm-pickup-aeo-grid h3 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.22;
+}
+
+.nm-pickup-aeo-grid p {
+  margin: 11px 0 0;
+  color: #796052;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
 .nm-pickup-directions {
   background: #fff9ee;
 }
@@ -549,7 +592,7 @@
 
 .nm-pickup-links {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -612,6 +655,64 @@
   font-weight: 900;
 }
 
+.nm-pickup-orders-links {
+  margin: 19px 0 0;
+  color: #796052;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.nm-pickup-orders-links a {
+  color: #5a4032;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nm-pickup-reservation-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-top: 26px;
+  padding: clamp(22px, 4vw, 38px);
+  border: 2px solid #5a4032;
+  border-radius: 18px 23px 16px 21px;
+  color: #5a4032;
+  background: #f4dfb7;
+  box-shadow: 7px 7px 0 rgba(121, 96, 82, 0.2);
+}
+
+.nm-pickup-reservation-callout h3 {
+  margin: 10px 0 0;
+  font-size: clamp(26px, 3.4vw, 42px);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.nm-pickup-reservation-callout p:not(.nm-seo-kicker) {
+  max-width: 590px;
+  margin: 13px 0 0;
+  color: #796052;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.nm-pickup-reservation-actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.nm-pickup-reservation-button {
+  background: #b8dfae;
+}
+
 .nm-pickup-faq-list {
   display: grid;
   gap: 9px;
@@ -666,13 +767,19 @@
   background: #fffdf7;
 }
 
+@media (min-width: 761px) and (max-width: 1050px) {
+  .nm-pickup-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .nm-pickup-sticky {
   display: none;
 }
 
 @media (max-width: 760px) {
   .nm-pickup-page .nm-site {
-    padding-bottom: 78px;
+    padding-bottom: 90px;
   }
 
   .nm-pickup-page .nm-pickup-hero .nm-seo-hero-photo {
@@ -696,32 +803,86 @@
     flex: 1 1 0;
   }
 
+  .nm-pickup-hero .nm-seo-button {
+    min-height: 46px;
+  }
+
   .nm-pickup-steps,
   .nm-pickup-check-grid,
-  .nm-pickup-links {
+  .nm-pickup-links,
+  .nm-pickup-reservation-callout,
+  .nm-pickup-aeo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .nm-pickup-reservation-callout {
+    display: grid;
+    gap: 18px;
+  }
+
+  .nm-pickup-reservation-actions {
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .nm-pickup-reservation-actions .nm-seo-button {
+    width: 100%;
+    min-height: 46px;
   }
 
   .nm-pickup-steps li,
   .nm-pickup-check-grid article,
-  .nm-pickup-links a {
+  .nm-pickup-links a,
+  .nm-pickup-aeo-grid article {
     min-height: 0;
   }
 
   .nm-pickup-page .nm-pickup-links a {
-    grid-template-columns: 118px minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
-    column-gap: 12px;
+    grid-template-columns: 112px minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: 16px;
     align-items: start;
+    overflow: hidden;
   }
 
   .nm-pickup-page .nm-pickup-links figure {
-    grid-row: 1 / span 3;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    width: 112px;
+    max-width: 112px;
+    min-width: 0;
     height: 100%;
-    min-height: 116px;
-    margin: -12px 0 -12px -12px;
+    min-height: 128px;
+    aspect-ratio: auto;
+    margin: -12px 0 -12px 0;
     border-right: 1px solid var(--seo-line);
     border-bottom: 0;
+    overflow: hidden;
+  }
+
+  .nm-pickup-page .nm-pickup-links figure img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .nm-pickup-page .nm-pickup-links strong,
+  .nm-pickup-page .nm-pickup-links span,
+  .nm-pickup-page .nm-pickup-links em {
+    grid-column: 2;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  @media (max-width: 360px) {
+    .nm-pickup-page .nm-pickup-links a {
+      grid-template-columns: 96px minmax(0, 1fr);
+    }
+
+    .nm-pickup-page .nm-pickup-links figure {
+      width: 96px;
+      max-width: 96px;
+    }
   }
 
   .nm-pickup-check-grid article + article {
@@ -765,7 +926,7 @@
   }
 
   .nm-pickup-sticky a:last-child {
-    background: var(--seo-yellow);
+    background: #b8dfae;
   }
 
   .nm-pickup-page .nm-floating-actions,
