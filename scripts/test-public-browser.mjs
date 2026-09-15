@@ -330,6 +330,8 @@ try {
   for (const width of MOBILE_WIDTHS) {
     await setViewport(cdp, width);
     await navigate(cdp, `${server.baseUrl}/pickup/`);
+    await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.nm-pickup-links img').forEach((image) => { image.loading = 'eager'; })" });
+    await waitFor(cdp, "() => [...document.querySelectorAll('.nm-pickup-links img')].every((image) => image.complete && image.naturalWidth > 0)", `pickup order thumbnails should load at ${width}px`);
     const pickupLayout = await evaluate(cdp, "() => { const selectors = ['.nm-pickup-hero .nm-seo-actions', '.nm-pickup-address-card', '.nm-pickup-sticky']; const bounds = Object.fromEntries(selectors.map((selector) => { const node = document.querySelector(selector); const rect = node?.getBoundingClientRect(); return [selector, rect ? { left: rect.left, right: rect.right, width: rect.width, height: rect.height, display: getComputedStyle(node).display } : null]; })); const heroImage = document.querySelector('.nm-pickup-hero img'); const heroRect = heroImage?.getBoundingClientRect(); const floatingDisplays = ['.nm-floating-actions', '.nm-float-icon', '.nm-float-cta', '.nm-mobile-float-stack'].map((selector) => { const node = document.querySelector(selector); return node ? getComputedStyle(node).display : 'none'; }); return { viewport: window.innerWidth, bounds, heroSrc: heroImage?.getAttribute('src') || '', heroObjectFit: heroImage ? getComputedStyle(heroImage).objectFit : '', heroNaturalRatio: heroImage ? heroImage.naturalWidth / heroImage.naturalHeight : 0, heroRenderedRatio: heroRect ? heroRect.width / heroRect.height : 0, heroHeight: heroRect?.height || 0, mapHref: document.querySelector('[data-analytics-event=\"pickup_map_click\"]')?.getAttribute('href') || '', hasCopyTrigger: Boolean(document.querySelector('[data-copy-target=\"#pickup-address\"]')), hasBlogLink: Boolean(document.querySelector('a[href=\"https://blog.nothingmatters.co.kr/\"]')), hasPickupFaq: Boolean(document.querySelector('.nm-pickup-faq-list details')), floatingDisplays, sitePaddingBottom: Number.parseFloat(getComputedStyle(document.querySelector('.nm-site')).paddingBottom) || 0 }; }");
     assert.ok(pickupLayout.bounds['.nm-pickup-hero .nm-seo-actions'].right <= pickupLayout.viewport, `pickup hero CTA overflows at ${width}px`);
     assert.ok(pickupLayout.bounds['.nm-pickup-address-card'].right <= pickupLayout.viewport, `pickup address card overflows at ${width}px`);
@@ -352,7 +354,11 @@ try {
       `pickup orders should match the four cookie products at ${width}px`
     );
     assert.equal(pickupOrders.hasGtag, true, `pickup should expose the GA4 gtag bootstrap at ${width}px`);
-    assert.ok(pickupOrders.cards.every((card) => card.imageLoaded && card.right <= width && card.figureRight <= card.textLeft && card.titleFits && card.actionFits), `pickup order cards should remain readable without image overlap at ${width}px`);
+    const cookieCrewThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); return { src: image ? new URL(image.src).pathname : '', objectFit: image ? getComputedStyle(image).objectFit : '', naturalWidth: image?.naturalWidth || 0, naturalHeight: image?.naturalHeight || 0 }; }");
+    assert.equal(cookieCrewThumbnail.src, "/images/pickup-cute-cookie.png", `pickup Cookie Crew card should use the provided cookie PNG at ${width}px`);
+    assert.equal(cookieCrewThumbnail.objectFit, "contain", `pickup Cookie Crew thumbnail should not crop the provided cookie image at ${width}px`);
+    assert.equal(cookieCrewThumbnail.naturalWidth, cookieCrewThumbnail.naturalHeight, `pickup Cookie Crew thumbnail should preserve the square source ratio at ${width}px`);
+    assert.ok(pickupOrders.cards.every((card) => card.imageLoaded && card.right <= width && card.figureRight <= card.textLeft && card.titleFits && card.actionFits), `pickup order cards should remain readable without image overlap at ${width}px: ${JSON.stringify(pickupOrders.cards)}`);
     assert.deepEqual(pickupOrders.reservationLinks.map((link) => link.label), ["pickup_hero", "pickup_orders", "pickup_sticky"], `pickup reservation CTAs should be labeled at ${width}px`);
     assert.ok(pickupOrders.reservationLinks.every((link) => link.href === PICKUP_RESERVATION_URL && link.height >= 44), `pickup reservation CTAs should use the official Naver destination at ${width}px: ${JSON.stringify(pickupOrders.reservationLinks)}`);
     assert.equal(pickupOrders.stickyText, "예약", `pickup sticky action should prioritize reservation at ${width}px`);
@@ -372,6 +378,16 @@ try {
     const pickupFooterClearance = await evaluate(cdp, "() => { const footer = document.querySelector('.nm-pickup-page .nm-seo-footer')?.getBoundingClientRect(); const sticky = document.querySelector('.nm-pickup-sticky')?.getBoundingClientRect(); return { footerBottom: footer?.bottom || 0, stickyTop: sticky?.top || 0 }; }");
     assert.ok(pickupFooterClearance.footerBottom <= pickupFooterClearance.stickyTop, `pickup sticky reservation should not cover the footer at ${width}px: ${JSON.stringify(pickupFooterClearance)}`);
   }
+
+  await setViewport(cdp, 1280, 900);
+  await navigate(cdp, `${server.baseUrl}/pickup/`);
+  await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.nm-pickup-links img').forEach((image) => { image.loading = 'eager'; })" });
+  await waitFor(cdp, "() => [...document.querySelectorAll('.nm-pickup-links img')].every((image) => image.complete && image.naturalWidth > 0)", "pickup order thumbnails should load at desktop width");
+  const pickupDesktopThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); const figure = document.querySelector('.nm-pickup-cookie-thumb')?.getBoundingClientRect(); const title = document.querySelector('.nm-pickup-cookie-thumb')?.nextElementSibling?.getBoundingClientRect(); return { src: image ? new URL(image.src).pathname : '', objectFit: image ? getComputedStyle(image).objectFit : '', figureBottom: figure?.bottom || 0, titleTop: title?.top || 0, viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth }; }");
+  assert.equal(pickupDesktopThumbnail.src, "/images/pickup-cute-cookie.png", "desktop pickup Cookie Crew card should use the provided cookie PNG");
+  assert.equal(pickupDesktopThumbnail.objectFit, "contain", "desktop pickup Cookie Crew thumbnail should not crop the provided cookie PNG");
+  assert.ok(pickupDesktopThumbnail.figureBottom <= pickupDesktopThumbnail.titleTop, "desktop pickup card image should not overlap its text");
+  assert.ok(pickupDesktopThumbnail.documentWidth <= pickupDesktopThumbnail.viewport, "desktop pickup page should not horizontally overflow");
 
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/`);

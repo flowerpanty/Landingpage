@@ -631,6 +631,14 @@
   transition: transform 180ms ease;
 }
 
+.nm-pickup-page .nm-pickup-links .nm-pickup-cookie-thumb {
+  background: #fffdf7;
+}
+
+.nm-pickup-page .nm-pickup-links .nm-pickup-cookie-thumb img {
+  object-fit: contain;
+}
+
 .nm-pickup-page .nm-pickup-links a:hover figure img,
 .nm-pickup-page .nm-pickup-links a:focus-visible figure img {
   transform: scale(1.025);
