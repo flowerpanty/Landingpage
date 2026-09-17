@@ -443,6 +443,7 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
 
   if (breadcrumb) schema.breadcrumb = { "@id": breadcrumb["@id"] };
   if (itemList) schema.mainEntity = { "@id": itemList["@id"] };
+  if (["/magok-cookie/", "/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
   if (product) schema.about = { "@id": product["@id"] };
   if (service) schema.mainEntity = { "@id": service["@id"] };
 

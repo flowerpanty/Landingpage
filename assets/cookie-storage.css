@@ -142,6 +142,17 @@
     details[open] summary::after{content:"−"}
     details p{font-size:14px;margin:0 0 18px}
 
+    .pickup-section{padding-top:30px;padding-bottom:72px}
+    .pickup-callout{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;align-items:center;border:var(--line);border-radius:28px;background:var(--paper);padding:32px;box-shadow:10px 10px 0 #000;scroll-margin-bottom:100px}
+    .pickup-label{background:var(--sky)}
+    .pickup-copy h2{font-size:clamp(34px,4vw,52px);line-height:1.04;letter-spacing:-.055em;margin-bottom:14px}
+    .pickup-copy p{font-size:16px;margin-bottom:12px;max-width:700px}
+    .pickup-address{display:inline-block;border:3px solid #000;border-radius:14px;background:#fff;padding:10px 13px;font-size:clamp(19px,2.5vw,27px)!important;font-weight:900;letter-spacing:-.04em}
+    .pickup-actions{display:grid;gap:12px;align-content:center}
+    .pickup-actions .btn{width:100%;text-align:center}
+    .pickup-actions .naver-place-btn{background:#03c75a;color:#fff}
+    .pickup-actions .instagram-btn{min-height:46px;background:#fff}
+
     .discover-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
     .discover-card{border:var(--line);border-radius:20px;background:#fff;overflow:hidden;box-shadow:var(--shadow)}
     .discover-image{height:210px;border-bottom:var(--line);background:#f5f5f5;overflow:hidden}
@@ -173,6 +184,7 @@
       .section,.cta-section{padding:62px 0}.heading{margin-bottom:25px}.heading p{font-size:15px}
       .product-grid,.discover-grid{grid-template-columns:1fr}.product-card{box-shadow:4px 4px 0 #000}.guide{box-shadow:6px 6px 0 #000}.guide-top{grid-template-columns:1fr;padding:20px}.route{justify-self:start}.guide-main{padding:20px}
       .cta-card{padding:24px;box-shadow:7px 7px 0 #000}.button-row{display:grid}.button-row .btn{width:100%}
+      .pickup-section{padding-top:20px;padding-bottom:62px}.pickup-callout{grid-template-columns:1fr;gap:24px;padding:24px;box-shadow:7px 7px 0 #000}.pickup-copy p{font-size:15px}.pickup-address{width:100%;font-size:clamp(18px,6vw,24px)!important}.pickup-actions .btn{min-height:56px}.pickup-actions .instagram-btn{min-height:44px}
       .footer-links{display:grid;gap:5px}
     }
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_URL = "https://nothingmatters.co.kr";
 const INSTAGRAM_URL = "https://instagram.com/nothingmatters_c";
+const NAVER_PLACE_URL = "https://naver.me/Gsj2pwAu";
 const businessFacts = JSON.parse(fs.readFileSync(path.join(ROOT, "data/business.json"), "utf8"));
 const sitePages = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site-pages.json"), "utf8"));
 const products = (sitePages.products || []).map((product) => ({
@@ -21,6 +22,10 @@ const registryEntries = new Map();
 
 for (const page of sitePages.pages || []) {
   registryEntries.set(normalizePathname(page.path), page);
+}
+
+for (const entry of sourceHtmlEntries) {
+  assert.equal(readHtml(entry.filePath).includes("매장 픽업"), false, `${entry.pathname}: public source must describe reservation pickup instead of store pickup`);
 }
 
 for (const product of products) {
@@ -238,6 +243,7 @@ for (const loc of locs) {
   for (const type of ["Organization", "Bakery"]) {
     const entity = graph.find((item) => item["@type"] === type);
     assert.ok(entity?.sameAs?.includes(INSTAGRAM_URL), `${pathname}: ${type} missing Instagram`);
+    assert.ok(entity?.sameAs?.includes(NAVER_PLACE_URL), `${pathname}: ${type} missing official Naver Place`);
   }
 
   for (const product of graph.filter((item) => item["@type"] === "Product")) {
@@ -247,6 +253,8 @@ for (const loc of locs) {
     }
   }
 }
+
+assert.ok(businessFacts.sameAs?.includes(NAVER_PLACE_URL), "business facts should include the official Naver Place URL");
 
 for (const product of products) {
   assert.ok(locs.includes(`${SITE_URL}${product.detailPath}`), `sitemap missing product: ${product.detailPath}`);
@@ -267,25 +275,54 @@ assert.match(
   /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-14<\/lastmod>/,
   "guides sitemap lastmod should reflect the cookie storage guide entry"
 );
-for (const pathname of ["/", "/guides/corporate-event-cookie/"]) {
+for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>2026-09-14<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>2026-09-18<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-15<\/lastmod>/,
-  "pickup sitemap lastmod should reflect the reservation update"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-18<\/lastmod>/,
+  "pickup sitemap lastmod should reflect the Gimpo Airport dessert gift guide"
 );
 
-const cookieStorageSchema = getStaticSchema(readHtml(filePathForPathname("/guides/cookie-storage/")));
+const cookieStoragePath = "/guides/cookie-storage/";
+const cookieStorageEntry = registryEntries.get(cookieStoragePath);
+assert.equal(cookieStorageEntry?.lastmod, "2026-09-17", "cookie storage registry lastmod should reflect the pickup location callout");
+assert.match(
+  sitemap,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/cookie-storage\/<\/loc>\s*<lastmod>2026-09-17<\/lastmod>/,
+  "cookie storage sitemap lastmod should reflect the pickup location callout"
+);
+const cookieStorageHtml = readHtml(filePathForPathname(cookieStoragePath));
+const cookieStorageSchema = getStaticSchema(cookieStorageHtml);
 const cookieStorageBreadcrumb = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
 assert.equal(
   cookieStorageBreadcrumb?.itemListElement?.at(-1)?.name,
   "쿠키 보관방법·맛있게 드시는 기간",
   "cookie storage breadcrumb should use its search-intent name"
+);
+const cookieStorageLocationMarkup = cookieStorageHtml.match(/<section class="section pickup-section" id="visit-pickup">([\s\S]*?)<\/section>/)?.[1] || "";
+assert.match(cookieStorageLocationMarkup, /서울특별시 강서구 송정로 25 1층/, "cookie storage pickup callout should expose the official address");
+assert.match(cookieStorageLocationMarkup, /김포공항·송정역 인근/, "cookie storage pickup callout should expose the local context");
+assert.match(cookieStorageLocationMarkup, /예약 픽업 전용/, "cookie storage pickup callout should explain the reservation-only pickup model");
+assert.match(cookieStorageLocationMarkup, /예약 없이 방문하시면 현장 구매가 어려우니/, "cookie storage pickup callout should not promise walk-in availability");
+assert.match(cookieStorageLocationMarkup, /href="https:\/\/naver\.me\/Gsj2pwAu"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*data-analytics-event="cookie_care_naver_place_click"/, "cookie storage pickup callout should use the official Naver Place CTA");
+assert.match(cookieStorageLocationMarkup, /href="\.\.\/\.\.\/pickup\/"/, "cookie storage pickup callout should link internally to pickup guidance");
+for (const forbidden of ["김포공항 매장", "김포공항점", "공항 내 매장", "예약 없이 구매 가능"]) {
+  assert.equal(cookieStorageLocationMarkup.includes(forbidden), false, `cookie storage pickup callout contains forbidden location claim: ${forbidden}`);
+}
+const cookieStorageFaq = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "FAQPage");
+assert.equal(cookieStorageFaq?.mainEntity?.length, 8, "cookie storage FAQPage should keep eight questions");
+const cookieStorageFaqMarkup = cookieStorageHtml.match(/<section class="section" id="faq">([\s\S]*?)<\/section>/)?.[1] || "";
+const cookieStorageVisibleFaq = [...cookieStorageFaqMarkup.matchAll(/<details><summary>([\s\S]*?)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)]
+  .map((match) => ({ name: cleanText(match[1]), text: cleanText(match[2]) }));
+assert.deepEqual(
+  cookieStorageVisibleFaq,
+  cookieStorageFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
+  "cookie storage visible FAQ and FAQPage should remain synchronized"
 );
 
 const magokPath = "/magok-cookie/";
@@ -299,6 +336,20 @@ const magokHtml = readHtml(filePathForPathname(magokPath));
 assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 쿠키/);
 assert.match(getMeta(magokHtml, "name", "description"), /쿠키|답례품/);
 assert.match(magokHtml, /<h1\b[^>]*>/i, "magok cookie hub should have an h1");
+assert.equal(magokEntry?.lastmod, "2026-09-18", "magok registry lastmod should reflect the favor guide");
+assert.match(getAttribute(magokHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /마곡 답례품/);
+assert.match(magokHtml, /실제 작업실은 마곡 인근 서울 강서구 공항동/, "magok quick answer should clarify the actual workshop location");
+assert.match(magokHtml, /QUICK ANSWER/, "magok should include an answer-first block");
+assert.match(magokHtml, /홈[\s\S]*마곡 답례품·쿠키 선물/, "magok should expose a visible breadcrumb");
+assert.match(magokHtml, /실제로 이런 쿠키를 만들고 있어요/, "magok should include first-party proof");
+assert.equal((magokHtml.match(/case-(?:handmade-cookie|corporate-favor|lucky-cookie)\.jpeg/g) || []).length, 3, "magok proof should use three existing production images");
+assert.match(magokHtml, /href="\.\.\/works\/">실제 제작 사례 더 보기 →<\/a>/, "magok proof should link to works");
+assert.match(magokHtml, /href="https:\/\/naver\.me\/Gsj2pwAu"/, "magok pickup section should expose the official Naver Place link");
+const magokFavorGuide = magokHtml.match(/<section class="magok-section magok-favor-guide" id="magok-favor-guide"[\s\S]*?<\/section>/)?.[0] || "";
+assert.match(magokFavorGuide, /회사·팀 감사 답례품/);
+assert.match(magokFavorGuide, /행사·세미나 답례품/);
+assert.match(magokFavorGuide, /소량 쿠키 선물/);
+assert.equal((magokFavorGuide.match(/<a href=/g) || []).length, 3, "magok favor guide should provide three contextual links");
 const magokSchema = getStaticSchema(magokHtml);
 const magokGraph = magokSchema["@graph"] || [];
 for (const type of ["Organization", "Bakery", "WebSite", "WebPage", "BreadcrumbList", "ItemList", "FAQPage"]) {
@@ -306,6 +357,8 @@ for (const type of ["Organization", "Bakery", "WebSite", "WebPage", "BreadcrumbL
 }
 const magokBreadcrumb = magokGraph.find((entry) => entry["@type"] === "BreadcrumbList");
 assert.equal(magokBreadcrumb?.itemListElement?.at(-1)?.name, "마곡 쿠키·답례품");
+const magokWebPage = magokGraph.find((entry) => entry["@type"] === "WebPage");
+assert.deepEqual(magokWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "magok WebPage should identify the actual LocalBusiness");
 const magokBusiness = magokGraph.find((entry) => entry["@type"] === "Bakery");
 assert.deepEqual(magokBusiness?.address, {
   "@type": "PostalAddress",
@@ -317,9 +370,18 @@ assert.deepEqual(magokBusiness?.address, {
 assert.ok(magokBusiness?.areaServed?.some((area) => area.name === "마곡"), "magok areaServed should include 마곡");
 assert.equal(magokBusiness?.priceRange, businessFacts.priceRange, "magok Bakery priceRange should match data/business.json");
 assert.equal(locs.includes(`${SITE_URL}${magokPath}`), true, "sitemap should include magok cookie hub");
-for (const forbidden of ["마곡 매장", "마곡동 매장", "마곡에 위치", "마곡 쿠키 전문점"]) {
+for (const forbidden of ["마곡 매장", "마곡동 매장", "마곡점", "마곡에 위치", "마곡 쿠키 전문점"]) {
   assert.equal(magokHtml.includes(forbidden), false, `magok cookie hub contains forbidden location claim: ${forbidden}`);
 }
+const magokFaq = magokGraph.find((entry) => entry["@type"] === "FAQPage");
+const magokFaqMarkup = magokHtml.match(/<div class="magok-faq-list">([\s\S]*?)<\/div><\/div>\s*<\/section>/)?.[1] || "";
+const magokVisibleFaq = [...magokFaqMarkup.matchAll(/<details><summary>([\s\S]*?)<\/summary><div class="magok-faq-answer">([\s\S]*?)<\/div><\/details>/g)]
+  .map((match) => ({ name: cleanText(match[1]), text: cleanText(match[2]) }));
+assert.deepEqual(
+  magokVisibleFaq,
+  magokFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
+  "magok visible FAQ and FAQPage should remain synchronized"
+);
 
 const guidesSchema = getStaticSchema(readHtml(filePathForPathname("/guides/")));
 const guidesItemList = guidesSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
@@ -327,7 +389,7 @@ assert.ok(guidesItemList?.itemListElement?.some((item) => item.url === `${SITE_U
 
 const pickupPath = "/pickup/";
 const pickupEntry = registryEntries.get(pickupPath);
-assert.equal(pickupEntry?.lastmod, "2026-09-15", "pickup registry lastmod should reflect the reservation update");
+assert.equal(pickupEntry?.lastmod, "2026-09-18", "pickup registry lastmod should reflect the Gimpo Airport dessert gift guide");
 const pickupHtml = readHtml(filePathForPathname(pickupPath));
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /김포공항/);
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /디저트/);
@@ -338,6 +400,8 @@ assert.match(getMeta(pickupHtml, "name", "description"), /디저트 선물|쿠�
 assert.match(getAttribute(pickupHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /김포공항/);
 assert.match(getAttribute(pickupHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /픽업/);
 const pickupSchema = getStaticSchema(pickupHtml);
+const pickupWebPage = pickupSchema["@graph"].find((entry) => entry["@type"] === "WebPage");
+assert.deepEqual(pickupWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "pickup WebPage should identify the actual LocalBusiness");
 const pickupItemList = pickupSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
 assert.deepEqual(
   pickupItemList?.itemListElement?.map((item) => [item.name, item.url]),
@@ -356,6 +420,17 @@ assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 픽업 전
 assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 없이 방문/);
 assert.match(pickupHtml, /예약 픽업 전용 작업실/);
 assert.match(pickupHtml, /예약 없이 방문하면 현장 구매가 어렵습니다/);
+assert.match(pickupHtml, /홈[\s\S]*김포공항 디저트 선물·픽업/, "pickup should expose a visible breadcrumb");
+assert.match(pickupHtml, /김포공항 내부 매장이 아니며 방문 전 픽업 예약이 필요합니다/, "pickup answer-first should clarify the reservation-only location");
+assert.match(pickupHtml, /픽업으로 준비하는 쿠키를[\s\S]*먼저 확인해보세요/, "pickup should include first-party proof");
+assert.equal((pickupHtml.match(/case-(?:handmade-cookie|corporate-favor|lucky-cookie)\.jpeg/g) || []).length, 3, "pickup proof should use three existing production images");
+assert.match(pickupHtml, /href="\.\.\/works\/">실제 제작 사례 더 보기 →<\/a>/, "pickup proof should link to works");
+const pickupGiftGuide = pickupHtml.match(/<section class="nm-seo-section nm-pickup-gift-guide" id="gimpo-dessert-gift-guide"[\s\S]*?<\/section>/)?.[0] || "";
+assert.match(pickupGiftGuide, /여행 전 작은 선물/);
+assert.match(pickupGiftGuide, /마중·배웅할 때 쿠키 선물/);
+assert.match(pickupGiftGuide, /답례품·여러 개 준비할 때/);
+assert.match(pickupGiftGuide, /김포공항 내부 매장이 아니라/);
+assert.match(pickupGiftGuide, /공항동의 예약 픽업 전용 작업실/);
 for (const forbidden of ["김포공항 매장", "김포공항점", "공항 내 매장", "김포공항 안에"]) {
   assert.equal(pickupHtml.includes(forbidden), false, `pickup page contains forbidden location claim: ${forbidden}`);
 }
@@ -367,5 +442,24 @@ assert.deepEqual(
   pickupFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
   "pickup visible FAQ and FAQPage should remain synchronized"
 );
+
+const homeHtml = readHtml(filePathForPathname("/"));
+assert.match(homeHtml, /href="pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "home should use a descriptive pickup hub anchor");
+assert.match(homeHtml, /김포공항·송정역 인근 공항동의 예약 픽업과 마곡 답례품·기업행사 상담/, "home visit copy should clarify both local intent hubs");
+const corporateHtml = readHtml(filePathForPathname("/guides/corporate-event-cookie/"));
+assert.match(corporateHtml, /href="\.\.\/\.\.\/magok-cookie\/">마곡 답례품·기업행사 안내<\/a>/, "corporate guide should expose its Magok contextual link");
+const smallGiftHtml = readHtml(filePathForPathname("/small-gift/"));
+assert.match(smallGiftHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·쿠키 선물 안내 →<\/a>/, "small gift hub should link once to the Magok favor guide");
+const dessertGiftHtml = readHtml(filePathForPathname("/guides/dessert-gift-set/"));
+assert.match(dessertGiftHtml, /href="\.\.\/\.\.\/pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "dessert gift guide should link to pickup");
+const bulkHtml = readHtml(filePathForPathname("/bulk/"));
+assert.match(bulkHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·기업행사 안내 →<\/a>/, "bulk should link to Magok favor guidance");
+const worksHtml = readHtml(filePathForPathname("/works/"));
+assert.match(worksHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·쿠키 선물 안내 →<\/a>/, "works should link to Magok favor guidance");
+assert.match(worksHtml, /href="\.\.\/pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "works should link to pickup guidance");
+const llms = fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8");
+assert.equal(llms.includes("in-store pickup"), false, "llms should not describe pickup as an in-store purchase");
+assert.match(llms, /reservation pickup at the Gonghang-dong workshop or vehicle quick consultation depending on schedule and quantity/);
+assert.match(llms, /Official Naver Place: https:\/\/naver\.me\/Gsj2pwAu/);
 
 console.log(`public SEO checks: passed ${locs.length} sitemap URLs, ${sourceHtmlEntries.length} discovered public HTML files`);

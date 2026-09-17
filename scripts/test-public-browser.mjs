@@ -212,8 +212,21 @@ try {
 
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/magok-cookie/`);
-  const magokState = await evaluate(cdp, "() => ({ h1: document.querySelector('h1')?.textContent.trim() || '', cards: document.querySelectorAll('#cookies .magok-product-card').length, corporate: [...document.querySelectorAll('a[href]')].some((link) => new URL(link.href).pathname === '/guides/corporate-event-cookie/'), pickup: [...document.querySelectorAll('a[href]')].some((link) => new URL(link.href).pathname === '/pickup/'), kakao: [...document.querySelectorAll('a[href]')].some((link) => link.href.includes('pf.kakao.com/_QdCaK/chat')), faq: document.querySelectorAll('#faq .magok-faq-list details').length, quickNav: Boolean(document.querySelector('.magok-quick-nav')), floats: document.querySelectorAll('.magok-float-stack a').length, address: document.body.textContent.includes('서울특별시 강서구 송정로 25 1층'), locationContext: document.body.textContent.includes('마곡 인근') })");
-  assert.deepEqual(magokState, { h1: "마곡 쿠키·답례품 찾고 있다면공항동에서 만들어 가까이 전해드려요", cards: 5, corporate: true, pickup: true, kakao: true, faq: 6, quickNav: true, floats: 2, address: true, locationContext: true }, "magok cookie hub should expose the local ordering path");
+  const magokState = await evaluate(cdp, "() => ({ h1: document.querySelector('h1')?.textContent.trim() || '', cards: document.querySelectorAll('#cookies .magok-product-card').length, favorGuide: document.querySelectorAll('#magok-favor-guide .magok-favor-guide-card').length, corporate: [...document.querySelectorAll('a[href]')].some((link) => new URL(link.href).pathname === '/guides/corporate-event-cookie/'), pickup: [...document.querySelectorAll('a[href]')].some((link) => new URL(link.href).pathname === '/pickup/'), kakao: [...document.querySelectorAll('a[href]')].some((link) => link.href.includes('pf.kakao.com/_QdCaK/chat')), faq: document.querySelectorAll('#faq .magok-faq-list details').length, quickNav: Boolean(document.querySelector('.magok-quick-nav')), floats: document.querySelectorAll('.magok-float-stack a').length, address: document.body.textContent.includes('서울특별시 강서구 송정로 25 1층'), locationContext: document.body.textContent.includes('마곡 인근') })");
+  assert.deepEqual(magokState, { h1: "마곡 답례품·쿠키 선물을 찾고 있다면공항동에서 만들어 가까이 전해드려요", cards: 5, favorGuide: 3, corporate: true, pickup: true, kakao: true, faq: 6, quickNav: true, floats: 2, address: true, locationContext: true }, "magok cookie hub should expose the local ordering path");
+  await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.magok-proof img').forEach((image) => { image.loading = 'eager'; })" });
+  await waitFor(cdp, "() => [...document.querySelectorAll('.magok-proof img')].every((image) => image.complete && image.naturalWidth > 0)", "magok proof images should load");
+  const magokAuthority = await evaluate(cdp, "() => ({ breadcrumb: document.querySelector('.magok-visible-breadcrumb')?.textContent.trim() || '', answer: document.querySelector('.magok-answer-first')?.textContent || '', proofImages: [...document.querySelectorAll('.magok-proof img')].map((image) => ({ loaded: Boolean(image.naturalWidth && image.naturalHeight), objectFit: getComputedStyle(image).objectFit })), proofHref: document.querySelector('.magok-proof a')?.getAttribute('href') || '', naverPlace: [...document.querySelectorAll('a[href]')].some((link) => link.getAttribute('href') === 'https://naver.me/Gsj2pwAu') })");
+  assert.match(magokAuthority.breadcrumb, /홈\s*\/\s*마곡 답례품·쿠키 선물/);
+  assert.match(magokAuthority.answer, /마곡에서 쿠키 답례품이나 회사 선물을 찾는다면/);
+  assert.ok(magokAuthority.proofImages.length === 3 && magokAuthority.proofImages.every((image) => image.loaded && image.objectFit === 'contain'), "magok proof images should load without cropping");
+  assert.equal(magokAuthority.proofHref, "../works/");
+  assert.equal(magokAuthority.naverPlace, true, "magok should expose the official Naver Place link");
+  await setViewport(cdp, 1280, 900);
+  await navigate(cdp, `${server.baseUrl}/magok-cookie/`);
+  const magokFavorGuideDesktop = await evaluate(cdp, "() => { const grid = document.querySelector('#magok-favor-guide .magok-favor-guide-grid'); const cards = [...document.querySelectorAll('#magok-favor-guide .magok-favor-guide-card')]; return { columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length, documentWidth: document.documentElement.scrollWidth, cards: cards.map((card) => ({ right: card.getBoundingClientRect().right, titleFits: (card.querySelector('h3')?.scrollWidth || 0) <= (card.querySelector('h3')?.clientWidth || 0), linkFits: (card.querySelector('a')?.scrollWidth || 0) <= (card.querySelector('a')?.clientWidth || 0) })) }; }");
+  assert.equal(magokFavorGuideDesktop.columns, 3, "magok favor guide should use three desktop cards");
+  assert.ok(magokFavorGuideDesktop.documentWidth <= 1280 && magokFavorGuideDesktop.cards.every((card) => card.right <= 1280 && card.titleFits && card.linkFits), "magok favor guide should remain readable on desktop");
   for (const [pathname, expectedTarget] of [
     ["/", "/magok-cookie/"],
     ["/guides/", "/magok-cookie/"],
@@ -246,6 +259,9 @@ try {
     assert.ok(magokMobile.productCards.every((card) => card.rect.right <= width && card.titleFits && card.linkFits), `magok product card content should fit at ${width}px`);
     assert.ok(magokMobile.productCards.at(-1).rect.width >= magokMobile.productCards[0].rect.width * 1.8, `magok fifth product card should use a wide mobile layout at ${width}px`);
     assert.equal(magokMobile.favorColumns, 2, `magok favor cards should use two compact columns at ${width}px`);
+    const magokFavorGuideMobile = await evaluate(cdp, "() => { const cards = [...document.querySelectorAll('#magok-favor-guide .magok-favor-guide-card')]; const columns = getComputedStyle(document.querySelector('#magok-favor-guide .magok-favor-guide-grid')).gridTemplateColumns.trim().split(/\\s+/).length; return { columns, cards: cards.map((card) => ({ right: card.getBoundingClientRect().right, titleFits: (card.querySelector('h3')?.scrollWidth || 0) <= (card.querySelector('h3')?.clientWidth || 0), linkFits: (card.querySelector('a')?.scrollWidth || 0) <= (card.querySelector('a')?.clientWidth || 0), linkHeight: card.querySelector('a')?.getBoundingClientRect().height || 0 })) }; }");
+    assert.equal(magokFavorGuideMobile.columns, 1, `magok favor guide should stack at ${width}px`);
+    assert.ok(magokFavorGuideMobile.cards.length === 3 && magokFavorGuideMobile.cards.every((card) => card.right <= width && card.titleFits && card.linkFits && card.linkHeight >= 44), `magok favor guide cards and links should remain readable and tappable at ${width}px`);
     assert.equal(magokMobile.businessColumns, 1, `magok business section should stack at ${width}px`);
     assert.equal(magokMobile.pickupColumns, 1, `magok pickup board should stack at ${width}px`);
     assert.equal(magokMobile.answerColumns, 1, `magok quick answers should use one column at ${width}px`);
@@ -264,6 +280,8 @@ try {
   await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/`);
   const cookieStorageGuide = await evaluate(cdp, "() => ({ cards: document.querySelectorAll('.product-card').length, active: document.querySelector('.product-card.active')?.dataset.product || '', guideTitle: document.querySelector('#guide-title')?.textContent.trim() || '', faqCount: document.querySelectorAll('#faq details').length, discoverCards: document.querySelectorAll('.discover-card').length, hasKakaoFloat: Boolean(document.querySelector('[data-kakao-float]')), hasKakaoBubble: Boolean(document.querySelector('.nm-float-bubble')), hasLegacyPng: [...document.images].some((image) => image.getAttribute('src')?.includes('main-order-cookie-thumb.png')), hasLegacyText: document.documentElement.textContent.includes('소비기한'), imageSourcesLocal: [...document.querySelectorAll('main img')].every((image) => image.getAttribute('src')?.startsWith('../../images/')) })");
   assert.deepEqual(cookieStorageGuide, { cards: 4, active: "crew", guideTitle: "쿠키크루 보관방법", faqCount: 8, discoverCards: 4, hasKakaoFloat: false, hasKakaoBubble: false, hasLegacyPng: false, hasLegacyText: false, imageSourcesLocal: true }, "cookie storage guide should render its four-product initial content");
+  const cookieStoragePickup = await evaluate(cdp, "() => { const callouts = document.querySelectorAll('.pickup-callout'); const place = document.querySelector('[data-analytics-event=\"cookie_care_naver_place_click\"]'); const pickup = [...document.querySelectorAll('.pickup-actions a')].find((link) => new URL(link.href).pathname === '/pickup/'); const instagram = document.querySelector('[data-analytics-event=\"cookie_care_instagram_click\"]'); return { count: callouts.length, address: callouts[0]?.textContent.includes('서울특별시 강서구 송정로 25 1층') || false, placeHref: place?.getAttribute('href') || '', placeTarget: place?.getAttribute('target') || '', placeEvent: place?.dataset.analyticsEvent || '', pickupHref: pickup?.getAttribute('href') || '', instagramHref: instagram?.getAttribute('href') || '', instagramTarget: instagram?.getAttribute('target') || '', instagramEvent: instagram?.dataset.analyticsEvent || '', actionEvents: [...document.querySelectorAll('.pickup-actions a')].map((link) => link.dataset.analyticsEvent || ''), reservationOnly: callouts[0]?.textContent.includes('예약 픽업 전용') || false, noWalkIn: callouts[0]?.textContent.includes('예약 없이 방문하시면 현장 구매가 어려우니') || false }; }");
+  assert.deepEqual(cookieStoragePickup, { count: 1, address: true, placeHref: "https://naver.me/Gsj2pwAu", placeTarget: "_blank", placeEvent: "cookie_care_naver_place_click", pickupHref: "../../pickup/", instagramHref: "https://instagram.com/nothingmatters_c", instagramTarget: "_blank", instagramEvent: "cookie_care_instagram_click", actionEvents: ["cookie_care_naver_place_click", "", "cookie_care_instagram_click"], reservationOnly: true, noWalkIn: true }, "cookie storage should expose ordered pickup, Place, and Instagram actions");
   for (const [key, expectedTitle, expectedContent] of [
     ["brookie", "브루키 보관방법", "브루키는 버터쿠키와 브라우니를 함께 구운 제품이에요."],
     ["handmade", "수제 꾸덕쿠키 보관방법", "수령 후 바로 밀봉하여 냉동 보관해주시고 2주 이내"],
@@ -283,9 +301,9 @@ try {
     { title: "행운쿠키", href: "https://nothingmatters.co.kr/products/lucky-cookie/?utm_source=cookie-care&utm_medium=owned&utm_campaign=aftercare", event: "cookie_care_product_discover_click", label: "행운쿠키" }
   ], "cookie storage AFTER COOKIE CARE should contain the four operating products");
 
-  await evaluate(cdp, "() => { window.__cookieCareEvents = []; window.gtag = (...args) => window.__cookieCareEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"cookie_care_find_product_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_subscribe_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_question_click\"]'); click('[data-analytics-event=\"cookie_care_product_discover_click\"]'); return true; }");
+  await evaluate(cdp, "() => { window.__cookieCareEvents = []; window.gtag = (...args) => window.__cookieCareEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"cookie_care_find_product_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_subscribe_click\"]'); click('[data-analytics-event=\"cookie_care_kakao_question_click\"]'); click('[data-analytics-event=\"cookie_care_product_discover_click\"]'); click('[data-analytics-event=\"cookie_care_naver_place_click\"]'); click('[data-analytics-event=\"cookie_care_instagram_click\"]'); return true; }");
   const cookieCareEvents = await evaluate(cdp, "() => window.__cookieCareEvents.map((entry) => entry[1])");
-  for (const eventName of ["cookie_care_find_product_click", "cookie_care_kakao_subscribe_click", "cookie_care_kakao_question_click", "cookie_care_product_discover_click"]) {
+  for (const eventName of ["cookie_care_find_product_click", "cookie_care_kakao_subscribe_click", "cookie_care_kakao_question_click", "cookie_care_product_discover_click", "cookie_care_naver_place_click", "cookie_care_instagram_click"]) {
     assert.equal(cookieCareEvents.filter((name) => name === eventName).length, 1, `${eventName} should fire once`);
   }
 
@@ -298,6 +316,12 @@ try {
   for (const width of MOBILE_WIDTHS) {
     await setViewport(cdp, width);
     await navigate(cdp, `${server.baseUrl}/guides/cookie-storage/`);
+    const guidePickupMobile = await evaluate(cdp, "() => { const callout = document.querySelector('.pickup-callout'); const actions = [...document.querySelectorAll('.pickup-actions .btn')]; const mobileCta = document.querySelector('.mobile-cta'); document.documentElement.style.scrollBehavior = 'auto'; callout?.scrollIntoView({ block: 'end' }); const rect = (node) => { const value = node?.getBoundingClientRect(); return value ? { left: value.left, right: value.right, top: value.top, bottom: value.bottom, height: value.height } : null; }; return { documentWidth: document.documentElement.scrollWidth, actionRects: actions.map(rect), mobileCta: rect(mobileCta) }; }");
+    await wait(100);
+    assert.ok(guidePickupMobile.documentWidth <= width, `cookie storage pickup callout should not overflow at ${width}px`);
+    assert.equal(guidePickupMobile.actionRects.length, 3, `cookie storage pickup callout should keep three actions at ${width}px`);
+    assert.ok(guidePickupMobile.actionRects.every((rect) => rect.left >= 0 && rect.right <= width && rect.height >= 44), `cookie storage pickup actions should fit and remain tappable at ${width}px`);
+    assert.ok(guidePickupMobile.actionRects.at(-1).bottom <= guidePickupMobile.mobileCta.top, `cookie storage pickup actions should clear the fixed CTA at ${width}px: ${JSON.stringify(guidePickupMobile)}`);
     await cdp.command("Runtime.evaluate", { expression: "document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.documentElement.scrollHeight)" });
     await wait(100);
     const guideMobileCta = await evaluate(cdp, "() => { const cta = document.querySelector('.mobile-cta'); const footer = document.querySelector('.footer-inner'); const ctaRect = cta?.getBoundingClientRect(); const footerRect = footer?.getBoundingClientRect(); return { visible: cta ? getComputedStyle(cta).display !== 'none' : false, ctaTop: ctaRect?.top || 0, footerBottom: footerRect?.bottom || 0, hasKakaoFloat: Boolean(document.querySelector('[data-kakao-float]')), hasKakaoBubble: Boolean(document.querySelector('.nm-float-bubble')) }; }");
@@ -368,6 +392,17 @@ try {
     assert.match(pickupOrders.reservationFaq, /예약 픽업 전용/);
     assert.match(pickupOrders.reservationFaq, /예약 없이 방문/);
     assert.equal(pickupOrders.aeoCards, 3, `pickup should keep three Gimpo Airport quick answers at ${width}px`);
+    const pickupGiftGuide = await evaluate(cdp, "() => { const cards = [...document.querySelectorAll('#gimpo-dessert-gift-guide .nm-pickup-gift-grid article')]; const columns = getComputedStyle(document.querySelector('#gimpo-dessert-gift-guide .nm-pickup-gift-grid')).gridTemplateColumns.trim().split(/\\s+/).length; return { columns, clarification: document.querySelector('#gimpo-dessert-gift-guide')?.textContent.includes('김포공항 내부 매장이 아니라') || false, cards: cards.map((card) => ({ right: card.getBoundingClientRect().right, titleFits: (card.querySelector('h3')?.scrollWidth || 0) <= (card.querySelector('h3')?.clientWidth || 0) })) }; }");
+    assert.equal(pickupGiftGuide.columns, 1, `pickup dessert gift cards should stack at ${width}px`);
+    assert.equal(pickupGiftGuide.clarification, true, `pickup dessert gift guide should clarify it is not inside Gimpo Airport at ${width}px`);
+    assert.ok(pickupGiftGuide.cards.length === 3 && pickupGiftGuide.cards.every((card) => card.right <= width && card.titleFits), `pickup dessert gift cards should remain readable at ${width}px`);
+    await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.nm-pickup-proof img').forEach((image) => { image.loading = 'eager'; })" });
+    await waitFor(cdp, "() => [...document.querySelectorAll('.nm-pickup-proof img')].every((image) => image.complete && image.naturalWidth > 0)", `pickup proof images should load at ${width}px`);
+    const pickupAuthority = await evaluate(cdp, "() => ({ breadcrumb: document.querySelector('.nm-pickup-visible-breadcrumb')?.textContent.trim() || '', answer: document.querySelector('.nm-pickup-answer-first')?.textContent || '', proofImages: [...document.querySelectorAll('.nm-pickup-proof img')].map((image) => ({ loaded: Boolean(image.naturalWidth && image.naturalHeight), objectFit: getComputedStyle(image).objectFit, right: image.getBoundingClientRect().right })), proofHref: document.querySelector('.nm-pickup-proof a')?.getAttribute('href') || '' })");
+    assert.match(pickupAuthority.breadcrumb, /홈\s*\/\s*김포공항 디저트 선물·픽업/);
+    assert.match(pickupAuthority.answer, /김포공항 내부 매장이 아니며 방문 전 픽업 예약이 필요합니다/);
+    assert.equal(pickupAuthority.proofHref, "../works/");
+    assert.ok(pickupAuthority.proofImages.length === 3 && pickupAuthority.proofImages.every((image) => image.loaded && image.objectFit === 'contain' && image.right <= width), `pickup proof images should fit without cropping at ${width}px`);
     assert.equal(pickupOrders.faqCards, 6, `pickup should keep six AEO FAQ items at ${width}px`);
     assert.match(pickupOrders.pageText, /김포공항/);
     assert.match(pickupOrders.pageText, /디저트 선물/);
@@ -388,6 +423,15 @@ try {
   assert.equal(pickupDesktopThumbnail.objectFit, "contain", "desktop pickup Cookie Crew thumbnail should not crop the provided cookie PNG");
   assert.ok(pickupDesktopThumbnail.figureBottom <= pickupDesktopThumbnail.titleTop, "desktop pickup card image should not overlap its text");
   assert.ok(pickupDesktopThumbnail.documentWidth <= pickupDesktopThumbnail.viewport, "desktop pickup page should not horizontally overflow");
+  const pickupGiftGuideDesktop = await evaluate(cdp, "() => { const grid = document.querySelector('#gimpo-dessert-gift-guide .nm-pickup-gift-grid'); const cards = [...document.querySelectorAll('#gimpo-dessert-gift-guide .nm-pickup-gift-grid article')]; return { columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length, cards: cards.map((card) => ({ right: card.getBoundingClientRect().right, titleFits: (card.querySelector('h3')?.scrollWidth || 0) <= (card.querySelector('h3')?.clientWidth || 0) })) }; }");
+  assert.equal(pickupGiftGuideDesktop.columns, 3, "pickup dessert gift guide should use three desktop cards");
+  assert.ok(pickupGiftGuideDesktop.cards.length === 3 && pickupGiftGuideDesktop.cards.every((card) => card.right <= 1280 && card.titleFits), "pickup dessert gift guide should remain readable on desktop");
+
+  await setViewport(cdp, 1440, 900);
+  await navigate(cdp, `${server.baseUrl}/magok-cookie/`);
+  const magokAuthorityDesktop = await evaluate(cdp, "() => { const breadcrumb = document.querySelector('.magok-visible-breadcrumb')?.getBoundingClientRect(); const answer = document.querySelector('.magok-answer-first')?.getBoundingClientRect(); const proofs = [...document.querySelectorAll('.magok-proof figure')].map((figure) => figure.getBoundingClientRect()); return { documentWidth: document.documentElement.scrollWidth, breadcrumb, answer, proofs }; }");
+  assert.ok(magokAuthorityDesktop.documentWidth <= 1440, "magok authority sections should not overflow at 1440px");
+  assert.ok(magokAuthorityDesktop.breadcrumb.right <= 1440 && magokAuthorityDesktop.answer.right <= 1440 && magokAuthorityDesktop.proofs.length === 3 && magokAuthorityDesktop.proofs.every((proof) => proof.right <= 1440), "magok authority content should fit at 1440px");
 
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/`);

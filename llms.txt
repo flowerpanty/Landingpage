@@ -39,12 +39,29 @@
 - Pickup policy: 예약 픽업 전용 / 방문 전 일정 예약 필요
 - Available cookie gifts: 브루키, 수제꾸덕쿠키, 행운쿠키, 쿠키크루
 - Use cases: 김포공항 인근 디저트 선물, 쿠키 선물, 답례품
-- Fulfillment: in-store pickup or vehicle quick consultation
+- Fulfillment: reservation pickup at the Gonghang-dong workshop or vehicle quick consultation depending on schedule and quantity
 - Consultation: Kakao channel and reservation order flow
-- Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
 - Nearby/service area: 김포공항, 송정역, 마곡
 - Magok: 마곡 인근 공항동 작업실 / 일정·수량에 따른 차량 퀵 상담
 - Magok cookie & favor hub: https://nothingmatters.co.kr/magok-cookie/
+
+## Local intent hubs
+
+### 마곡 답례품·쿠키 선물
+- Landing: https://nothingmatters.co.kr/magok-cookie/
+- Actual workshop is NOT in Magok.
+- Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
+- Magok is a nearby service area.
+- Vehicle quick is available only after consultation based on schedule and quantity.
+
+### 김포공항 디저트 선물·쿠키 픽업
+- Landing: https://nothingmatters.co.kr/pickup/
+- NOT inside Gimpo Airport.
+- Reservation-only workshop: 서울특별시 강서구 송정로 25 1층, 공항동.
+- Walk-in purchase without reservation is difficult.
+- Official Naver Place: https://naver.me/Gsj2pwAu
+- Official Instagram: https://instagram.com/nothingmatters_c
+- Products: 브루키 / 수제꾸덕쿠키 / 행운쿠키 / 쿠키크루
 
 ## Main ordering use cases
 - small handmade cookie gifts

@@ -180,6 +180,16 @@
   box-shadow: var(--magok-shadow);
 }
 
+.magok-visible-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.magok-visible-breadcrumb a { text-decoration: underline; text-underline-offset: 3px; }
+
 .magok-eyebrow,
 .magok-label,
 .magok-answer-index {
@@ -307,6 +317,8 @@
 .magok-section-title { font-size: clamp(38px, 4.4vw, 64px); }
 
 .magok-intro { background: var(--magok-paper); }
+.magok-answer-first { max-width: 880px; margin: 0 0 34px; padding: 20px 22px; border: 2.5px solid var(--magok-ink); border-radius: 22px; background: var(--magok-white); box-shadow: var(--magok-shadow); }
+.magok-answer-first p { margin: 12px 0 0; font-size: 16px; font-weight: 800; line-height: 1.7; }
 .magok-intro-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr); gap: clamp(24px, 6vw, 78px); align-items: center; }
 .magok-intro-copy > p { max-width: 610px; margin: 18px 0 0; font-size: 18px; font-weight: 700; line-height: 1.7; }
 
@@ -338,6 +350,12 @@
 .magok-product-card:nth-child(4) .magok-product-tag { background: var(--magok-orange); }
 .magok-product-card a { display: inline-flex; margin-top: 13px; font-size: 12px; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
 
+.magok-proof { background: var(--magok-white); }
+.magok-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.magok-proof figure { overflow: hidden; margin: 0; border: 2.5px solid var(--magok-ink); border-radius: 22px; background: var(--magok-paper); box-shadow: var(--magok-shadow); }
+.magok-proof img { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: var(--magok-paper); }
+.magok-proof figcaption { padding: 13px 15px; border-top: 2px solid var(--magok-ink); font-size: 13px; font-weight: 900; }
+
 .magok-favors { background: var(--magok-paper); }
 .magok-favor-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .magok-favor-card { min-height: 204px; padding: 18px; border: 2.5px solid var(--magok-ink); border-radius: 20px; box-shadow: var(--magok-shadow); }
@@ -350,6 +368,15 @@
 .magok-favor-card h3 { margin: 14px 0 0; font-size: 19px; line-height: 1.12; }
 .magok-favor-card p { margin: 9px 0 0; font-size: 13px; font-weight: 700; line-height: 1.55; }
 .magok-favor-card a { display: inline-flex; margin-top: 12px; font-size: 12px; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
+
+.magok-favor-guide { border-block: 3px solid var(--magok-ink); background: var(--magok-white); }
+.magok-favor-guide-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.magok-favor-guide-card { min-height: 230px; padding: 22px; border: 2.5px solid var(--magok-ink); border-radius: 22px; background: var(--magok-white); box-shadow: var(--magok-shadow); }
+.magok-favor-guide-card:nth-child(2) { background: var(--magok-cream); }
+.magok-favor-guide-card:nth-child(3) { background: var(--magok-blue-soft); }
+.magok-favor-guide-card h3 { margin: 15px 0 0; font-size: 24px; letter-spacing: -0.055em; line-height: 1.13; }
+.magok-favor-guide-card p { margin: 12px 0 0; font-size: 14px; font-weight: 700; line-height: 1.65; }
+.magok-favor-guide-card a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 15px; font-size: 12px; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
 
 .magok-business { background: var(--magok-blue-soft); }
 .magok-business-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, 0.9fr); gap: clamp(24px, 6vw, 80px); align-items: center; }
@@ -434,6 +461,7 @@
   .magok-chip { min-height: 28px; padding: 5px 8px; font-size: 9px; }
   .magok-hero-copy { position: relative; right: auto; bottom: auto; left: auto; z-index: 2; margin: -16px 12px 0; padding: 19px; border-radius: 21px; }
   .magok-hero-copy h1 { font-size: clamp(36px, 10vw, 40px); line-height: 1.01; }
+  .magok-visible-breadcrumb { font-size: 11px; }
   .magok-hero-lead { margin-top: 13px; font-size: 14px; line-height: 1.6; }
   .magok-hero-actions,
   .magok-action-row,
@@ -448,6 +476,10 @@
   .magok-business-copy > p,
   .magok-pickup-copy > p,
   .magok-final-copy > p { font-size: 15px; }
+  .magok-answer-first { margin-bottom: 24px; padding: 18px; border-radius: 18px; }
+  .magok-answer-first p { font-size: 14px; }
+  .magok-proof-grid { grid-template-columns: 1fr; gap: 10px; }
+  .magok-proof figure { border-radius: 18px; }
   .magok-ticket-row { grid-template-columns: 82px 1fr; padding: 13px 15px; }
   .magok-ticket-row span { font-size: 14px; }
   .magok-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -466,6 +498,9 @@
   .magok-favor-card h3 { margin-top: 10px; font-size: 16px; }
   .magok-favor-card p { font-size: 12px; line-height: 1.5; }
   .magok-favor-card a { margin-top: 8px; font-size: 11px; }
+  .magok-favor-guide-grid { grid-template-columns: 1fr; gap: 10px; }
+  .magok-favor-guide-card { min-height: 0; padding: 18px; }
+  .magok-favor-guide-card h3 { font-size: 22px; }
   .magok-check-list { grid-template-columns: 1fr; }
   .magok-business-card,
   .magok-final-card { padding: 19px; border-radius: 22px; }
