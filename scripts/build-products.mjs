@@ -323,9 +323,10 @@ ${recommendations}
 
 function buildHome() {
   const home = fs.readFileSync(HOME_PATH, "utf8");
-  const newProducts = products.filter((product) => product.cardStatus === "new");
+  // NEW products are identified by their card badge inside OUR COOKIES.
+  // Keep the managed block as a build contract, but intentionally render no standalone section.
   const next = replaceManagedBlock(
-    replaceManagedBlock(home, "NM_NEW_ARRIVAL", newProducts.map(renderNewArrival).join("\n")),
+    replaceManagedBlock(home, "NM_NEW_ARRIVAL", ""),
     "NM_PRODUCT_GRID",
     products.map(renderProductCard).join("\n")
   );
