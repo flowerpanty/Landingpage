@@ -109,6 +109,16 @@ function renderProductCard(product) {
   const status = product.cardStatus === "new"
     ? '\n              <span class="showroom-product-badge">NEW</span>'
     : "";
+  const homeCard = product.homeCard || {};
+  const tags = (homeCard.tags || [])
+    .map((tag) => `<span>${escapeHtml(tag)}</span>`)
+    .join("");
+  const cardMeta = homeCard.orderInfo
+    ? `\n              <p class="showroom-product-order-info">${escapeHtml(homeCard.orderInfo)}</p>`
+    : "";
+  const cardTags = tags
+    ? `\n              <div class="showroom-product-tags" aria-label="${escapeHtml(product.name)} 특징">${tags}</div>`
+    : "";
   const imageOptimization = IMAGE_OPTIMIZATIONS[product.thumbnail];
   const thumbnail = imageOptimization
     ? `              <picture>\n                <source srcset="${escapeHtml(homeAssetPath(imageOptimization.optimized))}" type="image/jpeg">\n                <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" width="${imageOptimization.width}" height="${imageOptimization.height}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">\n              </picture>`
@@ -120,10 +130,12 @@ ${thumbnail}${status}
             </figure>
             <div class="showroom-product-copy">
               <div class="showroom-product-text">
+                <small>${escapeHtml(homeCard.englishName || product.badge || product.category)}</small>
                 <h3>${escapeHtml(product.name)}</h3>
                 <p>${escapeHtml(product.description)}</p>
+${cardTags}${cardMeta}
               </div>
-              <span class="showroom-product-go">구경하기 →</span>
+              <span class="showroom-product-go">제품 보기 →</span>
             </div>
           </a>`;
 }

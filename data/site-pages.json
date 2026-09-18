@@ -30,6 +30,11 @@
       "primaryUrl": "/brookie/",
       "detailPageMode": "existing",
       "badge": "BROOKIE",
+      "homeCard": {
+        "englishName": "BROOKIE",
+        "tags": ["캐릭터 선택", "문구 선택"],
+        "orderInfo": "기본형 1구 7,800원 · 최소 12개"
+      },
       "updatedAt": "2026-09-11"
     },
     {
@@ -46,6 +51,11 @@
       "primaryUrl": "/out/",
       "detailPageMode": "existing",
       "badge": "HANDMADE COOKIES",
+      "homeCard": {
+        "englishName": "HANDMADE COOKIES",
+        "tags": ["7가지 맛", "패키지 선택"],
+        "orderInfo": "4,500원부터 · 대부분 최소 수량 없음"
+      },
       "updatedAt": "2026-09-11"
     },
     {
@@ -62,6 +72,11 @@
       "primaryUrl": "/out/fortune/",
       "detailPageMode": "existing",
       "badge": "LUCKY COOKIE",
+      "homeCard": {
+        "englishName": "LUCKY COOKIE",
+        "tags": ["4가지 마음", "응원 선물"],
+        "orderInfo": "4가지맛 1세트 15,000원 · 최소 1세트"
+      },
       "updatedAt": "2026-09-11"
     },
     {
@@ -80,6 +95,10 @@
       "primaryUrl": "/cookie-crew/",
       "detailPageMode": "existing",
       "badge": "COOKIE CREW",
+      "homeCard": {
+        "englishName": "COOKIE CREW",
+        "tags": ["쿠키 + 마그넷", "캐릭터 선물"]
+      },
       "updatedAt": "2026-09-11"
     }
   ],

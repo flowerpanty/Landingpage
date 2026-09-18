@@ -25,7 +25,7 @@ const CRITICAL_PATHS = [
   "/contact/",
   "/cookie-crew/"
 ];
-const MOBILE_WIDTHS = [320, 375, 430];
+const MOBILE_WIDTHS = [320, 375, 390, 430];
 const PICKUP_MAP_URL = "https://map.naver.com/p/entry/place/1547319276?lng=126.8115357&lat=37.557402&placePath=%2Fhome%3Ffrom%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202609131310%26locale%3Dko%26svcName%3Dmap_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh";
 const PICKUP_RESERVATION_URL = "https://m.place.naver.com/restaurant/1547319276/home?utm_source=nothingmatters.co.kr&utm_medium=owned&utm_campaign=pickup_reservation";
 
@@ -179,7 +179,7 @@ const chrome = spawn(CHROME_PATH, [
   "--no-first-run",
   "--remote-allow-origins=*",
   `--remote-debugging-port=${debugPort}`,
-  "--user-data-dir=/private/tmp/nothingmatters-public-browser-profile",
+  `--user-data-dir=/private/tmp/nothingmatters-public-browser-profile-${process.pid}`,
   "about:blank"
 ], { stdio: "ignore" });
 
@@ -444,6 +444,22 @@ try {
 
   const journalState = await evaluate(cdp, "() => ({ section: Boolean(document.querySelector('#journal')), list: Boolean(document.querySelector('[data-journal-list]')), header: Boolean(document.querySelector('[data-analytics-event=\"blog_header_click\"]')), footer: Boolean(document.querySelector('[data-analytics-event=\"blog_footer_click\"]')) })");
   assert.deepEqual(journalState, { section: true, list: true, header: true, footer: true });
+
+  const mobileProductCards = await evaluate(cdp, "() => { const grid = document.querySelector('.showroom-product-grid'); const cards = [...document.querySelectorAll('.showroom-product-card')]; return { columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length, cards: cards.map((card) => { const title = card.querySelector('h3'); const description = card.querySelector('.showroom-product-text > p'); const cta = card.querySelector('.showroom-product-go'); const rect = card.getBoundingClientRect(); const ctaRect = cta?.getBoundingClientRect(); const ctaStyle = getComputedStyle(cta); return { name: title?.textContent.trim() || '', href: card.getAttribute('href') || '', event: card.dataset.analyticsEvent || '', englishHidden: getComputedStyle(card.querySelector('small')).display === 'none', descriptionHidden: getComputedStyle(description).display === 'none', tags: card.querySelectorAll('.showroom-product-tags span').length, orderInfo: card.querySelector('.showroom-product-order-info')?.textContent.trim() || '', right: rect.right, ctaHeight: ctaRect?.height || 0, ctaMinHeight: ctaStyle.minHeight, ctaDisplay: ctaStyle.display, ctaText: cta?.textContent.trim() || '' }; }) }; }");
+  assert.equal(mobileProductCards.columns, 2, "OUR COOKIES should retain a two-column mobile grid");
+  assert.deepEqual(mobileProductCards.cards.map((card) => [card.name, card.href, card.event]), [["브루키", "brookie/", "product_click"], ["수제꾸덕쿠키", "out/", "product_click"], ["행운쿠키", "out/fortune/", "product_click"], ["쿠키크루", "cookie-crew/", "product_click"]], "OUR COOKIES should retain its four product routes and analytics");
+  assert.ok(mobileProductCards.cards.every((card) => card.right <= 390 && card.englishHidden && card.descriptionHidden && card.tags === 2 && card.ctaHeight >= 44 && card.ctaText === "제품 보기 →"), `OUR COOKIES mobile cards should keep readable tags and tappable CTAs: ${JSON.stringify(mobileProductCards.cards)}`);
+  assert.deepEqual(mobileProductCards.cards.map((card) => card.orderInfo), ["기본형 1구 7,800원 · 최소 12개", "4,500원부터 · 대부분 최소 수량 없음", "4가지맛 1세트 15,000원 · 최소 1세트", ""], "OUR COOKIES should expose only verified order information");
+
+  await setViewport(cdp, 1280, 900);
+  await navigate(cdp, `${server.baseUrl}/`);
+  const desktopProductCards = await evaluate(cdp, "() => { const grid = document.querySelector('.showroom-product-grid'); const cards = [...document.querySelectorAll('.showroom-product-card')]; return { columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length, documentWidth: document.documentElement.scrollWidth, cards: cards.map((card) => { const rect = card.getBoundingClientRect(); const cta = card.querySelector('.showroom-product-go')?.getBoundingClientRect(); return { right: rect.right, height: rect.height, ctaBottom: cta?.bottom || 0, cardBottom: rect.bottom }; }) }; }");
+  assert.equal(desktopProductCards.columns, 4, "OUR COOKIES should show four cards on one desktop row");
+  assert.ok(desktopProductCards.documentWidth <= 1280 && desktopProductCards.cards.every((card) => card.right <= 1280), "OUR COOKIES should not overflow on desktop");
+  assert.ok(desktopProductCards.cards.every((card) => Math.abs(card.height - desktopProductCards.cards[0].height) < 1 && card.cardBottom - card.ctaBottom >= 16), "OUR COOKIES cards should share a stable height with bottom-aligned CTAs");
+
+  await setViewport(cdp, 390);
+  await navigate(cdp, `${server.baseUrl}/`);
 
   await evaluate(cdp, "() => { window.__nmEvents = []; window.gtag = (...args) => window.__nmEvents.push(args); const click = (selector) => { const target = document.querySelector(selector); target.addEventListener('click', (event) => event.preventDefault(), { once: true }); target.click(); }; click('[data-analytics-event=\"product_click\"]'); click('[data-analytics-event=\"blog_header_click\"]'); click('[data-analytics-event=\"blog_card_click\"]'); click('[data-analytics-event=\"blog_footer_click\"]'); return true; }");
   const analytics = await evaluate(cdp, "() => window.__nmEvents.map((entry) => ({ name: entry[1], params: entry[2] || {} }))");
