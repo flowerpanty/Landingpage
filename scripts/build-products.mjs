@@ -113,9 +113,7 @@ function renderProductCard(product) {
   const tags = (homeCard.tags || [])
     .map((tag) => `<span>${escapeHtml(tag)}</span>`)
     .join("");
-  const cardMeta = homeCard.orderInfo
-    ? `\n              <p class="showroom-product-order-info">${escapeHtml(homeCard.orderInfo)}</p>`
-    : "";
+  const cardMeta = `\n              <p class="showroom-product-order-info">${escapeHtml(homeCard.orderInfo || "가격·수량 상담")}</p>`;
   const cardTags = tags
     ? `\n              <div class="showroom-product-tags" aria-label="${escapeHtml(product.name)} 특징">${tags}</div>`
     : "";

@@ -454,7 +454,19 @@ try {
   assert.equal(mobileProductCards.newBadge, "NEW", "Cookie Crew should retain its NEW badge in OUR COOKIES");
   assert.deepEqual(mobileProductCards.cards.map((card) => [card.name, card.href, card.event]), [["브루키", "brookie/", "product_click"], ["수제꾸덕쿠키", "out/", "product_click"], ["행운쿠키", "out/fortune/", "product_click"], ["쿠키크루", "cookie-crew/", "product_click"]], "OUR COOKIES should retain its four product routes and analytics");
   assert.ok(mobileProductCards.cards.every((card) => card.right <= 390 && card.englishHidden && card.descriptionHidden && card.tags === 2 && card.ctaHeight >= 44 && card.ctaText === "제품 보기 →"), `OUR COOKIES mobile cards should keep readable tags and tappable CTAs: ${JSON.stringify(mobileProductCards.cards)}`);
-  assert.deepEqual(mobileProductCards.cards.map((card) => card.orderInfo), ["기본형 1구 7,800원 · 최소 12개", "4,500원부터 · 대부분 최소 수량 없음", "4가지맛 1세트 15,000원 · 최소 1세트", ""], "OUR COOKIES should expose only verified order information");
+  assert.deepEqual(mobileProductCards.cards.map(card => card.orderInfo), ['기본형 1구 7,800원 · 최소 12개', '4,500원부터 · 대부분 최소 수량 없음', '4가지맛 1세트 15,000원 · 최소 1세트', '가격·수량 상담']);
+  const readBookingActions = () => evaluate(cdp, "() => [...document.querySelectorAll('.nm-booking-action')].map(a => ({text: a.textContent.trim(), href: a.href, height: a.getBoundingClientRect().height}))");
+  const bookingActions = await readBookingActions();
+  assert.deepEqual(bookingActions.map(a => a.text), ['네이버예약', '커스텀주문', '상담하기']);
+  assert.ok(bookingActions.every(a => a.height >= 44));
+  assert.equal(bookingActions[0].href, PICKUP_RESERVATION_URL);
+  assert.equal(bookingActions[1].href, 'https://thingmattersreserve-production.up.railway.app/');
+  assert.equal(bookingActions[2].href, 'https://pf.kakao.com/_QdCaK/chat');
+  for (const section of ['#actual-cases', '#local-pickup', '#contact']) {
+    await evaluate(cdp, `() => document.querySelector('${section}').scrollIntoView()`);
+    await wait(150);
+    assert.deepEqual(await readBookingActions(), bookingActions, 'Booking actions should remain stable while scrolling');
+  }
 
   await setViewport(cdp, 1280, 900);
   await navigate(cdp, `${server.baseUrl}/`);

@@ -3627,3 +3627,73 @@ body.is-made-overlay-open .nm-floating-actions {
     font-size: 13px;
   }
 }
+/* Image-first product cards: keep ordering essentials compact. */
+.theme-showroom .showroom-section--products .showroom-product-photo {
+  aspect-ratio: 1 / 1.1;
+  flex-shrink: 0;
+}
+.theme-showroom .showroom-section--products .showroom-product-card:nth-child(-n+3) .showroom-product-photo img {
+  padding: 0;
+}
+.theme-showroom .showroom-section--products .showroom-product-copy {
+  padding: 10px 8px 8px;
+}
+.theme-showroom .showroom-section--products .showroom-product-copy small,
+.theme-showroom .showroom-section--products .showroom-product-text > p:not(.showroom-product-order-info) {
+  display: none;
+}
+.theme-showroom .showroom-section--products .showroom-product-text > p.showroom-product-order-info {
+  display: block;
+  min-height: 0;
+  margin: 6px 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+/* Stable reservation actions and comparable product information. */
+.theme-showroom .nm-booking-actions {
+  position: fixed;
+  inset: auto 24px 24px auto;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  z-index: 100;
+  padding: 8px;
+  background: #fffaf3;
+  border: 1px solid #e4d8cb;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px #33271920;
+}
+.theme-showroom .nm-booking-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.theme-showroom .nm-booking-action--naver { background: #03c75a; color: #082b18; }
+.theme-showroom .nm-booking-action--custom { background: #302820; color: #fffaf3; }
+.theme-showroom .nm-booking-action--consult { background: #f1e6d8; color: #302820; }
+.theme-showroom .nm-booking-action:focus-visible { outline: 3px solid #754329; outline-offset: 3px; }
+.theme-showroom .showroom-order-guide { padding-block: 32px; }
+.theme-showroom .showroom-order-guide h2 { font-size: clamp(22px, 4vw, 30px); }
+.theme-showroom .showroom-order-guide p { line-height: 1.7; }
+.theme-showroom .showroom-order-guide ol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; list-style: none; padding: 0; margin: 24px 0; }
+.theme-showroom .showroom-order-guide li { padding: 20px; background: #f4ede3; border-radius: 12px; }
+.theme-showroom .showroom-order-guide li span { display: block; margin-top: 8px; font-size: 14px; line-height: 1.6; }
+.theme-showroom .showroom-product-text dl.showroom-product-order-info { display: grid; gap: 8px; font-size: 12px; line-height: 1.5; min-height: 0; }
+.theme-showroom .showroom-product-order-info div { display: grid; gap: 2px; }
+.theme-showroom .showroom-product-order-info dt { color: #68594b; font-weight: 400; }
+.theme-showroom .showroom-product-order-info dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.theme-showroom .showroom-footer { padding-bottom: 120px; }
+@media (max-width: 760px) {
+  .theme-showroom .nm-floating-actions.nm-booking-actions { inset: auto 0 0; border-radius: 16px 16px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
+  .theme-showroom .nm-booking-action { padding-inline: 4px; font-size: 13px; }
+  .theme-showroom .showroom-order-guide ol { grid-template-columns: 1fr; gap: 8px; }
+  .theme-showroom .showroom-order-guide li { padding: 16px; }
+  .theme-showroom .showroom-footer { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+}
