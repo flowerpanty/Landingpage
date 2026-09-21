@@ -220,6 +220,15 @@ for (const entry of sourceHtmlEntries) {
   assertLocalInternalLinksResolve(entry, html);
 }
 
+for (const entry of sitePages.pages || []) {
+  if (entry.status !== "archive") continue;
+  assert.equal(entry.indexing, "noindex", `${entry.path}: archive pages must be noindex in registry`);
+  assert.equal(entry.sitemap, false, `${entry.path}: archive pages must be excluded from sitemap`);
+  const archiveHtml = readHtml(filePathForPathname(entry.path));
+  assert.equal(getRobots(archiveHtml), "noindex,follow", `${entry.path}: archive robots must be exactly noindex,follow`);
+  assert.equal(locSet.has(`${SITE_URL}${normalizePathname(entry.path)}`), false, `${entry.path}: archive page must be absent from sitemap`);
+}
+
 for (const loc of locs) {
   const pathname = new URL(loc).pathname;
   assert.equal(/^\/(?:gallery-admin|dashboard|api)(?:\/|$)/.test(pathname), false, `non-public sitemap URL: ${pathname}`);
@@ -240,6 +249,14 @@ for (const loc of locs) {
 
   const schema = getStaticSchema(html);
   const graph = schema["@graph"] || [];
+  assert.equal(graph.filter((item) => item["@type"] === "Organization").length, 1, `${pathname}: Organization should have one top-level entity`);
+  assert.equal(graph.filter((item) => item["@type"] === "Bakery").length, 1, `${pathname}: Bakery should have one top-level entity`);
+  assert.equal(graph.filter((item) => item["@type"] === "Place").length, 0, `${pathname}: duplicate top-level Place schema is not allowed`);
+  const registryEntry = registryEntries.get(normalizePathname(pathname));
+  const webPage = graph.find((item) => ["WebPage", "CollectionPage", "ContactPage", "ProductPage"].includes(item["@type"]));
+  if (registryEntry?.indexing === "index" && registryEntry.lastmod) {
+    assert.equal(webPage?.dateModified, registryEntry.lastmod, `${pathname}: dateModified should match registry lastmod`);
+  }
   for (const type of ["Organization", "Bakery"]) {
     const entity = graph.find((item) => item["@type"] === type);
     assert.ok(entity?.sameAs?.includes(INSTAGRAM_URL), `${pathname}: ${type} missing Instagram`);
@@ -278,13 +295,13 @@ assert.match(
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>2026-09-18<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-09-20" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-18<\/lastmod>/,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-20<\/lastmod>/,
   "pickup sitemap lastmod should reflect the Gimpo Airport dessert gift guide"
 );
 
@@ -336,7 +353,7 @@ const magokHtml = readHtml(filePathForPathname(magokPath));
 assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 쿠키/);
 assert.match(getMeta(magokHtml, "name", "description"), /쿠키|답례품/);
 assert.match(magokHtml, /<h1\b[^>]*>/i, "magok cookie hub should have an h1");
-assert.equal(magokEntry?.lastmod, "2026-09-18", "magok registry lastmod should reflect the favor guide");
+assert.equal(magokEntry?.lastmod, "2026-09-20", "magok registry lastmod should reflect the favor guide");
 assert.match(getAttribute(magokHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /마곡 답례품/);
 assert.match(magokHtml, /실제 작업실은 마곡 인근 서울 강서구 공항동/, "magok quick answer should clarify the actual workshop location");
 assert.match(magokHtml, /QUICK ANSWER/, "magok should include an answer-first block");
@@ -359,6 +376,9 @@ const magokBreadcrumb = magokGraph.find((entry) => entry["@type"] === "Breadcrum
 assert.equal(magokBreadcrumb?.itemListElement?.at(-1)?.name, "마곡 쿠키·답례품");
 const magokWebPage = magokGraph.find((entry) => entry["@type"] === "WebPage");
 assert.deepEqual(magokWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "magok WebPage should identify the actual LocalBusiness");
+const magokService = magokGraph.find((entry) => entry["@type"] === "Service");
+assert.deepEqual(magokService?.provider, { "@id": `${SITE_URL}/#localbusiness` }, "magok Service should be provided by the actual LocalBusiness");
+assert.equal(magokService?.areaServed, "마곡", "magok Service should target Magok");
 const magokBusiness = magokGraph.find((entry) => entry["@type"] === "Bakery");
 assert.deepEqual(magokBusiness?.address, {
   "@type": "PostalAddress",
@@ -389,7 +409,7 @@ assert.ok(guidesItemList?.itemListElement?.some((item) => item.url === `${SITE_U
 
 const pickupPath = "/pickup/";
 const pickupEntry = registryEntries.get(pickupPath);
-assert.equal(pickupEntry?.lastmod, "2026-09-18", "pickup registry lastmod should reflect the Gimpo Airport dessert gift guide");
+assert.equal(pickupEntry?.lastmod, "2026-09-20", "pickup registry lastmod should reflect the Gimpo Airport dessert gift guide");
 const pickupHtml = readHtml(filePathForPathname(pickupPath));
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /김포공항/);
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /디저트/);
@@ -402,6 +422,9 @@ assert.match(getAttribute(pickupHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /픽업/);
 const pickupSchema = getStaticSchema(pickupHtml);
 const pickupWebPage = pickupSchema["@graph"].find((entry) => entry["@type"] === "WebPage");
 assert.deepEqual(pickupWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "pickup WebPage should identify the actual LocalBusiness");
+const pickupService = pickupSchema["@graph"].find((entry) => entry["@type"] === "Service");
+assert.deepEqual(pickupService?.provider, { "@id": `${SITE_URL}/#localbusiness` }, "pickup Service should be provided by the actual LocalBusiness");
+assert.deepEqual(pickupService?.areaServed, ["공항동", "김포공항", "송정역"], "pickup Service should identify its local area");
 const pickupItemList = pickupSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
 assert.deepEqual(
   pickupItemList?.itemListElement?.map((item) => [item.name, item.url]),
@@ -444,8 +467,18 @@ assert.deepEqual(
 );
 
 const homeHtml = readHtml(filePathForPathname("/"));
+assert.match(getAttribute(homeHtml, /<title>([\s\S]*?)<\/title>/i), /낫띵메터스.*수제쿠키.*김포공항/);
+assert.match(getMeta(homeHtml, "name", "description"), /서울 강서구 공항동/);
+assert.match(homeHtml, /서울특별시 강서구 송정로 25 1층/);
+assert.match(homeHtml, /예약 제작 · 예약 픽업 전용/);
+assert.match(homeHtml, /href="guides\/">쿠키 선물·답례품 가이드 →<\/a>/);
 assert.match(homeHtml, /href="pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "home should use a descriptive pickup hub anchor");
 assert.match(homeHtml, /김포공항·송정역 인근 공항동의 예약 픽업과 마곡 답례품·기업행사 상담/, "home visit copy should clarify both local intent hubs");
+const homeSchema = getStaticSchema(homeHtml);
+const homeWebPage = homeSchema["@graph"].find((item) => item["@type"] === "CollectionPage");
+assert.deepEqual(homeWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "homepage should identify the actual LocalBusiness");
+const homeBakery = homeSchema["@graph"].find((item) => item["@type"] === "Bakery");
+assert.deepEqual(homeBakery?.geo, { "@type": "GeoCoordinates", latitude: 37.557402, longitude: 126.8115357 }, "Bakery geo should match business facts");
 const corporateHtml = readHtml(filePathForPathname("/guides/corporate-event-cookie/"));
 assert.match(corporateHtml, /href="\.\.\/\.\.\/magok-cookie\/">마곡 답례품·기업행사 안내<\/a>/, "corporate guide should expose its Magok contextual link");
 const smallGiftHtml = readHtml(filePathForPathname("/small-gift/"));

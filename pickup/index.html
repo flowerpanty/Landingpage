@@ -136,6 +136,11 @@
           "https://instagram.com/nothingmatters_c",
           "https://naver.me/Gsj2pwAu"
         ],
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 37.557402,
+          "longitude": 126.8115357
+        },
         "parentOrganization": {
           "@id": "https://nothingmatters.co.kr/#organization"
         }
@@ -167,15 +172,21 @@
           "@type": "ImageObject",
           "url": "https://nothingmatters.co.kr/images/pickup-cookie-lineup-optimized.jpg"
         },
+        "dateModified": "2026-09-20",
         "breadcrumb": {
           "@id": "https://nothingmatters.co.kr/pickup/#breadcrumb"
         },
-        "mainEntity": {
-          "@id": "https://nothingmatters.co.kr/pickup/#itemlist"
-        },
         "about": {
           "@id": "https://nothingmatters.co.kr/#localbusiness"
-        }
+        },
+        "mainEntity": [
+          {
+            "@id": "https://nothingmatters.co.kr/pickup/#itemlist"
+          },
+          {
+            "@id": "https://nothingmatters.co.kr/pickup/#service"
+          }
+        ]
       },
       {
         "@type": "BreadcrumbList",
@@ -224,6 +235,22 @@
             "url": "https://nothingmatters.co.kr/cookie-crew/"
           }
         ]
+      },
+      {
+        "@type": "Service",
+        "@id": "https://nothingmatters.co.kr/pickup/#service",
+        "name": "김포공항 인근 공항동 쿠키 예약 픽업",
+        "serviceType": "쿠키·디저트 선물 예약 픽업",
+        "provider": {
+          "@id": "https://nothingmatters.co.kr/#localbusiness"
+        },
+        "url": "https://nothingmatters.co.kr/pickup/",
+        "areaServed": [
+          "공항동",
+          "김포공항",
+          "송정역"
+        ],
+        "description": "김포공항 안이 아닌 공항동 예약 픽업 전용 작업실에서 예약한 쿠키를 수령하는 서비스입니다. 방문 전 픽업 예약이 필요합니다."
       },
       {
         "@type": "FAQPage",

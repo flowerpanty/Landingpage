@@ -135,6 +135,11 @@
           "https://instagram.com/nothingmatters_c",
           "https://naver.me/Gsj2pwAu"
         ],
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 37.557402,
+          "longitude": 126.8115357
+        },
         "parentOrganization": {
           "@id": "https://nothingmatters.co.kr/#organization"
         }
@@ -166,15 +171,21 @@
           "@type": "ImageObject",
           "url": "https://nothingmatters.co.kr/images/handmade-cookie-flavor-lineup-optimized.jpg"
         },
+        "dateModified": "2026-09-20",
         "breadcrumb": {
           "@id": "https://nothingmatters.co.kr/magok-cookie/#breadcrumb"
         },
-        "mainEntity": {
-          "@id": "https://nothingmatters.co.kr/magok-cookie/#itemlist"
-        },
         "about": {
           "@id": "https://nothingmatters.co.kr/#localbusiness"
-        }
+        },
+        "mainEntity": [
+          {
+            "@id": "https://nothingmatters.co.kr/magok-cookie/#itemlist"
+          },
+          {
+            "@id": "https://nothingmatters.co.kr/magok-cookie/#service"
+          }
+        ]
       },
       {
         "@type": "BreadcrumbList",
@@ -241,6 +252,18 @@
             "url": "https://nothingmatters.co.kr/pickup/"
           }
         ]
+      },
+      {
+        "@type": "Service",
+        "@id": "https://nothingmatters.co.kr/magok-cookie/#service",
+        "name": "마곡 답례품·기업행사 쿠키 제작 상담",
+        "serviceType": "답례품·기업행사 쿠키 제작",
+        "provider": {
+          "@id": "https://nothingmatters.co.kr/#localbusiness"
+        },
+        "url": "https://nothingmatters.co.kr/magok-cookie/",
+        "areaServed": "마곡",
+        "description": "실제 작업실은 공항동에 있으며 마곡 기업행사·단체 답례품을 상담합니다. 차량 퀵은 일정과 수량에 따라 안내합니다."
       },
       {
         "@type": "FAQPage",

@@ -133,6 +133,13 @@ const localBusiness = {
   areaServed: BUSINESS_FACTS.areaServed,
   hasMap: BUSINESS_FACTS.naverMapUrl,
   sameAs: BUSINESS_FACTS.sameAs,
+  geo: BUSINESS_FACTS.geo
+    ? {
+        "@type": "GeoCoordinates",
+        latitude: BUSINESS_FACTS.geo.latitude,
+        longitude: BUSINESS_FACTS.geo.longitude,
+      }
+    : undefined,
   parentOrganization: {
     "@id": ORGANIZATION_ID,
   },
@@ -237,6 +244,9 @@ function getPageData(html, loc) {
     ),
     h1: cleanText(getAttribute(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i)),
     breadcrumbName: registryPage?.breadcrumbName || "",
+    status: registryPage?.status || "",
+    indexing: registryPage?.indexing || "",
+    lastmod: registryPage?.lastmod || "",
   };
 }
 
@@ -397,6 +407,32 @@ function buildProduct(page) {
 }
 
 function buildService(page) {
+  if (page.path === "/pickup/") {
+    return {
+      "@type": "Service",
+      "@id": `${page.pageUrl}#service`,
+      name: "김포공항 인근 공항동 쿠키 예약 픽업",
+      serviceType: "쿠키·디저트 선물 예약 픽업",
+      provider: { "@id": LOCAL_BUSINESS_ID },
+      url: page.pageUrl,
+      areaServed: ["공항동", "김포공항", "송정역"],
+      description: "김포공항 안이 아닌 공항동 예약 픽업 전용 작업실에서 예약한 쿠키를 수령하는 서비스입니다. 방문 전 픽업 예약이 필요합니다.",
+    };
+  }
+
+  if (page.path === "/magok-cookie/") {
+    return {
+      "@type": "Service",
+      "@id": `${page.pageUrl}#service`,
+      name: "마곡 답례품·기업행사 쿠키 제작 상담",
+      serviceType: "답례품·기업행사 쿠키 제작",
+      provider: { "@id": LOCAL_BUSINESS_ID },
+      url: page.pageUrl,
+      areaServed: "마곡",
+      description: "실제 작업실은 공항동에 있으며 마곡 기업행사·단체 답례품을 상담합니다. 차량 퀵은 일정과 수량에 따라 안내합니다.",
+    };
+  }
+
   if (page.path !== "/contact/") return null;
 
   return {
@@ -441,11 +477,14 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
     },
   };
 
+  if (page.indexing === "index" && page.lastmod) schema.dateModified = page.lastmod;
   if (breadcrumb) schema.breadcrumb = { "@id": breadcrumb["@id"] };
-  if (itemList) schema.mainEntity = { "@id": itemList["@id"] };
+  if (page.path === "/") schema.about = { "@id": LOCAL_BUSINESS_ID };
   if (["/magok-cookie/", "/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
   if (product) schema.about = { "@id": product["@id"] };
-  if (service) schema.mainEntity = { "@id": service["@id"] };
+  const mainEntities = [itemList, service].filter(Boolean).map((entry) => ({ "@id": entry["@id"] }));
+  if (mainEntities.length === 1) schema.mainEntity = mainEntities[0];
+  if (mainEntities.length > 1) schema.mainEntity = mainEntities;
 
   return schema;
 }

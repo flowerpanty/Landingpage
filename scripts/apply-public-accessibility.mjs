@@ -76,8 +76,14 @@ function addAccessibilityContract(html, filePath) {
     next = next.replace(/<\/head>/i, `${SKIP_STYLE}\n</head>`);
   }
 
-  if (registryEntry?.indexing === "noindex" && !/<meta\b[^>]*name=["']robots["'][^>]*\bnoindex\b/i.test(next)) {
-    next = next.replace(/<\/head>/i, '<meta name="robots" content="noindex,follow">\n</head>');
+  if (registryEntry?.indexing === "noindex") {
+    const robotsMeta = /<meta\b[^>]*name=["']robots["'][^>]*>/i;
+    const authoritativeRobots = '<meta name="robots" content="noindex,follow">';
+    if (robotsMeta.test(next)) {
+      next = next.replace(robotsMeta, authoritativeRobots);
+    } else {
+      next = next.replace(/<\/head>/i, `${authoritativeRobots}\n</head>`);
+    }
   }
 
   next = next.replace(
