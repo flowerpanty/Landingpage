@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MAX_PRIMARY_IMAGE_BYTES = 1024 * 1024;
 const MAX_PICKUP_COOKIE_BYTES = 500 * 1024;
+const SITE_ORIGIN = "https://nothingmatters.co.kr";
 const excludedDirectories = new Set([".git", ".playwright-cli", "node_modules", "dashboard", "gallery-admin", "_handoff"]);
 const excludedRelativeDirectories = new Set(["out/_next", "out/_not-found", "out/404", "out/scone"]);
+const effectiveBaseUrlByHtmlPath = new Map();
 
 function discoverHtmlFiles(directory = ROOT, relativeDirectory = "") {
   const files = [];
@@ -23,9 +25,29 @@ function discoverHtmlFiles(directory = ROOT, relativeDirectory = "") {
   return files;
 }
 
+function publicPathnameForHtml(htmlPath) {
+  const relativePath = path.relative(ROOT, htmlPath).split(path.sep).join("/");
+  if (relativePath === "index.html") return "/";
+  if (relativePath.endsWith("/index.html")) return `/${relativePath.slice(0, -"index.html".length)}`;
+  return `/${relativePath}`;
+}
+
+function getEffectiveBaseUrl(htmlPath) {
+  if (effectiveBaseUrlByHtmlPath.has(htmlPath)) return effectiveBaseUrlByHtmlPath.get(htmlPath);
+
+  const documentUrl = new URL(publicPathnameForHtml(htmlPath), SITE_ORIGIN);
+  const html = fs.readFileSync(htmlPath, "utf8");
+  const baseHref = html.match(/<base\b[^>]*\bhref=["']([^"']+)["'][^>]*>/i)?.[1];
+  const effectiveBaseUrl = new URL(baseHref || documentUrl.href, documentUrl);
+  effectiveBaseUrlByHtmlPath.set(htmlPath, effectiveBaseUrl);
+  return effectiveBaseUrl;
+}
+
 function resolveLocalAsset(reference, htmlPath) {
-  if (!reference || /^(?:https?:|data:|#)/i.test(reference)) return null;
-  return path.resolve(path.dirname(htmlPath), reference.split(/[?#]/, 1)[0]);
+  if (!reference || /^(?:data:|#)/i.test(reference)) return null;
+  const assetUrl = new URL(reference, getEffectiveBaseUrl(htmlPath));
+  if (assetUrl.origin !== SITE_ORIGIN) return null;
+  return path.join(ROOT, decodeURIComponent(assetUrl.pathname).replace(/^\/+/, ""));
 }
 
 function firstSrcsetReference(srcset = "") {
@@ -35,7 +57,7 @@ function firstSrcsetReference(srcset = "") {
 function imageSize(reference, htmlPath) {
   const assetPath = resolveLocalAsset(reference, htmlPath);
   if (!assetPath) return null;
-  if (!fs.existsSync(assetPath)) return null;
+  assert.ok(fs.existsSync(assetPath), `${path.relative(ROOT, htmlPath)}: local image asset is missing: ${reference}`);
   return fs.statSync(assetPath).size;
 }
 
@@ -79,6 +101,25 @@ for (const htmlPath of discoverHtmlFiles()) {
 }
 
 const pickupHtmlPath = path.join(ROOT, "pickup", "index.html");
+assert.equal(
+  resolveLocalAsset("/images/pickup-cute-cookie-optimized.png", pickupHtmlPath),
+  path.join(ROOT, "images", "pickup-cute-cookie-optimized.png"),
+  "root-relative assets must resolve from the workspace root"
+);
+const brookieHtmlPath = path.join(ROOT, "brookie", "index.html");
+const brookieHtml = fs.readFileSync(brookieHtmlPath, "utf8");
+assert.match(brookieHtml, /<base\s+href=["']\.\.\/["']\s*\/>/i, "brookie should retain its document base URL");
+assert.equal(getEffectiveBaseUrl(brookieHtmlPath).href, `${SITE_ORIGIN}/`, "brookie base URL should resolve from /brookie/ to the site root");
+const brookieWeddingImage = "images/wedding-case-03.jpeg";
+assert.equal(
+  resolveLocalAsset(brookieWeddingImage, brookieHtmlPath),
+  path.join(ROOT, "images", "wedding-case-03.jpeg"),
+  "brookie relative image paths must resolve through its base URL"
+);
+assert.ok(fs.existsSync(resolveLocalAsset(brookieWeddingImage, brookieHtmlPath)), "brookie base-resolved image must exist");
+const brookieHero = brookieHtml.match(/<img\b[^>]*\bsrc=["']([^"']*main-order-brookie-thumb[^"']*)["'][^>]*>/i)?.[1] || "";
+assert.equal(brookieHero, "images/main-order-brookie-thumb-optimized.jpg", "brookie should use the optimized hero image");
+assert.ok(imageSize(brookieHero, brookieHtmlPath) <= MAX_PRIMARY_IMAGE_BYTES, "brookie optimized hero image must be 1MB or smaller");
 const pickupHtml = fs.readFileSync(pickupHtmlPath, "utf8");
 const pickupCard = pickupHtml.match(/<figure class="nm-pickup-cookie-thumb">([\s\S]*?)<\/figure>/i)?.[1] || "";
 const pickupSource = pickupCard.match(/<source\b[^>]*\bsrcset=["']([^"']+)["'][^>]*>/i)?.[1] || "";

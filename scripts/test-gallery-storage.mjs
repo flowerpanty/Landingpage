@@ -137,7 +137,7 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
     body: JSON.stringify({
       dataUrl: `data:image/png;base64,${TINY_PNG}`,
       caption: "<strong>진단용 쿠키 사진</strong>",
-      href: "/products/handmade-cookie/"
+      href: "https://nothingmatters.co.kr/products/brownie-cookie/"
     })
   });
   assert.equal(upload.response.status, 201);
@@ -156,6 +156,14 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.doesNotMatch(works.body, /<strong>진단용 쿠키 사진<\/strong>/);
   assert.match(works.body, new RegExp(upload.payload.item.src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(works.body, /nm-work-card-details/, "uploads without optional works metadata should use the minimal card fallback");
+  assert.match(works.body, /href="https:\/\/nothingmatters\.co\.kr\/products\/brownie-cookie\/"/, "same-domain absolute work href should render as a valid link");
+  const worksSchemaMatch = works.body.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/);
+  assert.ok(worksSchemaMatch, "works should include runtime JSON-LD");
+  const worksSchema = JSON.parse(worksSchemaMatch[1]);
+  const worksItemList = worksSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
+  const absoluteHrefSchemaUrl = worksItemList?.itemListElement?.[0]?.url;
+  assert.equal(absoluteHrefSchemaUrl, "https://nothingmatters.co.kr/products/brownie-cookie/");
+  assert.equal((absoluteHrefSchemaUrl.match(/https:\/\/nothingmatters\.co\.kr/g) || []).length, 1, "works JSON-LD must not duplicate the canonical hostname");
 
   const media = await fetch(`${baseUrl}${upload.payload.item.src}`);
   assert.equal(media.status, 200);

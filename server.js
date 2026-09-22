@@ -1188,7 +1188,7 @@ function buildPublicWorksItemList(items) {
         "@type": "ListItem",
         position: index + 1,
         name: card.label.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
-        ...(card.href ? { url: `https://${CANONICAL_HOST}${card.href}` } : {})
+        ...(card.href ? { url: new URL(card.href, `https://${CANONICAL_HOST}`).href } : {})
       };
     })
   };
