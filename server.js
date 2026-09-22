@@ -122,6 +122,12 @@ const TRACKED_DASHBOARD_EVENTS = [
     description: "네이버 지도에서 픽업 주소 확인"
   },
   {
+    name: "pickup_reservation_click",
+    label: "픽업 예약",
+    type: "pickup",
+    description: "네이버플레이스 픽업 예약 진입"
+  },
+  {
     name: "pickup_consult_click",
     label: "픽업 상담 클릭",
     type: "consult",
@@ -201,6 +207,29 @@ const DEFAULT_GALLERY_ITEMS = [
     userUploaded: false
   }
 ];
+
+const PUBLIC_WORK_CARD_META_BY_HREF = {
+  "/products/handmade-cookie/": {
+    details: [["용도", "작은 선물"], ["관련 제품", "수제쿠키"]],
+    actionLabel: "수제쿠키 자세히 보기 →"
+  },
+  "/guides/wedding-favor-cookie/": {
+    details: [["용도", "결혼식 답례"], ["관련 가이드", "결혼식 답례품 쿠키"]],
+    actionLabel: "결혼식 답례 가이드 보기 →"
+  },
+  "/guides/corporate-event-cookie/": {
+    details: [["용도", "기업 행사"], ["관련 가이드", "기업행사 쿠키"]],
+    actionLabel: "기업행사 가이드 보기 →"
+  },
+  "/products/lucky-cookie/": {
+    details: [["관련 제품", "행운쿠키"]],
+    actionLabel: "행운쿠키 자세히 보기 →"
+  },
+  "/products/brownie-cookie/": {
+    details: [["관련 제품", "브라우니쿠키"]],
+    actionLabel: "브라우니쿠키 자세히 보기 →"
+  }
+};
 
 const LEGACY_PRODUCT_REDIRECTS = {
   "/brookie": "/products/custom-brownie-cookie/",
@@ -1070,6 +1099,18 @@ function formatPublicWorkDate(value) {
   return `공개 제작 사례 · ${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function getPublicWorkCardMeta(value) {
+  const href = getPublicWorkHref(value);
+  if (!href) return null;
+
+  try {
+    const pathname = new URL(href, `https://${CANONICAL_HOST}`).pathname;
+    return PUBLIC_WORK_CARD_META_BY_HREF[pathname] || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function getPublicWorkItems() {
   const savedItems = readGalleryManifest();
   const savedWorks = savedItems
@@ -1104,14 +1145,21 @@ function getPublicWorkItems() {
 function renderPublicWorkCards() {
   return getPublicWorkItems()
     .map((item) => {
+      const meta = getPublicWorkCardMeta(item.href);
+      const details = meta
+        ? `<dl class="nm-work-card-details">${meta.details
+          .map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`)
+          .join("")}</dl>`
+        : "";
       const action = item.href
-        ? `<a href="${escapeAttribute(item.href)}">관련 페이지 보기 →</a>`
+        ? `<a href="${escapeAttribute(item.href)}">${escapeHtml(meta?.actionLabel || "관련 페이지 보기 →")}</a>`
         : "";
 
       return `            <article class="nm-work-card">
               <img src="${escapeAttribute(item.src)}" alt="${escapeAttribute(item.alt)}" loading="lazy" decoding="async">
               <div class="nm-work-card-copy">
                 <p>${escapeHtml(item.caption)}</p>
+                ${details}
                 <small>${escapeHtml(formatPublicWorkDate(item.createdAt))} · 낫띵메터스 공항동 작업실</small>
                 ${action}
               </div>

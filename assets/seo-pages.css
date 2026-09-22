@@ -203,11 +203,65 @@
 
 .nm-work-card-copy a {
   display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   margin-top: 12px;
   font-size: 12px;
   font-weight: 900;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.nm-work-card-details {
+  display: grid;
+  gap: 5px;
+  margin: 13px 0 0;
+}
+
+.nm-work-card-details div {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.nm-work-card-details dt {
+  flex: 0 0 auto;
+  color: #6a6258;
+  font-weight: 800;
+}
+
+.nm-work-card-details dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+.nm-works-next-order-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nm-works-next-order-grid a {
+  display: grid;
+  gap: 10px;
+  min-height: 138px;
+  padding: 18px;
+  border: 1px solid var(--seo-line);
+  border-radius: 14px 17px 12px 16px;
+  background: #fff;
+}
+
+.nm-works-next-order-grid strong {
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.nm-works-next-order-grid span {
+  align-self: end;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .nm-fact-grid {
@@ -291,7 +345,8 @@
   }
 
   .nm-works-grid,
-  .nm-fact-grid {
+  .nm-fact-grid,
+  .nm-works-next-order-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
   }
@@ -309,6 +364,19 @@
   .nm-work-card-copy small,
   .nm-fact-card p {
     font-size: 11px;
+  }
+
+  .nm-works-next-order-grid a {
+    min-height: 126px;
+    padding: 14px;
+  }
+
+  .nm-works-next-order-grid strong {
+    font-size: 15px;
+  }
+
+  .nm-works-next-order-grid span {
+    font-size: 12px;
   }
 }
 

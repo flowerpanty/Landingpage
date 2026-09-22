@@ -2986,7 +2986,7 @@ body.theme-home {
 }
 
 .nm-home-hero h1 {
-  max-width: 6ch;
+  max-width: 9ch;
   margin: 18px 0 14px;
   font-size: clamp(66px, 10.4vw, 154px);
   line-height: 0.88;
@@ -3003,7 +3003,70 @@ body.theme-home {
 }
 
 .nm-home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 26px;
+}
+
+.nm-home-hero-actions .nm-btn {
+  min-height: 48px;
+}
+
+.nm-bulk-checklist {
+  background: #fffaf0;
+}
+
+.nm-bulk-checklist-grid,
+.nm-bulk-order-flow-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nm-bulk-checklist-grid li,
+.nm-bulk-order-flow-list li {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid rgba(25, 21, 15, 0.16);
+  border-radius: 24px;
+  background: #fff;
+}
+
+.nm-bulk-checklist-grid strong,
+.nm-bulk-order-flow-list strong {
+  display: block;
+  color: #0b57ff;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.nm-bulk-checklist-grid span,
+.nm-bulk-order-flow-list span {
+  display: block;
+  margin-top: 10px;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1.05;
+}
+
+.nm-bulk-checklist-grid p {
+  margin: 10px 0 0;
+  color: rgba(25, 21, 15, 0.7);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.nm-bulk-order-flow {
+  background: #f7fbff;
+}
+
+.nm-bulk-order-flow-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .nm-home-hero-note {
@@ -3829,7 +3892,7 @@ body.theme-home {
   }
 
   .nm-home-hero h1 {
-    max-width: 8.5ch;
+    max-width: 10ch;
     font-size: clamp(42px, 13vw, 62px);
     line-height: 0.98;
     letter-spacing: -0.06em;
@@ -3857,6 +3920,28 @@ body.theme-home {
 
   .nm-home-hero-actions .nm-btn {
     flex: 1 1 100%;
+  }
+
+  .nm-bulk-checklist-grid,
+  .nm-bulk-order-flow-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .nm-bulk-checklist-grid li,
+  .nm-bulk-order-flow-list li {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .nm-bulk-checklist-grid span,
+  .nm-bulk-order-flow-list span {
+    font-size: 19px;
+  }
+
+  .nm-bulk-checklist-grid p {
+    font-size: 13px;
   }
 
   .nm-home-marquee {

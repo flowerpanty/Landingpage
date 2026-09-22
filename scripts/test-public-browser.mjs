@@ -4,6 +4,7 @@ import { once } from "node:events";
 import fs from "node:fs";
 import http from "node:http";
 import net from "node:net";
+import os from "node:os";
 import path from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,7 @@ const CRITICAL_PATHS = [
   "/guides/",
   "/guides/cookie-storage/",
   "/works/",
+  "/bulk/",
   "/pickup/",
   "/contact/",
   "/cookie-crew/"
@@ -28,6 +30,7 @@ const CRITICAL_PATHS = [
 const MOBILE_WIDTHS = [320, 375, 390, 430];
 const PICKUP_MAP_URL = "https://map.naver.com/p/entry/place/1547319276?lng=126.8115357&lat=37.557402&placePath=%2Fhome%3Ffrom%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202609131310%26locale%3Dko%26svcName%3Dmap_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh";
 const PICKUP_RESERVATION_URL = "https://m.place.naver.com/restaurant/1547319276/home?utm_source=nothingmatters.co.kr&utm_medium=owned&utm_campaign=pickup_reservation";
+const BROWSER_GALLERY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "nm-public-browser-gallery-"));
 
 async function reservePort() {
   const probe = net.createServer();
@@ -53,7 +56,7 @@ async function startServer() {
   const port = await reservePort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd: ROOT,
-    env: { ...process.env, HOST: "127.0.0.1", PORT: String(port) },
+    env: { ...process.env, GALLERY_DATA_DIR: BROWSER_GALLERY_DATA_DIR, HOST: "127.0.0.1", PORT: String(port) },
     stdio: "ignore"
   });
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -208,6 +211,28 @@ try {
       assert.ok(dimensions.documentWidth <= dimensions.viewport, `${pathname}: document horizontal overflow at ${width}px`);
       assert.ok(dimensions.bodyWidth <= dimensions.viewport, `${pathname}: body horizontal overflow at ${width}px`);
     }
+  }
+
+  const knownWorkHrefs = [
+    "/products/handmade-cookie/",
+    "/guides/wedding-favor-cookie/",
+    "/guides/corporate-event-cookie/",
+    "/products/lucky-cookie/",
+    "/products/brownie-cookie/"
+  ];
+  for (const width of MOBILE_WIDTHS) {
+    await setViewport(cdp, width);
+    await navigate(cdp, `${server.baseUrl}/works/`);
+    const worksRuntime = await evaluate(cdp, "() => { const pathname = (href) => new URL(href, location.href).pathname; const cards = [...document.querySelectorAll('.nm-work-card')].map((card) => { const cta = card.querySelector('.nm-work-card-copy a'); return { href: cta ? pathname(cta.href) : '', hasDetails: Boolean(card.querySelector('.nm-work-card-details')), ctaHeight: cta?.getBoundingClientRect().height || 0 }; }); return { viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth, nextOrder: Boolean(document.querySelector('#works-next-order-title')), nextOrderHrefs: [...document.querySelectorAll('.nm-works-next-order-grid a')].map((link) => pathname(link.href)), cards }; }");
+    assert.equal(worksRuntime.nextOrder, true, `works runtime should include NEXT ORDER at ${width}px`);
+    for (const href of ["/bulk/", "/pickup/", "/magok-cookie/"]) {
+      assert.ok(worksRuntime.nextOrderHrefs.includes(href), `works runtime should link to ${href} at ${width}px`);
+    }
+    const knownCards = worksRuntime.cards.filter((card) => knownWorkHrefs.includes(card.href));
+    assert.equal(knownCards.length, knownWorkHrefs.length, `works runtime should render every default known card at ${width}px`);
+    assert.ok(knownCards.every((card) => card.hasDetails), `known work cards should render metadata at ${width}px`);
+    assert.ok(knownCards.every((card) => card.ctaHeight >= 44), `known work card CTAs should be at least 44px at ${width}px`);
+    assert.ok(worksRuntime.documentWidth <= worksRuntime.viewport && worksRuntime.bodyWidth <= worksRuntime.viewport, `works runtime should not horizontally overflow at ${width}px`);
   }
 
   await setViewport(cdp, 390);
@@ -544,6 +569,7 @@ try {
   cdp?.close();
   chrome.kill("SIGTERM");
   await stop(server.child);
+  fs.rmSync(BROWSER_GALLERY_DATA_DIR, { recursive: true, force: true });
 }
 
 console.log("public browser checks: passed");

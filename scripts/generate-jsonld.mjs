@@ -69,9 +69,11 @@ const ITEM_LISTS = {
     ["행운 · 응원 쿠키", "/guides/lucky-cheering-cookie/"],
   ],
   "/works/": [
-    ["실제 제작 사례", "/works/"],
+    ["결혼식 답례품 쿠키 가이드", "/guides/wedding-favor-cookie/"],
+    ["기업행사 쿠키 가이드", "/guides/corporate-event-cookie/"],
+    ["수제꾸덕쿠키", "/out/"],
     ["김포공항·송정역 픽업 안내", "/pickup/"],
-    ["쿠키 라인업", "/#our-cookies"],
+    ["마곡 쿠키·답례품", "/magok-cookie/"],
   ],
   "/pickup/": [
     ["브루키", "/brookie/"],

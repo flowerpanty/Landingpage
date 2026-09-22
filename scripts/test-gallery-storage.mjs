@@ -115,6 +115,7 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   const emptyWorks = await requestText(baseUrl, "/works/");
   assert.equal(emptyWorks.response.status, 200);
   assert.match(emptyWorks.body, /귀여운 표정을 고른 작은 선물/);
+  assert.match(emptyWorks.body, /nm-work-card-details/);
   assert.doesNotMatch(emptyWorks.body, /gallery-storage-test-token|GALLERY_DATA_DIR/);
 
   const pickup = await requestText(baseUrl, "/pickup/");
@@ -145,6 +146,7 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.match(works.body, /&lt;strong&gt;진단용 쿠키 사진&lt;\/strong&gt;/);
   assert.doesNotMatch(works.body, /<strong>진단용 쿠키 사진<\/strong>/);
   assert.match(works.body, new RegExp(upload.payload.item.src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(works.body, /nm-work-card-details/);
 
   const media = await fetch(`${baseUrl}${upload.payload.item.src}`);
   assert.equal(media.status, 200);
@@ -185,6 +187,7 @@ await withTemporaryStorage(async ({ storageDir, baseUrl }) => {
   const works = await requestText(baseUrl, "/works/");
   assert.equal(works.response.status, 200);
   assert.match(works.body, /saved-cookie\.webp/);
+  assert.doesNotMatch(works.body, /nm-work-card-details/);
 });
 
 await withTemporaryStorage(async ({ storageDir, baseUrl }) => {
