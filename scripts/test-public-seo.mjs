@@ -225,9 +225,10 @@ for (const entry of sourceHtmlEntries) {
   const registryEntry = registryEntries.get(entry.pathname);
 
   assert.ok(registryEntry, `public HTML is not classified in data/site-pages.json: ${entry.pathname}`);
-  assert.ok(
-    countHeadMetaByName(html, "naver-site-verification") <= 1,
-    `${entry.pathname}: naver-site-verification must not be duplicated in head`
+  assert.equal(
+    countHeadMetaByName(html, "naver-site-verification"),
+    1,
+    `${entry.pathname}: naver-site-verification must appear exactly once in head`
   );
 
   if (isIndexFollow(html)) {
