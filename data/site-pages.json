@@ -151,13 +151,13 @@
     { "id": "default-brownie", "src": "/images/work-new-01.jpg", "caption": "짧은 문구를 더한 브라우니", "href": "/products/brownie-cookie/" }
   ],
   "pages": [
-    { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-20" },
+    { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
     { "path": "/bulk/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/small-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/contact/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },
     { "path": "/works/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
-    { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-20" },
-    { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-20", "breadcrumbName": "마곡 쿠키·답례품" },
+    { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
+    { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "마곡 쿠키·답례품" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-14" },
     { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-17", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
     { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "workCardLabel": "짧은 문구를 더한 브라우니", "workCardDetails": { "product": "브라우니쿠키", "packaging": "짧은 문구 추가" }, "workCardActionLabel": "브라우니쿠키 자세히 보기 →", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },

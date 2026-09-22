@@ -118,6 +118,12 @@ function getMeta(html, attribute, value) {
   );
 }
 
+function countHeadMetaByName(html, name) {
+  const head = html.match(/<head\b[^>]*>([\s\S]*?)<\/head>/i)?.[1] || "";
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return [...head.matchAll(new RegExp(`<meta\\b[^>]*\\bname=["']${escapedName}["'][^>]*>`, "gi"))].length;
+}
+
 function getStaticSchema(html) {
   const match = html.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/);
   assert.ok(match, "missing static JSON-LD");
@@ -219,6 +225,10 @@ for (const entry of sourceHtmlEntries) {
   const registryEntry = registryEntries.get(entry.pathname);
 
   assert.ok(registryEntry, `public HTML is not classified in data/site-pages.json: ${entry.pathname}`);
+  assert.ok(
+    countHeadMetaByName(html, "naver-site-verification") <= 1,
+    `${entry.pathname}: naver-site-verification must not be duplicated in head`
+  );
 
   if (isIndexFollow(html)) {
     assert.ok(canonical, `${entry.pathname}: missing canonical`);
@@ -295,19 +305,34 @@ assert.deepEqual(
   "COOKIE FLIGHT should be an active, indexable existing product"
 );
 assert.equal((sitePages.pages || []).some((page) => page.path === cookieFlightPath), false, "COOKIE FLIGHT must not remain as a duplicate page-registry entry");
+assert.equal(cookieFlightProduct?.updatedAt, "2026-09-22", "COOKIE FLIGHT updatedAt should reflect activation");
 assert.ok(locs.includes(`${SITE_URL}${cookieFlightPath}`), "sitemap should include COOKIE FLIGHT");
+assert.match(
+  sitemap,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/products\/cookie-flight\/<\/loc>\s*<lastmod>2026-09-22<\/lastmod>/,
+  "COOKIE FLIGHT sitemap lastmod should reflect activation"
+);
 const cookieFlightHtml = readHtml(filePathForPathname(cookieFlightPath));
+assert.equal(
+  countHeadMetaByName(cookieFlightHtml, "naver-site-verification"),
+  1,
+  "COOKIE FLIGHT should have exactly one naver-site-verification meta tag"
+);
 assert.match(getRobots(cookieFlightHtml), /\bindex\b/);
 assert.equal(getRobots(cookieFlightHtml).includes("noindex"), false, "COOKIE FLIGHT must be indexable");
+assert.equal(getCanonical(cookieFlightHtml), `${SITE_URL}${cookieFlightPath}`, "COOKIE FLIGHT canonical should be exact");
 assert.equal(getAttribute(cookieFlightHtml, /<title>([\s\S]*?)<\/title>/i), "COOKIE FLIGHT 비행기 쿠키 선물 | 낫띵메터스");
 assert.match(getMeta(cookieFlightHtml, "name", "description"), /클래식버터, 더블초코, 제주말차, 오렌지/);
 for (const flavor of ["클래식버터", "더블초코", "제주말차", "오렌지"]) {
   assert.ok(cookieFlightHtml.includes(flavor), `COOKIE FLIGHT should visibly name ${flavor}`);
 }
+assert.match(cookieFlightHtml, /FROM GIMPO/, "COOKIE FLIGHT should visibly identify its Gimpo origin");
 for (const unverifiedDetail of ["4,500원부터", "1구부터", "1구, 2구, 4구", "handmade-hero.jpg", "handmade-4box-01.jpg"]) {
   assert.equal(cookieFlightHtml.includes(unverifiedDetail), false, `COOKIE FLIGHT must not include unverified detail: ${unverifiedDetail}`);
 }
-assert.equal(cookieFlightHtml.includes("김포공항 내부 매장"), false, "COOKIE FLIGHT must not imply an in-airport shop");
+for (const forbiddenLocationClaim of ["김포공항 매장", "김포공항점", "공항 내 매장", "김포공항 안에 위치"]) {
+  assert.equal(cookieFlightHtml.includes(forbiddenLocationClaim), false, `COOKIE FLIGHT must not imply an in-airport shop: ${forbiddenLocationClaim}`);
+}
 for (const href of ["../../pickup/", "../../magok-cookie/", "../../works/"]) {
   assert.ok(cookieFlightHtml.includes(`href=\"${href}\"`), `COOKIE FLIGHT should link to ${href}`);
 }
@@ -353,13 +378,13 @@ assert.match(
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-09-20" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-20<\/lastmod>/,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-22<\/lastmod>/,
   "pickup sitemap lastmod should reflect the Gimpo Airport dessert gift guide"
 );
 
@@ -413,7 +438,7 @@ assert.equal((magokLineup.match(/<h3>COOKIE FLIGHT<\/h3>/g) || []).length, 1, "m
 assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 쿠키/);
 assert.match(getMeta(magokHtml, "name", "description"), /쿠키|답례품/);
 assert.match(magokHtml, /<h1\b[^>]*>/i, "magok cookie hub should have an h1");
-assert.equal(magokEntry?.lastmod, "2026-09-20", "magok registry lastmod should reflect the favor guide");
+assert.equal(magokEntry?.lastmod, "2026-09-22", "magok registry lastmod should reflect COOKIE FLIGHT activation");
 assert.match(getAttribute(magokHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /마곡 답례품/);
 assert.match(magokHtml, /실제 작업실은 마곡 인근 서울 강서구 공항동/, "magok quick answer should clarify the actual workshop location");
 assert.match(magokHtml, /QUICK ANSWER/, "magok should include an answer-first block");
@@ -469,7 +494,7 @@ assert.ok(guidesItemList?.itemListElement?.some((item) => item.url === `${SITE_U
 
 const pickupPath = "/pickup/";
 const pickupEntry = registryEntries.get(pickupPath);
-assert.equal(pickupEntry?.lastmod, "2026-09-20", "pickup registry lastmod should reflect the Gimpo Airport dessert gift guide");
+assert.equal(pickupEntry?.lastmod, "2026-09-22", "pickup registry lastmod should reflect COOKIE FLIGHT activation");
 const pickupHtml = readHtml(filePathForPathname(pickupPath));
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /김포공항/);
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /디저트/);
@@ -499,6 +524,10 @@ assert.deepEqual(
 );
 const pickupFaq = pickupSchema["@graph"].find((entry) => entry["@type"] === "FAQPage");
 assert.equal(pickupFaq?.mainEntity?.length, 6, "pickup FAQPage should contain six AEO questions");
+const pickupProductsQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "김포공항 디저트 선물은 어떤 제품이 있나요?");
+for (const productName of ["브루키", "수제꾸덕쿠키", "행운쿠키", "쿠키크루", "COOKIE FLIGHT"]) {
+  assert.match(pickupProductsQuestion?.acceptedAnswer?.text || "", new RegExp(productName), `pickup FAQ should list ${productName}`);
+}
 const reservationQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "예약 없이 바로 구매할 수 있나요?");
 assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 픽업 전용/);
 assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 없이 방문/);

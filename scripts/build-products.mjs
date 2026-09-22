@@ -377,7 +377,7 @@ function upsertExistingProductMetadata(html, product) {
   const title = product.seoTitle || `${product.name} | 낫띵메터스`;
   const withoutConflictingTags = withoutManagedBlock
     .replace(/<title>[\s\S]*?<\/title>/i, "")
-    .replace(/<meta\s+name=["'](?:description|robots|twitter:card|twitter:title|twitter:description|twitter:image)["'][^>]*>/gi, "")
+    .replace(/<meta\s+name=["'](?:description|robots|naver-site-verification|twitter:card|twitter:title|twitter:description|twitter:image)["'][^>]*>/gi, "")
     .replace(/<meta\s+property=["']og:(?:type|title|description|url|image|image:alt)["'][^>]*>/gi, "")
     .replace(/<link\s+rel=["']canonical["'][^>]*>/gi, "");
 
@@ -386,10 +386,12 @@ function upsertExistingProductMetadata(html, product) {
     (headTag) => `${headTag}\n  <title>${escapeHtml(title)}</title>\n  ${metadata}`
   );
 
-  return withMetadata.replace(
-    /(<!-- NM_EXISTING_PRODUCT_META:END -->)\s*(?=<(?:meta|base|style|link|script))/i,
-    "$1\n  "
-  );
+  return withMetadata
+    .replace(
+      /(<!-- NM_EXISTING_PRODUCT_META:END -->)\s*(?=<(?:meta|base|style|link|script))/i,
+      "$1\n  "
+    )
+    .replace(/[ \t]+(?=\r?\n)/g, "");
 }
 
 function buildExistingProductPages() {
