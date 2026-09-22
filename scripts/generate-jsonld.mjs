@@ -15,6 +15,19 @@ const PRODUCT_CATALOG = (SITE_PAGE_DATA.products || []).map((product) => ({
   ...product,
   detailPath: product.primaryUrl
 }));
+const WORK_REGISTRY_BY_HREF = new Map();
+for (const product of PRODUCT_CATALOG) {
+  if (product.primaryUrl) WORK_REGISTRY_BY_HREF.set(product.primaryUrl, product);
+}
+for (const page of SITE_PAGE_DATA.pages || []) {
+  if (page.path) WORK_REGISTRY_BY_HREF.set(page.path, page);
+  if (page.product?.primaryUrl) WORK_REGISTRY_BY_HREF.set(page.product.primaryUrl, page);
+}
+const WORK_ITEM_LIST = (SITE_PAGE_DATA.works || []).map((item, index) => {
+  const registryEntry = WORK_REGISTRY_BY_HREF.get(item.href);
+  if (!registryEntry) throw new Error(`works item href is missing from the site registry: ${item.href}`);
+  return [item.workCardLabel || registryEntry.workCardLabel || item.caption, item.href, index + 1];
+});
 
 const isCheckMode = process.argv.includes("--check");
 
@@ -68,13 +81,7 @@ const ITEM_LISTS = {
     ["디저트 선물세트", "/guides/dessert-gift-set/"],
     ["행운 · 응원 쿠키", "/guides/lucky-cheering-cookie/"],
   ],
-  "/works/": [
-    ["결혼식 답례품 쿠키 가이드", "/guides/wedding-favor-cookie/"],
-    ["기업행사 쿠키 가이드", "/guides/corporate-event-cookie/"],
-    ["수제꾸덕쿠키", "/out/"],
-    ["김포공항·송정역 픽업 안내", "/pickup/"],
-    ["마곡 쿠키·답례품", "/magok-cookie/"],
-  ],
+  "/works/": WORK_ITEM_LIST,
   "/pickup/": [
     ["브루키", "/brookie/"],
     ["수제꾸덕쿠키", "/out/"],
@@ -347,9 +354,9 @@ function buildItemList(page) {
   return {
     "@type": "ItemList",
     "@id": `${page.pageUrl}#itemlist`,
-    itemListElement: items.map(([name, url], index) => ({
+    itemListElement: items.map(([name, url, position], index) => ({
       "@type": "ListItem",
-      position: index + 1,
+      position: position || index + 1,
       name,
       url: absoluteUrl(url),
     })),

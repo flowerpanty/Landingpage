@@ -19,6 +19,7 @@ const locSet = new Set(locs);
 const htmlCache = new Map();
 const sourceHtmlEntries = discoverSourceHtmlEntries();
 const registryEntries = new Map();
+const serverSource = fs.readFileSync(path.join(ROOT, "server.js"), "utf8");
 
 for (const page of sitePages.pages || []) {
   registryEntries.set(normalizePathname(page.path), page);
@@ -36,6 +37,16 @@ for (const product of products) {
     sitemap: product.sitemap ?? true,
     source: "products",
   });
+}
+
+assert.equal(serverSource.includes("PUBLIC_WORK_CARD_META_BY_HREF"), false, "works metadata must not use a separate href map");
+for (const product of products) {
+  assert.ok(product.primaryUrl, `${product.name}: primaryUrl is required`);
+  assert.ok(registryEntries.has(normalizePathname(product.primaryUrl)), `${product.name}: primaryUrl must resolve through the registry`);
+  assert.ok(fs.existsSync(filePathForPathname(product.primaryUrl)), `${product.name}: primaryUrl must resolve to a public page`);
+}
+for (const work of sitePages.works || []) {
+  assert.ok(registryEntries.has(normalizePathname(work.href)), `works item ${work.id}: href must exist in the registry`);
 }
 
 const registrySitemapLocs = [...registryEntries.values()]
@@ -490,6 +501,28 @@ assert.match(bulkHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·기업행�
 const worksHtml = readHtml(filePathForPathname("/works/"));
 assert.match(worksHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·쿠키 선물 안내 →<\/a>/, "works should link to Magok favor guidance");
 assert.match(worksHtml, /href="\.\.\/pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "works should link to pickup guidance");
+const visibleWorkCards = [...worksHtml.matchAll(/<article class="nm-work-card">([\s\S]*?)<\/article>/g)].map((match) => {
+  const card = match[1];
+  const label = cleanText(card.match(/<p>([\s\S]*?)<\/p>/i)?.[1] || "");
+  const href = card.match(/<a\b[^>]*href="([^"]+)"/i)?.[1] || "";
+  return { label, href: href ? new URL(href, `${SITE_URL}/works/`).pathname : "" };
+});
+assert.deepEqual(
+  visibleWorkCards,
+  (sitePages.works || []).map((work) => {
+    const entry = registryEntries.get(normalizePathname(work.href));
+    return { label: work.workCardLabel || entry?.workCardLabel || work.caption, href: work.href };
+  }),
+  "works visible cards should be generated from the registry-backed works list"
+);
+assert.ok(visibleWorkCards.every((card) => registryEntries.has(normalizePathname(card.href))), "every work card link must exist in the registry");
+const worksSchema = getStaticSchema(worksHtml);
+const worksItemList = worksSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
+assert.deepEqual(
+  worksItemList?.itemListElement?.map((item) => ({ label: item.name, href: new URL(item.url).pathname })),
+  visibleWorkCards,
+  "works ItemList should describe the visible production cases rather than guide links"
+);
 const llms = fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8");
 assert.equal(llms.includes("in-store pickup"), false, "llms should not describe pickup as an in-store purchase");
 assert.match(llms, /reservation pickup at the Gonghang-dong workshop or vehicle quick consultation depending on schedule and quantity/);

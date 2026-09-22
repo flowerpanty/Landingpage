@@ -28,6 +28,10 @@
       "category": "브루키",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/brookie",
       "primaryUrl": "/brookie/",
+      "publicName": "브루키",
+      "workCardLabel": "캐릭터와 문구를 고른 브루키",
+      "workCardDetails": { "product": "브루키", "context": "캐릭터와 문구 선택" },
+      "workCardActionLabel": "브루키 자세히 보기 →",
       "detailPageMode": "existing",
       "badge": "BROOKIE",
       "homeCard": {
@@ -49,6 +53,10 @@
       "category": "수제꾸덕쿠키",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
       "primaryUrl": "/out/",
+      "publicName": "수제꾸덕쿠키",
+      "workCardLabel": "귀여운 표정을 고른 작은 선물",
+      "workCardDetails": { "purpose": "작은 선물", "product": "수제꾸덕쿠키", "context": "캐릭터 쿠키" },
+      "workCardActionLabel": "수제꾸덕쿠키 자세히 보기 →",
       "detailPageMode": "existing",
       "badge": "HANDMADE COOKIES",
       "homeCard": {
@@ -70,6 +78,10 @@
       "category": "행운쿠키",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/lucky?step=1",
       "primaryUrl": "/out/fortune/",
+      "publicName": "행운쿠키",
+      "workCardLabel": "응원하는 마음을 담은 행운쿠키",
+      "workCardDetails": { "product": "행운쿠키", "context": "응원 선물" },
+      "workCardActionLabel": "행운쿠키 자세히 보기 →",
       "detailPageMode": "existing",
       "badge": "LUCKY COOKIE",
       "homeCard": {
@@ -93,6 +105,10 @@
       "category": "쿠키크루",
       "orderUrl": "https://pf.kakao.com/_QdCaK/chat",
       "primaryUrl": "/cookie-crew/",
+      "publicName": "쿠키크루",
+      "workCardLabel": "작은 쿠키가 전하는 특별한 마음",
+      "workCardDetails": { "product": "쿠키크루", "context": "캐릭터 선물" },
+      "workCardActionLabel": "쿠키크루 자세히 보기 →",
       "detailPageMode": "existing",
       "badge": "COOKIE CREW",
       "homeCard": {
@@ -101,6 +117,13 @@
       },
       "updatedAt": "2026-09-11"
     }
+  ],
+  "works": [
+    { "id": "default-handmade", "src": "/images/case-handmade-cookie.jpeg", "caption": "귀여운 표정을 고른 작은 선물", "href": "/out/" },
+    { "id": "default-wedding", "src": "/images/case-wedding-favor.jpeg", "caption": "결혼식 날 건넨 감사 쿠키", "href": "/guides/wedding-favor-cookie/" },
+    { "id": "default-corporate", "src": "/images/case-corporate-favor.jpeg", "caption": "브랜드 행사에 맞춘 단체 구성", "href": "/guides/corporate-event-cookie/" },
+    { "id": "default-lucky", "src": "/images/case-lucky-cookie.jpeg", "caption": "응원하는 마음을 담은 행운쿠키", "href": "/out/fortune/" },
+    { "id": "default-brownie", "src": "/images/work-new-01.jpg", "caption": "짧은 문구를 더한 브라우니", "href": "/products/brownie-cookie/" }
   ],
   "pages": [
     { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-20" },
@@ -112,7 +135,7 @@
     { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-20", "breadcrumbName": "마곡 쿠키·답례품" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-14" },
     { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-17", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
-    { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },
+    { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "workCardLabel": "짧은 문구를 더한 브라우니", "workCardDetails": { "product": "브라우니쿠키", "packaging": "짧은 문구 추가" }, "workCardActionLabel": "브라우니쿠키 자세히 보기 →", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },
     { "path": "/products/custom-brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 커스텀 브라우니쿠키", "lowPrice": 7800, "minOrder": "보통 12개 이상 상담", "category": "커스텀 브라우니쿠키", "primaryUrl": "/products/custom-brownie-cookie/" } },
     { "path": "/products/handmade-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 수제꾸덕쿠키", "lowPrice": 4500, "minOrder": "대부분 최소 수량 없음", "category": "수제쿠키 선물세트", "primaryUrl": "/products/handmade-cookie/" } },
     { "path": "/products/lucky-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 행운쿠키 4가지맛 세트", "price": 15000, "minOrder": "최소 1세트", "category": "행운쿠키 선물세트", "primaryUrl": "/products/lucky-cookie/" } },
@@ -121,8 +144,8 @@
     { "path": "/products/cookie-flight/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
     { "path": "/products/crew-brownie/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
     { "path": "/products/gimpo-airport-brookie/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
-    { "path": "/guides/wedding-favor-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
-    { "path": "/guides/corporate-event-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
+    { "path": "/guides/wedding-favor-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "workCardLabel": "결혼식 날 건넨 감사 쿠키", "workCardDetails": { "purpose": "결혼식 답례", "context": "결혼식" }, "workCardActionLabel": "결혼식 답례 가이드 보기 →" },
+    { "path": "/guides/corporate-event-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18", "workCardLabel": "브랜드 행사에 맞춘 단체 구성", "workCardDetails": { "purpose": "기업 행사", "context": "브랜드 행사", "packaging": "단체 구성" }, "workCardActionLabel": "기업행사 가이드 보기 →" },
     { "path": "/guides/teacher-snack-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/guides/farewell-favor-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/guides/dessert-gift-set/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },

@@ -165,72 +165,52 @@ const TRACKED_DASHBOARD_EVENTS = [
   }
 ];
 const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;
+const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "site-pages.json"), "utf8"));
+const WORK_CARD_DETAIL_FIELDS = [
+  ["purpose", "용도"],
+  ["product", "관련 제품"],
+  ["fulfillment", "수령 방식"],
+  ["context", "지역/행사 유형"],
+  ["packaging", "포장 또는 문구 여부"]
+];
+const PUBLIC_WORK_REGISTRY_BY_HREF = new Map();
+
+for (const product of SITE_PAGE_DATA.products || []) {
+  if (product.primaryUrl) PUBLIC_WORK_REGISTRY_BY_HREF.set(product.primaryUrl, product);
+}
+for (const page of SITE_PAGE_DATA.pages || []) {
+  if (page.path) PUBLIC_WORK_REGISTRY_BY_HREF.set(page.path, page);
+  if (page.product?.primaryUrl) PUBLIC_WORK_REGISTRY_BY_HREF.set(page.product.primaryUrl, page);
+}
+
+function getRegistryEntryForPublicHref(value) {
+  const href = String(value || "").trim();
+  if (!href) return null;
+  try {
+    const url = new URL(href, `https://${CANONICAL_HOST}`);
+    if (url.origin !== `https://${CANONICAL_HOST}`) return null;
+    return PUBLIC_WORK_REGISTRY_BY_HREF.get(url.pathname) || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+const DEFAULT_GALLERY_ITEMS = (SITE_PAGE_DATA.works || []).map((item) => ({
+  ...item,
+  userUploaded: false
+}));
+
+for (const item of DEFAULT_GALLERY_ITEMS) {
+  if (!getRegistryEntryForPublicHref(item.href)) {
+    throw new Error(`Default gallery item href must exist in the site registry: ${item.href}`);
+  }
+}
+
 const wordpressJournal = createWordpressJournalService({
   fetchImpl: process.env.WORDPRESS_JOURNAL_OFFLINE === "1"
     ? async () => { throw new Error("wordpress_offline"); }
     : global.fetch
 });
-const DEFAULT_GALLERY_ITEMS = [
-  {
-    id: "default-handmade",
-    src: "/images/case-handmade-cookie.jpeg",
-    caption: "귀여운 표정을 고른 작은 선물",
-    href: "/products/handmade-cookie/",
-    userUploaded: false
-  },
-  {
-    id: "default-wedding",
-    src: "/images/case-wedding-favor.jpeg",
-    caption: "결혼식 날 건넨 감사 쿠키",
-    href: "/guides/wedding-favor-cookie/",
-    userUploaded: false
-  },
-  {
-    id: "default-corporate",
-    src: "/images/case-corporate-favor.jpeg",
-    caption: "브랜드 행사에 맞춘 단체 구성",
-    href: "/guides/corporate-event-cookie/",
-    userUploaded: false
-  },
-  {
-    id: "default-lucky",
-    src: "/images/case-lucky-cookie.jpeg",
-    caption: "응원하는 마음을 담은 행운쿠키",
-    href: "/products/lucky-cookie/",
-    userUploaded: false
-  },
-  {
-    id: "default-brownie",
-    src: "/images/work-new-01.jpg",
-    caption: "짧은 문구를 더한 브라우니",
-    href: "/products/brownie-cookie/",
-    userUploaded: false
-  }
-];
-
-const PUBLIC_WORK_CARD_META_BY_HREF = {
-  "/products/handmade-cookie/": {
-    details: [["용도", "작은 선물"], ["관련 제품", "수제쿠키"]],
-    actionLabel: "수제쿠키 자세히 보기 →"
-  },
-  "/guides/wedding-favor-cookie/": {
-    details: [["용도", "결혼식 답례"], ["관련 가이드", "결혼식 답례품 쿠키"]],
-    actionLabel: "결혼식 답례 가이드 보기 →"
-  },
-  "/guides/corporate-event-cookie/": {
-    details: [["용도", "기업 행사"], ["관련 가이드", "기업행사 쿠키"]],
-    actionLabel: "기업행사 가이드 보기 →"
-  },
-  "/products/lucky-cookie/": {
-    details: [["관련 제품", "행운쿠키"]],
-    actionLabel: "행운쿠키 자세히 보기 →"
-  },
-  "/products/brownie-cookie/": {
-    details: [["관련 제품", "브라우니쿠키"]],
-    actionLabel: "브라우니쿠키 자세히 보기 →"
-  }
-};
-
 const LEGACY_PRODUCT_REDIRECTS = {
   "/brookie": "/products/custom-brownie-cookie/",
   "/brookie.html": "/products/custom-brownie-cookie/",
@@ -963,6 +943,14 @@ function normalizeGalleryHref(value) {
   return `/${href.replace(/^\.\//, "").slice(0, 498)}`;
 }
 
+function normalizeGalleryWorkMetadata(payload = {}) {
+  return Object.fromEntries(
+    [...WORK_CARD_DETAIL_FIELDS.map(([key]) => key), "workCardLabel", "workCardActionLabel"]
+      .map((key) => [key, String(payload[key] || "").trim().slice(0, key.startsWith("workCard") ? 120 : 120)])
+      .filter(([, value]) => value)
+  );
+}
+
 function decodeGalleryPathSegment(value) {
   try {
     return decodeURIComponent(value);
@@ -1030,7 +1018,8 @@ async function handleGalleryApi(req, res, requestUrl) {
         caption: String(payload.caption || "새로 만든 쿠키").trim().slice(0, 80),
         href: normalizeGalleryHref(payload.href),
         createdAt: new Date().toISOString(),
-        userUploaded: true
+        userUploaded: true,
+        ...normalizeGalleryWorkMetadata(payload)
       };
       items.push(item);
       writeGalleryManifest(items);
@@ -1099,16 +1088,21 @@ function formatPublicWorkDate(value) {
   return `공개 제작 사례 · ${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function getPublicWorkCardMeta(value) {
-  const href = getPublicWorkHref(value);
-  if (!href) return null;
+function getPublicWorkCardData(item) {
+  const registryEntry = getRegistryEntryForPublicHref(item.href);
+  const registryDetails = item.userUploaded ? {} : (registryEntry?.workCardDetails || {});
+  const details = Object.fromEntries(
+    WORK_CARD_DETAIL_FIELDS
+      .map(([key]) => [key, String(item[key] || registryDetails[key] || "").trim().slice(0, 120)])
+      .filter(([, value]) => value)
+  );
 
-  try {
-    const pathname = new URL(href, `https://${CANONICAL_HOST}`).pathname;
-    return PUBLIC_WORK_CARD_META_BY_HREF[pathname] || null;
-  } catch (error) {
-    return null;
-  }
+  return {
+    label: String(item.workCardLabel || (!item.userUploaded && registryEntry?.workCardLabel) || item.caption || "낫띵메터스 제작 쿠키").trim().slice(0, 160),
+    details,
+    actionLabel: String(item.workCardActionLabel || (!item.userUploaded && registryEntry?.workCardActionLabel) || "관련 페이지 보기 →").trim().slice(0, 120),
+    href: registryEntry ? getPublicWorkHref(item.href) : ""
+  };
 }
 
 function getPublicWorkItems() {
@@ -1126,6 +1120,14 @@ function getPublicWorkItems() {
         caption: String(item.caption || "낫띵메터스 제작 쿠키").trim().slice(0, 160),
         href: getPublicWorkHref(item.href),
         createdAt: item.createdAt,
+        purpose: item.purpose,
+        product: item.product,
+        fulfillment: item.fulfillment,
+        context: item.context,
+        packaging: item.packaging,
+        workCardLabel: item.workCardLabel,
+        workCardActionLabel: item.workCardActionLabel,
+        userUploaded: true,
       };
     })
     .filter(Boolean)
@@ -1139,26 +1141,34 @@ function getPublicWorkItems() {
     caption: item.caption,
     href: getPublicWorkHref(item.href),
     createdAt: "",
+    purpose: item.purpose,
+    product: item.product,
+    fulfillment: item.fulfillment,
+    context: item.context,
+    packaging: item.packaging,
+    workCardLabel: item.workCardLabel,
+    workCardActionLabel: item.workCardActionLabel,
   }));
 }
 
-function renderPublicWorkCards() {
-  return getPublicWorkItems()
+function renderPublicWorkCards(items = getPublicWorkItems()) {
+  return items
     .map((item) => {
-      const meta = getPublicWorkCardMeta(item.href);
-      const details = meta
-        ? `<dl class="nm-work-card-details">${meta.details
-          .map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`)
+      const card = getPublicWorkCardData(item);
+      const details = Object.keys(card.details).length
+        ? `<dl class="nm-work-card-details">${WORK_CARD_DETAIL_FIELDS
+          .filter(([key]) => card.details[key])
+          .map(([key, label]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(card.details[key])}</dd></div>`)
           .join("")}</dl>`
         : "";
-      const action = item.href
-        ? `<a href="${escapeAttribute(item.href)}">${escapeHtml(meta?.actionLabel || "관련 페이지 보기 →")}</a>`
+      const action = card.href
+        ? `<a href="${escapeAttribute(card.href)}">${escapeHtml(card.actionLabel)}</a>`
         : "";
 
       return `            <article class="nm-work-card">
               <img src="${escapeAttribute(item.src)}" alt="${escapeAttribute(item.alt)}" loading="lazy" decoding="async">
               <div class="nm-work-card-copy">
-                <p>${escapeHtml(item.caption)}</p>
+                <p>${escapeHtml(card.label)}</p>
                 ${details}
                 <small>${escapeHtml(formatPublicWorkDate(item.createdAt))} · 낫띵메터스 공항동 작업실</small>
                 ${action}
@@ -1168,15 +1178,49 @@ function renderPublicWorkCards() {
     .join("\n");
 }
 
+function buildPublicWorksItemList(items) {
+  return {
+    "@type": "ItemList",
+    "@id": `https://${CANONICAL_HOST}/works/#itemlist`,
+    itemListElement: items.map((item, index) => {
+      const card = getPublicWorkCardData(item);
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        name: card.label.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
+        ...(card.href ? { url: `https://${CANONICAL_HOST}${card.href}` } : {})
+      };
+    })
+  };
+}
+
+function renderPublicWorksSchema(html, items) {
+  const schemaMatch = html.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/);
+  if (!schemaMatch) return html;
+
+  try {
+    const schema = JSON.parse(schemaMatch[1]);
+    const itemListIndex = schema["@graph"]?.findIndex((entry) => entry["@type"] === "ItemList" && entry["@id"] === `https://${CANONICAL_HOST}/works/#itemlist`);
+    if (itemListIndex == null || itemListIndex < 0) return html;
+    schema["@graph"][itemListIndex] = buildPublicWorksItemList(items);
+    const replacement = `<script type="application/ld+json" data-nm-schema="static">\n${JSON.stringify(schema, null, 2)}\n  </script>`;
+    return html.replace(schemaMatch[0], replacement);
+  } catch (error) {
+    return html;
+  }
+}
+
 function renderWorksPage() {
   const templatePath = path.join(ROOT, "works", "index.html");
   const template = fs.readFileSync(templatePath, "utf8");
-  const cards = renderPublicWorkCards();
+  const items = getPublicWorkItems();
+  const cards = renderPublicWorkCards(items);
 
-  return template.replace(
+  const html = template.replace(
     /<!-- NM_WORKS_CARDS:START -->[\s\S]*?<!-- NM_WORKS_CARDS:END -->/,
     `<!-- NM_WORKS_CARDS:START -->\n${cards}\n            <!-- NM_WORKS_CARDS:END -->`
   );
+  return renderPublicWorksSchema(html, items);
 }
 
 function parseBasicAuthHeader(headerValue) {

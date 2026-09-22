@@ -214,10 +214,10 @@ try {
   }
 
   const knownWorkHrefs = [
-    "/products/handmade-cookie/",
+    "/out/",
     "/guides/wedding-favor-cookie/",
     "/guides/corporate-event-cookie/",
-    "/products/lucky-cookie/",
+    "/out/fortune/",
     "/products/brownie-cookie/"
   ];
   for (const width of MOBILE_WIDTHS) {
@@ -403,8 +403,10 @@ try {
       `pickup orders should match the four cookie products at ${width}px`
     );
     assert.equal(pickupOrders.hasGtag, true, `pickup should expose the GA4 gtag bootstrap at ${width}px`);
-    const cookieCrewThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); return { src: image ? new URL(image.src).pathname : '', objectFit: image ? getComputedStyle(image).objectFit : '', naturalWidth: image?.naturalWidth || 0, naturalHeight: image?.naturalHeight || 0 }; }");
-    assert.equal(cookieCrewThumbnail.src, "/images/pickup-cute-cookie.png", `pickup Cookie Crew card should use the provided cookie PNG at ${width}px`);
+    const cookieCrewThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); const source = document.querySelector('.nm-pickup-cookie-thumb picture source'); return { src: image ? new URL(image.src).pathname : '', currentSrc: image?.currentSrc ? new URL(image.currentSrc).pathname : '', source: source?.getAttribute('srcset') || '', objectFit: image ? getComputedStyle(image).objectFit : '', naturalWidth: image?.naturalWidth || 0, naturalHeight: image?.naturalHeight || 0 }; }");
+    assert.equal(cookieCrewThumbnail.source, "../images/pickup-cute-cookie-optimized.png", `pickup Cookie Crew card should declare the optimized source at ${width}px`);
+    assert.equal(cookieCrewThumbnail.currentSrc, "/images/pickup-cute-cookie-optimized.png", `pickup Cookie Crew card should load the optimized source at ${width}px`);
+    assert.equal(cookieCrewThumbnail.src, "/images/pickup-cute-cookie.png", `pickup Cookie Crew card should retain the original PNG fallback at ${width}px`);
     assert.equal(cookieCrewThumbnail.objectFit, "contain", `pickup Cookie Crew thumbnail should not crop the provided cookie image at ${width}px`);
     assert.equal(cookieCrewThumbnail.naturalWidth, cookieCrewThumbnail.naturalHeight, `pickup Cookie Crew thumbnail should preserve the square source ratio at ${width}px`);
     assert.ok(pickupOrders.cards.every((card) => card.imageLoaded && card.right <= width && card.figureRight <= card.textLeft && card.titleFits && card.actionFits), `pickup order cards should remain readable without image overlap at ${width}px: ${JSON.stringify(pickupOrders.cards)}`);
@@ -443,8 +445,10 @@ try {
   await navigate(cdp, `${server.baseUrl}/pickup/`);
   await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.nm-pickup-links img').forEach((image) => { image.loading = 'eager'; })" });
   await waitFor(cdp, "() => [...document.querySelectorAll('.nm-pickup-links img')].every((image) => image.complete && image.naturalWidth > 0)", "pickup order thumbnails should load at desktop width");
-  const pickupDesktopThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); const figure = document.querySelector('.nm-pickup-cookie-thumb')?.getBoundingClientRect(); const title = document.querySelector('.nm-pickup-cookie-thumb')?.nextElementSibling?.getBoundingClientRect(); return { src: image ? new URL(image.src).pathname : '', objectFit: image ? getComputedStyle(image).objectFit : '', figureBottom: figure?.bottom || 0, titleTop: title?.top || 0, viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth }; }");
-  assert.equal(pickupDesktopThumbnail.src, "/images/pickup-cute-cookie.png", "desktop pickup Cookie Crew card should use the provided cookie PNG");
+  const pickupDesktopThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); const source = document.querySelector('.nm-pickup-cookie-thumb picture source'); const figure = document.querySelector('.nm-pickup-cookie-thumb')?.getBoundingClientRect(); const title = document.querySelector('.nm-pickup-cookie-thumb')?.nextElementSibling?.getBoundingClientRect(); return { src: image ? new URL(image.src).pathname : '', currentSrc: image?.currentSrc ? new URL(image.currentSrc).pathname : '', source: source?.getAttribute('srcset') || '', objectFit: image ? getComputedStyle(image).objectFit : '', figureBottom: figure?.bottom || 0, titleTop: title?.top || 0, viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth }; }");
+  assert.equal(pickupDesktopThumbnail.source, "../images/pickup-cute-cookie-optimized.png", "desktop pickup Cookie Crew card should declare the optimized source");
+  assert.equal(pickupDesktopThumbnail.currentSrc, "/images/pickup-cute-cookie-optimized.png", "desktop pickup Cookie Crew card should load the optimized source");
+  assert.equal(pickupDesktopThumbnail.src, "/images/pickup-cute-cookie.png", "desktop pickup Cookie Crew card should retain the original PNG fallback");
   assert.equal(pickupDesktopThumbnail.objectFit, "contain", "desktop pickup Cookie Crew thumbnail should not crop the provided cookie PNG");
   assert.ok(pickupDesktopThumbnail.figureBottom <= pickupDesktopThumbnail.titleTop, "desktop pickup card image should not overlap its text");
   assert.ok(pickupDesktopThumbnail.documentWidth <= pickupDesktopThumbnail.viewport, "desktop pickup page should not horizontally overflow");

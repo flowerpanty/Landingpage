@@ -112,6 +112,15 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.equal(empty.payload.missingReferencedImageCount, 0);
   assert.equal(empty.payload.orphanImageFileCount, 0);
 
+  const defaultGallery = await requestJson(baseUrl, "/api/gallery");
+  assert.equal(defaultGallery.response.status, 200);
+  assert.equal(defaultGallery.payload.customCount, 0);
+  assert.equal(defaultGallery.payload.items.length, 5, "registry-backed default gallery should expose five works");
+  assert.deepEqual(
+    defaultGallery.payload.items.map((item) => item.href),
+    ["/out/", "/guides/wedding-favor-cookie/", "/guides/corporate-event-cookie/", "/out/fortune/", "/products/brownie-cookie/"]
+  );
+
   const emptyWorks = await requestText(baseUrl, "/works/");
   assert.equal(emptyWorks.response.status, 200);
   assert.match(emptyWorks.body, /귀여운 표정을 고른 작은 선물/);
@@ -146,7 +155,7 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.match(works.body, /&lt;strong&gt;진단용 쿠키 사진&lt;\/strong&gt;/);
   assert.doesNotMatch(works.body, /<strong>진단용 쿠키 사진<\/strong>/);
   assert.match(works.body, new RegExp(upload.payload.item.src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  assert.match(works.body, /nm-work-card-details/);
+  assert.doesNotMatch(works.body, /nm-work-card-details/, "uploads without optional works metadata should use the minimal card fallback");
 
   const media = await fetch(`${baseUrl}${upload.payload.item.src}`);
   assert.equal(media.status, 200);
@@ -167,6 +176,29 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
 
   const afterDelete = await requestJson(baseUrl, "/api/gallery");
   assert.equal(afterDelete.payload.customCount, 0);
+
+  const metadataUpload = await requestJson(baseUrl, "/api/gallery", {
+    method: "POST",
+    headers: { ...adminHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      dataUrl: `data:image/png;base64,${TINY_PNG}`,
+      caption: "메타데이터가 있는 제작 사진",
+      href: "/not-in-the-registry/",
+      purpose: "작은 선물",
+      fulfillment: "예약 픽업",
+      packaging: "문구 추가"
+    })
+  });
+  assert.equal(metadataUpload.response.status, 201);
+  assert.deepEqual(
+    { purpose: metadataUpload.payload.item.purpose, fulfillment: metadataUpload.payload.item.fulfillment, packaging: metadataUpload.payload.item.packaging },
+    { purpose: "작은 선물", fulfillment: "예약 픽업", packaging: "문구 추가" }
+  );
+  const invalidHrefWorks = await requestText(baseUrl, "/works/");
+  assert.equal(invalidHrefWorks.response.status, 200, "an uploaded work with an unknown href must not break works rendering");
+  assert.match(invalidHrefWorks.body, /메타데이터가 있는 제작 사진/);
+  assert.match(invalidHrefWorks.body, /예약 픽업/);
+  assert.doesNotMatch(invalidHrefWorks.body, /href="\/not-in-the-registry\//);
 });
 
 await withTemporaryStorage(async ({ storageDir, baseUrl }) => {
