@@ -98,7 +98,7 @@ function addAccessibilityContract(html, filePath) {
     /(<a\b[^>]*class=["'][^"']*\bnm-logo\b[^"']*["'][^>]*\bhref=["'][^"']*)#mainpage-home(["'])/gi,
     `$1$2`
   );
-  if (pathnameFor(filePath) !== "/cookie-crew/") {
+  if (!["/cookie-crew/", "/guides/wedding-favor-cookie/"].includes(pathnameFor(filePath))) {
     next = next.replace(
       /(<nav\b[^>]*class=["'][^"']*\b(?:nm-nav|showroom-nav)\b[^"']*["'][^>]*>)([\s\S]*?)(<\/nav>)/gi,
       (match, openingTag, contents, closingTag) => {

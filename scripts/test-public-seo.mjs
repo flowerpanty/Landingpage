@@ -524,8 +524,10 @@ assert.match(magokHtml, /QUICK ANSWER/, "magok should include an answer-first bl
 assert.match(magokHtml, /마곡 회사 답례품을 준비한다면 행사 날짜, 필요한 수량, 선물 목적을 먼저 정한 뒤 쿠키와 포장·문구 가능 범위를 상담하면 됩니다\./, "magok should answer how to prepare a company gift");
 assert.match(magokHtml, /홈[\s\S]*마곡 답례품·쿠키 선물/, "magok should expose a visible breadcrumb");
 assert.match(magokHtml, /실제로 이런 쿠키를 만들고 있어요/, "magok should include first-party proof");
-assert.equal((magokHtml.match(/case-(?:handmade-cookie|corporate-favor|lucky-cookie)\.jpeg/g) || []).length, 3, "magok proof should use three existing production images");
+assert.match(magokHtml, /class="magok-proof-grid"[^>]*data-live-gallery-preview[^>]*data-archive-href="\.\.\/#actual-cases"[^>]*data-gallery-preview-limit="3"/, "magok proof should use the live homepage archive preview");
+assert.match(magokHtml, /href="\.\.\/#actual-cases">메인에서 최근 제작 아카이브 보기 →<\/a>/, "magok proof should link to the homepage production archive");
 assert.match(magokHtml, /href="\.\.\/works\/">실제 제작 사례 더 보기 →<\/a>/, "magok proof should link to works");
+assert.match(magokHtml, /<script src="\.\.\/assets\/gallery\.js"><\/script>/, "magok should load the shared live archive renderer");
 assert.match(magokHtml, /href="https:\/\/naver\.me\/Gsj2pwAu"/, "magok pickup section should expose the official Naver Place link");
 const magokFavorGuide = magokHtml.match(/<section class="magok-section magok-favor-guide" id="magok-favor-guide"[\s\S]*?<\/section>/)?.[0] || "";
 assert.match(magokFavorGuide, /회사·팀 감사 답례품/);
@@ -647,8 +649,10 @@ assert.match(pickupHtml, /홈[\s\S]*김포공항 디저트 선물·픽업/, "pic
 assert.match(pickupHtml, /김포공항 내부 매장이 아니며 방문 전 픽업 예약이 필요합니다/, "pickup answer-first should clarify the reservation-only location");
 assert.match(pickupHtml, /원하는 쿠키를 먼저 고르고 픽업 날짜를 예약한 뒤 공항동 작업실에서 수령하면 됩니다/, "pickup quick answer should explain the reservation flow directly");
 assert.match(pickupHtml, /픽업으로 준비하는 쿠키를[\s\S]*먼저 확인해보세요/, "pickup should include first-party proof");
-assert.equal((pickupHtml.match(/case-(?:handmade-cookie|corporate-favor|lucky-cookie)\.jpeg/g) || []).length, 3, "pickup proof should use three existing production images");
+assert.match(pickupHtml, /class="nm-pickup-proof-grid"[^>]*data-live-gallery-preview[^>]*data-archive-href="\.\.\/#actual-cases"[^>]*data-gallery-preview-limit="3"/, "pickup proof should use the live homepage archive preview");
+assert.match(pickupHtml, /href="\.\.\/#actual-cases">메인에서 최근 제작 아카이브 보기 →<\/a>/, "pickup proof should link to the homepage production archive");
 assert.match(pickupHtml, /href="\.\.\/works\/">실제 제작 사례 더 보기 →<\/a>/, "pickup proof should link to works");
+assert.match(pickupHtml, /<script src="\.\.\/assets\/gallery\.js"><\/script>/, "pickup should load the shared live archive renderer");
 const pickupGiftGuide = pickupHtml.match(/<section class="nm-seo-section nm-pickup-gift-guide" id="gimpo-dessert-gift-guide"[\s\S]*?<\/section>/)?.[0] || "";
 assert.match(pickupGiftGuide, /여행 전 작은 선물/);
 assert.match(pickupGiftGuide, /마중·배웅할 때 쿠키 선물/);

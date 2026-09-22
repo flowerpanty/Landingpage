@@ -10,44 +10,44 @@
  */
 const madeArchiveItems = [
   {
-    src: "images/made/handmade-cookie-box.jpeg",
+    src: "/images/made/handmade-cookie-box.jpeg",
     alt: "여러 표정의 쿠키를 담은 낫띵메터스 선물 상자",
     size: "tall"
   },
   {
-    src: "images/made/wedding-favor.jpeg",
+    src: "/images/made/wedding-favor.jpeg",
     alt: "결혼식 답례용 캐릭터 쿠키 세트",
     title: "COOKIE FLIGHT",
     size: "square"
   },
   {
-    src: "images/made/corporate-favor.jpeg",
+    src: "/images/made/corporate-favor.jpeg",
     alt: "브랜드 행사에 맞춰 제작한 단체 쿠키",
     size: "large"
   },
   {
-    src: "images/made/lucky-cookie.jpeg",
+    src: "/images/made/lucky-cookie.jpeg",
     alt: "행운 메시지와 함께 구성한 쿠키 선물",
     size: "wide"
   },
   {
-    src: "images/made/terminal-crew.png",
+    src: "/images/made/terminal-crew.png",
     alt: "터미널 유니폼을 입은 낫띵메터스 쿠키 크루",
     title: "tiny cookie crew",
     size: "wide"
   },
   {
-    src: "images/made/crew-brownie.jpg",
+    src: "/images/made/crew-brownie.jpg",
     alt: "하트 메시지를 든 곰 캐릭터 브라우니",
     size: "tall"
   },
   {
-    src: "images/made/handmade-cookie-rack.jpg",
+    src: "/images/made/handmade-cookie-rack.jpg",
     alt: "다양한 캐릭터 수제쿠키가 놓인 쿠키 랙",
     size: "large"
   },
   {
-    src: "images/made/made-cookie-moment.jpg",
+    src: "/images/made/made-cookie-moment.jpg",
     alt: "메시지를 더해 제작한 브라우니 선물",
     size: "square"
   }
@@ -55,12 +55,13 @@ const madeArchiveItems = [
 
 (() => {
   const homeGallery = document.querySelector("[data-recent-gallery]");
+  const livePreviewGalleries = [...document.querySelectorAll("[data-live-gallery-preview]")];
   const overlay = document.querySelector("[data-made-overlay]");
   const overlayDialog = overlay?.querySelector(".showroom-made-overlay-dialog");
   const overlayGrid = document.querySelector("[data-made-overlay-grid]");
   const closeButton = document.querySelector("[data-made-overlay-close]");
   const archiveOpenButtons = [...document.querySelectorAll("[data-open-made-overlay]")];
-  if (!homeGallery) return;
+  if (!homeGallery && !livePreviewGalleries.length) return;
 
   const validSizes = new Set(["square", "tall", "wide", "large"]);
   const uploadedSizes = ["large", "tall", "wide", "square"];
@@ -105,6 +106,22 @@ const madeArchiveItems = [
     return trigger;
   };
 
+  const createLivePreviewItem = (item, gallery) => {
+    const link = document.createElement("a");
+    link.className = "nm-live-archive-preview";
+    link.href = gallery.dataset.archiveHref || "/#actual-cases";
+    link.setAttribute("aria-label", `${item.caption || item.title || item.alt || "제작 사진"} 메인 제작 아카이브로 보기`);
+
+    const figure = document.createElement("figure");
+    figure.append(createImage(item));
+
+    const caption = document.createElement("figcaption");
+    caption.textContent = item.caption || item.title || item.alt || "낫띵메터스 제작 쿠키";
+    figure.append(caption);
+    link.append(figure);
+    return link;
+  };
+
   const createOverlayItem = (item) => {
     const figure = document.createElement("figure");
     figure.className = "showroom-made-overlay-item";
@@ -135,6 +152,7 @@ const madeArchiveItems = [
   };
 
   const renderHomeArchive = (items) => {
+    if (!homeGallery) return;
     const fragment = document.createDocumentFragment();
     items.forEach((item, index) => fragment.append(createHomeItem(item, index)));
     homeGallery.classList.remove("is-ready");
@@ -145,6 +163,7 @@ const madeArchiveItems = [
   };
 
   const renderHomeSkeleton = () => {
+    if (!homeGallery) return;
     const fragment = document.createDocumentFragment();
     Array.from({ length: 4 }, (_, index) => {
       const skeleton = document.createElement("span");
@@ -156,6 +175,17 @@ const madeArchiveItems = [
     homeGallery.replaceChildren(fragment);
     homeGallery.classList.add("is-loading");
     homeGallery.setAttribute("aria-busy", "true");
+  };
+
+  const renderLivePreviews = (items, source) => {
+    livePreviewGalleries.forEach((gallery) => {
+      const limit = Math.max(1, Number.parseInt(gallery.dataset.galleryPreviewLimit || "3", 10) || 3);
+      const fragment = document.createDocumentFragment();
+      items.slice(0, limit).forEach((item) => fragment.append(createLivePreviewItem(item, gallery)));
+      gallery.replaceChildren(fragment);
+      gallery.dataset.gallerySource = source;
+      gallery.setAttribute("aria-busy", "false");
+    });
   };
 
   const renderOverlayArchive = (items) => {
@@ -288,11 +318,12 @@ const madeArchiveItems = [
   renderOverlayArchive(madeArchiveItems);
 
   getUploadedItems().then(({ items: uploadedItems }) => {
-    const homeItems = uploadedItems.length
+    const visibleArchiveItems = uploadedItems.length
       ? uploadedItems.slice(0, 5)
       : madeArchiveItems.slice(0, 5);
     const overlayItems = uploadedItems.length ? uploadedItems : madeArchiveItems;
-    renderHomeArchive(homeItems);
+    renderHomeArchive(visibleArchiveItems);
+    renderLivePreviews(visibleArchiveItems, uploadedItems.length ? "uploaded" : "fallback");
     renderOverlayArchive(overlayItems);
   });
 })();
