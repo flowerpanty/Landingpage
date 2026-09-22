@@ -447,6 +447,7 @@ assert.equal(magokEntry?.lastmod, "2026-09-22", "magok registry lastmod should r
 assert.match(getAttribute(magokHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /마곡 답례품/);
 assert.match(magokHtml, /실제 작업실은 마곡 인근 서울 강서구 공항동/, "magok quick answer should clarify the actual workshop location");
 assert.match(magokHtml, /QUICK ANSWER/, "magok should include an answer-first block");
+assert.match(magokHtml, /마곡 회사 답례품을 준비한다면 행사 날짜, 필요한 수량, 선물 목적을 먼저 정한 뒤 쿠키와 포장·문구 가능 범위를 상담하면 됩니다\./, "magok should answer how to prepare a company gift");
 assert.match(magokHtml, /홈[\s\S]*마곡 답례품·쿠키 선물/, "magok should expose a visible breadcrumb");
 assert.match(magokHtml, /실제로 이런 쿠키를 만들고 있어요/, "magok should include first-party proof");
 assert.equal((magokHtml.match(/case-(?:handmade-cookie|corporate-favor|lucky-cookie)\.jpeg/g) || []).length, 3, "magok proof should use three existing production images");
@@ -457,6 +458,17 @@ assert.match(magokFavorGuide, /회사·팀 감사 답례품/);
 assert.match(magokFavorGuide, /행사·세미나 답례품/);
 assert.match(magokFavorGuide, /소량 쿠키 선물/);
 assert.equal((magokFavorGuide.match(/<a href=/g) || []).length, 3, "magok favor guide should provide three contextual links");
+const magokCompanyChoice = magokHtml.match(/<section class="magok-section magok-company-choice"[\s\S]*?<\/section>/)?.[0] || "";
+assert.match(magokCompanyChoice, /마곡 회사 선물,[\s\S]*어떤 경우에 무엇부터 확인하면 될까요\?/);
+for (const label of ["팀·직원 감사 선물", "세미나·기업행사", "승진·퇴사·송별", "외부 방문객·가벼운 선물"]) {
+  assert.match(magokCompanyChoice, new RegExp(label), `magok company choice should include ${label}`);
+}
+for (const href of ["../small-gift/", "../guides/corporate-event-cookie/", "../guides/farewell-favor-cookie/", "../index.html#cookies", "../works/"]) {
+  assert.match(magokCompanyChoice, new RegExp(`href="${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `magok company choice should link to ${href}`);
+}
+for (const productHint of ["브루키는 캐릭터와 짧은 문구", "수제꾸덕쿠키는 여러 맛과 패키지", "행운쿠키는 HAPPY", "COOKIE FLIGHT는 비행기 모양", "쿠키크루는 쿠키와 캐릭터 굿즈"]) {
+  assert.match(magokCompanyChoice, new RegExp(productHint), `magok company choice should explain ${productHint}`);
+}
 const magokSchema = getStaticSchema(magokHtml);
 const magokGraph = magokSchema["@graph"] || [];
 for (const type of ["Organization", "Bakery", "WebSite", "WebPage", "BreadcrumbList", "ItemList", "FAQPage"]) {
@@ -469,6 +481,16 @@ assert.deepEqual(magokWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "
 const magokService = magokGraph.find((entry) => entry["@type"] === "Service");
 assert.deepEqual(magokService?.provider, { "@id": `${SITE_URL}/#localbusiness` }, "magok Service should be provided by the actual LocalBusiness");
 assert.equal(magokService?.areaServed, "마곡", "magok Service should target Magok");
+const magokItemList = magokGraph.find((entry) => entry["@type"] === "ItemList");
+const normalizeMagokProductName = (name) => cleanText(name).replaceAll(" ", "");
+const magokProductNames = new Set(["브루키", "쿠키크루", "수제꾸덕쿠키", "행운쿠키", "COOKIE FLIGHT", "터미널 샌드쿠키"].map(normalizeMagokProductName));
+const magokVisibleProductEntries = [...magokLineup.matchAll(/<h3>([^<]+)<\/h3>[\s\S]*?<a href="([^"]+)"/g)]
+  .map((match) => ({ name: normalizeMagokProductName(match[1]), url: new URL(match[2], `${SITE_URL}${magokPath}`).href }))
+  .filter((entry) => magokProductNames.has(entry.name));
+const magokSchemaProductEntries = (magokItemList?.itemListElement || [])
+  .filter((item) => magokProductNames.has(normalizeMagokProductName(item.name)))
+  .map((item) => ({ name: normalizeMagokProductName(item.name), url: item.url }));
+assert.deepEqual(magokSchemaProductEntries, magokVisibleProductEntries.map((entry) => ({ name: entry.name, url: entry.url })), "magok visible product grid and ItemList products should stay synchronized");
 const magokBusiness = magokGraph.find((entry) => entry["@type"] === "Bakery");
 assert.deepEqual(magokBusiness?.address, {
   "@type": "PostalAddress",
@@ -480,7 +502,7 @@ assert.deepEqual(magokBusiness?.address, {
 assert.ok(magokBusiness?.areaServed?.some((area) => area.name === "마곡"), "magok areaServed should include 마곡");
 assert.equal(magokBusiness?.priceRange, businessFacts.priceRange, "magok Bakery priceRange should match data/business.json");
 assert.equal(locs.includes(`${SITE_URL}${magokPath}`), true, "sitemap should include magok cookie hub");
-for (const forbidden of ["마곡 매장", "마곡동 매장", "마곡점", "마곡에 위치", "마곡 쿠키 전문점"]) {
+for (const forbidden of ["마곡 매장", "마곡동 매장", "마곡점", "마곡에 위치", "마곡 쿠키 전문점", "당일 배송", "무료 배송", "마곡 전지역 배송 가능", "즉시 퀵 가능"]) {
   assert.equal(magokHtml.includes(forbidden), false, `magok cookie hub contains forbidden location claim: ${forbidden}`);
 }
 const magokFaq = magokGraph.find((entry) => entry["@type"] === "FAQPage");
@@ -492,6 +514,10 @@ assert.deepEqual(
   magokFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
   "magok visible FAQ and FAQPage should remain synchronized"
 );
+assert.equal(magokVisibleFaq.length, 8, "magok should expose eight visible FAQ entries");
+for (const href of ["../works/", "../small-gift/", "../bulk/", "../guides/corporate-event-cookie/", "../guides/farewell-favor-cookie/"]) {
+  assert.equal(magokHtml.includes(`href="${href}"`), true, `magok should expose contextual link ${href}`);
+}
 
 const guidesSchema = getStaticSchema(readHtml(filePathForPathname("/guides/")));
 const guidesItemList = guidesSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
