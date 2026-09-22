@@ -34,7 +34,7 @@ const isCheckMode = process.argv.includes("--check");
 const PRODUCT_META = {
   ...Object.fromEntries(
     (SITE_PAGE_DATA.pages || [])
-      .filter((page) => page.product)
+      .filter((page) => page.product && page.urlRole !== "search-landing")
       .map((page) => [page.path, page.product])
   ),
   ...Object.fromEntries(
@@ -390,12 +390,6 @@ function buildProduct(page) {
     },
   };
 
-  if (page.urlRole === "search-landing" && page.relatedProductPrimaryUrl) {
-    product.isRelatedTo = {
-      "@id": `${absoluteUrl(page.relatedProductPrimaryUrl)}#product`,
-    };
-  }
-
   if (page.urlRole === "primary-product") {
     const relatedSearchLandings = (SITE_PAGE_DATA.pages || []).filter((entry) => (
       entry.urlRole === "search-landing" && entry.relatedProductPrimaryUrl === page.path
@@ -516,7 +510,14 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
   if (breadcrumb) schema.breadcrumb = { "@id": breadcrumb["@id"] };
   if (page.path === "/") schema.about = { "@id": LOCAL_BUSINESS_ID };
   if (["/magok-cookie/", "/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
-  if (product) schema.about = { "@id": product["@id"] };
+  if (product) {
+    schema.about = { "@id": product["@id"] };
+  } else if (page.relatedProductPrimaryUrl) {
+    // Search landings describe the representative Product declared on the
+    // primary product page. This avoids publishing separate Product entities
+    // for the same item while preserving each landing page's self canonical.
+    schema.about = { "@id": `${absoluteUrl(page.relatedProductPrimaryUrl)}#product` };
+  }
   const mainEntities = [itemList, service].filter(Boolean).map((entry) => ({ "@id": entry["@id"] }));
   if (mainEntities.length === 1) schema.mainEntity = mainEntities[0];
   if (mainEntities.length > 1) schema.mainEntity = mainEntities;

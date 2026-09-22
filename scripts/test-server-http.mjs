@@ -147,6 +147,12 @@ try {
   assert.equal(head.headers["content-length"], asset.headers["content-length"]);
   assert.equal(head.body.length, 0);
 
+  const feed = await request(server.baseUrl, "/feed.xml");
+  assert.equal(feed.status, 200, "RSS feed should be publicly available");
+  assert.match(feed.headers["content-type"], /application\/xml/, "RSS feed should use an XML content type");
+  assert.match(feed.headers["cache-control"], /public, max-age=86400/, "RSS feed should use the static asset cache policy");
+  assert.match(feed.body.toString("utf8"), /<rss version="2\.0"/, "RSS feed should return RSS content");
+
   const home = await request(server.baseUrl, "/");
   assert.equal(home.status, 200);
   assert.match(home.headers["cache-control"], /max-age=0, must-revalidate/);

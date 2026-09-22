@@ -13,19 +13,24 @@
     "/cookies": "/out/",
     "/cookies.html": "/out/",
     "/lucky": "/out/fortune/",
-    "/lucky.html": "/out/fortune/"
+    "/lucky.html": "/out/fortune/",
+    "/blog": "https://blog.nothingmatters.co.kr/",
+    "/blog/": "https://blog.nothingmatters.co.kr/"
   },
   "products": [
     {
       "name": "브루키",
       "slug": "brookie",
-      "description": "캐릭터와 문구를 골라 만드는 나만의 브루키.",
+      "description": "캐릭터와 짧은 문구를 골라 만드는 브루키 답례품·커스텀 쿠키.",
+      "seoTitle": "브루키 답례품·커스텀 쿠키 | 낫띵메터스",
       "thumbnail": "/images/main-order-brookie-thumb.png",
       "images": ["/images/main-order-brookie-thumb.png", "/images/brownie-main.jpg"],
       "status": "active",
       "indexing": "index",
       "sitemap": true,
       "category": "브루키",
+      "lowPrice": 7800,
+      "minOrder": "최소 주문 수량 12개",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/brookie",
       "primaryUrl": "/brookie/",
       "urlRole": "primary-product",
@@ -45,13 +50,16 @@
     {
       "name": "수제꾸덕쿠키",
       "slug": "handmade-cookie",
-      "description": "맛과 패키지를 골라 담는 수제 꾸덕쿠키.",
+      "description": "7가지 맛과 패키지를 고르는 수제꾸덕쿠키 선물세트.",
+      "seoTitle": "수제꾸덕쿠키 선물세트 | 낫띵메터스",
       "thumbnail": "/images/handmade-cookie-flavor-lineup.png",
       "images": ["/images/handmade-cookie-flavor-lineup.png", "/images/handmade-4box-01.jpg"],
       "status": "active",
       "indexing": "index",
       "sitemap": true,
       "category": "수제꾸덕쿠키",
+      "lowPrice": 4500,
+      "minOrder": "대부분 최소 수량 없음",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
       "primaryUrl": "/out/",
       "urlRole": "primary-product",
@@ -66,18 +74,23 @@
         "tags": ["7가지 맛", "패키지 선택"],
         "orderInfo": "4,500원부터 · 대부분 최소 수량 없음"
       },
-      "updatedAt": "2026-09-11"
+      "updatedAt": "2026-09-22"
     },
     {
       "name": "행운쿠키",
       "slug": "lucky-cookie",
-      "description": "HAPPY, RESET, MONEY, UP 네 가지 마음을 담은 쿠키.",
+      "description": "HAPPY, RESET, MONEY, UP 메시지를 담은 행운쿠키·응원 선물세트.",
+      "seoTitle": "행운쿠키 응원 선물세트 | 낫띵메터스",
       "thumbnail": "/images/lucky-hero-custom-20260414.jpeg",
+      "imageWidth": 892,
+      "imageHeight": 976,
       "images": ["/images/lucky-hero-custom-20260414.jpeg", "/images/lucky-realcut-01.jpeg"],
       "status": "active",
       "indexing": "index",
       "sitemap": true,
       "category": "행운쿠키",
+      "price": 15000,
+      "minOrder": "최소 1세트",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/lucky?step=1",
       "primaryUrl": "/out/fortune/",
       "urlRole": "primary-product",
@@ -92,13 +105,16 @@
         "tags": ["4가지 마음", "응원 선물"],
         "orderInfo": "4가지맛 1세트 15,000원 · 최소 1세트"
       },
-      "updatedAt": "2026-09-11"
+      "updatedAt": "2026-09-22"
     },
     {
       "name": "쿠키크루",
       "slug": "cookie-crew",
-      "description": "작은 쿠키가 전하는 특별한 마음, COOKIE CREW.",
+      "description": "캐릭터 쿠키와 굿즈를 함께 고르는 COOKIE CREW 선물.",
+      "seoTitle": "쿠키크루 캐릭터 쿠키 선물 | 낫띵메터스",
       "thumbnail": "/images/cookie-crew-group-scene.jpg",
+      "imageWidth": 629,
+      "imageHeight": 477,
       "heroImage": "/images/cookie-crew-group-scene.jpg",
       "images": ["/images/cookie-crew-group-scene.jpg", "/images/terminal-main.png"],
       "status": "active",
@@ -119,7 +135,7 @@
         "englishName": "COOKIE CREW",
         "tags": ["쿠키 + 마그넷", "캐릭터 선물"]
       },
-      "updatedAt": "2026-09-11"
+      "updatedAt": "2026-09-22"
     },
     {
       "name": "COOKIE FLIGHT",
@@ -164,13 +180,13 @@
     { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
     { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "마곡 쿠키·답례품" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-14" },
-    { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-17", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
+    { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
     { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/brookie/", "workCardLabel": "짧은 문구를 더한 브라우니", "workCardDetails": { "product": "브라우니쿠키", "packaging": "짧은 문구 추가" }, "workCardActionLabel": "브라우니쿠키 자세히 보기 →", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },
     { "path": "/products/custom-brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/brookie/", "product": { "name": "nothingmatters 커스텀 브라우니쿠키", "lowPrice": 7800, "minOrder": "보통 12개 이상 상담", "category": "커스텀 브라우니쿠키", "primaryUrl": "/products/custom-brownie-cookie/" } },
     { "path": "/products/handmade-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/out/", "product": { "name": "nothingmatters 수제꾸덕쿠키", "lowPrice": 4500, "minOrder": "대부분 최소 수량 없음", "category": "수제쿠키 선물세트", "primaryUrl": "/products/handmade-cookie/" } },
     { "path": "/products/lucky-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/out/fortune/", "product": { "name": "nothingmatters 행운쿠키 4가지맛 세트", "price": 15000, "minOrder": "최소 1세트", "category": "행운쿠키 선물세트", "primaryUrl": "/products/lucky-cookie/" } },
-    { "path": "/products/scone/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
-    { "path": "/products/terminal-sand-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
+    { "path": "/products/scone/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "urlRole": "primary-product", "product": { "name": "nothingmatters 곰돌이 스콘", "category": "곰돌이 스콘·구움과자 선물", "primaryUrl": "/products/scone/", "minOrder": "최소 주문 수량 12개", "additionalProperties": [{ "@type": "PropertyValue", "name": "맛 구성", "value": "플레인(고메버터) · 초코 중 택1" }, { "@type": "PropertyValue", "name": "예약 제작", "value": "예약 제작 상품" }] } },
+    { "path": "/products/terminal-sand-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "urlRole": "primary-product", "product": { "name": "nothingmatters terminal 샌드쿠키", "category": "프리미엄 샌드쿠키 선물", "primaryUrl": "/products/terminal-sand-cookie/", "additionalProperties": [{ "@type": "PropertyValue", "name": "주문 방식", "value": "구성 및 포장 상담" }] } },
     { "path": "/products/crew-brownie/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
     { "path": "/products/gimpo-airport-brookie/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
     { "path": "/guides/wedding-favor-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "workCardLabel": "결혼식 날 건넨 감사 쿠키", "workCardDetails": { "purpose": "결혼식 답례", "context": "결혼식" }, "workCardActionLabel": "결혼식 답례 가이드 보기 →" },

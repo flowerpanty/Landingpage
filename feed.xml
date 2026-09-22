@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>nothingmatters 쿠키 가이드</title>
+    <link>https://nothingmatters.co.kr/guides/</link>
+    <description>낫띵메터스의 쿠키 선물, 답례품, 보관방법 가이드입니다.</description>
+    <language>ko-KR</language>
+    <lastBuildDate>Mon, 21 Sep 2026 15:00:00 GMT</lastBuildDate>
+    <atom:link href="https://nothingmatters.co.kr/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>쿠키 보관방법·맛있게 드시는 기간 | 낫띵메터스</title>
+      <link>https://nothingmatters.co.kr/guides/cookie-storage/</link>
+      <guid isPermaLink="true">https://nothingmatters.co.kr/guides/cookie-storage/</guid>
+      <pubDate>Mon, 21 Sep 2026 15:00:00 GMT</pubDate>
+      <description>낫띵메터스 쿠키 보관방법과 맛있게 드시는 기간을 제품별로 빠르게 확인하세요. 쿠키크루, 브루키, 수제 꾸덕쿠키, 행운쿠키 안내와 자주 묻는 질문을 정리했습니다.</description>
+    </item>
+    <item>
+      <title>결혼식 답례쿠키 주문 가이드 | 낫띵메터스</title>
+      <link>https://nothingmatters.co.kr/guides/wedding-favor-cookie/</link>
+      <guid isPermaLink="true">https://nothingmatters.co.kr/guides/wedding-favor-cookie/</guid>
+      <pubDate>Mon, 21 Sep 2026 15:00:00 GMT</pubDate>
+      <description>결혼식 답례쿠키와 웨딩 답례품 주문 가이드. 문구·스티커·수량을 상담하고 강서구 공항동 픽업 또는 차량 퀵으로 받을 수 있습니다.</description>
+    </item>
+    <item>
+      <title>마곡 기업행사 쿠키 · 회사 답례품 | 낫띵메터스</title>
+      <link>https://nothingmatters.co.kr/guides/corporate-event-cookie/</link>
+      <guid isPermaLink="true">https://nothingmatters.co.kr/guides/corporate-event-cookie/</guid>
+      <pubDate>Thu, 17 Sep 2026 15:00:00 GMT</pubDate>
+      <description>마곡 기업행사 쿠키와 회사 답례품 주문 가이드. 로고 스티커, 행사 문구, 단체 수량과 공항동 픽업·차량 퀵을 상담합니다.</description>
+    </item>
+    <item>
+      <title>디저트 선물세트·구움과자 | 낫띵메터스</title>
+      <link>https://nothingmatters.co.kr/guides/dessert-gift-set/</link>
+      <guid isPermaLink="true">https://nothingmatters.co.kr/guides/dessert-gift-set/</guid>
+      <pubDate>Thu, 17 Sep 2026 15:00:00 GMT</pubDate>
+      <description>김포공항·송정역 인근에서 픽업하는 구움과자와 디저트 선물세트 가이드. 공항동 수제쿠키 공방에서 제품과 포장을 상담합니다.</description>
+    </item>
+    <item>
+      <title>퇴사·승진·육아휴직 답례품 | 낫띵메터스</title>
+      <link>https://nothingmatters.co.kr/guides/farewell-favor-cookie/</link>
+      <guid isPermaLink="true">https://nothingmatters.co.kr/guides/farewell-favor-cookie/</guid>
+      <pubDate>Thu, 27 Aug 2026 15:00:00 GMT</pubDate>
+      <description>퇴사, 승진, 육아휴직 인사에 어울리는 문구 쿠키와 포장, 수량 선택법을 정리했습니다.</description>
+    </item>
+    <item>
+      <title>행운쿠키·응원 선물 가이드 | 낫띵메터스</title>
+      <link>https://nothingmatters.co.kr/guides/lucky-cheering-cookie/</link>
+      <guid isPermaLink="true">https://nothingmatters.co.kr/guides/lucky-cheering-cookie/</guid>
+      <pubDate>Thu, 27 Aug 2026 15:00:00 GMT</pubDate>
+      <description>졸업, 응원, 감사 인사에 어울리는 행운쿠키 구성과 수량, 선물 선택법을 정리했습니다.</description>
+    </item>
+    <item>
+      <title>선생님 간식·어린이집 선물 | 낫띵메터스</title>
+      <link>https://nothingmatters.co.kr/guides/teacher-snack-gift/</link>
+      <guid isPermaLink="true">https://nothingmatters.co.kr/guides/teacher-snack-gift/</guid>
+      <pubDate>Thu, 27 Aug 2026 15:00:00 GMT</pubDate>
+      <description>유치원과 어린이집 선생님께 전하기 좋은 수제쿠키, 행운쿠키, 곰돌이 스콘 구성을 비교합니다.</description>
+    </item>
+  </channel>
+</rss>

@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const MAX_PRIMARY_IMAGE_BYTES = 1024 * 1024;
+const MAX_PRIMARY_IMAGE_BYTES = 500 * 1024;
 const MAX_PICKUP_COOKIE_BYTES = 500 * 1024;
 const SITE_ORIGIN = "https://nothingmatters.co.kr";
 const excludedDirectories = new Set([".git", ".playwright-cli", "node_modules", "dashboard", "gallery-admin", "_handoff"]);
@@ -66,6 +66,23 @@ function isSmallLocalSource(reference, htmlPath) {
   return size !== null && size <= MAX_PRIMARY_IMAGE_BYTES;
 }
 
+function assertIntrinsicDimensions(imageTag, reference, htmlPath) {
+  if (!resolveLocalAsset(reference, htmlPath)) return;
+  assert.match(imageTag, /\bwidth=["']\d+["']/i, `${path.relative(ROOT, htmlPath)}: local image ${reference} is missing width`);
+  assert.match(imageTag, /\bheight=["']\d+["']/i, `${path.relative(ROOT, htmlPath)}: local image ${reference} is missing height`);
+}
+
+function assertLoadingStrategy(imageTag, reference, htmlPath) {
+  const assetPath = resolveLocalAsset(reference, htmlPath);
+  if (!assetPath || !/\.(?:avif|gif|jpe?g|png|webp)$/i.test(assetPath)) return;
+  const loading = imageTag.match(/\bloading=["'](lazy|eager)["']/i)?.[1]?.toLowerCase();
+  assert.ok(loading, `${path.relative(ROOT, htmlPath)}: local raster image ${reference} must declare loading`);
+  assert.match(imageTag, /\bdecoding=["']async["']/i, `${path.relative(ROOT, htmlPath)}: local raster image ${reference} must decode asynchronously`);
+  if (loading === "eager") {
+    assert.match(imageTag, /\bfetchpriority=["']high["']/i, `${path.relative(ROOT, htmlPath)}: eager local raster image ${reference} must be high priority`);
+  }
+}
+
 for (const htmlPath of discoverHtmlFiles()) {
   const html = fs.readFileSync(htmlPath, "utf8");
   const pictureRanges = [];
@@ -77,15 +94,18 @@ for (const htmlPath of discoverHtmlFiles()) {
     const sources = [...pictureHtml.matchAll(/<source\b[^>]*\bsrcset=["']([^"']+)["'][^>]*>/gi)]
       .map((source) => firstSrcsetReference(source[1]))
       .filter(Boolean);
-    const fallback = pictureHtml.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/i)?.[1] || "";
+    const fallbackImage = pictureHtml.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/i);
+    const fallback = fallbackImage?.[1] || "";
 
     for (const source of sources) imageSize(source, htmlPath);
     if (!fallback || !resolveLocalAsset(fallback, htmlPath)) continue;
+    assertIntrinsicDimensions(fallbackImage?.[0] || "", fallback, htmlPath);
+    assertLoadingStrategy(fallbackImage?.[0] || "", fallback, htmlPath);
     const fallbackSize = imageSize(fallback, htmlPath);
     if (fallbackSize > MAX_PRIMARY_IMAGE_BYTES) {
       assert.ok(
         sources.some((source) => isSmallLocalSource(source, htmlPath)),
-        `${path.relative(ROOT, htmlPath)}: ${fallback} exceeds 1MB without a smaller picture source`
+        `${path.relative(ROOT, htmlPath)}: ${fallback} exceeds 500KB without a smaller picture source`
       );
     }
   }
@@ -95,7 +115,9 @@ for (const htmlPath of discoverHtmlFiles()) {
     if (pictureRanges.some(([start, end]) => imageOffset >= start && imageOffset < end)) continue;
     const size = imageSize(image[1], htmlPath);
     if (size !== null) {
-      assert.ok(size <= MAX_PRIMARY_IMAGE_BYTES, `${path.relative(ROOT, htmlPath)}: ${image[1]} is a direct primary image larger than 1MB`);
+      assertIntrinsicDimensions(image[0], image[1], htmlPath);
+      assertLoadingStrategy(image[0], image[1], htmlPath);
+      assert.ok(size <= MAX_PRIMARY_IMAGE_BYTES, `${path.relative(ROOT, htmlPath)}: ${image[1]} is a direct primary image larger than 500KB`);
     }
   }
 }
@@ -119,19 +141,26 @@ assert.equal(
 assert.ok(fs.existsSync(resolveLocalAsset(brookieWeddingImage, brookieHtmlPath)), "brookie base-resolved image must exist");
 const brookieHero = brookieHtml.match(/<img\b[^>]*\bsrc=["']([^"']*main-order-brookie-thumb[^"']*)["'][^>]*>/i)?.[1] || "";
 assert.equal(brookieHero, "images/main-order-brookie-thumb-optimized.jpg", "brookie should use the optimized hero image");
-assert.ok(imageSize(brookieHero, brookieHtmlPath) <= MAX_PRIMARY_IMAGE_BYTES, "brookie optimized hero image must be 1MB or smaller");
+assert.ok(imageSize(brookieHero, brookieHtmlPath) <= MAX_PRIMARY_IMAGE_BYTES, "brookie optimized hero image must be 500KB or smaller");
 const pickupHtml = fs.readFileSync(pickupHtmlPath, "utf8");
 const pickupCard = pickupHtml.match(/<figure class="nm-pickup-cookie-thumb">([\s\S]*?)<\/figure>/i)?.[1] || "";
-const pickupSource = pickupCard.match(/<source\b[^>]*\bsrcset=["']([^"']+)["'][^>]*>/i)?.[1] || "";
+const pickupSources = [...pickupCard.matchAll(/<source\b[^>]*\bsrcset=["']([^"']+)["'][^>]*>/gi)].map((match) => match[1]);
 const pickupFallback = pickupCard.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/i)?.[1] || "";
 
-assert.equal(pickupSource, "../images/pickup-cute-cookie-optimized.png", "pickup Cookie Crew card must prioritize the optimized image");
+assert.deepEqual(
+  pickupSources,
+  ["../images/pickup-cute-cookie-optimized.webp", "../images/pickup-cute-cookie-optimized.png"],
+  "pickup Cookie Crew card must prioritize WebP and retain the optimized PNG fallback"
+);
 assert.equal(pickupFallback, "../images/pickup-cute-cookie.png", "pickup Cookie Crew card must retain the original PNG fallback");
-const pickupOptimizedSize = imageSize(pickupSource, pickupHtmlPath);
+const pickupOptimizedSize = imageSize(pickupSources[0], pickupHtmlPath);
+const pickupPngFallbackSize = imageSize(pickupSources[1], pickupHtmlPath);
 const pickupFallbackSize = imageSize(pickupFallback, pickupHtmlPath);
 assert.ok(pickupOptimizedSize != null, "optimized pickup Cookie Crew image must exist");
+assert.ok(pickupPngFallbackSize != null, "optimized PNG pickup Cookie Crew image must exist");
 assert.ok(pickupFallbackSize != null, "pickup Cookie Crew fallback image must exist");
 assert.ok(pickupOptimizedSize <= MAX_PICKUP_COOKIE_BYTES, "optimized pickup Cookie Crew image must be 500KB or smaller");
+assert.ok(pickupPngFallbackSize <= MAX_PICKUP_COOKIE_BYTES, "optimized PNG pickup Cookie Crew image must be 500KB or smaller");
 assert.ok(pickupFallbackSize > MAX_PRIMARY_IMAGE_BYTES, "pickup Cookie Crew fallback fixture should remain a large source image");
 
 console.log(`public performance checks: passed ${discoverHtmlFiles().length} pages`);

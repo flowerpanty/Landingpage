@@ -110,6 +110,10 @@ function detailAssetPath(value) {
   return `../../${value.replace(/^\//, "")}`;
 }
 
+function optimizedAssetUrl(value) {
+  return IMAGE_OPTIMIZATIONS[value]?.optimized || value;
+}
+
 function renderProductCard(product) {
   const status = product.cardStatus === "new"
     ? '\n              <span class="showroom-product-badge">NEW</span>'
@@ -125,7 +129,7 @@ function renderProductCard(product) {
   const imageOptimization = IMAGE_OPTIMIZATIONS[product.thumbnail];
   const thumbnail = imageOptimization
     ? `              <picture>\n                <source srcset="${escapeHtml(homeAssetPath(imageOptimization.optimized))}" type="image/jpeg">\n                <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" width="${imageOptimization.width}" height="${imageOptimization.height}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">\n              </picture>`
-    : `              <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">`;
+    : `              <img src="${escapeHtml(homeAssetPath(product.thumbnail))}"${product.imageWidth && product.imageHeight ? ` width="${product.imageWidth}" height="${product.imageHeight}"` : ""} alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">`;
 
   return `          <a class="showroom-product-card" href="${escapeHtml(homeLinkPath(product.detailPath))}" data-reveal data-analytics-event="product_click" data-analytics-label="${escapeHtml(product.name)}">
             <figure class="showroom-product-photo">
@@ -347,7 +351,7 @@ function stripStaticSchema(html) {
 
 function getExistingProductMetadata(product) {
   const canonical = `${SITE_URL}${product.detailPath}`;
-  const image = `${SITE_URL}${product.thumbnail}`;
+  const image = `${SITE_URL}${optimizedAssetUrl(product.thumbnail)}`;
   const title = product.seoTitle || `${product.name} | 낫띵메터스`;
 
   return `<!-- NM_EXISTING_PRODUCT_META:START -->

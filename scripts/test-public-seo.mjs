@@ -16,6 +16,7 @@ const products = (sitePages.products || []).map((product) => ({
 const sitemap = fs.readFileSync(path.join(ROOT, "sitemap.xml"), "utf8");
 const locs = [...sitemap.matchAll(/<loc>(https:\/\/nothingmatters\.co\.kr[^<]+)<\/loc>/g)].map((match) => match[1]);
 const locSet = new Set(locs);
+const feed = fs.readFileSync(path.join(ROOT, "feed.xml"), "utf8");
 const htmlCache = new Map();
 const sourceHtmlEntries = discoverSourceHtmlEntries();
 const registryEntries = new Map();
@@ -51,13 +52,24 @@ for (const work of sitePages.works || []) {
   assert.ok(registryEntries.has(normalizePathname(work.href)), `works item ${work.id}: href must exist in the registry`);
 }
 
+const indexableGuidePages = (sitePages.pages || []).filter((page) => (
+  page.path.startsWith("/guides/")
+  && page.path !== "/guides/"
+  && page.status === "active"
+  && page.indexing === "index"
+));
+assert.match(feed, /<rss version="2\.0"/, "feed.xml should be a valid RSS feed");
+assert.match(feed, /<atom:link href="https:\/\/nothingmatters\.co\.kr\/feed\.xml" rel="self" type="application\/rss\+xml" \/>/, "feed.xml should declare its canonical self link");
+for (const page of indexableGuidePages) {
+  assert.match(feed, new RegExp(`<link>${SITE_URL}${page.path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</link>`), `${page.path}: feed should include the indexable guide`);
+}
+
 const primaryProducts = products.filter((product) => product.urlRole === "primary-product");
 const searchLandingPages = (sitePages.pages || []).filter((page) => page.urlRole === "search-landing");
-const expectedSearchLandingOffers = new Map([
-  ["/products/brownie-cookie/", ["lowPrice", 7800]],
-  ["/products/custom-brownie-cookie/", ["lowPrice", 7800]],
-  ["/products/handmade-cookie/", ["lowPrice", 4500]],
-  ["/products/lucky-cookie/", ["price", 15000]],
+const expectedPrimaryOffers = new Map([
+  ["/brookie/", ["lowPrice", 7800]],
+  ["/out/", ["lowPrice", 4500]],
+  ["/out/fortune/", ["price", 15000]],
 ]);
 assert.equal(primaryProducts.length, 5, "site registry should define five primary products");
 assert.equal(searchLandingPages.length, 4, "site registry should define four search landing pages");
@@ -83,6 +95,14 @@ for (const product of primaryProducts) {
     .filter((page) => normalizePathname(page.relatedProductPrimaryUrl) === pathname)
     .map((page) => ({ "@id": `${SITE_URL}${normalizePathname(page.path)}#webpage` }));
   assert.deepEqual(productEntity?.subjectOf, expectedSubjects.length ? expectedSubjects : undefined, `${pathname}: primary Product subjectOf should list only related search landings`);
+  const [offerKey, offerValue] = expectedPrimaryOffers.get(pathname) || [];
+  if (offerKey) {
+    assert.equal(productEntity?.offers?.[offerKey], offerValue, `${pathname}: primary Product should retain its verified price metadata`);
+    assert.equal(productEntity?.offers?.priceCurrency, "KRW", `${pathname}: primary Product offers should retain KRW`);
+    assert.deepEqual(productEntity?.offers?.seller, { "@id": `${SITE_URL}/#organization` }, `${pathname}: primary Product offers should retain the organization seller`);
+  } else {
+    assert.equal(productEntity?.offers, undefined, `${pathname}: primary Product must not infer a price`);
+  }
 }
 for (const page of searchLandingPages) {
   const pathname = normalizePathname(page.path);
@@ -102,15 +122,43 @@ for (const page of searchLandingPages) {
     try { return new URL(match[1], `${SITE_URL}${pathname}`).href === relatedUrl; } catch { return false; }
   }), `${pathname}: search landing should link to its related primary product`);
   assert.ok(productPage, `${pathname}: search landing should use ProductPage schema`);
-  assert.equal(productEntity?.["@id"], `${SITE_URL}${pathname}#product`, `${pathname}: search landing Product should keep its local @id`);
-  assert.deepEqual(productPage?.about, { "@id": `${SITE_URL}${pathname}#product` }, `${pathname}: ProductPage should describe its local Product`);
-  assert.deepEqual(productEntity?.mainEntityOfPage, { "@id": `${SITE_URL}${pathname}#webpage` }, `${pathname}: Product should identify its local ProductPage`);
-  assert.deepEqual(productEntity?.isRelatedTo, { "@id": `${SITE_URL}${normalizePathname(page.relatedProductPrimaryUrl)}#product` }, `${pathname}: search landing should relate only to its primary Product`);
-  const [offerKey, offerValue] = expectedSearchLandingOffers.get(pathname) || [];
-  assert.equal(productEntity?.offers?.[offerKey], offerValue, `${pathname}: search landing should retain its verified price metadata`);
-  assert.equal(productEntity?.offers?.priceCurrency, "KRW", `${pathname}: search landing offers should retain KRW`);
-  assert.deepEqual(productEntity?.offers?.seller, { "@id": `${SITE_URL}/#organization` }, `${pathname}: search landing offers should retain the organization seller`);
-  assert.equal(productEntity?.offers?.availability, undefined, `${pathname}: search landing offers must omit availability`);
+  assert.equal(productEntity, undefined, `${pathname}: search landing must not publish a duplicate Product entity`);
+  assert.deepEqual(
+    productPage?.about,
+    { "@id": `${SITE_URL}${normalizePathname(page.relatedProductPrimaryUrl)}#product` },
+    `${pathname}: ProductPage should reference its representative primary Product`
+  );
+}
+
+for (const [pathname, expectedProperties] of [
+  ["/products/scone/", ["맛 구성", "예약 제작", "주문 기준", "수령 방식"]],
+  ["/products/terminal-sand-cookie/", ["주문 방식", "수령 방식"]],
+]) {
+  const html = readHtml(filePathForPathname(pathname));
+  const graph = getStaticSchema(html)["@graph"] || [];
+  const productPage = graph.find((entry) => entry["@type"] === "ProductPage");
+  const productEntity = graph.find((entry) => entry["@type"] === "Product");
+  assert.ok(productEntity, `${pathname}: active product page should have a Product entity`);
+  assert.equal(productEntity?.["@id"], `${SITE_URL}${pathname}#product`, `${pathname}: Product should use the local representative URL`);
+  assert.deepEqual(productPage?.about, { "@id": `${SITE_URL}${pathname}#product` }, `${pathname}: ProductPage should reference its Product`);
+  assert.deepEqual(productEntity?.mainEntityOfPage, { "@id": `${SITE_URL}${pathname}#webpage` }, `${pathname}: Product should identify its ProductPage`);
+  assert.equal(productEntity?.offers, undefined, `${pathname}: Product must not infer a price`);
+  assert.deepEqual(productEntity?.additionalProperty?.map((property) => property.name), expectedProperties, `${pathname}: Product should expose only confirmed properties`);
+}
+
+for (const [pathname, { title, description, optimizedImage }] of [
+  ["/brookie/", { title: "브루키 답례품·커스텀 쿠키 | 낫띵메터스", description: /브루키 답례품·커스텀 쿠키/, optimizedImage: "/images/main-order-brookie-thumb-optimized.jpg" }],
+  ["/out/", { title: "수제꾸덕쿠키 선물세트 | 낫띵메터스", description: /수제꾸덕쿠키 선물세트/, optimizedImage: "/images/handmade-cookie-flavor-lineup-optimized.jpg" }],
+  ["/out/fortune/", { title: "행운쿠키 응원 선물세트 | 낫띵메터스", description: /행운쿠키·응원 선물세트/ }],
+  ["/cookie-crew/", { title: "쿠키크루 캐릭터 쿠키 선물 | 낫띵메터스", description: /캐릭터 쿠키와 굿즈/ }],
+]) {
+  const html = readHtml(filePathForPathname(pathname));
+  assert.equal(getAttribute(html, /<title>([\s\S]*?)<\/title>/i), title, `${pathname}: product title should match its search intent`);
+  assert.match(getMeta(html, "name", "description"), description, `${pathname}: product description should match its search intent`);
+  if (optimizedImage) {
+    assert.equal(getMeta(html, "property", "og:image"), `${SITE_URL}${optimizedImage}`, `${pathname}: social metadata should use its optimized image`);
+    assert.ok(fs.statSync(path.join(ROOT, optimizedImage)).size <= 500 * 1024, `${pathname}: optimized social image should stay at or below 500KB`);
+  }
 }
 const brookieHtml = readHtml(filePathForPathname("/brookie/"));
 for (const relatedLanding of ["/products/brownie-cookie/", "/products/custom-brownie-cookie/"]) {
@@ -465,13 +513,14 @@ assert.match(
 
 const cookieStoragePath = "/guides/cookie-storage/";
 const cookieStorageEntry = registryEntries.get(cookieStoragePath);
-assert.equal(cookieStorageEntry?.lastmod, "2026-09-17", "cookie storage registry lastmod should reflect the pickup location callout");
+assert.equal(cookieStorageEntry?.lastmod, "2026-09-22", "cookie storage registry lastmod should reflect the answer-first update");
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/cookie-storage\/<\/loc>\s*<lastmod>2026-09-17<\/lastmod>/,
-  "cookie storage sitemap lastmod should reflect the pickup location callout"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/cookie-storage\/<\/loc>\s*<lastmod>2026-09-22<\/lastmod>/,
+  "cookie storage sitemap lastmod should reflect the answer-first update"
 );
 const cookieStorageHtml = readHtml(filePathForPathname(cookieStoragePath));
+assert.match(cleanText(getAttribute(cookieStorageHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), /쿠키 보관방법과\s*맛있게 드시는 기간/, "cookie storage H1 should answer the search intent directly");
 const cookieStorageSchema = getStaticSchema(cookieStorageHtml);
 const cookieStorageBreadcrumb = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
 assert.equal(
