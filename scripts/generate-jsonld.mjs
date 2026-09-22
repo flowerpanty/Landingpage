@@ -46,6 +46,7 @@ const PRODUCT_META = {
         lowPrice: product.lowPrice,
         minOrder: product.minOrder,
         category: product.category,
+        additionalProperties: product.additionalProperties,
       },
     ])
   ),
@@ -87,6 +88,7 @@ const ITEM_LISTS = {
     ["수제꾸덕쿠키", "/out/"],
     ["행운쿠키", "/out/fortune/"],
     ["쿠키크루", "/cookie-crew/"],
+    ["COOKIE FLIGHT", "/products/cookie-flight/"],
   ],
   "/magok-cookie/": [
     ["브루키", "/brookie/"],
@@ -94,6 +96,7 @@ const ITEM_LISTS = {
     ["수제꾸덕쿠키", "/products/handmade-cookie/"],
     ["행운쿠키", "/products/lucky-cookie/"],
     ["터미널 샌드쿠키", "/products/terminal-sand-cookie/"],
+    ["COOKIE FLIGHT", "/products/cookie-flight/"],
     ["마곡 기업행사 쿠키", "/guides/corporate-event-cookie/"],
     ["공항동 픽업 안내", "/pickup/"],
   ],
@@ -401,6 +404,7 @@ function buildProduct(page) {
   }
 
   const properties = [
+    ...(meta.additionalProperties || []),
     meta.minOrder
       ? { "@type": "PropertyValue", name: "주문 기준", value: meta.minOrder }
       : null,

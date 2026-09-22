@@ -19,6 +19,11 @@ const IMAGE_OPTIMIZATIONS = {
     optimized: "/images/handmade-cookie-flavor-lineup-optimized.jpg",
     width: 1064,
     height: 798
+  },
+  "/images/main-order-cookie-thumb.png": {
+    optimized: "/images/main-order-cookie-thumb-optimized.jpg",
+    width: 1086,
+    height: 1448
   }
 };
 
@@ -343,7 +348,7 @@ function stripStaticSchema(html) {
 function getExistingProductMetadata(product) {
   const canonical = `${SITE_URL}${product.detailPath}`;
   const image = `${SITE_URL}${product.thumbnail}`;
-  const title = `${product.name} | 낫띵메터스`;
+  const title = product.seoTitle || `${product.name} | 낫띵메터스`;
 
   return `<!-- NM_EXISTING_PRODUCT_META:START -->
   <meta name="description" content="${escapeHtml(product.description)}">
@@ -369,7 +374,7 @@ function upsertExistingProductMetadata(html, product) {
     /\s*<!-- NM_EXISTING_PRODUCT_META:START -->[\s\S]*?<!-- NM_EXISTING_PRODUCT_META:END -->/,
     ""
   );
-  const title = `${product.name} | 낫띵메터스`;
+  const title = product.seoTitle || `${product.name} | 낫띵메터스`;
   const withoutConflictingTags = withoutManagedBlock
     .replace(/<title>[\s\S]*?<\/title>/i, "")
     .replace(/<meta\s+name=["'](?:description|robots|twitter:card|twitter:title|twitter:description|twitter:image)["'][^>]*>/gi, "")

@@ -116,6 +116,31 @@
         "tags": ["쿠키 + 마그넷", "캐릭터 선물"]
       },
       "updatedAt": "2026-09-11"
+    },
+    {
+      "name": "COOKIE FLIGHT",
+      "slug": "cookie-flight",
+      "description": "비행기를 닮은 클래식버터, 더블초코, 제주말차, 오렌지 4가지 쿠키를 한 박스에 담은 낫띵메터스 쿠키 플라이트.",
+      "seoTitle": "COOKIE FLIGHT 비행기 쿠키 선물 | 낫띵메터스",
+      "thumbnail": "/images/main-order-cookie-thumb.png",
+      "images": ["/images/main-order-cookie-thumb.png", "/images/main-order-cookie-thumb-optimized.jpg"],
+      "status": "active",
+      "indexing": "index",
+      "sitemap": true,
+      "category": "쿠키 선물세트",
+      "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
+      "primaryUrl": "/products/cookie-flight/",
+      "detailPageMode": "existing",
+      "badge": "4 FLAVORS · COOKIE FLIGHT",
+      "additionalProperties": [
+        { "@type": "PropertyValue", "name": "맛 구성", "value": "클래식버터 · 더블초코 · 제주말차 · 오렌지" }
+      ],
+      "homeCard": {
+        "englishName": "COOKIE FLIGHT",
+        "tags": ["4 FLAVORS", "FROM GIMPO"],
+        "orderInfo": "예약 제작 · 공항동 픽업"
+      },
+      "updatedAt": "2026-09-22"
     }
   ],
   "works": [
@@ -141,7 +166,6 @@
     { "path": "/products/lucky-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 행운쿠키 4가지맛 세트", "price": 15000, "minOrder": "최소 1세트", "category": "행운쿠키 선물세트", "primaryUrl": "/products/lucky-cookie/" } },
     { "path": "/products/scone/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/products/terminal-sand-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
-    { "path": "/products/cookie-flight/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
     { "path": "/products/crew-brownie/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
     { "path": "/products/gimpo-airport-brookie/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
     { "path": "/guides/wedding-favor-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "workCardLabel": "결혼식 날 건넨 감사 쿠키", "workCardDetails": { "purpose": "결혼식 답례", "context": "결혼식" }, "workCardActionLabel": "결혼식 답례 가이드 보기 →" },

@@ -282,6 +282,53 @@ for (const loc of locs) {
   }
 }
 
+const cookieFlightPath = "/products/cookie-flight/";
+const cookieFlightProduct = products.find((product) => product.primaryUrl === cookieFlightPath);
+assert.deepEqual(
+  {
+    status: cookieFlightProduct?.status,
+    indexing: cookieFlightProduct?.indexing,
+    sitemap: cookieFlightProduct?.sitemap,
+    detailPageMode: cookieFlightProduct?.detailPageMode
+  },
+  { status: "active", indexing: "index", sitemap: true, detailPageMode: "existing" },
+  "COOKIE FLIGHT should be an active, indexable existing product"
+);
+assert.equal((sitePages.pages || []).some((page) => page.path === cookieFlightPath), false, "COOKIE FLIGHT must not remain as a duplicate page-registry entry");
+assert.ok(locs.includes(`${SITE_URL}${cookieFlightPath}`), "sitemap should include COOKIE FLIGHT");
+const cookieFlightHtml = readHtml(filePathForPathname(cookieFlightPath));
+assert.match(getRobots(cookieFlightHtml), /\bindex\b/);
+assert.equal(getRobots(cookieFlightHtml).includes("noindex"), false, "COOKIE FLIGHT must be indexable");
+assert.equal(getAttribute(cookieFlightHtml, /<title>([\s\S]*?)<\/title>/i), "COOKIE FLIGHT 비행기 쿠키 선물 | 낫띵메터스");
+assert.match(getMeta(cookieFlightHtml, "name", "description"), /클래식버터, 더블초코, 제주말차, 오렌지/);
+for (const flavor of ["클래식버터", "더블초코", "제주말차", "오렌지"]) {
+  assert.ok(cookieFlightHtml.includes(flavor), `COOKIE FLIGHT should visibly name ${flavor}`);
+}
+for (const unverifiedDetail of ["4,500원부터", "1구부터", "1구, 2구, 4구", "handmade-hero.jpg", "handmade-4box-01.jpg"]) {
+  assert.equal(cookieFlightHtml.includes(unverifiedDetail), false, `COOKIE FLIGHT must not include unverified detail: ${unverifiedDetail}`);
+}
+assert.equal(cookieFlightHtml.includes("김포공항 내부 매장"), false, "COOKIE FLIGHT must not imply an in-airport shop");
+for (const href of ["../../pickup/", "../../magok-cookie/", "../../works/"]) {
+  assert.ok(cookieFlightHtml.includes(`href=\"${href}\"`), `COOKIE FLIGHT should link to ${href}`);
+}
+const cookieFlightSchema = getStaticSchema(cookieFlightHtml);
+const cookieFlightGraph = cookieFlightSchema["@graph"] || [];
+const cookieFlightWebPage = cookieFlightGraph.find((entry) => entry["@type"] === "ProductPage");
+const cookieFlightSchemaProduct = cookieFlightGraph.find((entry) => entry["@type"] === "Product");
+assert.ok(cookieFlightSchemaProduct, "COOKIE FLIGHT should have Product schema");
+assert.equal(cookieFlightSchemaProduct?.offers, undefined, "COOKIE FLIGHT must not infer a price in Product schema");
+assert.deepEqual(
+  cookieFlightSchemaProduct?.additionalProperty?.map((property) => [property.name, property.value]),
+  [["맛 구성", "클래식버터 · 더블초코 · 제주말차 · 오렌지"], ["수령 방식", "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담"]],
+  "COOKIE FLIGHT Product schema should contain only verified flavor and fulfillment facts"
+);
+assert.deepEqual(cookieFlightWebPage?.about, { "@id": `${SITE_URL}${cookieFlightPath}#product` }, "COOKIE FLIGHT ProductPage should link to its Product entity");
+const cookieFlightHomeHtml = readHtml(filePathForPathname("/"));
+assert.match(cookieFlightHomeHtml, /data-analytics-label="COOKIE FLIGHT"[\s\S]*?href="products\/cookie-flight\/"|href="products\/cookie-flight\/"[\s\S]*?data-analytics-label="COOKIE FLIGHT"/);
+assert.match(cookieFlightHomeHtml, /<span>4 FLAVORS<\/span><span>FROM GIMPO<\/span>/, "home should render COOKIE FLIGHT registry tags");
+const cookieFlightWorksHtml = readHtml(filePathForPathname("/works/"));
+assert.equal(cookieFlightWorksHtml.includes("COOKIE FLIGHT"), false, "works must not claim a COOKIE FLIGHT production case without evidence");
+
 assert.ok(businessFacts.sameAs?.includes(NAVER_PLACE_URL), "business facts should include the official Naver Place URL");
 
 for (const product of products) {
@@ -361,6 +408,8 @@ assert.deepEqual(
   "magok cookie hub should be an indexable sitemap page"
 );
 const magokHtml = readHtml(filePathForPathname(magokPath));
+const magokLineup = magokHtml.match(/<div class="magok-product-grid">([\s\S]*?)<\/div>\s*<\/section>/)?.[1] || "";
+assert.equal((magokLineup.match(/<h3>COOKIE FLIGHT<\/h3>/g) || []).length, 1, "magok lineup should expose COOKIE FLIGHT exactly once");
 assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 쿠키/);
 assert.match(getMeta(magokHtml, "name", "description"), /쿠키|답례품/);
 assert.match(magokHtml, /<h1\b[^>]*>/i, "magok cookie hub should have an h1");
@@ -443,9 +492,10 @@ assert.deepEqual(
     ["브루키", `${SITE_URL}/brookie/`],
     ["수제꾸덕쿠키", `${SITE_URL}/out/`],
     ["행운쿠키", `${SITE_URL}/out/fortune/`],
-    ["쿠키크루", `${SITE_URL}/cookie-crew/`]
+    ["쿠키크루", `${SITE_URL}/cookie-crew/`],
+    ["COOKIE FLIGHT", `${SITE_URL}/products/cookie-flight/`]
   ],
-  "pickup ItemList should match the four pickup order products"
+  "pickup ItemList should match the five pickup order products"
 );
 const pickupFaq = pickupSchema["@graph"].find((entry) => entry["@type"] === "FAQPage");
 assert.equal(pickupFaq?.mainEntity?.length, 6, "pickup FAQPage should contain six AEO questions");
