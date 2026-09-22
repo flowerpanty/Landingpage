@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "site-pages.json"), "utf8"));
 const cookieCareDashboardEvents = [
   "cookie_care_entry_click",
   "cookie_care_find_product_click",
@@ -165,10 +166,15 @@ try {
   assert.match(notFound.body.toString("utf8"), /제작 사례/);
   assert.match(notFound.body.toString("utf8"), /주문 상담/);
 
-  const legacy = await request(server.baseUrl, "/cookies");
-  assert.equal(legacy.status, 301);
-  assert.equal(legacy.headers.location, "https://nothingmatters.co.kr/products/handmade-cookie/");
-  assert.match(legacy.headers["cache-control"], /max-age=86400/);
+  for (const [alias, target] of Object.entries(SITE_PAGE_DATA.redirects || {})) {
+    const legacy = await request(server.baseUrl, alias);
+    assert.equal(legacy.status, 301, `${alias} should redirect`);
+    assert.equal(legacy.headers.location, new URL(target, "https://nothingmatters.co.kr").toString(), `${alias} should redirect to its registry target`);
+    assert.match(legacy.headers["cache-control"], /max-age=86400/, `${alias} should use the long redirect cache policy`);
+  }
+  assert.equal((await request(server.baseUrl, "/brookie")).headers.location, "https://nothingmatters.co.kr/brookie/");
+  assert.equal((await request(server.baseUrl, "/cookies")).headers.location, "https://nothingmatters.co.kr/out/");
+  assert.equal((await request(server.baseUrl, "/lucky")).headers.location, "https://nothingmatters.co.kr/out/fortune/");
 } finally {
   await stopServer(server);
 }

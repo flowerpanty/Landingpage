@@ -211,14 +211,7 @@ const wordpressJournal = createWordpressJournalService({
     ? async () => { throw new Error("wordpress_offline"); }
     : global.fetch
 });
-const LEGACY_PRODUCT_REDIRECTS = {
-  "/brookie": "/products/custom-brownie-cookie/",
-  "/brookie.html": "/products/custom-brownie-cookie/",
-  "/cookies": "/products/handmade-cookie/",
-  "/cookies.html": "/products/handmade-cookie/",
-  "/lucky": "/products/lucky-cookie/",
-  "/lucky.html": "/products/lucky-cookie/",
-};
+const LEGACY_PRODUCT_REDIRECTS = SITE_PAGE_DATA.redirects || {};
 
 let googleTokenCache = {
   accessToken: "",

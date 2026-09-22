@@ -40,6 +40,8 @@ for (const product of products) {
 }
 
 assert.equal(serverSource.includes("PUBLIC_WORK_CARD_META_BY_HREF"), false, "works metadata must not use a separate href map");
+assert.match(serverSource, /const LEGACY_PRODUCT_REDIRECTS = SITE_PAGE_DATA\.redirects \|\| \{\};/, "redirects must come from site-pages.json");
+assert.doesNotMatch(serverSource, /const LEGACY_PRODUCT_REDIRECTS = \{/, "server must not define a separate legacy redirect map");
 for (const product of products) {
   assert.ok(product.primaryUrl, `${product.name}: primaryUrl is required`);
   assert.ok(registryEntries.has(normalizePathname(product.primaryUrl)), `${product.name}: primaryUrl must resolve through the registry`);
@@ -47,6 +49,45 @@ for (const product of products) {
 }
 for (const work of sitePages.works || []) {
   assert.ok(registryEntries.has(normalizePathname(work.href)), `works item ${work.id}: href must exist in the registry`);
+}
+
+const primaryProducts = products.filter((product) => product.urlRole === "primary-product");
+const searchLandingPages = (sitePages.pages || []).filter((page) => page.urlRole === "search-landing");
+assert.equal(primaryProducts.length, 5, "site registry should define five primary products");
+assert.equal(searchLandingPages.length, 4, "site registry should define four search landing pages");
+const primaryProductUrls = new Set(primaryProducts.map((product) => normalizePathname(product.primaryUrl)));
+for (const product of primaryProducts) {
+  const pathname = normalizePathname(product.primaryUrl);
+  const html = readHtml(filePathForPathname(pathname));
+  assert.equal(product.status, "active", `${pathname}: primary product should remain active`);
+  assert.equal(product.indexing, "index", `${pathname}: primary product should remain indexable`);
+  assert.equal(product.sitemap, true, `${pathname}: primary product should remain in the sitemap`);
+  assert.equal(getCanonical(html), `${SITE_URL}${pathname}`, `${pathname}: primary product must use self canonical`);
+  assert.equal(isIndexFollow(html), true, `${pathname}: primary product must remain index,follow`);
+  assert.equal(locSet.has(`${SITE_URL}${pathname}`), true, `${pathname}: primary product must remain in the sitemap`);
+}
+for (const page of searchLandingPages) {
+  const pathname = normalizePathname(page.path);
+  const html = readHtml(filePathForPathname(pathname));
+  assert.equal(page.indexing, "index", `${pathname}: search landing should remain indexable`);
+  assert.equal(page.sitemap, true, `${pathname}: search landing should remain in the sitemap`);
+  assert.ok(primaryProductUrls.has(normalizePathname(page.relatedProductPrimaryUrl)), `${pathname}: relatedProductPrimaryUrl must point to a primary product`);
+  assert.equal(getCanonical(html), `${SITE_URL}${pathname}`, `${pathname}: search landing must use self canonical`);
+  assert.equal(isIndexFollow(html), true, `${pathname}: search landing must remain index,follow`);
+  assert.equal(locSet.has(`${SITE_URL}${pathname}`), true, `${pathname}: search landing must remain in the sitemap`);
+  const relatedUrl = `${SITE_URL}${normalizePathname(page.relatedProductPrimaryUrl)}`;
+  assert.ok([...html.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["']/gi)].some((match) => {
+    try { return new URL(match[1], `${SITE_URL}${pathname}`).href === relatedUrl; } catch { return false; }
+  }), `${pathname}: search landing should link to its related primary product`);
+}
+const brookieHtml = readHtml(filePathForPathname("/brookie/"));
+for (const relatedLanding of ["/products/brownie-cookie/", "/products/custom-brownie-cookie/"]) {
+  assert.ok([...brookieHtml.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["']/gi)].some((match) => {
+    try { return new URL(match[1], `${SITE_URL}/brookie/`).pathname === relatedLanding; } catch { return false; }
+  }), `primary Brookie page should link to ${relatedLanding}`);
+}
+for (const alias of Object.keys(sitePages.redirects || {})) {
+  assert.equal(locSet.has(`${SITE_URL}${alias}`), false, `${alias}: redirect aliases must not enter the sitemap`);
 }
 
 const registrySitemapLocs = [...registryEntries.values()]

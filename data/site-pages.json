@@ -8,12 +8,12 @@
     "/out/404/"
   ],
   "redirects": {
-    "/brookie": "/products/custom-brownie-cookie/",
-    "/brookie.html": "/products/custom-brownie-cookie/",
-    "/cookies": "/products/handmade-cookie/",
-    "/cookies.html": "/products/handmade-cookie/",
-    "/lucky": "/products/lucky-cookie/",
-    "/lucky.html": "/products/lucky-cookie/"
+    "/brookie": "/brookie/",
+    "/brookie.html": "/brookie/",
+    "/cookies": "/out/",
+    "/cookies.html": "/out/",
+    "/lucky": "/out/fortune/",
+    "/lucky.html": "/out/fortune/"
   },
   "products": [
     {
@@ -28,6 +28,7 @@
       "category": "브루키",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/brookie",
       "primaryUrl": "/brookie/",
+      "urlRole": "primary-product",
       "publicName": "브루키",
       "workCardLabel": "캐릭터와 문구를 고른 브루키",
       "workCardDetails": { "product": "브루키", "context": "캐릭터와 문구 선택" },
@@ -39,7 +40,7 @@
         "tags": ["캐릭터 선택", "문구 선택"],
         "orderInfo": "기본형 1구 7,800원 · 최소 12개"
       },
-      "updatedAt": "2026-09-11"
+      "updatedAt": "2026-09-22"
     },
     {
       "name": "수제꾸덕쿠키",
@@ -53,6 +54,7 @@
       "category": "수제꾸덕쿠키",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
       "primaryUrl": "/out/",
+      "urlRole": "primary-product",
       "publicName": "수제꾸덕쿠키",
       "workCardLabel": "귀여운 표정을 고른 작은 선물",
       "workCardDetails": { "purpose": "작은 선물", "product": "수제꾸덕쿠키" },
@@ -78,6 +80,7 @@
       "category": "행운쿠키",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/lucky?step=1",
       "primaryUrl": "/out/fortune/",
+      "urlRole": "primary-product",
       "publicName": "행운쿠키",
       "workCardLabel": "응원하는 마음을 담은 행운쿠키",
       "workCardDetails": { "product": "행운쿠키", "context": "응원 선물" },
@@ -105,6 +108,7 @@
       "category": "쿠키크루",
       "orderUrl": "https://pf.kakao.com/_QdCaK/chat",
       "primaryUrl": "/cookie-crew/",
+      "urlRole": "primary-product",
       "publicName": "쿠키크루",
       "workCardLabel": "작은 쿠키가 전하는 특별한 마음",
       "workCardDetails": { "product": "쿠키크루", "context": "캐릭터 선물" },
@@ -130,6 +134,7 @@
       "category": "쿠키 선물세트",
       "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
       "primaryUrl": "/products/cookie-flight/",
+      "urlRole": "primary-product",
       "detailPageMode": "existing",
       "badge": "4 FLAVORS · COOKIE FLIGHT",
       "additionalProperties": [
@@ -160,10 +165,10 @@
     { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "마곡 쿠키·답례품" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-14" },
     { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-17", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
-    { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "workCardLabel": "짧은 문구를 더한 브라우니", "workCardDetails": { "product": "브라우니쿠키", "packaging": "짧은 문구 추가" }, "workCardActionLabel": "브라우니쿠키 자세히 보기 →", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },
-    { "path": "/products/custom-brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 커스텀 브라우니쿠키", "lowPrice": 7800, "minOrder": "보통 12개 이상 상담", "category": "커스텀 브라우니쿠키", "primaryUrl": "/products/custom-brownie-cookie/" } },
-    { "path": "/products/handmade-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 수제꾸덕쿠키", "lowPrice": 4500, "minOrder": "대부분 최소 수량 없음", "category": "수제쿠키 선물세트", "primaryUrl": "/products/handmade-cookie/" } },
-    { "path": "/products/lucky-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28", "product": { "name": "nothingmatters 행운쿠키 4가지맛 세트", "price": 15000, "minOrder": "최소 1세트", "category": "행운쿠키 선물세트", "primaryUrl": "/products/lucky-cookie/" } },
+    { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/brookie/", "workCardLabel": "짧은 문구를 더한 브라우니", "workCardDetails": { "product": "브라우니쿠키", "packaging": "짧은 문구 추가" }, "workCardActionLabel": "브라우니쿠키 자세히 보기 →", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },
+    { "path": "/products/custom-brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/brookie/", "product": { "name": "nothingmatters 커스텀 브라우니쿠키", "lowPrice": 7800, "minOrder": "보통 12개 이상 상담", "category": "커스텀 브라우니쿠키", "primaryUrl": "/products/custom-brownie-cookie/" } },
+    { "path": "/products/handmade-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/out/", "product": { "name": "nothingmatters 수제꾸덕쿠키", "lowPrice": 4500, "minOrder": "대부분 최소 수량 없음", "category": "수제쿠키 선물세트", "primaryUrl": "/products/handmade-cookie/" } },
+    { "path": "/products/lucky-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/out/fortune/", "product": { "name": "nothingmatters 행운쿠키 4가지맛 세트", "price": 15000, "minOrder": "최소 1세트", "category": "행운쿠키 선물세트", "primaryUrl": "/products/lucky-cookie/" } },
     { "path": "/products/scone/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/products/terminal-sand-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/products/crew-brownie/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
