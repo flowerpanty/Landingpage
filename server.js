@@ -169,9 +169,9 @@ const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "site-
 const WORK_CARD_DETAIL_FIELDS = [
   ["purpose", "용도"],
   ["product", "관련 제품"],
-  ["fulfillment", "수령 방식"],
   ["context", "지역/행사 유형"],
-  ["packaging", "포장 또는 문구 여부"]
+  ["packaging", "포장 또는 문구 여부"],
+  ["fulfillment", "수령 방식"]
 ];
 const PUBLIC_WORK_REGISTRY_BY_HREF = new Map();
 
@@ -1170,7 +1170,7 @@ function renderPublicWorkCards(items = getPublicWorkItems()) {
               <div class="nm-work-card-copy">
                 <p>${escapeHtml(card.label)}</p>
                 ${details}
-                <small>${escapeHtml(formatPublicWorkDate(item.createdAt))} · 낫띵메터스 공항동 작업실</small>
+                <small>${escapeHtml(`${formatPublicWorkDate(item.createdAt)}${item.userUploaded ? "" : " · 낫띵메터스 공항동 작업실"}`)}</small>
                 ${action}
               </div>
             </article>`;

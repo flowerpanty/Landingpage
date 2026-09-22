@@ -156,6 +156,8 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   assert.doesNotMatch(works.body, /<strong>진단용 쿠키 사진<\/strong>/);
   assert.match(works.body, new RegExp(upload.payload.item.src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(works.body, /nm-work-card-details/, "uploads without optional works metadata should use the minimal card fallback");
+  const captionOnlyCard = works.body.match(/<article class="nm-work-card">[\s\S]*?진단용 쿠키 사진[\s\S]*?<\/article>/)?.[0] || "";
+  assert.doesNotMatch(captionOnlyCard, /공항동 작업실/, "caption-only uploads must not inherit default workshop metadata");
   assert.match(works.body, /href="https:\/\/nothingmatters\.co\.kr\/products\/brownie-cookie\/"/, "same-domain absolute work href should render as a valid link");
   const worksSchemaMatch = works.body.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/);
   assert.ok(worksSchemaMatch, "works should include runtime JSON-LD");
@@ -191,7 +193,7 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
     body: JSON.stringify({
       dataUrl: `data:image/png;base64,${TINY_PNG}`,
       caption: "메타데이터가 있는 제작 사진",
-      href: "/not-in-the-registry/",
+      href: "/products/brownie-cookie/",
       purpose: "작은 선물",
       fulfillment: "예약 픽업",
       packaging: "문구 추가"
@@ -202,11 +204,31 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
     { purpose: metadataUpload.payload.item.purpose, fulfillment: metadataUpload.payload.item.fulfillment, packaging: metadataUpload.payload.item.packaging },
     { purpose: "작은 선물", fulfillment: "예약 픽업", packaging: "문구 추가" }
   );
+  const metadataWorks = await requestText(baseUrl, "/works/");
+  assert.equal(metadataWorks.response.status, 200, "an uploaded work with optional metadata must render");
+  assert.match(metadataWorks.body, /메타데이터가 있는 제작 사진/);
+  assert.match(metadataWorks.body, /예약 픽업/);
+  assert.match(metadataWorks.body, /문구 추가/);
+  assert.match(metadataWorks.body, /href="\/products\/brownie-cookie\/"/);
+  assert.doesNotMatch(metadataWorks.body, /<dt>관련 제품<\/dt><dd>브라우니쿠키<\/dd>/, "uploaded works must not inherit registry metadata");
+
+  const invalidHrefUpload = await requestJson(baseUrl, "/api/gallery", {
+    method: "POST",
+    headers: { ...adminHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      dataUrl: `data:image/png;base64,${TINY_PNG}`,
+      caption: "외부 링크가 제거되는 제작 사진",
+      href: "https://example.com/not-a-public-work"
+    })
+  });
+  assert.equal(invalidHrefUpload.response.status, 201);
   const invalidHrefWorks = await requestText(baseUrl, "/works/");
-  assert.equal(invalidHrefWorks.response.status, 200, "an uploaded work with an unknown href must not break works rendering");
-  assert.match(invalidHrefWorks.body, /메타데이터가 있는 제작 사진/);
-  assert.match(invalidHrefWorks.body, /예약 픽업/);
-  assert.doesNotMatch(invalidHrefWorks.body, /href="\/not-in-the-registry\//);
+  assert.equal(invalidHrefWorks.response.status, 200, "an uploaded work with an external href must not break works rendering");
+  assert.match(invalidHrefWorks.body, /외부 링크가 제거되는 제작 사진/);
+  assert.doesNotMatch(invalidHrefWorks.body, /href="https:\/\/example\.com\/not-a-public-work"/);
+  const invalidHrefSchema = JSON.parse(invalidHrefWorks.body.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/)[1]);
+  const invalidHrefItem = invalidHrefSchema["@graph"].find((entry) => entry["@type"] === "ItemList").itemListElement[0];
+  assert.equal("url" in invalidHrefItem, false, "external uploaded href must be omitted from works JSON-LD");
 });
 
 await withTemporaryStorage(async ({ storageDir, baseUrl }) => {

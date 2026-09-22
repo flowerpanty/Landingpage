@@ -379,7 +379,7 @@ assert.match(
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${["/", "/works/"].includes(pathname) ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
@@ -636,14 +636,28 @@ assert.match(dessertGiftHtml, /href="\.\.\/\.\.\/pickup\/">김포공항 디저�
 const bulkHtml = readHtml(filePathForPathname("/bulk/"));
 assert.match(bulkHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·기업행사 안내 →<\/a>/, "bulk should link to Magok favor guidance");
 const worksHtml = readHtml(filePathForPathname("/works/"));
+assert.match(worksHtml, /id="works-answer-first"/, "works should expose an answer-first evidence explanation");
+assert.match(worksHtml, /관리자가 입력하지 않은 정보는 자동으로 추정하지 않습니다\./, "works should explain that missing metadata is not inferred");
 assert.match(worksHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·쿠키 선물 안내 →<\/a>/, "works should link to Magok favor guidance");
 assert.match(worksHtml, /href="\.\.\/pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "works should link to pickup guidance");
+assert.match(worksHtml, /실제 제작 사례를 본 뒤 수령 흐름 확인/, "works pickup CTA should explain the next step");
+assert.match(worksHtml, /회사·행사 목적이라면 마곡 안내 확인/, "works Magok CTA should explain the next step");
+const worksSchema = getStaticSchema(worksHtml);
+const worksWebPage = worksSchema["@graph"].find((entry) => entry["@type"] === "CollectionPage");
+assert.equal(worksWebPage?.dateModified, "2026-09-22", "works dateModified should match the registry");
 const visibleWorkCards = [...worksHtml.matchAll(/<article class="nm-work-card">([\s\S]*?)<\/article>/g)].map((match) => {
   const card = match[1];
   const label = cleanText(card.match(/<p>([\s\S]*?)<\/p>/i)?.[1] || "");
   const href = card.match(/<a\b[^>]*href="([^"]+)"/i)?.[1] || "";
   return { label, href: href ? new URL(href, `${SITE_URL}/works/`).pathname : "" };
 });
+const detailOrder = ["용도", "관련 제품", "지역/행사 유형", "포장 또는 문구 여부", "수령 방식"];
+for (const [index, match] of [...worksHtml.matchAll(/<article class="nm-work-card">([\s\S]*?)<\/article>/g)].entries()) {
+  const labels = [...match[1].matchAll(/<dt>([^<]+)<\/dt>/g)].map((detail) => detail[1]);
+  assert.deepEqual(labels, [...labels].sort((a, b) => detailOrder.indexOf(a) - detailOrder.indexOf(b)), `works card ${index + 1} metadata should use the standard order`);
+  assert.equal(labels.some((label) => !detailOrder.includes(label)), false, `works card ${index + 1} should only use standard metadata fields`);
+  assert.doesNotMatch(match[1], /<dd>\s*<\/dd>/, `works card ${index + 1} should not render empty metadata values`);
+}
 assert.deepEqual(
   visibleWorkCards,
   (sitePages.works || []).map((work) => {
@@ -653,13 +667,26 @@ assert.deepEqual(
   "works visible cards should be generated from the registry-backed works list"
 );
 assert.ok(visibleWorkCards.every((card) => registryEntries.has(normalizePathname(card.href))), "every work card link must exist in the registry");
-const worksSchema = getStaticSchema(worksHtml);
 const worksItemList = worksSchema["@graph"].find((entry) => entry["@type"] === "ItemList");
 assert.deepEqual(
   worksItemList?.itemListElement?.map((item) => ({ label: item.name, href: new URL(item.url).pathname })),
   visibleWorkCards,
   "works ItemList should describe the visible production cases rather than guide links"
 );
+const worksFaq = worksSchema["@graph"].find((entry) => entry["@type"] === "FAQPage");
+const worksFaqMarkup = worksHtml.match(/<section[^>]+class="[^"]*nm-works-faq[^"]*"[\s\S]*?<\/section>/)?.[0] || "";
+const visibleWorksFaq = [...worksFaqMarkup.matchAll(/<details><summary>([\s\S]*?)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)]
+  .map((match) => ({ name: cleanText(match[1]), text: cleanText(match[2]) }));
+assert.deepEqual(
+  visibleWorksFaq,
+  worksFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
+  "works visible FAQ and FAQPage should remain synchronized"
+);
+assert.equal(visibleWorksFaq.length, 3, "works should expose three evidence FAQ entries");
+assert.doesNotMatch(worksHtml, /사진과 같은 구성을 그대로 주문할 수 있습니다/, "works must not guarantee that a past configuration is currently orderable");
+for (const href of ["../guides/corporate-event-cookie/", "../guides/wedding-favor-cookie/", "../out/fortune/", "../products/brownie-cookie/"]) {
+  assert.equal(worksHtml.includes(`href="${href}"`), true, `works should preserve contextual link ${href}`);
+}
 const llms = fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8");
 assert.equal(llms.includes("in-store pickup"), false, "llms should not describe pickup as an in-store purchase");
 assert.match(llms, /reservation pickup at the Gonghang-dong workshop or vehicle quick consultation depending on schedule and quantity/);

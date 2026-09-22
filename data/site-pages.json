@@ -155,7 +155,7 @@
     { "path": "/bulk/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/small-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/contact/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },
-    { "path": "/works/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
+    { "path": "/works/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
     { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
     { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "마곡 쿠키·답례품" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-14" },

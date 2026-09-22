@@ -223,7 +223,11 @@ try {
   for (const width of MOBILE_WIDTHS) {
     await setViewport(cdp, width);
     await navigate(cdp, `${server.baseUrl}/works/`);
-    const worksRuntime = await evaluate(cdp, "() => { const pathname = (href) => new URL(href, location.href).pathname; const cards = [...document.querySelectorAll('.nm-work-card')].map((card) => { const cta = card.querySelector('.nm-work-card-copy a'); return { href: cta ? pathname(cta.href) : '', hasDetails: Boolean(card.querySelector('.nm-work-card-details')), ctaHeight: cta?.getBoundingClientRect().height || 0 }; }); return { viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth, nextOrder: Boolean(document.querySelector('#works-next-order-title')), nextOrderHrefs: [...document.querySelectorAll('.nm-works-next-order-grid a')].map((link) => pathname(link.href)), cards }; }");
+    await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.nm-work-card img').forEach((image) => { image.loading = 'eager'; })" });
+    await waitFor(cdp, "() => [...document.querySelectorAll('.nm-work-card img')].every((image) => image.complete && image.naturalWidth > 0)", `works images should load at ${width}px`);
+    const worksRuntime = await evaluate(cdp, "() => { const pathname = (href) => new URL(href, location.href).pathname; const cards = [...document.querySelectorAll('.nm-work-card')].map((card) => { const cta = card.querySelector('.nm-work-card-copy a'); const details = card.querySelector('.nm-work-card-details'); return { href: cta ? pathname(cta.href) : '', hasDetails: Boolean(details), detailsFits: !details || details.scrollWidth <= details.clientWidth, detailLabels: [...card.querySelectorAll('.nm-work-card-details dt')].map((label) => label.textContent.trim()), ctaHeight: cta?.getBoundingClientRect().height || 0 }; }); return { viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth, answerFirst: Boolean(document.querySelector('#works-answer-first')), faqCount: document.querySelectorAll('.nm-works-faq details').length, nextOrder: Boolean(document.querySelector('#works-next-order-title')), nextOrderHrefs: [...document.querySelectorAll('.nm-works-next-order-grid a')].map((link) => pathname(link.href)), cards }; }");
+    assert.equal(worksRuntime.answerFirst, true, `works should expose answer-first context at ${width}px`);
+    assert.equal(worksRuntime.faqCount, 3, `works should expose three FAQ entries at ${width}px`);
     assert.equal(worksRuntime.nextOrder, true, `works runtime should include NEXT ORDER at ${width}px`);
     for (const href of ["/bulk/", "/pickup/", "/magok-cookie/"]) {
       assert.ok(worksRuntime.nextOrderHrefs.includes(href), `works runtime should link to ${href} at ${width}px`);
@@ -231,6 +235,8 @@ try {
     const knownCards = worksRuntime.cards.filter((card) => knownWorkHrefs.includes(card.href));
     assert.equal(knownCards.length, knownWorkHrefs.length, `works runtime should render every default known card at ${width}px`);
     assert.ok(knownCards.every((card) => card.hasDetails), `known work cards should render metadata at ${width}px`);
+    assert.ok(knownCards.every((card) => card.detailsFits), `works metadata details should fit within their cards at ${width}px`);
+    assert.ok(knownCards.every((card) => card.detailLabels.every((label, index) => ["용도", "관련 제품", "지역/행사 유형", "포장 또는 문구 여부", "수령 방식"].indexOf(label) >= (index ? ["용도", "관련 제품", "지역/행사 유형", "포장 또는 문구 여부", "수령 방식"].indexOf(card.detailLabels[index - 1]) : -1))), `works metadata should keep its standard order at ${width}px`);
     assert.ok(knownCards.every((card) => card.ctaHeight >= 44), `known work card CTAs should be at least 44px at ${width}px`);
     assert.ok(worksRuntime.documentWidth <= worksRuntime.viewport && worksRuntime.bodyWidth <= worksRuntime.viewport, `works runtime should not horizontally overflow at ${width}px`);
   }
