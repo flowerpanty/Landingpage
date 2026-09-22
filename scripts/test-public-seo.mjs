@@ -53,22 +53,44 @@ for (const work of sitePages.works || []) {
 
 const primaryProducts = products.filter((product) => product.urlRole === "primary-product");
 const searchLandingPages = (sitePages.pages || []).filter((page) => page.urlRole === "search-landing");
+const expectedSearchLandingOffers = new Map([
+  ["/products/brownie-cookie/", ["lowPrice", 7800]],
+  ["/products/custom-brownie-cookie/", ["lowPrice", 7800]],
+  ["/products/handmade-cookie/", ["lowPrice", 4500]],
+  ["/products/lucky-cookie/", ["price", 15000]],
+]);
 assert.equal(primaryProducts.length, 5, "site registry should define five primary products");
 assert.equal(searchLandingPages.length, 4, "site registry should define four search landing pages");
 const primaryProductUrls = new Set(primaryProducts.map((product) => normalizePathname(product.primaryUrl)));
 for (const product of primaryProducts) {
   const pathname = normalizePathname(product.primaryUrl);
   const html = readHtml(filePathForPathname(pathname));
+  const schema = getStaticSchema(html);
+  const graph = schema["@graph"] || [];
+  const productPage = graph.find((entry) => entry["@type"] === "ProductPage");
+  const productEntity = graph.find((entry) => entry["@type"] === "Product");
   assert.equal(product.status, "active", `${pathname}: primary product should remain active`);
   assert.equal(product.indexing, "index", `${pathname}: primary product should remain indexable`);
   assert.equal(product.sitemap, true, `${pathname}: primary product should remain in the sitemap`);
   assert.equal(getCanonical(html), `${SITE_URL}${pathname}`, `${pathname}: primary product must use self canonical`);
   assert.equal(isIndexFollow(html), true, `${pathname}: primary product must remain index,follow`);
   assert.equal(locSet.has(`${SITE_URL}${pathname}`), true, `${pathname}: primary product must remain in the sitemap`);
+  assert.ok(productPage, `${pathname}: primary product should use ProductPage schema`);
+  assert.equal(productEntity?.["@id"], `${SITE_URL}${pathname}#product`, `${pathname}: primary Product should keep its local @id`);
+  assert.deepEqual(productPage?.about, { "@id": `${SITE_URL}${pathname}#product` }, `${pathname}: ProductPage should describe its local Product`);
+  assert.deepEqual(productEntity?.mainEntityOfPage, { "@id": `${SITE_URL}${pathname}#webpage` }, `${pathname}: Product should identify its local ProductPage`);
+  const expectedSubjects = searchLandingPages
+    .filter((page) => normalizePathname(page.relatedProductPrimaryUrl) === pathname)
+    .map((page) => ({ "@id": `${SITE_URL}${normalizePathname(page.path)}#webpage` }));
+  assert.deepEqual(productEntity?.subjectOf, expectedSubjects.length ? expectedSubjects : undefined, `${pathname}: primary Product subjectOf should list only related search landings`);
 }
 for (const page of searchLandingPages) {
   const pathname = normalizePathname(page.path);
   const html = readHtml(filePathForPathname(pathname));
+  const schema = getStaticSchema(html);
+  const graph = schema["@graph"] || [];
+  const productPage = graph.find((entry) => entry["@type"] === "ProductPage");
+  const productEntity = graph.find((entry) => entry["@type"] === "Product");
   assert.equal(page.indexing, "index", `${pathname}: search landing should remain indexable`);
   assert.equal(page.sitemap, true, `${pathname}: search landing should remain in the sitemap`);
   assert.ok(primaryProductUrls.has(normalizePathname(page.relatedProductPrimaryUrl)), `${pathname}: relatedProductPrimaryUrl must point to a primary product`);
@@ -79,6 +101,16 @@ for (const page of searchLandingPages) {
   assert.ok([...html.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["']/gi)].some((match) => {
     try { return new URL(match[1], `${SITE_URL}${pathname}`).href === relatedUrl; } catch { return false; }
   }), `${pathname}: search landing should link to its related primary product`);
+  assert.ok(productPage, `${pathname}: search landing should use ProductPage schema`);
+  assert.equal(productEntity?.["@id"], `${SITE_URL}${pathname}#product`, `${pathname}: search landing Product should keep its local @id`);
+  assert.deepEqual(productPage?.about, { "@id": `${SITE_URL}${pathname}#product` }, `${pathname}: ProductPage should describe its local Product`);
+  assert.deepEqual(productEntity?.mainEntityOfPage, { "@id": `${SITE_URL}${pathname}#webpage` }, `${pathname}: Product should identify its local ProductPage`);
+  assert.deepEqual(productEntity?.isRelatedTo, { "@id": `${SITE_URL}${normalizePathname(page.relatedProductPrimaryUrl)}#product` }, `${pathname}: search landing should relate only to its primary Product`);
+  const [offerKey, offerValue] = expectedSearchLandingOffers.get(pathname) || [];
+  assert.equal(productEntity?.offers?.[offerKey], offerValue, `${pathname}: search landing should retain its verified price metadata`);
+  assert.equal(productEntity?.offers?.priceCurrency, "KRW", `${pathname}: search landing offers should retain KRW`);
+  assert.deepEqual(productEntity?.offers?.seller, { "@id": `${SITE_URL}/#organization` }, `${pathname}: search landing offers should retain the organization seller`);
+  assert.equal(productEntity?.offers?.availability, undefined, `${pathname}: search landing offers must omit availability`);
 }
 const brookieHtml = readHtml(filePathForPathname("/brookie/"));
 for (const relatedLanding of ["/products/brownie-cookie/", "/products/custom-brownie-cookie/"]) {
@@ -327,6 +359,7 @@ for (const loc of locs) {
   }
 
   for (const product of graph.filter((item) => item["@type"] === "Product")) {
+    assert.equal(product.offers?.availability, undefined, `${pathname}: Product offers must not claim InStoreOnly or another unverified availability`);
     if (product.offers) {
       assert.ok(product.offers.priceCurrency, `${pathname}: Product offer missing currency`);
       assert.ok(product.offers.price != null || product.offers.lowPrice != null, `${pathname}: Product offer missing price`);

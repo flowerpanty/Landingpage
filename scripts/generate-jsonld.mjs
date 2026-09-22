@@ -240,7 +240,8 @@ function filePathForUrl(loc) {
 function getPageData(html, loc) {
   const url = new URL(loc);
   const canonical = getCanonicalHref(html) || loc;
-  const registryPage = (SITE_PAGE_DATA.pages || []).find((entry) => entry.path === url.pathname);
+  const registryPage = (SITE_PAGE_DATA.pages || []).find((entry) => entry.path === url.pathname)
+    || PRODUCT_CATALOG.find((product) => product.primaryUrl === url.pathname);
 
   return {
     loc,
@@ -258,16 +259,19 @@ function getPageData(html, loc) {
     breadcrumbName: registryPage?.breadcrumbName || "",
     status: registryPage?.status || "",
     indexing: registryPage?.indexing || "",
-    lastmod: registryPage?.lastmod || "",
+    lastmod: registryPage?.lastmod || registryPage?.updatedAt || "",
+    urlRole: registryPage?.urlRole || "",
+    relatedProductPrimaryUrl: registryPage?.relatedProductPrimaryUrl || "",
   };
 }
 
-function getPageType(pathname) {
-  if (pathname === "/" || pathname === "/works/") return "CollectionPage";
-  if (pathname === "/contact/") return "ContactPage";
-  if (pathname === "/guides/") return "CollectionPage";
-  if (pathname.startsWith("/products/")) return "ProductPage";
-  if (pathname === "/bulk/" || pathname === "/small-gift/") return "CollectionPage";
+function getPageType(page) {
+  if (["primary-product", "search-landing"].includes(page.urlRole)) return "ProductPage";
+  if (page.path === "/" || page.path === "/works/") return "CollectionPage";
+  if (page.path === "/contact/") return "ContactPage";
+  if (page.path === "/guides/") return "CollectionPage";
+  if (page.path.startsWith("/products/")) return "ProductPage";
+  if (page.path === "/bulk/" || page.path === "/small-gift/") return "CollectionPage";
   return "WebPage";
 }
 
@@ -381,7 +385,27 @@ function buildProduct(page) {
       "@id": ORGANIZATION_ID,
     },
     category: meta.category,
+    mainEntityOfPage: {
+      "@id": `${page.pageUrl}#webpage`,
+    },
   };
+
+  if (page.urlRole === "search-landing" && page.relatedProductPrimaryUrl) {
+    product.isRelatedTo = {
+      "@id": `${absoluteUrl(page.relatedProductPrimaryUrl)}#product`,
+    };
+  }
+
+  if (page.urlRole === "primary-product") {
+    const relatedSearchLandings = (SITE_PAGE_DATA.pages || []).filter((entry) => (
+      entry.urlRole === "search-landing" && entry.relatedProductPrimaryUrl === page.path
+    ));
+    if (relatedSearchLandings.length) {
+      product.subjectOf = relatedSearchLandings.map((entry) => ({
+        "@id": `${absoluteUrl(entry.path)}#webpage`,
+      }));
+    }
+  }
 
   if (meta.price != null) {
     product.offers = {
@@ -389,7 +413,6 @@ function buildProduct(page) {
       url: page.pageUrl,
       price: meta.price,
       priceCurrency: "KRW",
-      availability: "https://schema.org/InStoreOnly",
       seller: { "@id": ORGANIZATION_ID },
     };
   } else if (meta.lowPrice != null) {
@@ -398,7 +421,6 @@ function buildProduct(page) {
       url: page.pageUrl,
       lowPrice: meta.lowPrice,
       priceCurrency: "KRW",
-      availability: "https://schema.org/InStoreOnly",
       seller: { "@id": ORGANIZATION_ID },
     };
   }
@@ -472,7 +494,7 @@ function buildService(page) {
 
 function buildWebPage(page, breadcrumb, itemList, product, service) {
   const schema = {
-    "@type": getPageType(page.path),
+    "@type": getPageType(page),
     "@id": `${page.pageUrl}#webpage`,
     url: page.pageUrl,
     name: page.title.replace(/\s*\|\s*nothingmatters.*$/i, ""),
@@ -614,7 +636,7 @@ for (const loc of locs) {
       }
 
       const types = getGraphTypes(staticSchema);
-      for (const type of ["Organization", "Bakery", "WebSite", getPageType(new URL(loc).pathname)]) {
+      for (const type of ["Organization", "Bakery", "WebSite", getPageType(getPageData(html, loc))]) {
         if (!types.has(type)) failures.push(`${relativePath}: missing ${type}`);
       }
 
