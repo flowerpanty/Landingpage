@@ -432,14 +432,23 @@ try {
     assert.equal(pickupGiftGuide.columns, 1, `pickup dessert gift cards should stack at ${width}px`);
     assert.equal(pickupGiftGuide.clarification, true, `pickup dessert gift guide should clarify it is not inside Gimpo Airport at ${width}px`);
     assert.ok(pickupGiftGuide.cards.length === 3 && pickupGiftGuide.cards.every((card) => card.right <= width && card.titleFits), `pickup dessert gift cards should remain readable at ${width}px`);
+    const pickupChoiceGuide = await evaluate(cdp, "() => { const grid = document.querySelector('.nm-pickup-choice-grid'); const cards = [...document.querySelectorAll('.nm-pickup-choice-grid article')]; return { columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length, cards: cards.map((card) => { const title = card.querySelector('h3'); const link = card.querySelector('a'); const rect = card.getBoundingClientRect(); return { title: title?.textContent.trim() || '', href: link ? new URL(link.href).pathname : '', right: rect.right, titleFits: (title?.scrollWidth || 0) <= (title?.clientWidth || 0) }; }) }; }");
+    assert.equal(pickupChoiceGuide.columns, 1, `pickup choice guide should stack at ${width}px`);
+    assert.deepEqual(
+      pickupChoiceGuide.cards.map((card) => [card.title, card.href]),
+      [["COOKIE FLIGHT", "/products/cookie-flight/"], ["브루키", "/brookie/"], ["수제꾸덕쿠키", "/out/"], ["행운쿠키", "/out/fortune/"], ["쿠키크루", "/cookie-crew/"]],
+      `pickup choice guide should retain five contextual product links at ${width}px`
+    );
+    assert.ok(pickupChoiceGuide.cards.every((card) => card.right <= width && card.titleFits), `pickup choice guide cards should fit at ${width}px`);
     await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.nm-pickup-proof img').forEach((image) => { image.loading = 'eager'; })" });
     await waitFor(cdp, "() => [...document.querySelectorAll('.nm-pickup-proof img')].every((image) => image.complete && image.naturalWidth > 0)", `pickup proof images should load at ${width}px`);
     const pickupAuthority = await evaluate(cdp, "() => ({ breadcrumb: document.querySelector('.nm-pickup-visible-breadcrumb')?.textContent.trim() || '', answer: document.querySelector('.nm-pickup-answer-first')?.textContent || '', proofImages: [...document.querySelectorAll('.nm-pickup-proof img')].map((image) => ({ loaded: Boolean(image.naturalWidth && image.naturalHeight), objectFit: getComputedStyle(image).objectFit, right: image.getBoundingClientRect().right })), proofHref: document.querySelector('.nm-pickup-proof a')?.getAttribute('href') || '' })");
     assert.match(pickupAuthority.breadcrumb, /홈\s*\/\s*김포공항 디저트 선물·픽업/);
     assert.match(pickupAuthority.answer, /김포공항 내부 매장이 아니며 방문 전 픽업 예약이 필요합니다/);
+    assert.match(pickupAuthority.answer, /원하는 쿠키를 먼저 고르고 픽업 날짜를 예약한 뒤 공항동 작업실에서 수령하면 됩니다/);
     assert.equal(pickupAuthority.proofHref, "../works/");
     assert.ok(pickupAuthority.proofImages.length === 3 && pickupAuthority.proofImages.every((image) => image.loaded && image.objectFit === 'contain' && image.right <= width), `pickup proof images should fit without cropping at ${width}px`);
-    assert.equal(pickupOrders.faqCards, 6, `pickup should keep six AEO FAQ items at ${width}px`);
+    assert.equal(pickupOrders.faqCards, 7, `pickup should keep seven AEO FAQ items at ${width}px`);
     assert.match(pickupOrders.pageText, /김포공항/);
     assert.match(pickupOrders.pageText, /디저트 선물/);
     assert.match(pickupOrders.pageText, /답례품/);

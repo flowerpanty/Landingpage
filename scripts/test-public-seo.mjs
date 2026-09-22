@@ -436,6 +436,10 @@ assert.deepEqual(
 const magokHtml = readHtml(filePathForPathname(magokPath));
 const magokLineup = magokHtml.match(/<div class="magok-product-grid">([\s\S]*?)<\/div>\s*<\/section>/)?.[1] || "";
 assert.equal((magokLineup.match(/<h3>COOKIE FLIGHT<\/h3>/g) || []).length, 1, "magok lineup should expose COOKIE FLIGHT exactly once");
+assert.match(magokLineup, /김포공항 인근 시그니처 선물/, "magok should preserve the verified COOKIE FLIGHT context");
+for (const forbidden of ["마곡 전용 상품", "마곡 매장 상품"]) {
+  assert.equal(magokLineup.includes(forbidden), false, `magok COOKIE FLIGHT lineup must not imply ${forbidden}`);
+}
 assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 쿠키/);
 assert.match(getMeta(magokHtml, "name", "description"), /쿠키|답례품/);
 assert.match(magokHtml, /<h1\b[^>]*>/i, "magok cookie hub should have an h1");
@@ -524,10 +528,15 @@ assert.deepEqual(
   "pickup ItemList should match the five pickup order products"
 );
 const pickupFaq = pickupSchema["@graph"].find((entry) => entry["@type"] === "FAQPage");
-assert.equal(pickupFaq?.mainEntity?.length, 6, "pickup FAQPage should contain six AEO questions");
+assert.equal(pickupFaq?.mainEntity?.length, 7, "pickup FAQPage should contain seven AEO questions");
 const pickupProductsQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "김포공항 디저트 선물은 어떤 제품이 있나요?");
 for (const productName of ["브루키", "수제꾸덕쿠키", "행운쿠키", "쿠키크루", "COOKIE FLIGHT"]) {
   assert.match(pickupProductsQuestion?.acceptedAnswer?.text || "", new RegExp(productName), `pickup FAQ should list ${productName}`);
+}
+const pickupFlightQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "김포공항 근처에서 비행기 모양 쿠키를 살 수 있나요?");
+assert.ok(pickupFlightQuestion, "pickup FAQ should answer the airplane-shaped cookie question");
+for (const flavor of ["COOKIE FLIGHT", "클래식버터", "더블초코", "제주말차", "오렌지", "김포공항 내부 매장이 아니며", "공항동 작업실"]) {
+  assert.match(pickupFlightQuestion?.acceptedAnswer?.text || "", new RegExp(flavor), `pickup airplane-cookie FAQ should include ${flavor}`);
 }
 const reservationQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "예약 없이 바로 구매할 수 있나요?");
 assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 픽업 전용/);
@@ -536,6 +545,7 @@ assert.match(pickupHtml, /예약 픽업 전용 작업실/);
 assert.match(pickupHtml, /예약 없이 방문하면 현장 구매가 어렵습니다/);
 assert.match(pickupHtml, /홈[\s\S]*김포공항 디저트 선물·픽업/, "pickup should expose a visible breadcrumb");
 assert.match(pickupHtml, /김포공항 내부 매장이 아니며 방문 전 픽업 예약이 필요합니다/, "pickup answer-first should clarify the reservation-only location");
+assert.match(pickupHtml, /원하는 쿠키를 먼저 고르고 픽업 날짜를 예약한 뒤 공항동 작업실에서 수령하면 됩니다/, "pickup quick answer should explain the reservation flow directly");
 assert.match(pickupHtml, /픽업으로 준비하는 쿠키를[\s\S]*먼저 확인해보세요/, "pickup should include first-party proof");
 assert.equal((pickupHtml.match(/case-(?:handmade-cookie|corporate-favor|lucky-cookie)\.jpeg/g) || []).length, 3, "pickup proof should use three existing production images");
 assert.match(pickupHtml, /href="\.\.\/works\/">실제 제작 사례 더 보기 →<\/a>/, "pickup proof should link to works");
@@ -545,6 +555,25 @@ assert.match(pickupGiftGuide, /마중·배웅할 때 쿠키 선물/);
 assert.match(pickupGiftGuide, /답례품·여러 개 준비할 때/);
 assert.match(pickupGiftGuide, /김포공항 내부 매장이 아니라/);
 assert.match(pickupGiftGuide, /공항동의 예약 픽업 전용 작업실/);
+assert.match(pickupGiftGuide, /비행기를 닮은 COOKIE FLIGHT/);
+assert.match(pickupGiftGuide, /브루키, 수제꾸덕쿠키, 행운쿠키, 쿠키크루, [\s\S]*COOKIE FLIGHT/);
+assert.match(pickupGiftGuide, /href="\.\.\/products\/cookie-flight\/"/, "pickup gift guide should link COOKIE FLIGHT contextually");
+const pickupChoiceGuide = pickupHtml.match(/<section class="nm-seo-section nm-seo-section--cream nm-pickup-choice-guide"[\s\S]*?<\/section>/)?.[0] || "";
+assert.match(pickupChoiceGuide, /김포공항 가기 전 선물,[\s\S]*어떤 쿠키를 고르면 될까요/);
+for (const [name, href] of [
+  ["COOKIE FLIGHT", "../products/cookie-flight/"],
+  ["브루키", "../brookie/"],
+  ["수제꾸덕쿠키", "../out/"],
+  ["행운쿠키", "../out/fortune/"],
+  ["쿠키크루", "../cookie-crew/"]
+]) {
+  assert.match(pickupChoiceGuide, new RegExp(`<h3>${name}<\\/h3>[\\s\\S]*?href="${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `pickup choice guide should link ${name}`);
+}
+const pickupHrefPaths = [...pickupHtml.matchAll(/<a\b[^>]*href="([^"]+)"/gi)]
+  .map((match) => new URL(match[1], `${SITE_URL}${pickupPath}`).pathname);
+for (const pathname of ["/products/cookie-flight/", "/brookie/", "/out/", "/out/fortune/", "/cookie-crew/", "/works/", "/bulk/", "/magok-cookie/"]) {
+  assert.ok(pickupHrefPaths.includes(pathname), `pickup should provide a contextual link to ${pathname}`);
+}
 for (const forbidden of ["김포공항 매장", "김포공항점", "공항 내 매장", "김포공항 안에"]) {
   assert.equal(pickupHtml.includes(forbidden), false, `pickup page contains forbidden location claim: ${forbidden}`);
 }
@@ -563,6 +592,8 @@ assert.match(getMeta(homeHtml, "name", "description"), /서울 강서구 공항�
 assert.match(homeHtml, /서울특별시 강서구 송정로 25 1층/);
 assert.match(homeHtml, /예약 제작 · 예약 픽업 전용/);
 assert.match(homeHtml, /href="guides\/">쿠키 선물·답례품 가이드 →<\/a>/);
+assert.equal((homeHtml.match(/data-analytics-label="COOKIE FLIGHT"/g) || []).length, 1, "home should show COOKIE FLIGHT exactly once");
+assert.match(homeHtml, /href="products\/cookie-flight\/"/, "home COOKIE FLIGHT card should use its public product URL");
 assert.match(homeHtml, /href="pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "home should use a descriptive pickup hub anchor");
 assert.match(homeHtml, /김포공항·송정역 인근 공항동의 예약 픽업과 마곡 답례품·기업행사 상담/, "home visit copy should clarify both local intent hubs");
 const homeSchema = getStaticSchema(homeHtml);
