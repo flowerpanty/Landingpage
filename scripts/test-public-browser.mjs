@@ -214,6 +214,41 @@ try {
     }
   }
 
+  const stickyProducts = [
+    ["/products/cookie-flight/", "cookie-flight"],
+    ["/products/airplane-cookie/", "airplane-cookie"],
+    ["/cookie-crew/", "cookie-crew"]
+  ];
+  await setViewport(cdp, 390);
+  for (const [pathname, label] of stickyProducts) {
+    await navigate(cdp, `${server.baseUrl}${pathname}`);
+    await cdp.command("Runtime.evaluate", { expression: "window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })" });
+    const mobileSticky = await evaluate(cdp, "() => { const nav = document.querySelector('.nm-product-sticky'); const buttons = [...(nav?.querySelectorAll('a') || [])]; const bounds = buttons.map((button) => button.getBoundingClientRect()); const navBounds = nav?.getBoundingClientRect(); const content = document.querySelector('footer') || document.querySelector('main'); return { disabled: document.body.hasAttribute('data-disable-kakao-float'), floatCount: document.querySelectorAll('.nm-float-icon, .nm-float-bubble, [data-kakao-float]').length, coupon: document.body.textContent.includes('채널추가하고 1,000원 쿠폰 받기'), legacyBuybar: document.querySelectorAll('.mobile-buybar').length, navCount: document.querySelectorAll('.nm-product-sticky').length, display: nav ? getComputedStyle(nav).display : '', columns: nav ? getComputedStyle(nav).gridTemplateColumns.trim().split(/\\s+/).length : 0, buttons: buttons.map((button) => ({ text: button.textContent.trim(), href: button.href, event: button.dataset.analyticsEvent, label: button.dataset.analyticsLabel, target: button.target, height: button.getBoundingClientRect().height })), sameRow: bounds.length === 2 && Math.abs(bounds[0].top - bounds[1].top) < 1 && Math.abs(bounds[0].width - bounds[1].width) < 1, contentBottom: content?.getBoundingClientRect().bottom || 0, stickyTop: navBounds?.top || 0, bodyPadding: parseFloat(getComputedStyle(document.body).paddingBottom), stickyHeight: navBounds?.height || 0, documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
+    assert.equal(mobileSticky.disabled, true, `${pathname}: Kakao float should be disabled`);
+    assert.equal(mobileSticky.floatCount, 0, `${pathname}: no floating Kakao widget should be injected`);
+    assert.equal(mobileSticky.coupon, false, `${pathname}: coupon bubble copy should be absent`);
+    assert.equal(mobileSticky.legacyBuybar, 0, `${pathname}: legacy buybar should be absent`);
+    assert.equal(mobileSticky.navCount, 1, `${pathname}: exactly one sticky CTA should exist`);
+    assert.equal(mobileSticky.display, "grid", `${pathname}: mobile sticky should be visible`);
+    assert.equal(mobileSticky.columns, 2, `${pathname}: mobile sticky should have two columns`);
+    assert.equal(mobileSticky.sameRow, true, `${pathname}: equal-width buttons should share a row`);
+    assert.deepEqual(mobileSticky.buttons.map(({ text, href, event, label: buttonLabel, target }) => ({ text, href, event, label: buttonLabel, target })), [
+      { text: "네이버예약", href: "https://m.place.naver.com/restaurant/1547319276/booking?entry=ple", event: "naver_booking_click", label, target: "_blank" },
+      { text: "주문하기", href: "https://pf.kakao.com/_QdCaK/chat", event: "order_start", label, target: "_blank" }
+    ], `${pathname}: sticky CTA links and analytics should match`);
+    assert.ok(mobileSticky.buttons.every((button) => button.height >= 48), `${pathname}: buttons should have touch-friendly height`);
+    assert.ok(mobileSticky.bodyPadding >= mobileSticky.stickyHeight, `${pathname}: body should reserve space for the sticky CTA`);
+    assert.ok(mobileSticky.contentBottom <= mobileSticky.stickyTop + 1, `${pathname}: footer/content should not be obscured at the bottom (${mobileSticky.contentBottom} > ${mobileSticky.stickyTop})`);
+    assert.ok(mobileSticky.documentWidth <= mobileSticky.viewport, `${pathname}: sticky CTA should not cause horizontal overflow`);
+  }
+  await setViewport(cdp, 1280, 900);
+  for (const [pathname] of stickyProducts) {
+    await navigate(cdp, `${server.baseUrl}${pathname}`);
+    const desktopSticky = await evaluate(cdp, "() => ({ display: getComputedStyle(document.querySelector('.nm-product-sticky')).display, floatCount: document.querySelectorAll('.nm-float-icon, .nm-float-bubble, [data-kakao-float]').length })");
+    assert.equal(desktopSticky.display, "none", `${pathname}: mobile sticky should be hidden on desktop`);
+    assert.equal(desktopSticky.floatCount, 0, `${pathname}: Kakao float should also be absent on desktop`);
+  }
+
   const knownWorkHrefs = [
     "/out/",
     "/guides/wedding-favor-cookie/",

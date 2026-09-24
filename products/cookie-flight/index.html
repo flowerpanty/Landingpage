@@ -378,7 +378,6 @@
     .final-order-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .final-order-meta span{padding:7px 10px;border:2px solid var(--ink);border-radius:999px;background:#fff;font-size:10px;font-weight:800}
 
-    .mobile-buybar{display:none}
 
     :where(a,button,summary):focus-visible{outline:3px solid var(--ink);outline-offset:3px}
     .airport-banner :where(a,button,summary):focus-visible{outline-color:var(--cream)}
@@ -416,7 +415,6 @@
     }
     @media(max-width:700px){.at-glance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:560px){
-      body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
       .wrap{width:min(100% - 24px,520px)}
       .breadcrumb{display:none}
       .hero{padding-top:12px;padding-bottom:18px}
@@ -471,10 +469,6 @@
       .final-copy h2{font-size:38px}
       .final-copy .price-tag{font-size:26px;padding:14px 22px}
       .final-section{padding-bottom:var(--space-section-mobile)}
-      .mobile-buybar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:2px solid var(--ink);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-      .mobile-buybar-copy{min-width:0}
-      .mobile-buybar-copy b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .mobile-buybar a{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 18px;border:2px solid var(--ink);border-radius:999px;background:var(--blue);font-size:13px;font-weight:900;box-shadow:0 4px 0 rgba(17,17,17,.12)}
     }
 </style>
 <style data-nm-accessibility>
@@ -764,8 +758,9 @@
     ]
   }
   </script>
+<link rel="stylesheet" href="../../assets/product-sticky.css"/>
 </head>
-<body>
+<body data-disable-kakao-float>
 <a data-nm-skip-link class="nm-skip-link" href="#main-content">본문으로 건너뛰기</a>
 <main id="main-content" tabindex="-1"><div class="wrap breadcrumb"><a href="../../">Home</a> <span>›</span> Products <span>›</span> 쿠키 플라이트</div><section class="wrap hero" id="top">
 <div class="hero-visual paper-bg">
@@ -1111,8 +1106,9 @@
     updateActiveNav();
   </script>
 <script src="../../assets/site.js"></script>
-<div aria-label="모바일 구매 바" class="mobile-buybar">
-<div class="mobile-buybar-copy"><b>쿠키 플라이트 · 16,000원</b></div>
-<a href="https://m.place.naver.com/restaurant/1547319276/booking?entry=ple&amp;utm_campaign=pickup_reservation&amp;utm_medium=owned&amp;utm_source=nothingmatters.co.kr" rel="noopener" target="_blank">예약하기</a>
-</div></body>
+<nav class="nm-product-sticky" aria-label="예약 및 주문">
+  <a href="https://m.place.naver.com/restaurant/1547319276/booking?entry=ple" target="_blank" rel="noopener noreferrer" data-analytics-event="naver_booking_click" data-analytics-label="cookie-flight">네이버예약</a>
+  <a href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="order_start" data-analytics-label="cookie-flight">주문하기</a>
+</nav>
+</body>
 </html>
