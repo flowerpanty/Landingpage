@@ -1395,6 +1395,7 @@ body.theme-showroom {
   }
 }
 
+
 @media (min-width: 761px) {
   .theme-showroom .showroom-recent-grid > a:nth-child(6n + 4) {
     grid-column: auto;
@@ -1803,6 +1804,31 @@ body.theme-showroom {
     grid-column: auto;
     grid-row: auto;
     scroll-snap-align: start;
+  }
+}
+
+/* Keep the two airplane-cookie launches readable in the existing product grid. */
+.theme-showroom .showroom-section--products .showroom-product-card--featured .showroom-product-photo img {
+  object-fit: contain;
+  object-position: center;
+}
+
+.theme-showroom .showroom-section--products .showroom-product-card[data-analytics-label="수제꾸덕쿠키"] .showroom-product-photo img,
+.theme-showroom .showroom-section--products .showroom-product-card[data-analytics-label="행운쿠키"] .showroom-product-photo img {
+  object-fit: contain;
+  padding: 9px;
+}
+
+@media (max-width: 760px) {
+  .theme-showroom .showroom-section--products .showroom-product-card--featured .showroom-product-order-info {
+    display: block;
+    min-height: 0;
+    margin-top: 5px;
+  }
+
+  .theme-showroom .showroom-section--products .showroom-product-card[data-analytics-label="수제꾸덕쿠키"] .showroom-product-photo img,
+  .theme-showroom .showroom-section--products .showroom-product-card[data-analytics-label="행운쿠키"] .showroom-product-photo img {
+    padding: 4px;
   }
 }
 

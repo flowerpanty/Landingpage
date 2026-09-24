@@ -119,6 +119,8 @@ function renderProductCard(product) {
     ? '\n              <span class="showroom-product-badge">NEW</span>'
     : "";
   const homeCard = product.homeCard || {};
+  const imageAlt = homeCard.imageAlt || product.name;
+  const cardClass = homeCard.showPriceOnMobile ? " showroom-product-card--featured" : "";
   const tags = (homeCard.tags || [])
     .map((tag) => `<span>${escapeHtml(tag)}</span>`)
     .join("");
@@ -128,10 +130,10 @@ function renderProductCard(product) {
     : "";
   const imageOptimization = IMAGE_OPTIMIZATIONS[product.thumbnail];
   const thumbnail = imageOptimization
-    ? `              <picture>\n                <source srcset="${escapeHtml(homeAssetPath(imageOptimization.optimized))}" type="image/jpeg">\n                <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" width="${imageOptimization.width}" height="${imageOptimization.height}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">\n              </picture>`
-    : `              <img src="${escapeHtml(homeAssetPath(product.thumbnail))}"${product.imageWidth && product.imageHeight ? ` width="${product.imageWidth}" height="${product.imageHeight}"` : ""} alt="${escapeHtml(product.name)}" loading="lazy" decoding="async">`;
+    ? `              <picture>\n                <source srcset="${escapeHtml(homeAssetPath(imageOptimization.optimized))}" type="image/jpeg">\n                <img src="${escapeHtml(homeAssetPath(product.thumbnail))}" width="${imageOptimization.width}" height="${imageOptimization.height}" alt="${escapeHtml(imageAlt)}" loading="lazy" decoding="async">\n              </picture>`
+    : `              <img src="${escapeHtml(homeAssetPath(product.thumbnail))}"${product.imageWidth && product.imageHeight ? ` width="${product.imageWidth}" height="${product.imageHeight}"` : ""} alt="${escapeHtml(imageAlt)}" loading="lazy" decoding="async">`;
 
-  return `          <a class="showroom-product-card" href="${escapeHtml(homeLinkPath(product.detailPath))}" data-reveal data-analytics-event="product_click" data-analytics-label="${escapeHtml(product.name)}">
+  return `          <a class="showroom-product-card${cardClass}" href="${escapeHtml(homeLinkPath(product.detailPath))}" data-reveal data-analytics-event="product_click" data-analytics-label="${escapeHtml(product.name)}">
             <figure class="showroom-product-photo">
 ${thumbnail}${status}
             </figure>

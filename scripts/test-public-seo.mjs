@@ -70,8 +70,10 @@ const expectedPrimaryOffers = new Map([
   ["/brookie/", ["lowPrice", 7800]],
   ["/out/", ["lowPrice", 4500]],
   ["/out/fortune/", ["price", 15000]],
+  ["/products/cookie-flight/", ["price", 16000]],
+  ["/products/airplane-cookie/", ["price", 2500]],
 ]);
-assert.equal(primaryProducts.length, 5, "site registry should define five primary products");
+assert.equal(primaryProducts.length, 6, "site registry should define six primary products");
 assert.equal(searchLandingPages.length, 4, "site registry should define four search landing pages");
 const primaryProductUrls = new Set(primaryProducts.map((product) => normalizePathname(product.primaryUrl)));
 for (const product of primaryProducts) {
@@ -428,12 +430,12 @@ assert.deepEqual(
   "COOKIE FLIGHT should be an active, indexable existing product"
 );
 assert.equal((sitePages.pages || []).some((page) => page.path === cookieFlightPath), false, "COOKIE FLIGHT must not remain as a duplicate page-registry entry");
-assert.equal(cookieFlightProduct?.updatedAt, "2026-09-22", "COOKIE FLIGHT updatedAt should reflect activation");
+assert.equal(cookieFlightProduct?.updatedAt, "2026-09-24", "COOKIE FLIGHT updatedAt should reflect the new detail");
 assert.ok(locs.includes(`${SITE_URL}${cookieFlightPath}`), "sitemap should include COOKIE FLIGHT");
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/products\/cookie-flight\/<\/loc>\s*<lastmod>2026-09-22<\/lastmod>/,
-  "COOKIE FLIGHT sitemap lastmod should reflect activation"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/products\/cookie-flight\/<\/loc>\s*<lastmod>2026-09-24<\/lastmod>/,
+  "COOKIE FLIGHT sitemap lastmod should reflect the new detail"
 );
 const cookieFlightHtml = readHtml(filePathForPathname(cookieFlightPath));
 assert.equal(
@@ -444,8 +446,8 @@ assert.equal(
 assert.match(getRobots(cookieFlightHtml), /\bindex\b/);
 assert.equal(getRobots(cookieFlightHtml).includes("noindex"), false, "COOKIE FLIGHT must be indexable");
 assert.equal(getCanonical(cookieFlightHtml), `${SITE_URL}${cookieFlightPath}`, "COOKIE FLIGHT canonical should be exact");
-assert.equal(getAttribute(cookieFlightHtml, /<title>([\s\S]*?)<\/title>/i), "COOKIE FLIGHT 비행기 쿠키 선물 | 낫띵메터스");
-assert.match(getMeta(cookieFlightHtml, "name", "description"), /클래식버터, 더블초코, 제주말차, 오렌지/);
+assert.equal(getAttribute(cookieFlightHtml, /<title>([\s\S]*?)<\/title>/i), "COOKIE FLIGHT 비행기 쿠키 4종 선물세트 | 낫띵메터스");
+assert.match(getMeta(cookieFlightHtml, "name", "description"), /클래식버터, 오렌지, 제주말차, 더블초코/);
 for (const flavor of ["클래식버터", "더블초코", "제주말차", "오렌지"]) {
   assert.ok(cookieFlightHtml.includes(flavor), `COOKIE FLIGHT should visibly name ${flavor}`);
 }
@@ -464,16 +466,26 @@ const cookieFlightGraph = cookieFlightSchema["@graph"] || [];
 const cookieFlightWebPage = cookieFlightGraph.find((entry) => entry["@type"] === "ProductPage");
 const cookieFlightSchemaProduct = cookieFlightGraph.find((entry) => entry["@type"] === "Product");
 assert.ok(cookieFlightSchemaProduct, "COOKIE FLIGHT should have Product schema");
-assert.equal(cookieFlightSchemaProduct?.offers, undefined, "COOKIE FLIGHT must not infer a price in Product schema");
+assert.equal(cookieFlightSchemaProduct?.offers?.price, 16000, "COOKIE FLIGHT Product schema should use the supplied 16,000원 price");
 assert.deepEqual(
   cookieFlightSchemaProduct?.additionalProperty?.map((property) => [property.name, property.value]),
-  [["맛 구성", "클래식버터 · 더블초코 · 제주말차 · 오렌지"], ["수령 방식", "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담"]],
-  "COOKIE FLIGHT Product schema should contain only verified flavor and fulfillment facts"
+  [["맛 구성", "클래식버터 · 오렌지 · 제주말차 · 더블초코"], ["구성", "4개입 전용 박스"], ["수령 방식", "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담"]],
+  "COOKIE FLIGHT Product schema should contain the supplied flavor and box facts"
 );
 assert.deepEqual(cookieFlightWebPage?.about, { "@id": `${SITE_URL}${cookieFlightPath}#product` }, "COOKIE FLIGHT ProductPage should link to its Product entity");
 const cookieFlightHomeHtml = readHtml(filePathForPathname("/"));
 assert.match(cookieFlightHomeHtml, /data-analytics-label="COOKIE FLIGHT"[\s\S]*?href="products\/cookie-flight\/"|href="products\/cookie-flight\/"[\s\S]*?data-analytics-label="COOKIE FLIGHT"/);
-assert.match(cookieFlightHomeHtml, /<span>4 FLAVORS<\/span><span>FROM GIMPO<\/span>/, "home should render COOKIE FLIGHT registry tags");
+assert.match(cookieFlightHomeHtml, /<span>4 FLAVORS<\/span><span>4개입 세트<\/span>/, "home should render COOKIE FLIGHT registry tags");
+assert.match(cookieFlightHomeHtml, /alt="NOTHINGMATTERS COOKIE FLIGHT 4종 선물세트"/);
+assert.equal((cookieFlightHomeHtml.match(/data-analytics-label="COOKIE FLIGHT"/g) || []).length, 1, "old COOKIE FLIGHT card must be replaced");
+const airplanePath = "/products/airplane-cookie/";
+const airplaneHtml = readHtml(filePathForPathname(airplanePath));
+assert.equal(getCanonical(airplaneHtml), `${SITE_URL}${airplanePath}`);
+assert.ok(locs.includes(`${SITE_URL}${airplanePath}`), "sitemap should include the airplane butter cookie");
+assert.match(airplaneHtml, /비행기 버터쿠키/);
+assert.match(airplaneHtml, /2,500/);
+assert.equal(getStaticSchema(airplaneHtml)["@graph"].find((entry) => entry["@type"] === "Product")?.offers?.price, 2500);
+assert.match(cookieFlightHomeHtml, /alt="NOTHINGMATTERS 비행기 버터쿠키"/);
 const cookieFlightWorksHtml = readHtml(filePathForPathname("/works/"));
 assert.equal(cookieFlightWorksHtml.includes("COOKIE FLIGHT"), false, "works must not claim a COOKIE FLIGHT production case without evidence");
 
@@ -501,7 +513,7 @@ assert.match(
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${["/", "/works/"].includes(pathname) ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-09-24" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }

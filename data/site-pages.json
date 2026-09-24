@@ -19,6 +19,66 @@
   },
   "products": [
     {
+      "name": "COOKIE FLIGHT",
+      "slug": "cookie-flight",
+      "description": "클래식버터, 오렌지, 제주말차, 더블초코 4가지 맛을 전용 박스에 담은 4개입 세트.",
+      "seoTitle": "COOKIE FLIGHT 비행기 쿠키 4종 선물세트 | 낫띵메터스",
+      "thumbnail": "/images/cookie-flight-box-open.jpg",
+      "imageWidth": 1084,
+      "imageHeight": 1341,
+      "images": ["/images/cookie-flight-box-open.jpg", "/products/cookie-flight/images/cookie-flight-hero.webp"],
+      "status": "active",
+      "indexing": "index",
+      "sitemap": true,
+      "category": "비행기 쿠키 4종 선물세트",
+      "price": 16000,
+      "orderUrl": "https://m.place.naver.com/restaurant/1547319276/booking?entry=ple",
+      "primaryUrl": "/products/cookie-flight/",
+      "urlRole": "primary-product",
+      "detailPageMode": "existing",
+      "badge": "4 FLAVORS · COOKIE FLIGHT",
+      "additionalProperties": [
+        { "@type": "PropertyValue", "name": "맛 구성", "value": "클래식버터 · 오렌지 · 제주말차 · 더블초코" },
+        { "@type": "PropertyValue", "name": "구성", "value": "4개입 전용 박스" }
+      ],
+      "homeCard": {
+        "englishName": "비행기 쿠키 4종 선물세트",
+        "imageAlt": "NOTHINGMATTERS COOKIE FLIGHT 4종 선물세트",
+        "showPriceOnMobile": true,
+        "tags": ["4 FLAVORS", "4개입 세트"],
+        "orderInfo": "16,000원"
+      },
+      "updatedAt": "2026-09-24"
+    },
+    {
+      "name": "비행기 버터쿠키",
+      "slug": "airplane-cookie",
+      "description": "비행기 모양 버터쿠키를 개별 포장한 작은 선물용 단품.",
+      "seoTitle": "비행기 버터쿠키 단품 | 낫띵메터스",
+      "thumbnail": "/images/airplane-cookie-handheld.png",
+      "imageWidth": 639,
+      "imageHeight": 560,
+      "images": ["/images/airplane-cookie-handheld.png", "/products/airplane-cookie/assets/airplane-cookie/graded/hero.jpg"],
+      "status": "active",
+      "indexing": "index",
+      "sitemap": true,
+      "category": "비행기 버터쿠키 단품",
+      "price": 2500,
+      "orderUrl": "https://m.place.naver.com/restaurant/1547319276/home",
+      "primaryUrl": "/products/airplane-cookie/",
+      "urlRole": "primary-product",
+      "detailPageMode": "existing",
+      "badge": "AIRPLANE COOKIE",
+      "homeCard": {
+        "englishName": "여행 가는 날 가볍게 챙기기 좋은 단품 쿠키",
+        "imageAlt": "NOTHINGMATTERS 비행기 버터쿠키",
+        "showPriceOnMobile": true,
+        "tags": ["개별 포장", "단품 쿠키"],
+        "orderInfo": "2,500원"
+      },
+      "updatedAt": "2026-09-24"
+    },
+    {
       "name": "브루키",
       "slug": "brookie",
       "description": "캐릭터와 짧은 문구를 골라 만드는 브루키 답례품·커스텀 쿠키.",
@@ -136,32 +196,6 @@
         "tags": ["쿠키 + 마그넷", "캐릭터 선물"]
       },
       "updatedAt": "2026-09-22"
-    },
-    {
-      "name": "COOKIE FLIGHT",
-      "slug": "cookie-flight",
-      "description": "비행기를 닮은 클래식버터, 더블초코, 제주말차, 오렌지 4가지 쿠키를 한 박스에 담은 낫띵메터스 쿠키 플라이트.",
-      "seoTitle": "COOKIE FLIGHT 비행기 쿠키 선물 | 낫띵메터스",
-      "thumbnail": "/images/main-order-cookie-thumb.png",
-      "images": ["/images/main-order-cookie-thumb.png", "/images/main-order-cookie-thumb-optimized.jpg"],
-      "status": "active",
-      "indexing": "index",
-      "sitemap": true,
-      "category": "쿠키 선물세트",
-      "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
-      "primaryUrl": "/products/cookie-flight/",
-      "urlRole": "primary-product",
-      "detailPageMode": "existing",
-      "badge": "4 FLAVORS · COOKIE FLIGHT",
-      "additionalProperties": [
-        { "@type": "PropertyValue", "name": "맛 구성", "value": "클래식버터 · 더블초코 · 제주말차 · 오렌지" }
-      ],
-      "homeCard": {
-        "englishName": "COOKIE FLIGHT",
-        "tags": ["4 FLAVORS", "FROM GIMPO"],
-        "orderInfo": "예약 제작 · 공항동 픽업"
-      },
-      "updatedAt": "2026-09-22"
     }
   ],
   "works": [
@@ -172,7 +206,7 @@
     { "id": "default-brownie", "src": "/images/work-new-01.jpg", "caption": "짧은 문구를 더한 브라우니", "href": "/products/brownie-cookie/" }
   ],
   "pages": [
-    { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
+    { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-24" },
     { "path": "/bulk/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/small-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/contact/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },

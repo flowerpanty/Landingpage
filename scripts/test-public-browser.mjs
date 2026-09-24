@@ -15,6 +15,7 @@ const CRITICAL_PATHS = [
   "/",
   "/products/scone/",
   "/products/cookie-flight/",
+  "/products/airplane-cookie/",
   "/brookie/",
   "/products/handmade-cookie/",
   "/products/lucky-cookie/",
@@ -261,12 +262,19 @@ try {
   assert.ok(magokAuthority.rail.scrollWidth > magokAuthority.rail.clientWidth && magokAuthority.proofImages[0].right <= 390 && magokAuthority.documentWidth <= 390, "magok production archive should reduce vertical pressure without page overflow");
   assert.equal(magokAuthority.naverPlace, true, "magok should expose the official Naver Place link");
   await navigate(cdp, `${server.baseUrl}/products/cookie-flight/`);
-  const cookieFlightState = await evaluate(cdp, "() => { const pathname = (href) => new URL(href, location.href).pathname; return { h1: document.querySelector('h1')?.textContent.replace(/\\s+/g, ' ').trim() || '', flavors: [...document.querySelectorAll('#flavors li')].map((item) => item.textContent.trim()), links: [...document.querySelectorAll('.showroom-detail-final a')].map((link) => pathname(link.href)), hasPrice: /4,500원|1구부터|1구, 2구, 4구/.test(document.body.textContent), inAirportClaim: document.body.textContent.includes('김포공항 내부 매장'), documentWidth: document.documentElement.scrollWidth, viewport: window.innerWidth }; }");
+  const cookieFlightState = await evaluate(cdp, "() => { const pathname = (href) => new URL(href, location.href).pathname; const hero = document.querySelector('.hero-photo img'); return { flavors: [...document.querySelectorAll('#flavors .flavor-card h3')].map((item) => item.textContent.trim()), links: [...document.querySelectorAll('nav[aria-label=\"관련 안내\"] a')].map((link) => pathname(link.href)), price: document.querySelector('.hero-price')?.textContent.replace(/\\s+/g, '').trim() || '', heroLoaded: hero?.complete && hero.naturalWidth > 0, inAirportClaim: document.body.textContent.includes('김포공항 내부 매장'), documentWidth: document.documentElement.scrollWidth, viewport: window.innerWidth }; }");
   assert.deepEqual(cookieFlightState.flavors, ["클래식버터", "더블초코", "제주말차", "오렌지"], "COOKIE FLIGHT should visibly list its four flavors");
   assert.deepEqual(cookieFlightState.links, ["/pickup/", "/magok-cookie/", "/works/"], "COOKIE FLIGHT should connect pickup, magok, and works flows");
-  assert.equal(cookieFlightState.hasPrice, false, "COOKIE FLIGHT should not show an unverified price or package quantity");
+  assert.equal(cookieFlightState.price, "16,000원", "COOKIE FLIGHT should show the supplied 16,000원 price");
+  assert.equal(cookieFlightState.heroLoaded, true, "COOKIE FLIGHT hero image should load");
   assert.equal(cookieFlightState.inAirportClaim, false, "COOKIE FLIGHT should not imply an in-airport shop");
   assert.ok(cookieFlightState.documentWidth <= cookieFlightState.viewport, "COOKIE FLIGHT should not horizontally overflow on mobile");
+  await navigate(cdp, `${server.baseUrl}/products/airplane-cookie/`);
+  const airplaneState = await evaluate(cdp, "() => { const hero = document.querySelector('.hero-visual img'); return { title: document.querySelector('h1')?.textContent.trim(), price: document.querySelector('.price-tag')?.textContent.replace(/\\s+/g, '').trim(), heroLoaded: hero?.complete && hero.naturalWidth > 0, documentWidth: document.documentElement.scrollWidth, viewport: window.innerWidth }; }");
+  assert.equal(airplaneState.title, "비행기 버터쿠키");
+  assert.equal(airplaneState.price, "2,500원·1개");
+  assert.equal(airplaneState.heroLoaded, true, "airplane butter cookie hero should load");
+  assert.ok(airplaneState.documentWidth <= airplaneState.viewport, "airplane butter cookie should not horizontally overflow on mobile");
   await setViewport(cdp, 1280, 900);
   await navigate(cdp, `${server.baseUrl}/magok-cookie/`);
   const magokFavorGuideDesktop = await evaluate(cdp, "() => { const grid = document.querySelector('#magok-favor-guide .magok-favor-guide-grid'); const cards = [...document.querySelectorAll('#magok-favor-guide .magok-favor-guide-card')]; return { columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length, documentWidth: document.documentElement.scrollWidth, cards: cards.map((card) => ({ right: card.getBoundingClientRect().right, titleFits: (card.querySelector('h3')?.scrollWidth || 0) <= (card.querySelector('h3')?.clientWidth || 0), linkFits: (card.querySelector('a')?.scrollWidth || 0) <= (card.querySelector('a')?.clientWidth || 0) })) }; }");
@@ -574,9 +582,16 @@ try {
   assert.equal(mobileProductCards.columns, 2, "OUR COOKIES should retain a two-column mobile grid");
   assert.equal(mobileProductCards.newArrivalSection, false, "NEW ARRIVAL should not render as a standalone section");
   assert.equal(mobileProductCards.newBadge, "NEW", "Cookie Crew should retain its NEW badge in OUR COOKIES");
-  assert.deepEqual(mobileProductCards.cards.map((card) => [card.name, card.href, card.event]), [["브루키", "brookie/", "product_click"], ["수제꾸덕쿠키", "out/", "product_click"], ["행운쿠키", "out/fortune/", "product_click"], ["쿠키크루", "cookie-crew/", "product_click"], ["COOKIE FLIGHT", "products/cookie-flight/", "product_click"]], "OUR COOKIES should include COOKIE FLIGHT with its product route and analytics");
+  assert.deepEqual(mobileProductCards.cards.map((card) => [card.name, card.href, card.event]), [["COOKIE FLIGHT", "products/cookie-flight/", "product_click"], ["비행기 버터쿠키", "products/airplane-cookie/", "product_click"], ["브루키", "brookie/", "product_click"], ["수제꾸덕쿠키", "out/", "product_click"], ["행운쿠키", "out/fortune/", "product_click"], ["쿠키크루", "cookie-crew/", "product_click"]], "OUR COOKIES should lead with both airplane cookie products");
   assert.ok(mobileProductCards.cards.every((card) => card.right <= 390 && card.englishHidden && card.descriptionHidden && card.tags === 2 && card.ctaHeight >= 44 && card.ctaText === "제품 보기 →"), `OUR COOKIES mobile cards should keep readable tags and tappable CTAs: ${JSON.stringify(mobileProductCards.cards)}`);
-  assert.deepEqual(mobileProductCards.cards.map(card => card.orderInfo), ['기본형 1구 7,800원 · 최소 12개', '4,500원부터 · 대부분 최소 수량 없음', '4가지맛 1세트 15,000원 · 최소 1세트', '가격·수량 상담', '예약 제작 · 공항동 픽업']);
+  assert.deepEqual(mobileProductCards.cards.map(card => card.orderInfo), ['16,000원', '2,500원', '기본형 1구 7,800원 · 최소 12개', '4,500원부터 · 대부분 최소 수량 없음', '4가지맛 1세트 15,000원 · 최소 1세트', '가격·수량 상담']);
+  await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.showroom-product-card--featured img').forEach((image) => { image.loading = 'eager'; })" });
+  await waitFor(cdp, "() => [...document.querySelectorAll('.showroom-product-card--featured img')].every((image) => image.complete && image.naturalWidth > 0)", "new product card images should load");
+  for (const [label, expectedPath] of [["COOKIE FLIGHT", "/products/cookie-flight/"], ["비행기 버터쿠키", "/products/airplane-cookie/"]]) {
+    await evaluate(cdp, `() => { document.querySelector('.showroom-product-card[data-analytics-label="${label}"]').click(); return true; }`);
+    await waitFor(cdp, `() => location.pathname === "${expectedPath}"`, `${label} card click should open its detail page`);
+    await navigate(cdp, `${server.baseUrl}/`);
+  }
   const readBookingActions = () => evaluate(cdp, "() => [...document.querySelectorAll('.nm-booking-action')].map(a => ({text: a.textContent.trim(), href: a.href, height: a.getBoundingClientRect().height}))");
   const bookingActions = await readBookingActions();
   assert.deepEqual(bookingActions.map(a => a.text), ['네이버예약', '커스텀주문', '상담하기']);
@@ -596,6 +611,10 @@ try {
   assert.equal(desktopProductCards.columns, 4, "OUR COOKIES should show four cards on one desktop row");
   assert.ok(desktopProductCards.documentWidth <= 1280 && desktopProductCards.cards.every((card) => card.right <= 1280), "OUR COOKIES should not overflow on desktop");
   assert.ok(desktopProductCards.cards.every((card) => Math.abs(card.height - desktopProductCards.cards[0].height) < 1 && card.cardBottom - card.ctaBottom >= 16), "OUR COOKIES cards should share a stable height with bottom-aligned CTAs");
+  for (const pathname of ["/products/cookie-flight/", "/products/airplane-cookie/"]) {
+    await navigate(cdp, `${server.baseUrl}${pathname}`);
+    assert.ok(await evaluate(cdp, "() => document.documentElement.scrollWidth <= window.innerWidth"), `${pathname}: desktop detail should not overflow`);
+  }
 
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/`);
