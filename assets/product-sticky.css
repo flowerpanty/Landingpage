@@ -36,6 +36,11 @@
     text-decoration: none;
   }
 
+  .nm-product-sticky a:first-child {
+    background: #03c75a;
+    color: #fff;
+  }
+
   .nm-product-sticky a:last-child {
     background: #87c1eb;
   }
