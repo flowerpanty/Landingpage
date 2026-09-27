@@ -378,14 +378,15 @@ assert.ok(locSet.has(`${SITE_URL}/gimpo-board/`), "Gimpo flight board should be 
 const boardHtml = readHtml(filePathForPathname("/gimpo-board/"));
 assert.match(boardHtml, /<title>김포공항 도착·출발 실시간 항공편 \| NOTHINGMATTERS<\/title>/);
 assert.equal(getCanonical(boardHtml), `${SITE_URL}/gimpo-board/`);
-assert.match(boardHtml, /href="\/gimpo\/"/);
-assert.match(boardHtml, /href="\/gimpo\/pickup\/"/);
+assert.match(boardHtml, /href="\/gimpo2\/"/);
+assert.match(boardHtml, /id="detail-pickup-link"/, "selected board flight should link to pickup timing");
 assert.match(boardHtml, /id="board-badge"[^>]*>GMP · CHECKING<\/span>/, "board must not claim LIVE before fresh data loads");
 assert.doesNotMatch(boardHtml, /KAC_FLIGHT_API_KEY|serviceKey=/, "board HTML must not expose provider credentials");
 assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "utf8"), /KAC_FLIGHT_API_KEY|serviceKey=/, "board client JS must not expose provider credentials");
 
 for (const [pathname, title, h1, pageType] of [
   ["/gimpo/", "김포공항 비행기 쿠키 · 여행 선물 | NOTHINGMATTERS", "김포공항 가는 길, 쿠키도 챙겨가세요.", "CollectionPage"],
+  ["/gimpo2/", "김포공항 실시간 항공편·쿠키 픽업 | NOTHINGMATTERS", "김포공항 실시간 출발·도착 항공편", "WebPage"],
   ["/gimpo/pickup/", "김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS", "김포공항 가기 전, 예약한 쿠키를 픽업하세요.", "WebPage"],
 ]) {
   const entry = registryEntries.get(pathname);
@@ -393,7 +394,7 @@ for (const [pathname, title, h1, pageType] of [
   const graph = getStaticSchema(html)["@graph"];
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: "2026-09-27" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo2/" ? "2026-09-28" : "2026-09-27" },
     `${pathname}: registry must publish the new route`
   );
   assert.equal(getCanonical(html), `${SITE_URL}${pathname}`);

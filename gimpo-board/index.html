@@ -15,11 +15,12 @@
   <meta property="og:image" content="https://nothingmatters.co.kr/images/cookie-flight-box-open.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="../images/nm-bear-mark.svg">
-  <link rel="stylesheet" href="../assets/gimpo-board.css">
+  <link rel="stylesheet" href="../assets/gimpo-board.css?v=20260928a">
   <link rel="stylesheet" href="../assets/split-flap.css">
   <link rel="stylesheet" href="../assets/board-immersive.css">
+  <script defer src="../assets/gimpo-flight-data.js?v=20260928a"></script>
   <script defer src="../assets/split-flap.js"></script>
-  <script defer src="../assets/gimpo-board.js"></script>
+  <script defer src="../assets/gimpo-board.js?v=20260928a"></script>
 <style data-nm-accessibility>
   .nm-skip-link { position: fixed; z-index: 10000; top: -80px; left: 12px; min-height: 44px; padding: 11px 16px; color: #111; background: #fff4cf; border: 3px solid #111; border-radius: 999px; font: 800 14px/1.2 system-ui, sans-serif; text-decoration: none; transition: top .16s ease; }
   .nm-skip-link:focus { top: 12px; }
@@ -212,7 +213,7 @@
       <header class="board-header">
         <div class="board-header-inner">
           <span class="board-marquee-symbol" aria-hidden="true"><img class="board-plane-departure" src="../assets/gimpo-departure.png" alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority="high"><img class="board-plane-arrival" src="../assets/gimpo-arrivals.png" alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority="high"></span>
-          <div class="board-marquee-copy"><div class="board-marquee-title-line"><strong id="board-marquee-title">DEPARTURES</strong><span id="board-marquee-ko">출발</span></div><p>Have a sweet flight.</p></div>
+          <div class="board-marquee-copy"><div class="board-marquee-title-line"><strong id="board-marquee-title">DEPARTURE</strong></div><span id="board-marquee-ko" class="visually-hidden">출발</span><p>Have a sweet flight.</p></div>
           <div class="board-marquee-brand"><a class="board-logo" href="../">NOTHINGMATTERS<sup>®</sup></a><div class="board-marquee-icons" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12"/><path d="M4 16h24M16 4c-8 7-8 17 0 24M16 4c8 7 8 17 0 24"/></svg><svg viewBox="0 0 32 32" fill="none"><path d="M27 14a5 5 0 0 1-5-6 12 12 0 1 0 5 6Z"/><circle cx="12" cy="13" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="12" cy="22" r="1"/></svg><svg viewBox="0 0 32 32" fill="none"><path d="M4 21 27 8l2 4-17 17-8-2"/><path d="m13 16-6-7 3-2 11 5"/></svg></div><span class="board-live-badge" id="board-badge" aria-live="polite">GMP · CHECKING</span></div>
           <h1 class="visually-hidden">김포공항 실시간 항공편</h1>
         </div>
@@ -240,6 +241,7 @@
             <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">FLIGHT</th><th role="columnheader" scope="col" id="route-heading">DESTINATION</th><th role="columnheader" scope="col">TIME</th><th role="columnheader" scope="col">GATE</th><th role="columnheader" scope="col">STATUS</th></tr></thead>
             <tbody id="flight-rows" role="rowgroup"><tr class="board-placeholder" role="row"><td role="cell" colspan="5">GIMPO · LOADING...</td></tr></tbody>
           </table>
+          <button id="board-more" class="board-more" type="button" hidden>다음 항공편 보기</button>
         </div>
         <div class="board-status-line"><span id="board-live-state" class="board-live-state" role="status" aria-live="polite">항공편 정보를 불러오는 중입니다.</span><time id="board-updated" datetime="">UPDATED —</time></div>
         <p class="board-disclaimer">항공편 정보는 한국공항공사 제공 자료입니다. 변경시간은 실제 출발·도착 시각이 아닐 수 있습니다. 탑승 전 항공사와 공항 안내를 다시 확인하세요.</p>
@@ -247,8 +249,7 @@
     </section>
 
     <section class="brand-section" aria-labelledby="brand-title">
-      <div class="brand-content"><p class="brand-eyebrow">BEFORE YOU BOARD...</p><h2 id="brand-title">김포공항 가는 길,<br>쿠키도 챙겨가세요. ✈</h2><p>김포공항 가까운 공항동에서<br>비행기와 여행을 닮은 쿠키를 만들고 있습니다.</p><p class="brand-sweet">Have a sweet flight.</p><div class="brand-actions"><a href="/gimpo/">쿠키 보기 →</a><a href="/gimpo/pickup/">픽업 안내 →</a></div></div>
-      <div class="brand-photos"><img src="../images/cookie-flight-box-open.jpg" alt="COOKIE FLIGHT 비행기 쿠키 4종 선물세트" width="1084" height="1341" loading="lazy" decoding="async"><img src="../images/airplane-cookie-handheld.png" alt="개별 포장 비행기 버터쿠키" width="639" height="560" loading="lazy" decoding="async"></div>
+      <div class="brand-content"><p class="brand-eyebrow">BEFORE YOU BOARD</p><h2 id="brand-title">김포공항 가는 길,<br>쿠키도 챙겨가세요.</h2><p>내 항공편 기준으로 쿠키 픽업 가능 시간을 참고해 보세요.</p><div class="brand-actions"><a id="board-gimpo2-link" href="/gimpo2/">비행 전 쿠키 픽업 가능시간 확인 →</a></div></div>
     </section>
     <footer class="board-footer"><span>NOTHINGMATTERS®</span><span>GMP · HAVE A SWEET FLIGHT</span></footer>
   </main>
@@ -271,6 +272,7 @@
     <div class="detail-head"><p>FLIGHT INFORMATION</p><button type="button" id="detail-close" aria-label="상세 정보 닫기">×</button></div>
     <h2 id="detail-title">항공편 상세</h2>
     <dl id="detail-fields"></dl>
+    <a id="detail-pickup-link" class="detail-pickup-link" href="/gimpo2/">이 항공편으로 픽업 시간 확인 →</a>
     <p id="detail-updated"></p>
   </dialog>
 </body>

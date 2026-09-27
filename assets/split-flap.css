@@ -23,10 +23,9 @@
   background: linear-gradient(90deg, #080808, #222 12%, #151515 55%, #090909);
   box-shadow: inset 1px 0 rgba(255,255,255,.06), inset -1px 0 rgba(0,0,0,.8);
   font: 900 min(calc(var(--slot-h) * .68), calc(var(--slot-w) * 2.55))/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  perspective: 650px;
-  transform-style: preserve-3d;
 }
 .flap-slot:last-child { border-right: 0; }
+.flap-slot.is-flipping { perspective: 650px; transform-style: preserve-3d; }
 
 .flap-static-top,
 .flap-static-bottom,
@@ -37,7 +36,6 @@
   right: 0;
   height: 50%;
   overflow: hidden;
-  backface-visibility: hidden;
 }
 .flap-static-top,
 .flap-flip-top {
@@ -57,8 +55,8 @@
 }
 .flap-static-top,
 .flap-static-bottom { z-index: 1; }
-.flap-flip-top { z-index: 3; transform-origin: center bottom; opacity: 0; }
-.flap-flip-bottom { z-index: 2; transform-origin: center top; transform: rotateX(90deg); opacity: 0; }
+.flap-flip-top { display: none; z-index: 3; transform-origin: center bottom; opacity: 0; backface-visibility: hidden; }
+.flap-flip-bottom { display: none; z-index: 2; transform-origin: center top; transform: rotateX(90deg); opacity: 0; backface-visibility: hidden; }
 
 /* Both clipped halves share the exact same glyph box and baseline. */
 .flap-glyph {
@@ -71,7 +69,7 @@
   height: var(--slot-h);
   line-height: .96;
   text-align: center;
-  transform: translateZ(1px) scaleX(.68);
+  transform: scaleX(.68);
   transform-origin: center;
 }
 .flap-static-top .flap-glyph,
@@ -92,10 +90,12 @@
 }
 
 .flap-slot.is-flipping .flap-flip-top {
+  display: block;
   opacity: 1;
   animation: flap-leaf-top .07s cubic-bezier(.4,0,.2,1) both;
 }
 .flap-slot.is-flipping .flap-flip-bottom {
+  display: block;
   opacity: 1;
   animation: flap-leaf-bottom .07s cubic-bezier(.4,0,.2,1) both;
 }

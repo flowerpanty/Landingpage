@@ -204,7 +204,7 @@
       const [newHH, newMM] = currentTime();
       setFlapValue(hhEl, newHH, { animate: true, rowDelay: 0 });
       setFlapValue(mmEl, newMM, { animate: true, rowDelay: 0 });
-      hhEl.closest(".board-clock").setAttribute("aria-label", `현재 한국 시간 ${newHH}시 ${newMM}분`);
+      hhEl.closest(".board-clock")?.setAttribute("aria-label", `현재 한국 시간 ${newHH}시 ${newMM}분`);
     }
     updateClock();
     window.setInterval(updateClock, 1000);

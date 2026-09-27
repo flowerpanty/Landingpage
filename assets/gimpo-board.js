@@ -11,6 +11,7 @@
   const badge = document.getElementById("board-badge");
   const updated = document.getElementById("board-updated");
   const count = document.getElementById("board-count");
+  const moreButton = document.getElementById("board-more");
   const direction = document.getElementById("board-direction");
   const routeHeading = document.getElementById("route-heading");
   const searchSheet = document.getElementById("flight-search-sheet");
@@ -19,6 +20,7 @@
   const searchDone = document.getElementById("board-search-done");
   const loader = document.getElementById("board-loader");
   const flap = window.NmSplitFlap;
+  const flights = window.NmGimpoFlights;
   const BANK_WIDTHS = { flight: 7, route: 16, time: 5, gate: 2, status: 10 };
   flap.bindSoundToggle(document.getElementById("board-sound"));
   flap.initClock(
@@ -35,6 +37,25 @@
   let requestNumber = 0;
   let lastTrigger = null;
   let hasLoadedRows = false;
+  let initialFlight = flights.flightQuery();
+  let searchTerm = "";
+  let searchTimer;
+  let extraPages = 0;
+  const mobileQuery = window.matchMedia("(max-width: 760px)");
+  const kstClock = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+  function minutesOfDay(value) {
+    if (!/^\d{2}:\d{2}$/.test(value || "")) return null;
+    const [hour, minute] = value.split(":").map(Number);
+    return hour < 24 && minute < 60 ? hour * 60 + minute : null;
+  }
+
+  function inTimeWindow(row, nowMinutes) {
+    const minutes = minutesOfDay(row.revisedTime || row.scheduledTime);
+    return minutes !== null && minutes >= nowMinutes - 60 && minutes <= nowMinutes + 240;
+  }
+
+  function pageSize() { return mobileQuery.matches ? 10 : 16; }
 
   for (const [index, word] of ["GIMPO", "FLIGHT", "INFO"].entries()) {
     const bank = flap.createFlapBank(" ".repeat(word.length), "flap-bank--loader");
@@ -138,31 +159,48 @@
     const rowDelay = Math.min(rowIndex * 30 + Math.floor(Math.random() * 15), 250);
     for (const [name, value] of Object.entries(values)) {
       const part = tr._banks[name];
-      part.td.setAttribute("aria-label", `${labels[name]} ${value}`);
-      flap.setFlapValue(part.bank, value, { animate, rowDelay, onStep: flap.tick });
+      if (part.bank.dataset.value !== value) flap.setFlapValue(part.bank, value, { animate, rowDelay, onStep: flap.tick });
+      const ariaLabel = `${labels[name]} ${value}`;
+      if (part.td.getAttribute("aria-label") !== ariaLabel) part.td.setAttribute("aria-label", ariaLabel);
     }
-    tr._airlineName.textContent = row.airline.en || row.airline.ko || "—";
-    tr._routeKorean.textContent = endpoint.ko || "";
-    tr._statusKorean.textContent = row.status.ko || "";
-    tr._banks.route.td.setAttribute("aria-label", `${labels.route} ${values.route} ${endpoint.ko || ""}`.trim());
-    tr._banks.status.td.setAttribute("aria-label", `운항상태 ${values.status} ${row.status.ko || ""}`.trim());
-    tr._banks.status.td.dataset.status = values.status.toUpperCase();
+    const airline = row.airline.en || row.airline.ko || "—";
+    if (tr._airlineName.textContent !== airline) tr._airlineName.textContent = airline;
+    if (tr._routeKorean.textContent !== (endpoint.ko || "")) tr._routeKorean.textContent = endpoint.ko || "";
+    if (tr._statusKorean.textContent !== (row.status.ko || "")) tr._statusKorean.textContent = row.status.ko || "";
+    const routeLabel = `${labels.route} ${values.route} ${endpoint.ko || ""}`.trim();
+    if (tr._banks.route.td.getAttribute("aria-label") !== routeLabel) tr._banks.route.td.setAttribute("aria-label", routeLabel);
+    const statusLabel = `운항상태 ${values.status} ${row.status.ko || ""}`.trim();
+    if (tr._banks.status.td.getAttribute("aria-label") !== statusLabel) tr._banks.status.td.setAttribute("aria-label", statusLabel);
+    if (tr._banks.status.td.dataset.status !== values.status.toUpperCase()) tr._banks.status.td.dataset.status = values.status.toUpperCase();
     tr._row = row;
   }
 
   function render({ dataUpdate = false } = {}) {
     const line = document.querySelector('input[name="board-line"]:checked')?.value || "all";
-    const q = searchInput.value.trim().toLocaleLowerCase();
-    const visible = rows.filter((row) => (line === "all" || row.lineType === line) && (!q || [
-      row.flightNumber, row.airline.ko, row.airline.en, row.origin.ko, row.origin.en, row.origin.code,
-      row.destination.ko, row.destination.en, row.destination.code
-    ].filter(Boolean).join(" ").toLocaleLowerCase().includes(q)));
-    count.textContent = `${visible.length} FLIGHTS`;
+    const query = searchTerm.trim();
+    const nowMinutes = minutesOfDay(kstClock.format(new Date()));
+    // Keep the full response in `rows`; only the mechanical DOM is windowed.
+    const matching = rows.filter((row) => (line === "all" || row.lineType === line) && flights.matches(row, query));
+    const relevant = query ? matching : matching.filter((row) => inTimeWindow(row, nowMinutes));
+    const visible = relevant.slice(0, pageSize() * (1 + extraPages));
+    const onscreenRows = new Set();
+    if (dataUpdate) {
+      for (const tr of rowElements.values()) {
+        if (!tr.isConnected) continue;
+        const bounds = tr.getBoundingClientRect();
+        if (bounds.bottom >= 0 && bounds.top <= window.innerHeight) onscreenRows.add(tr);
+      }
+    }
+    count.textContent = `${visible.length} / ${relevant.length} FLIGHTS`;
+    moreButton.hidden = visible.length >= relevant.length;
+    if (!moreButton.hidden) moreButton.textContent = `다음 항공편 보기 (${relevant.length - visible.length}편 남음)`;
     if (!visible.length) {
       const empty = document.createElement("tr"); empty.className = "board-placeholder";
-      const td = cell(rows.length ? "조건에 맞는 항공편이 없습니다."
+      const td = cell(rows.length ? query || line !== "all" ? "조건에 맞는 항공편이 없습니다." : "현재 시간대 항공편이 없습니다. 편명으로 전체 항공편을 검색할 수 있습니다."
         : notice.hidden ? "표시할 항공편이 없습니다." : "항공편 정보를 불러오지 못했습니다.");
-      td.colSpan = 5; empty.append(td); rowsElement.replaceChildren(empty); return;
+      td.colSpan = 5; empty.append(td);
+      if (rowsElement.children.length !== 1 || !rowsElement.firstElementChild.classList.contains("board-placeholder") || rowsElement.firstElementChild.textContent !== td.textContent) rowsElement.replaceChildren(empty);
+      return;
     }
     if (dataUpdate) {
       const currentIds = new Set(rows.map((row) => row.id));
@@ -174,17 +212,22 @@
       if (!tr) {
         tr = flightRow(row);
         rowElements.set(row.id, tr);
-        if (dataUpdate) {
+        if (dataUpdate && index < 10) {
           tr.classList.add("is-entering");
           const delay = Math.min(index * 30, initial ? 600 : 150);
           tr.style.setProperty("--row-delay", `${delay}ms`);
           tr.addEventListener("animationend", () => tr.classList.remove("is-entering"), { once: true });
           setTimeout(() => tr.classList.remove("is-entering"), delay + 280);
         }
-      } else updateRow(tr, row, index, dataUpdate);
+      } else updateRow(tr, row, index, dataUpdate && onscreenRows.has(tr));
       return tr;
     });
-    rowsElement.replaceChildren(...elements);
+    if (rowsElement.children.length !== elements.length || elements.some((tr, index) => rowsElement.children[index] !== tr)) {
+      rowsElement.replaceChildren(...elements);
+    }
+    const displayedIds = new Set(visible.map((row) => row.id));
+    for (const id of rowElements.keys()) if (!displayedIds.has(id)) rowElements.delete(id);
+    if (dataUpdate && !hasLoadedRows) performance.mark("gimpo-board-first-render");
   }
 
   function setNotice(message, retry = false) {
@@ -193,7 +236,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = "다시 시도 ↻";
-      button.addEventListener("click", load);
+      button.addEventListener("click", () => load(true));
       notice.append(button);
     }
     notice.hidden = !message;
@@ -215,19 +258,33 @@
     setNotice(stale ? "마지막으로 확인된 항공편 정보를 표시하고 있습니다." : "");
   }
 
-  async function load() {
+  async function load(force = false) {
     const seq = ++requestNumber;
     refreshButton.disabled = true;
     setBadge("CHECKING");
     liveState.textContent = "항공편 정보를 확인하고 있습니다…";
     try {
-      const response = await fetch(`/api/gimpo-board/flights?type=${encodeURIComponent(type)}`, { cache: "no-store" });
-      if (!response.ok) throw new Error("unavailable");
-      const payload = await response.json();
+      const payload = await flights.load(type, { force });
       if (seq !== requestNumber) return;
       rows = payload.data;
       updateMeta(payload.meta);
+      if (initialFlight && rows.some((row) => row.flightNumber === initialFlight)) {
+        searchInput.value = initialFlight;
+        searchTerm = initialFlight;
+      }
       render({ dataUpdate: true });
+      if (initialFlight) {
+        const matching = rows.find((row) => row.flightNumber === initialFlight);
+        if (matching) {
+          initialFlight = "";
+          const selected = rowElements.get(matching.id);
+          if (selected) openDetail(matching, selected.querySelector("button"));
+        } else if (type === "departure") {
+          selectTab(tabs.find((tab) => tab.dataset.type === "arrival"));
+        } else {
+          initialFlight = "";
+        }
+      }
       if (!hasLoadedRows) {
         hasLoadedRows = true;
         setTimeout(() => { loader.hidden = true; }, 500);
@@ -248,17 +305,21 @@
     const nextType = nextTab.dataset.type;
     tabs.forEach((tab) => { const selected = tab === nextTab; tab.setAttribute("aria-selected", String(selected)); tab.tabIndex = selected ? 0 : -1; });
     panel.setAttribute("aria-labelledby", nextTab.id);
-    document.getElementById("board-marquee-title").textContent = nextType === "departure" ? "DEPARTURES" : "ARRIVALS";
+    document.getElementById("board-marquee-title").textContent = nextType === "departure" ? "DEPARTURE" : "ARRIVAL";
     document.getElementById("board-marquee-ko").textContent = nextType === "departure" ? "출발" : "도착";
     document.querySelector(".board-shell").dataset.type = nextType;
     direction.textContent = nextType === "departure" ? "DEPARTURES / 출발" : "ARRIVALS / 도착";
     routeHeading.textContent = nextType === "departure" ? "DESTINATION" : "ORIGIN";
     if (focus) nextTab.focus();
-    if (nextType !== type) { type = nextType; rows = []; rowElements.clear(); rowsElement.replaceChildren(); load(); }
+    if (nextType !== type) { type = nextType; rows = []; extraPages = 0; rowElements.clear(); rowsElement.replaceChildren(); load(); }
   }
 
   function openDetail(row, trigger) {
     lastTrigger = trigger;
+    document.getElementById("board-gimpo2-link").href = flights.flightUrl("/gimpo2/", row);
+    const pickupLink = document.getElementById("detail-pickup-link");
+    pickupLink.href = flights.flightUrl("/gimpo2/", row);
+    pickupLink.textContent = row.type === "arrival" ? "도착 후 김포공항 근처 쿠키 보기 →" : "이 항공편으로 픽업 시간 확인 →";
     document.getElementById("detail-title").textContent = row.flightNumber;
     const fields = [
       ["항공사", [row.airline.ko, row.airline.en].filter(Boolean).join(" / ") || "—"],
@@ -287,13 +348,20 @@
       event.preventDefault(); selectTab(tabs[next], true);
     });
   });
-  searchInput.addEventListener("input", render);
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { searchTerm = searchInput.value; extraPages = 0; render(); }, 180);
+  });
   searchOpen.addEventListener("click", () => { searchSheet.showModal(); searchInput.focus(); });
   searchClose.addEventListener("click", () => searchSheet.close());
   searchDone.addEventListener("click", () => searchSheet.close());
   searchSheet.addEventListener("close", () => searchOpen.focus());
-  document.querySelectorAll('input[name="board-line"]').forEach((input) => input.addEventListener("change", render));
-  refreshButton.addEventListener("click", load);
+  document.querySelectorAll('input[name="board-line"]').forEach((input) => input.addEventListener("change", () => {
+    clearTimeout(searchTimer); searchTerm = searchInput.value; extraPages = 0; render();
+  }));
+  moreButton.addEventListener("click", () => { extraPages += 1; render(); });
+  mobileQuery.addEventListener("change", () => { extraPages = 0; render(); });
+  refreshButton.addEventListener("click", () => load(true));
   detailClose.addEventListener("click", () => dialog.close());
   dialog.addEventListener("close", () => lastTrigger?.focus());
   window.setInterval(() => { if (!document.hidden) load(); }, 60_000);

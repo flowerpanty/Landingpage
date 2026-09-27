@@ -53,6 +53,11 @@ const PRODUCT_META = {
 };
 
 const ITEM_LISTS = {
+  "/gimpo2/": [
+    ["COOKIE FLIGHT", "/products/cookie-flight/"],
+    ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/"],
+    ["AIRPLANE BUTTER COOKIE", "/products/airplane-cookie/"],
+  ],
   "/gimpo/": [
     ["COOKIE FLIGHT", "/products/cookie-flight/"],
     ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/"],
@@ -528,7 +533,7 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
   if (page.indexing === "index" && page.lastmod) schema.dateModified = page.lastmod;
   if (breadcrumb) schema.breadcrumb = { "@id": breadcrumb["@id"] };
   if (page.path === "/") schema.about = { "@id": LOCAL_BUSINESS_ID };
-  if (["/magok-cookie/", "/pickup/", "/gimpo/", "/gimpo/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
+  if (["/magok-cookie/", "/pickup/", "/gimpo/", "/gimpo2/", "/gimpo/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
   if (product) {
     schema.about = { "@id": product["@id"] };
   } else if (page.relatedProductPrimaryUrl) {

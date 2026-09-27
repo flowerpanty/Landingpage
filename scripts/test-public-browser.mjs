@@ -30,6 +30,7 @@ const CRITICAL_PATHS = [
   "/cookie-crew/",
   "/gimpo-board/",
   "/gimpo/",
+  "/gimpo2/",
   "/gimpo/pickup/"
 ];
 const MOBILE_WIDTHS = [320, 375, 390, 430];
@@ -344,6 +345,28 @@ try {
   assert.equal(gimpoPickupState.address, "서울 강서구 송정로 25 1층");
   const gimpoPickupTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .pickup-hero h1, .pickup-hero-copy>p:not(.eyebrow)')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
   assert.ok(gimpoPickupTextClipping.every((element) => !element.clipped), `Gimpo pickup mobile text must fit: ${JSON.stringify(gimpoPickupTextClipping)}`);
+  await navigate(cdp, `${server.baseUrl}/gimpo2/`);
+  await waitFor(cdp, "() => document.querySelectorAll('#g2-list .flight-row').length === 4", "Gimpo2 should show shared live departures");
+  const gimpo2FirstView = await evaluate(cdp, "() => ({ h1: document.querySelector('h1')?.textContent.trim(), tabs: [...document.querySelectorAll('.flight-tabs button')].map((button) => button.textContent.trim()), searchVisible: document.getElementById('g2-search').getBoundingClientRect().top < innerHeight, rows: document.querySelectorAll('#g2-list .flight-row').length, boardHref: new URL(document.getElementById('g2-board-link').href).pathname, viewport: innerWidth, documentWidth: document.documentElement.scrollWidth })");
+  assert.equal(gimpo2FirstView.h1, "김포공항 실시간 출발·도착 항공편");
+  assert.equal(gimpo2FirstView.tabs.length, 2);
+  assert.ok(gimpo2FirstView.searchVisible && gimpo2FirstView.documentWidth <= gimpo2FirstView.viewport, "Gimpo2 mobile search should fit in the first viewport");
+  assert.equal(gimpo2FirstView.boardHref, "/gimpo-board/");
+  fs.writeFileSync("/private/tmp/nothingmatters-gimpo2-mobile.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  await navigate(cdp, `${server.baseUrl}/gimpo2/?flight=RS901`);
+  await waitFor(cdp, "() => document.getElementById('g2-flight-number')?.textContent === 'RS901'", "Gimpo2 flight query should select a departure");
+  const gimpo2Departure = await evaluate(cdp, "() => ({ kind: document.getElementById('g2-pickup-card').dataset.kind, board: document.getElementById('g2-selected-board').getAttribute('href'), actionCount: document.querySelectorAll('#g2-pickup-action a').length })");
+  assert.deepEqual(gimpo2Departure, { kind: "DEPARTED", board: "/gimpo-board/?flight=RS901", actionCount: 0 }, "departed flights must not suggest pickup");
+  await navigate(cdp, `${server.baseUrl}/gimpo2/?flight=TW922`);
+  await waitFor(cdp, "() => document.getElementById('g2-flight-number')?.textContent === 'TW922'", "Gimpo2 flight query should also select an arrival");
+  const gimpo2Arrival = await evaluate(cdp, "() => ({ tab: document.getElementById('g2-arrival-tab').getAttribute('aria-selected'), kind: document.getElementById('g2-pickup-card').dataset.kind, countdown: document.getElementById('g2-countdown').textContent, timelineHidden: document.getElementById('g2-timeline').hidden })");
+  assert.deepEqual(gimpo2Arrival, { tab: "true", kind: "ARRIVAL", countdown: "", timelineHidden: true }, "arrivals should show a nearby-cookie message without pickup timing");
+  const pickupMath = await evaluate(cdp, "() => { const base = { type:'departure', scheduledTime:'15:00', revisedTime:null, status:{ en:'ON TIME' } }; const meta = { live:true, stale:false, updatedAt:'2026-09-28T12:00:00+09:00' }; const now = new Date('2026-09-28T12:00:00+09:00'); const calculate = (time) => window.NmGimpoFlights.pickupPlan({ ...base, scheduledTime:time },meta,now).kind; return { plenty:calculate('15:00'), available:calculate('14:00'), quick:calculate('13:30'), avoid:calculate('13:29'), revised:window.NmGimpoFlights.pickupPlan({ ...base, revisedTime:'13:29' },meta,now).kind, stale:window.NmGimpoFlights.pickupPlan(base,{ ...meta,stale:true },now).kind, cancelled:window.NmGimpoFlights.pickupPlan({ ...base,status:{ en:'CANCELLED' } },meta,now).kind }; }");
+  assert.deepEqual(pickupMath, { plenty:"PLENTY", available:"AVAILABLE", quick:"QUICK", avoid:"NOT_RECOMMENDED", revised:"NOT_RECOMMENDED", stale:"UNAVAILABLE", cancelled:"CANCELLED" });
+  const boardClock = await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "(() => { const NativeDate = Date; function FixedDate(...args) { return args.length ? new NativeDate(...args) : new NativeDate('2026-09-28T06:30:00+09:00'); } FixedDate.now = () => new NativeDate('2026-09-28T06:30:00+09:00').getTime(); FixedDate.parse = NativeDate.parse; FixedDate.UTC = NativeDate.UTC; FixedDate.prototype = NativeDate.prototype; window.Date = FixedDate; })();" });
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/?flight=RS901`);
+  await waitFor(cdp, "() => document.getElementById('flight-detail')?.open", "board flight query should open the matching detail");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('detail-pickup-link').getAttribute('href')"), "/gimpo2/?flight=RS901", "board detail should carry the selected flight into Gimpo2");
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
   await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "Gimpo departures should load from the mocked provider");
@@ -353,7 +376,7 @@ try {
   assert.equal(boardMobile.title, "김포공항 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
   assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION", "TIME", "GATE", "STATUS"], `board mobile columns at viewport ${boardMobile.viewport}`);
-  assert.deepEqual(boardMobile.links, ["/gimpo/", "/gimpo/pickup/"]);
+  assert.deepEqual(boardMobile.links, ["/gimpo2/"]);
   assert.deepEqual([boardMobile.route, boardMobile.routeKorean], ["JEJU", "제주"], "English destination should be the main mechanical value with Korean below");
   assert.deepEqual(boardMobile.halves, ["flap-static-top", "flap-static-bottom", "flap-flip-top", "flap-flip-bottom", "flap-hinge"]);
   assert.equal(boardMobile.grid, "grid", "mobile board rows should use a physical two-line grid");
@@ -363,7 +386,7 @@ try {
   assert.ok(boardMobile.sweetOffset >= 0 && boardMobile.sweetOffset <= 12, `mobile sweet-flight copy should sit close to the title: offset=${boardMobile.sweetOffset}`);
   assert.match(boardMobile.planeFilter, /invert/);
   assert.equal(boardMobile.searchInControls, false, "search must not dominate the board controls");
-  assert.equal(await evaluate(cdp, "() => document.querySelector('.board-shell').firstElementChild?.className === 'board-header' && document.getElementById('board-marquee-title').textContent === 'DEPARTURES'"), true, "the yellow departure marquee must be the first section inside the physical frame");
+  assert.equal(await evaluate(cdp, "() => document.querySelector('.board-shell').firstElementChild?.className === 'board-header' && document.getElementById('board-marquee-title').textContent === 'DEPARTURE'"), true, "the yellow departure marquee must be the first section inside the physical frame");
   assert.equal(await evaluate(cdp, "() => getComputedStyle(document.querySelector('.board-plane-departure')).display !== 'none' && getComputedStyle(document.querySelector('.board-plane-arrival')).display === 'none'"), true, "departure marquee must show the departure plane icon");
   const fixedMobileBanks = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); return Object.fromEntries(['flight','route','time','gate','status'].map((field) => { const bank = row.querySelector(`[data-field=${field}] .flap-bank`); return [field, { width: bank.children.length, blanks: [...bank.children].filter((slot) => slot.dataset.char === ' ').length }]; })); }");
   assert.deepEqual(Object.fromEntries(Object.entries(fixedMobileBanks).map(([field, bank]) => [field, bank.width])), { flight: 7, route: 16, time: 5, gate: 2, status: 10 }, "each field must preserve a fixed physical bank width");
@@ -388,15 +411,16 @@ try {
   assert.equal(providerCalls, 4, "browser traffic should share one four-stream provider cache refresh");
   for (const width of [320, 375, 390, 430]) {
     await setViewport(cdp, width);
-    const fitted = await evaluate(cdp, "() => { const shell = document.querySelector('.board-shell').getBoundingClientRect(); const banks = [...document.querySelectorAll('#flight-rows .flap-bank')].filter((bank) => getComputedStyle(bank).display !== 'none'); return { viewport: innerWidth, documentWidth: document.documentElement.scrollWidth, bankRight: Math.max(...banks.map((bank) => bank.getBoundingClientRect().right)), shellRight: shell.right }; }");
+    const fitted = await evaluate(cdp, "() => { const shell = document.querySelector('.board-shell').getBoundingClientRect(); const banks = [...document.querySelectorAll('#flight-rows .flap-bank')].filter((bank) => getComputedStyle(bank).display !== 'none'); const title = document.getElementById('board-marquee-title'); const logo = document.querySelector('.board-logo'); const tagline = document.querySelector('.board-marquee-copy p'); return { viewport: innerWidth, documentWidth: document.documentElement.scrollWidth, bankRight: Math.max(...banks.map((bank) => bank.getBoundingClientRect().right)), shellRight: shell.right, titleRight: title.getBoundingClientRect().right, logoLeft: logo.getBoundingClientRect().left, titleWeight: Number(getComputedStyle(title).fontWeight), taglineWeight: Number(getComputedStyle(tagline).fontWeight) }; }");
     assert.ok(fitted.documentWidth <= fitted.viewport && fitted.bankRight <= fitted.shellRight, `fixed physical banks must fit the ${width}px mobile board`);
+    assert.ok(fitted.titleRight < fitted.logoLeft && fitted.titleWeight >= 800 && fitted.taglineWeight >= 800, `bold marquee text must fit beside the brand at ${width}px: ${JSON.stringify(fitted)}`);
   }
   await setViewport(cdp, 390);
   await evaluate(cdp, "() => { document.getElementById('board-search-open').click(); return true; }");
   assert.equal(await evaluate(cdp, "() => document.getElementById('flight-search-sheet').open"), true, "flight search should open a separate sheet");
   fs.writeFileSync("/private/tmp/nothingmatters-gimpo-board-search.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
   await evaluate(cdp, "() => { const input = document.getElementById('flight-search'); input.value = 'RS901'; input.dispatchEvent(new Event('input', { bubbles: true })); return true; }");
-  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length"), 1, "search should filter locally");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 1", "debounced search should filter locally");
   assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length"), 0, "search must not replay mechanical flips");
   assert.equal(flightProvider.state.calls.length, providerCalls, "search keystrokes must not call the provider");
   await evaluate(cdp, "() => { document.getElementById('board-search-done').click(); return true; }");
@@ -408,7 +432,7 @@ try {
   await evaluate(cdp, "() => { document.getElementById('board-search-close').click(); return true; }");
   await evaluate(cdp, "() => { document.querySelector('input[value=all]').click(); document.getElementById('arrivals-tab').click(); return true; }");
   await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2 && document.getElementById('route-heading').textContent === 'ORIGIN'", "arrival board should show two origins");
-  assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-title').textContent"), "ARRIVALS", "marquee must follow the selected flight direction");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-title').textContent"), "ARRIVAL", "marquee must follow the selected flight direction");
   assert.equal(await evaluate(cdp, "() => getComputedStyle(document.querySelector('.board-plane-departure')).display === 'none' && getComputedStyle(document.querySelector('.board-plane-arrival')).display !== 'none'"), true, "arrival marquee must show the arrival plane icon");
   assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-ko').textContent"), "도착", "Korean marquee label must follow arrivals");
   assert.deepEqual((await evaluate(cdp, "() => [...document.querySelectorAll('#flight-rows [data-field=route]')].map((cell) => [cell.querySelector('.flap-bank').dataset.value, cell.querySelector('.route-korean').textContent])")).sort(([left], [right]) => left.localeCompare(right)), [["BUSAN/GIMHAE", "부산/김해"], ["TOKYO/HND", "도쿄/하네다"]]);
@@ -420,7 +444,7 @@ try {
   assert.equal(await evaluate(cdp, "() => document.activeElement?.classList.contains('flight-number')"), true, "closing detail should restore flight focus");
   await evaluate(cdp, "() => { document.getElementById('departures-tab').click(); return true; }");
   await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "departure tab should restore departure rows");
-  assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-title').textContent"), "DEPARTURES");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-title').textContent"), "DEPARTURE");
   await evaluate(cdp, "() => { const originalFetch = window.fetch.bind(window); window.__boardRevision = 1; window.__boardErrorMode = ''; window.fetch = async (...args) => { if (String(args[0]).includes('/api/gimpo-board/') && window.__boardErrorMode === 'checking') await new Promise((resolve) => { window.__boardRelease = resolve; }); if (window.__boardErrorMode === 'error' && String(args[0]).includes('/api/gimpo-board/')) throw new Error('simulated failure'); const response = await originalFetch(...args); if (!String(args[0]).includes('/api/gimpo-board/')) return response; const payload = await response.json(); if (window.__boardErrorMode === 'stale') { payload.meta.stale = true; payload.meta.live = false; } const row = payload.data.find((item) => item.flightNumber === 'RS901'); if (row) { row.revisedTime = window.__boardRevision === 1 ? '06:25' : '06:35'; row.status.en = window.__boardRevision === 1 ? 'DELAYED' : 'BOARDING'; row.status.ko = window.__boardRevision === 1 ? '지연' : '탑승 중'; } return new Response(JSON.stringify(payload), { status: response.status, headers: { 'Content-Type': 'application/json' } }); }; return true; }");
   await evaluate(cdp, "() => { document.getElementById('board-refresh').click(); return true; }");
   await waitFor(cdp, "() => document.querySelectorAll('[data-field=time] .flap-slot.is-flipping').length > 0", "changed time characters should flip on refresh");
@@ -448,6 +472,8 @@ try {
   assert.match(await evaluate(cdp, "() => document.getElementById('board-live-state').textContent"), /TEMPORARILY UNAVAILABLE/);
   assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · STALE", "failed refresh with cached rows must show STALE");
   assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length"), 4, "provider error should not erase board rows");
+  const stickyHeading = await evaluate(cdp, "() => { const table = document.querySelector('.flight-table'); scrollTo({ top: table.getBoundingClientRect().top + scrollY + 70, behavior: 'instant' }); const rect = document.querySelector('.flight-table thead').getBoundingClientRect(); return { top: rect.top, position: getComputedStyle(document.querySelector('.flight-table thead')).position }; }");
+  assert.ok(stickyHeading.position === "sticky" && Math.abs(stickyHeading.top) <= 2, `flight column headings should remain pinned during scroll: ${JSON.stringify(stickyHeading)}`);
   const blocker = await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "const boardOriginalFetch = window.fetch.bind(window); window.fetch = (...args) => String(args[0]).includes('/api/gimpo-board/') ? Promise.reject(new Error('simulated failure')) : boardOriginalFetch(...args);" });
   await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
   await waitFor(cdp, "() => Boolean(document.querySelector('#board-notice button'))", "no-cache failure should show a retry button");
@@ -461,6 +487,14 @@ try {
   assert.equal(boardDesktop.grid, "grid", "desktop board should use mechanical grid rows");
   assert.ok(boardDesktop.slots > 0, "desktop board should contain physical flap slots");
   assert.ok(boardDesktop.documentWidth <= boardDesktop.viewport, "desktop Gimpo board must not overflow");
+  const desktopMarquee = await evaluate(cdp, "() => { const title = document.getElementById('board-marquee-title'); const tagline = document.querySelector('.board-marquee-copy p'); const logo = document.querySelector('.board-logo'); return { title: title.textContent, titleRight: title.getBoundingClientRect().right, logoLeft: logo.getBoundingClientRect().left, headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, taglineWeight: Number(getComputedStyle(tagline).fontWeight), titleWeight: Number(getComputedStyle(title).fontWeight) }; }");
+  assert.ok(desktopMarquee.title === "DEPARTURE" && desktopMarquee.titleRight < desktopMarquee.logoLeft && desktopMarquee.headerHeight >= 180 && desktopMarquee.titleWeight >= 800 && desktopMarquee.taglineWeight >= 800, `desktop marquee should match the bold reference without overlap: ${JSON.stringify(desktopMarquee)}`);
+  for (const width of [800, 1024, 1100]) {
+    await setViewport(cdp, width);
+    const marquee = await evaluate(cdp, "() => ({ titleRight: document.getElementById('board-marquee-title').getBoundingClientRect().right, logoLeft: document.querySelector('.board-logo').getBoundingClientRect().left, documentWidth: document.documentElement.scrollWidth, viewport: innerWidth })");
+    assert.ok(marquee.titleRight < marquee.logoLeft && marquee.documentWidth <= marquee.viewport, `marquee must fit at ${width}px: ${JSON.stringify(marquee)}`);
+  }
+  await setViewport(cdp, 1280, 900);
   const desktopHousing = await evaluate(cdp, "() => { const rows = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')]; const first = rows[0]; const second = rows[1]; const style = getComputedStyle(first); const slot = first.querySelector('[data-field=route] .flap-slot'); const hinge = slot.querySelector('.flap-hinge'); const shell = getComputedStyle(document.querySelector('.board-shell')); return { gap: second.getBoundingClientRect().top - first.getBoundingClientRect().bottom, margin: style.marginBottom, radius: style.borderRadius, shadow: style.boxShadow, divider: parseFloat(style.borderBottomWidth), rowHeight: first.getBoundingClientRect().height, slotWidth: slot.getBoundingClientRect().width, slotHeight: slot.getBoundingClientRect().height, hinge: hinge.getBoundingClientRect().height, slotRadius: parseFloat(getComputedStyle(slot).borderTopLeftRadius), slotShadow: getComputedStyle(slot).boxShadow, slotBackground: getComputedStyle(slot).backgroundImage, faceBackground: getComputedStyle(slot.querySelector('.flap-static-top')).backgroundImage, shellBackground: shell.backgroundImage, topShadow: getComputedStyle(slot.querySelector('.flap-static-top')).boxShadow, bottomShadow: getComputedStyle(slot.querySelector('.flap-static-bottom')).boxShadow, flight: first.querySelector('[data-field=flight] .flap-bank').dataset.value, route: first.querySelector('[data-field=route] .flap-bank').dataset.value, time: first.querySelector('[data-field=time] .flap-bank').dataset.value, status: first.querySelector('[data-field=status] .flap-bank').dataset.value }; }");
   assert.ok(desktopHousing.gap <= 1 && desktopHousing.margin === "0px" && desktopHousing.radius === "0px" && desktopHousing.shadow === "none", "desktop flights must form one continuous board, not cards");
   assert.ok(desktopHousing.divider <= 6 && desktopHousing.hinge === 1 && desktopHousing.topShadow === "none" && desktopHousing.bottomShadow === "none", "flaps must have a single 1px seam without face inset shadows");
@@ -482,6 +516,7 @@ try {
   assert.deepEqual(await evaluate(cdp, "() => window.NmSplitFlap.getSoundState()"), { enabled: true, contextCreated: false }, "restored preference must not auto-start Web Audio");
   await evaluate(cdp, "() => { document.getElementById('board-sound').click(); return true; }");
   assert.equal(await evaluate(cdp, "() => localStorage.getItem('gimpoBoardSound')"), "off");
+  await cdp.command("Page.removeScriptToEvaluateOnNewDocument", { identifier: boardClock.identifier });
 
   const stickyProducts = [
     ["/products/cookie-flight/", "cookie-flight"],
