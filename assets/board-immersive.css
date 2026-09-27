@@ -79,28 +79,26 @@
   background: #050505;
 }
 .flight-table thead tr { min-height: 41px; border-bottom: 3px solid #050505; }
-.flight-table th { display: flex; align-items: center; min-width: 0; padding: 5px 5px; border: 0; color: #eee; background: linear-gradient(#171717,#0e0e0e); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.9); font: 900 clamp(14px,1.2vw,19px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .11em; }
+.flight-table th { display: flex; align-items: center; min-width: 0; padding: 5px; border: 0; color: #eee; background: linear-gradient(#171717,#0e0e0e); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.9); font: 900 clamp(14px,1.2vw,19px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .11em; }
 .flight-table tbody { background: #0e0e0e; }
 .flight-table tbody tr:not(.board-placeholder) { min-height: 70px; margin: 0; border: 0; border-bottom: 3px solid #050505; border-radius: 0; box-shadow: none; cursor: pointer; }
 .flight-table tbody tr:not(.board-placeholder):hover td,
 .flight-table tbody tr:not(.board-placeholder):focus-within td { background: #222018; }
-.flight-table tbody td { position: relative; min-width: 0; padding: 3px 3px 2px; border: 0; background: transparent; align-content: center; box-shadow: inset -1px 0 rgba(255,255,255,.045), inset 1px 0 rgba(0,0,0,.8); }
-.flight-table tbody tr.is-entering { animation: board-row-arrive .32s cubic-bezier(.33,1,.68,1) both; animation-delay: var(--row-delay,0ms); }
-@keyframes board-row-arrive { from { opacity: 0; filter: brightness(.6); } to { opacity: 1; filter: brightness(1); } }
+.flight-table tbody td { position: relative; min-width: 0; padding: 3px 3px 2px; border: 0; background: transparent; align-content: center; overflow: hidden; box-shadow: inset -1px 0 rgba(255,255,255,.045), inset 1px 0 rgba(0,0,0,.8); }
+.flight-table tbody tr.is-entering { animation: board-row-arrive .25s ease-out both; animation-delay: var(--row-delay,0ms); }
+@keyframes board-row-arrive { from { opacity: 0; } to { opacity: 1; } }
 .flight-number { display: inline-block; max-width: 100%; padding: 0; border: 0; color: inherit; background: none; text-align: left; }
 .flight-number:hover .flap-slot, .flight-number:focus-visible .flap-slot { border-color: #ffcf09; }
-.flight-cell-sub, .airline-name { display: block; margin-top: 2px; color: #aaa; font: 900 clamp(10px,.95vw,14px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .04em; white-space: nowrap; }
+.flight-cell-sub, .airline-name { display: block; margin-top: 2px; color: #aaa; font: 900 clamp(10px,.95vw,14px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .route-korean { color: #ffcf09; font-family: Futura, "Helvetica Neue", Helvetica, Arial,"Apple SD Gothic Neo",sans-serif; letter-spacing: 0; }
 .status-korean { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+.flap-bank--flight { --slot-w: clamp(16px,1.9vw,28px); --slot-h: 46px; }
+.flap-bank--route  { --slot-w: clamp(15px,1.8vw,27px); --slot-h: 46px; }
+.flap-bank--time   { --slot-w: clamp(17px,2vw,28px); --slot-h: 46px; }
+.flap-bank--gate   { --slot-w: clamp(18px,2.1vw,28px); --slot-h: 46px; }
+.flap-bank--status { --slot-w: clamp(14px,1.6vw,24px); --slot-h: 46px; }
 
-/* ─── Flap bank size variants per column ─── */
-.flap-bank--flight { --slot-w: clamp(16px,1.9vw,28px); --slot-h: 46px; gap: 3px; }
-.flap-bank--route  { --slot-w: clamp(15px,1.8vw,27px); --slot-h: 46px; gap: 2px; }
-.flap-bank--time   { --slot-w: clamp(17px,2vw,28px);   --slot-h: 46px; gap: 3px; }
-.flap-bank--gate   { --slot-w: clamp(18px,2.1vw,28px); --slot-h: 46px; gap: 3px; }
-.flap-bank--status { --slot-w: clamp(14px,1.6vw,24px); --slot-h: 46px; gap: 2px; }
-
-/* ─── Status is the board's yellow signal column ─── */
+/* The status column is the board's yellow signal. */
 .flight-table td[data-field="status"] .flap-slot { color: #ffce00; }
 
 .board-placeholder { display: block; }
@@ -135,14 +133,7 @@
   .board-utilities button { min-width: 0; min-height: 37px; padding: 2px; gap: 3px; font-size: clamp(9px,2.5vw,13px); }
   .board-utilities button svg { width: 17px; height: 17px; }
   .board-table-wrap { min-height: calc(100svh - 260px); padding: 0 3px 9px; }
-
-  /* ─── Mobile grid: 5 columns in 2 rows ─── */
-  .flight-table thead tr, .flight-table tbody tr:not(.board-placeholder) {
-    grid-template-columns: repeat(12,minmax(0,1fr));
-    grid-template-areas: "flight flight flight flight route route route route route route route route" "time time time time time gate gate gate status status status status";
-    column-gap: 5px;
-    padding: 0 3px;
-  }
+  .flight-table thead tr, .flight-table tbody tr:not(.board-placeholder) { grid-template-columns: repeat(12,minmax(0,1fr)); column-gap: 5px; padding: 0 3px; }
   .flight-table thead tr { min-height: 62px; grid-template-rows: 1fr 1fr; row-gap: 2px; border-bottom-width: 3px; }
   .flight-table th { padding: 3px; font-size: 11px; letter-spacing: .07em; }
   .flight-table tbody tr:not(.board-placeholder) { min-height: 112px; grid-template-rows: 1fr 1fr; row-gap: 3px; border-bottom-width: 3px; }
@@ -152,13 +143,12 @@
   .flight-table thead th:nth-child(3), .flight-table tbody td[data-field="time"] { grid-area: time; }
   .flight-table thead th:nth-child(4), .flight-table tbody td[data-field="gate"] { grid-area: gate; }
   .flight-table thead th:nth-child(5), .flight-table tbody td[data-field="status"] { grid-area: status; }
-
-  /* ─── Mobile flap sizes: wide enough to be legible ─── */
-  .flap-bank--flight { --slot-w: clamp(12px,3.5vw,18px); --slot-h: 36px; gap: 2px; }
-  .flap-bank--route  { --slot-w: clamp(10px,3.1vw,15px); --slot-h: 36px; gap: 1px; }
-  .flap-bank--time   { --slot-w: clamp(13px,3.8vw,20px); --slot-h: 36px; gap: 2px; }
-  .flap-bank--gate   { --slot-w: clamp(14px,3.8vw,19px); --slot-h: 36px; gap: 2px; }
-  .flap-bank--status { --slot-w: clamp(10px,3.4vw,17px); --slot-h: 36px; gap: 1px; }
+  .flight-table thead tr, .flight-table tbody tr:not(.board-placeholder) { grid-template-areas: "flight flight flight flight route route route route route route route route" "time time time time time gate gate gate status status status status"; }
+  .flap-bank--flight { --slot-w: clamp(12px,3.5vw,18px); --slot-h: 36px; }
+  .flap-bank--route { --slot-w: clamp(10px,3.1vw,15px); --slot-h: 36px; }
+  .flap-bank--time { --slot-w: clamp(13px,3.8vw,20px); --slot-h: 36px; }
+  .flap-bank--gate { --slot-w: clamp(14px,3.8vw,19px); --slot-h: 36px; }
+  .flap-bank--status { --slot-w: clamp(10px,3.4vw,17px); --slot-h: 36px; }
   .airline-name, .flight-cell-sub { font-size: 13px; margin-top: 2px; }
   .board-status-line { padding: 5px 8px; font-size: 9px; }
   .board-disclaimer { padding: 10px 8px 16px; font-size: 10px; }

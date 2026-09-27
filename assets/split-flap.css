@@ -3,8 +3,9 @@
   --slot-w: 24px;
   --slot-h: 46px;
   display: inline-flex;
-  gap: 2px;
+  gap: 0;
   max-width: 100%;
+  overflow: hidden;
   vertical-align: middle;
   white-space: nowrap;
   line-height: 1;
@@ -16,15 +17,16 @@
   flex: 0 0 var(--slot-w);
   width: var(--slot-w);
   height: var(--slot-h);
-  border: 1px solid #070707;
-  border-radius: 3px;
+  border: 0;
+  border-right: 1px solid #090909;
   color: #f5f2e9;
-  background: linear-gradient(90deg, #070707 0%, #232323 12%, #151515 48%, #080808 100%);
-  box-shadow: inset 1px 0 0 rgba(255,255,255,.08), inset -1px 0 0 rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.8);
-  font: 900 min(calc(var(--slot-h) * .68), calc(var(--slot-w) * 2.55))/1 Futura, "Helvetica Neue", Helvetica, Arial, "Arial Narrow", Impact, sans-serif;
+  background: linear-gradient(90deg, #080808, #222 12%, #151515 55%, #090909);
+  box-shadow: inset 1px 0 rgba(255,255,255,.06), inset -1px 0 rgba(0,0,0,.8);
+  font: 900 min(calc(var(--slot-h) * .68), calc(var(--slot-w) * 2.55))/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif;
   perspective: 650px;
   transform-style: preserve-3d;
 }
+.flap-slot:last-child { border-right: 0; }
 
 .flap-static-top,
 .flap-static-bottom,
@@ -41,19 +43,17 @@
 .flap-flip-top {
   top: 0;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.08), transparent 46%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 5px),
-    linear-gradient(90deg, #151515, #252525 18%, #181818 55%, #0d0d0d);
-  border-radius: 2px 2px 0 0;
+    linear-gradient(180deg, rgba(255,255,255,.075), transparent 46%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.018) 0 1px, transparent 1px 5px),
+    linear-gradient(90deg, #151515, #242424 18%, #181818 55%, #0d0d0d);
 }
 .flap-static-bottom,
 .flap-flip-bottom {
   bottom: 0;
   background:
-    linear-gradient(0deg, rgba(255,255,255,.035), transparent 45%),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.04) 0 1px, transparent 1px 5px),
+    linear-gradient(0deg, rgba(255,255,255,.03), transparent 45%),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 5px),
     linear-gradient(90deg, #0b0b0b, #1b1b1b 20%, #111 56%, #070707);
-  border-radius: 0 0 2px 2px;
 }
 .flap-static-top,
 .flap-static-bottom { z-index: 1; }
@@ -83,8 +83,8 @@
   position: absolute;
   z-index: 5;
   top: calc(50% - .5px);
-  left: -1px;
-  right: -1px;
+  left: 0;
+  right: 0;
   height: 1px;
   background: #080808;
   box-shadow: 0 1px 0 rgba(255,255,255,.03);
@@ -93,11 +93,11 @@
 
 .flap-slot.is-flipping .flap-flip-top {
   opacity: 1;
-  animation: flap-leaf-top .085s cubic-bezier(.4,0,.2,1) both;
+  animation: flap-leaf-top .07s cubic-bezier(.4,0,.2,1) both;
 }
 .flap-slot.is-flipping .flap-flip-bottom {
   opacity: 1;
-  animation: flap-leaf-bottom .085s cubic-bezier(.4,0,.2,1) both;
+  animation: flap-leaf-bottom .07s cubic-bezier(.4,0,.2,1) both;
 }
 @keyframes flap-leaf-top {
   0% { transform: rotateX(0deg); opacity: 1; }

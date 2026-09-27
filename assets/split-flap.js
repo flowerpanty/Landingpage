@@ -2,8 +2,8 @@
   "use strict";
 
   const ALPHABET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:/-.";
-  const STEP_MS = 85;
-  const STEP_INTERVAL_MS = 105;
+  const STEP_MS = 70;
+  const STEP_INTERVAL_MS = 80;
   const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
   const STORAGE_KEY = "gimpoBoardSound";
   let soundEnabled = false;
@@ -91,14 +91,10 @@
     const oldIndex = ALPHABET.indexOf(from);
     const newIndex = ALPHABET.indexOf(to);
     const distance = (newIndex - oldIndex + ALPHABET.length) % ALPHABET.length;
-    if (distance > 0 && distance <= 6) {
-      return Array.from({ length: distance }, (_, index) => ALPHABET[(oldIndex + index + 1) % ALPHABET.length]);
-    }
-    const intermediateCount = 2 + (Math.abs(oldIndex - newIndex) % 3);
-    return [
-      ...Array.from({ length: intermediateCount }, (_, index) => ALPHABET[(oldIndex + index + 1) % ALPHABET.length]),
-      to
-    ];
+    if (distance <= 1) return [to];
+    const intermediateCount = Math.min(2, distance - 1);
+    return [...Array.from({ length: intermediateCount }, (_, index) =>
+      ALPHABET[(oldIndex + index + 1) % ALPHABET.length]), to];
   }
 
   function setFlapValue(bank, value, { animate = true, rowDelay = 0, onStep } = {}) {
@@ -119,11 +115,11 @@
       changed += 1;
       if (!animate || REDUCED_MOTION.matches) { settle(slot, target); return; }
       sequence(slot.dataset.char, target).forEach((char, stepIndex) => {
-        slot._timers.push(setTimeout(() => step(slot, char, onStep), rowDelay + (index % 7) * 38 + stepIndex * STEP_INTERVAL_MS));
+        slot._timers.push(setTimeout(() => step(slot, char, onStep), rowDelay + (index % 5) * 30 + stepIndex * STEP_INTERVAL_MS));
       });
     });
     if (!fixedWidth && oldLength > next.length) {
-      const cleanupDelay = animate && !REDUCED_MOTION.matches ? rowDelay + 7 * 38 + 7 * STEP_INTERVAL_MS : 0;
+      const cleanupDelay = animate && !REDUCED_MOTION.matches ? rowDelay + 5 * 30 + 3 * STEP_INTERVAL_MS : 0;
       setTimeout(() => { if (bank.dataset.value === next) while (bank.children.length > next.length) bank.lastElementChild.remove(); }, cleanupDelay);
     }
     return changed;
@@ -140,7 +136,7 @@
   function tick() {
     if (!soundEnabled || !audioContext || audioContext.state !== "running") return;
     const now = performance.now();
-    if (now - lastTickAt < 48) return;
+    if (now - lastTickAt < 80) return;
     lastTickAt = now;
     const duration = .035;
     const buffer = audioContext.createBuffer(1, Math.ceil(audioContext.sampleRate * duration), audioContext.sampleRate);

@@ -135,7 +135,7 @@
       gate: gateDisplay(row.gate), status: row.status.en || "-"
     };
     const labels = { flight: "편명", route: type === "departure" ? "목적지" : "출발지", time: "시간", gate: "게이트", status: "운항상태" };
-    const rowDelay = Math.min(rowIndex * 45, 450) + Math.floor(Math.random() * 25);
+    const rowDelay = Math.min(rowIndex * 30 + Math.floor(Math.random() * 15), 250);
     for (const [name, value] of Object.entries(values)) {
       const part = tr._banks[name];
       part.td.setAttribute("aria-label", `${labels[name]} ${value}`);
@@ -176,10 +176,10 @@
         rowElements.set(row.id, tr);
         if (dataUpdate) {
           tr.classList.add("is-entering");
-          const delay = Math.min(index * 38, initial ? 1400 : 300);
+          const delay = Math.min(index * 30, initial ? 600 : 150);
           tr.style.setProperty("--row-delay", `${delay}ms`);
           tr.addEventListener("animationend", () => tr.classList.remove("is-entering"), { once: true });
-          setTimeout(() => tr.classList.remove("is-entering"), delay + 350);
+          setTimeout(() => tr.classList.remove("is-entering"), delay + 280);
         }
       } else updateRow(tr, row, index, dataUpdate);
       return tr;
