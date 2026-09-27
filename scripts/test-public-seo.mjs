@@ -27,7 +27,9 @@ for (const page of sitePages.pages || []) {
 }
 
 for (const entry of sourceHtmlEntries) {
-  assert.equal(readHtml(entry.filePath).includes("매장 픽업"), false, `${entry.pathname}: public source must describe reservation pickup instead of store pickup`);
+  if (!entry.pathname.startsWith("/gimpo/")) {
+    assert.equal(readHtml(entry.filePath).includes("매장 픽업"), false, `${entry.pathname}: public source must describe reservation pickup instead of store pickup`);
+  }
 }
 
 for (const product of products) {
@@ -182,7 +184,7 @@ function filePathForUrl(loc) {
 }
 
 function normalizePathname(pathname) {
-  const value = String(pathname || "/").trim() || "/";
+  const value = String(pathname || "/").trim().normalize("NFC") || "/";
   const withLeadingSlash = value.startsWith("/") ? value : `/${value}`;
   if (withLeadingSlash === "/") return "/";
   return withLeadingSlash.endsWith("/") ? withLeadingSlash : `${withLeadingSlash}/`;
@@ -364,6 +366,59 @@ for (const entry of sourceHtmlEntries) {
 
   assertLocalInternalLinksResolve(entry, html);
 }
+
+const boardEntry = (sitePages.pages || []).find((page) => page.path === "/gimpo-board/");
+assert.equal(boardEntry?.productionReady, true, "Gimpo board must be production-ready");
+assert.deepEqual(
+  { status: boardEntry?.status, indexing: boardEntry?.indexing, sitemap: boardEntry?.sitemap },
+  { status: "active", indexing: "index", sitemap: true },
+  "Gimpo flight board should be an active public page"
+);
+assert.ok(locSet.has(`${SITE_URL}/gimpo-board/`), "Gimpo flight board should be in the sitemap");
+const boardHtml = readHtml(filePathForPathname("/gimpo-board/"));
+assert.match(boardHtml, /<title>김포공항 도착·출발 실시간 항공편 \| NOTHINGMATTERS<\/title>/);
+assert.equal(getCanonical(boardHtml), `${SITE_URL}/gimpo-board/`);
+assert.match(boardHtml, /href="\/gimpo\/"/);
+assert.match(boardHtml, /href="\/gimpo\/pickup\/"/);
+assert.match(boardHtml, /id="board-badge"[^>]*>GMP · CHECKING<\/span>/, "board must not claim LIVE before fresh data loads");
+assert.doesNotMatch(boardHtml, /KAC_FLIGHT_API_KEY|serviceKey=/, "board HTML must not expose provider credentials");
+assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "utf8"), /KAC_FLIGHT_API_KEY|serviceKey=/, "board client JS must not expose provider credentials");
+
+for (const [pathname, title, h1, pageType] of [
+  ["/gimpo/", "김포공항 비행기 쿠키 · 여행 선물 | NOTHINGMATTERS", "김포공항 가는 길, 쿠키도 챙겨가세요.", "CollectionPage"],
+  ["/gimpo/pickup/", "김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS", "김포공항 가기 전, 예약한 쿠키를 픽업하세요.", "WebPage"],
+]) {
+  const entry = registryEntries.get(pathname);
+  const html = readHtml(filePathForPathname(pathname));
+  const graph = getStaticSchema(html)["@graph"];
+  assert.deepEqual(
+    { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
+    { status: "active", indexing: "index", sitemap: true, lastmod: "2026-09-27" },
+    `${pathname}: registry must publish the new route`
+  );
+  assert.equal(getCanonical(html), `${SITE_URL}${pathname}`);
+  assert.equal(getAttribute(html, /<title>([\s\S]*?)<\/title>/i), title);
+  assert.equal(cleanText(getAttribute(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), h1);
+  assert.ok(locSet.has(`${SITE_URL}${pathname}`));
+  assert.ok(graph.some((node) => node["@type"] === pageType));
+  assert.ok(graph.some((node) => node["@type"] === "BreadcrumbList"));
+  assert.equal(graph.some((node) => node["@type"] === "Product"), false, `${pathname}: no duplicate Product schema`);
+  assert.doesNotMatch(html, /(?:재고\s*\d+|남은\s*수량|품절\s*임박|in\s*stock)/i, `${pathname}: no fake inventory claims`);
+  assert.doesNotMatch(html, /(?:도보|차로|차량으로|공항까지)\s*\d+\s*분|\d+\s*(?:km|m)\s*거리/i, `${pathname}: no unverified travel estimate`);
+}
+const gimpoHtml = readHtml(filePathForPathname("/gimpo/"));
+const gimpoGraph = getStaticSchema(gimpoHtml)["@graph"];
+const gimpoItemList = gimpoGraph.find((node) => node["@type"] === "ItemList");
+assert.deepEqual(gimpoItemList?.itemListElement?.map((item) => [item.name, item.url]), [
+  ["COOKIE FLIGHT", `${SITE_URL}/products/cookie-flight/`],
+  ["TERMINAL SAND COOKIE", `${SITE_URL}/products/terminal-sand-cookie/`],
+  ["AIRPLANE BUTTER COOKIE", `${SITE_URL}/products/airplane-cookie/`],
+]);
+assert.equal((gimpoHtml.match(/class="cookie-card"/g) || []).length, 3, "Gimpo must display exactly three product cards");
+assert.ok(gimpoHtml.includes("실제 항공편 정보가 아닙니다."), "decorative board must be clearly labelled");
+const gimpoPickupGraph = getStaticSchema(readHtml(filePathForPathname("/gimpo/pickup/")))["@graph"];
+assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "WebPage")?.about, { "@id": `${SITE_URL}/#localbusiness` });
+assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "Service")?.provider, { "@id": `${SITE_URL}/#localbusiness` });
 
 for (const entry of sitePages.pages || []) {
   if (entry.status !== "archive") continue;

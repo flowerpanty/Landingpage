@@ -3,6 +3,7 @@
     "/api/",
     "/dashboard/",
     "/gallery-admin/",
+    "/gimpo-board 복사본/",
     "/out/_next/",
     "/out/_not-found/",
     "/out/404/"
@@ -213,6 +214,9 @@
     { "path": "/works/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
     { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
     { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "마곡 쿠키·답례품" },
+    { "path": "/gimpo-board/", "status": "active", "indexing": "index", "sitemap": true, "productionReady": true, "lastmod": "2026-09-27", "breadcrumbName": "김포공항 실시간 항공편" },
+    { "path": "/gimpo/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-27", "breadcrumbName": "김포공항 여행 쿠키" },
+    { "path": "/gimpo/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-27", "breadcrumbName": "김포공항 쿠키 픽업" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-14" },
     { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
     { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/brookie/", "workCardLabel": "짧은 문구를 더한 브라우니", "workCardDetails": { "product": "브라우니쿠키", "packaging": "짧은 문구 추가" }, "workCardActionLabel": "브라우니쿠키 자세히 보기 →", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },

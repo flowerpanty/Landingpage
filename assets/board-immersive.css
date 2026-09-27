@@ -1,0 +1,181 @@
+/* The page is one airport board: sign, controls, five mechanical columns. */
+.board-shell {
+  width: min(1536px, calc(100% - 12px));
+  min-height: calc(100svh - 12px);
+  margin: 0 auto;
+  border: 10px solid #101010;
+  border-radius: 3px;
+  color: #f5f4ef;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px),
+    linear-gradient(145deg, #1e1e1e 0%, #080808 22%, #111 54%, #050505 100%);
+  box-shadow: inset 0 0 0 2px #55534d, inset 0 0 18px rgba(0,0,0,.9), 0 0 0 1px #77736b, 0 16px 24px #0008;
+  isolation: isolate;
+}
+.board-header {
+  border-bottom: 7px solid #050505;
+  color: #050505;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 5px),
+    linear-gradient(#ffdd17, #f9c900);
+  box-shadow: inset 0 -7px 10px rgba(117,78,0,.16), inset 0 1px 0 rgba(255,255,255,.45);
+}
+.board-header-inner { display: grid; grid-template-columns: 110px minmax(0,1fr) auto; align-items: center; gap: 20px; min-height: 137px; padding: 12px 25px; }
+.board-marquee-symbol { display: grid; place-items: center; width: 110px; height: 104px; border-radius: 13px; color: #ffd700; background: #060606; }
+.board-marquee-symbol img { width: 78px; height: 78px; object-fit: contain; filter: brightness(0) invert(1); }
+.board-marquee-copy { min-width: 0; }
+.board-marquee-title-line { display: flex; align-items: baseline; gap: 15px; white-space: nowrap; }
+.board-marquee-title-line strong { display: inline-block; margin-right: clamp(30px,3.5vw,60px); font: 900 clamp(68px,6.3vw,100px)/.78 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: -.025em; transform: scaleX(1.05); transform-origin: left center; }
+.board-marquee-title-line span { font-size: clamp(20px,2.4vw,40px); font-weight: 1000; }
+.board-marquee-copy p { margin: 3px 0 0; font: 900 clamp(19px,2.1vw,34px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: -.025em; }
+.board-marquee-brand { display: flex; flex-direction: column; align-items: flex-end; gap: 13px; }
+.board-logo { font: 900 clamp(17px,2.1vw,31px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: -.035em; text-decoration: none; white-space: nowrap; }
+.board-logo sup { font-size: .45em; margin-left: 1px; vertical-align: top; }
+.board-marquee-icons { display: flex; align-items: center; gap: 15px; }
+.board-marquee-icons svg { width: 37px; height: 37px; stroke: #080808; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.board-marquee-icons svg + svg { padding-left: 13px; border-left: 2px solid #0c0c0c; box-sizing: content-box; }
+.board-marquee-icons svg:last-child { fill: #080808; stroke: #080808; }
+.board-live-badge { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.board-live-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #777; }
+.board-live-badge[data-state="live"]::before { background: #189b54; }
+.board-live-badge[data-state="stale"]::before { background: #ad6816; }
+.board-plane-arrival { display: none; }
+.board-shell[data-type="arrival"] .board-plane-departure { display: none; }
+.board-shell[data-type="arrival"] .board-plane-arrival { display: block; }
+
+.board-controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 60px; padding: 5px 16px; border-bottom: 3px solid #333; background: linear-gradient(#171717,#0a0a0a); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -4px 8px rgba(0,0,0,.8); }
+.board-tabs { display: grid; grid-template-columns: 1fr 1fr; width: min(40%,590px); }
+.board-tabs button { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 46px; padding: 6px 12px; border: 1px solid #626262; border-radius: 5px; color: #f0f0f0; background: #111; white-space: nowrap; }
+.board-tabs button:first-child { border-radius: 5px 0 0 5px; }
+.board-tabs button:last-child { border-radius: 0 5px 5px 0; }
+.board-tabs button[aria-selected="true"] { border-color: #ffcf09; color: #080808; background: #ffcf09; }
+.board-tabs button span { font: 900 clamp(20px,1.9vw,27px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.board-tabs button small { font-size: clamp(11px,1vw,17px); font-weight: 900; }
+.board-utilities { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.board-utilities button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 6px 11px; border: 1px solid #818181; border-radius: 6px; color: #f3f3f3; background: #101010; font: 900 clamp(12px,1.1vw,16px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; white-space: nowrap; }
+.board-utilities button svg { width: 20px; height: 20px; flex: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.board-utilities button:hover, .board-utilities button:focus-visible { border-color: #ffcf09; color: #ffcf09; }
+.board-utilities button:disabled { opacity: .55; cursor: wait; }
+#board-sound[aria-pressed="true"] { color: #111; background: #ffcf09; border-color: #ffcf09; }
+
+.board-panel { background: #070707; }
+.board-table-wrap { position: relative; min-height: calc(100svh - 229px); padding: 0 5px 12px; background: radial-gradient(ellipse at 50% -20%, #252525 0, #0d0d0d 42%, #050505 100%); box-shadow: inset 0 10px 18px rgba(0,0,0,.6); }
+.board-loader { position: absolute; z-index: 4; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 210px; color: #ffcf09; background: #0a0a0a; }
+.board-loader[hidden] { display: none !important; }
+.board-loader-banks { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.flap-bank--loader { --slot-w: 17px; --slot-h: 34px; }
+.board-loader-caption { font: 900 12px/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .25em; }
+.flap-bank--clock { --slot-w: 17px; --slot-h: 30px; }
+.clock-separator { color: #ffcf09; }
+
+.flight-table { display: block; width: 100%; text-align: left; }
+.flight-table thead, .flight-table tbody { display: block; width: 100%; }
+.flight-table thead tr, .flight-table tbody tr:not(.board-placeholder) {
+  display: grid;
+  grid-template-columns: minmax(0,1.25fr) minmax(0,2fr) minmax(0,1fr) minmax(0,.7fr) minmax(0,1.35fr);
+  column-gap: 8px;
+  align-items: stretch;
+  padding: 0 5px;
+  background: #050505;
+}
+.flight-table thead tr { min-height: 41px; border-bottom: 3px solid #050505; }
+.flight-table th { display: flex; align-items: center; min-width: 0; padding: 5px 5px; border: 0; color: #eee; background: linear-gradient(#171717,#0e0e0e); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.9); font: 900 clamp(14px,1.2vw,19px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .11em; }
+.flight-table tbody { background: #0e0e0e; }
+.flight-table tbody tr:not(.board-placeholder) { min-height: 70px; margin: 0; border: 0; border-bottom: 3px solid #050505; border-radius: 0; box-shadow: none; cursor: pointer; }
+.flight-table tbody tr:not(.board-placeholder):hover td,
+.flight-table tbody tr:not(.board-placeholder):focus-within td { background: #222018; }
+.flight-table tbody td { position: relative; min-width: 0; padding: 3px 3px 2px; border: 0; background: transparent; align-content: center; box-shadow: inset -1px 0 rgba(255,255,255,.045), inset 1px 0 rgba(0,0,0,.8); }
+.flight-table tbody tr.is-entering { animation: board-row-arrive .32s cubic-bezier(.33,1,.68,1) both; animation-delay: var(--row-delay,0ms); }
+@keyframes board-row-arrive { from { opacity: 0; filter: brightness(.6); } to { opacity: 1; filter: brightness(1); } }
+.flight-number { display: inline-block; max-width: 100%; padding: 0; border: 0; color: inherit; background: none; text-align: left; }
+.flight-number:hover .flap-slot, .flight-number:focus-visible .flap-slot { border-color: #ffcf09; }
+.flight-cell-sub, .airline-name { display: block; margin-top: 2px; color: #aaa; font: 900 clamp(10px,.95vw,14px)/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .04em; white-space: nowrap; }
+.route-korean { color: #ffcf09; font-family: Futura, "Helvetica Neue", Helvetica, Arial,"Apple SD Gothic Neo",sans-serif; letter-spacing: 0; }
+.status-korean { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+/* ─── Flap bank size variants per column ─── */
+.flap-bank--flight { --slot-w: clamp(16px,1.9vw,28px); --slot-h: 46px; gap: 3px; }
+.flap-bank--route  { --slot-w: clamp(15px,1.8vw,27px); --slot-h: 46px; gap: 2px; }
+.flap-bank--time   { --slot-w: clamp(17px,2vw,28px);   --slot-h: 46px; gap: 3px; }
+.flap-bank--gate   { --slot-w: clamp(18px,2.1vw,28px); --slot-h: 46px; gap: 3px; }
+.flap-bank--status { --slot-w: clamp(14px,1.6vw,24px); --slot-h: 46px; gap: 2px; }
+
+/* ─── Status is the board's yellow signal column ─── */
+.flight-table td[data-field="status"] .flap-slot { color: #ffce00; }
+
+.board-placeholder { display: block; }
+.board-placeholder td { display: block; padding: 34px 14px; border: 0; color: #ffcf09; background: #111; font: 900 18px/1.3 Futura, "Helvetica Neue", Helvetica, Arial,sans-serif; letter-spacing: .12em; text-align: center; }
+.board-status-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 30px; padding: 5px 15px; border-top: 1px solid #302e2a; color: #aaa; background: #101010; font-size: 10px; font-weight: 800; }
+.board-status-line time { color: #ffcf09; white-space: nowrap; }
+.board-disclaimer { max-width: 900px; margin: 0; padding: 10px 15px 16px; color: #999; font-size: 11px; line-height: 1.5; }
+
+@media (max-width: 760px) {
+  .board-shell { width: calc(100% - 8px); min-height: calc(100svh - 8px); border-width: 6px; box-shadow: inset 0 0 0 1px #55534d, inset 0 0 11px rgba(0,0,0,.9), 0 8px 14px #0006; }
+  .board-header { border-bottom-width: 6px; }
+  .board-header-inner { position: relative; grid-template-columns: 62px minmax(0,1fr) auto; align-items: start; gap: 7px; min-height: 99px; padding: 8px; }
+  .board-marquee-symbol { width: 62px; height: 62px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 2px 3px 0 rgba(0,0,0,.28); }
+  .board-marquee-symbol img { width: 47px; height: 47px; }
+  .board-marquee-title-line { display: block; }
+  .board-marquee-title-line strong { display: block; width: max-content; margin-right: 0; font-size: clamp(31px,8.5vw,46px); line-height: .84; letter-spacing: -.025em; transform: scaleX(.78); transform-origin: left center; }
+  .board-marquee-title-line span { display: block; margin-top: 3px; font-size: 19px; line-height: 1; }
+  .board-marquee-copy p { position: static; margin: 3px 0 0; font-size: 14px; line-height: 1; }
+  .board-marquee-brand { gap: 8px; }
+  .board-logo { font-size: clamp(10px,2.8vw,16px); }
+  .board-marquee-icons { gap: 4px; }
+  .board-marquee-icons svg { width: 19px; height: 19px; stroke-width: 2.2; }
+  .board-marquee-icons svg + svg { padding-left: 4px; border-left-width: 1px; }
+  .board-live-badge { gap: 3px; padding: 3px 4px; font-size: 7px; letter-spacing: 0; }
+  .board-live-badge::before { width: 5px; height: 5px; }
+  .board-controls { display: block; min-height: 0; padding: 5px; }
+  .board-tabs { width: 100%; }
+  .board-tabs button { min-height: 41px; padding: 5px; gap: 5px; }
+  .board-tabs button span { font-size: clamp(18px,4.7vw,23px); }
+  .board-tabs button small { font-size: 11px; }
+  .board-utilities { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 5px; margin-top: 6px; }
+  .board-utilities button { min-width: 0; min-height: 37px; padding: 2px; gap: 3px; font-size: clamp(9px,2.5vw,13px); }
+  .board-utilities button svg { width: 17px; height: 17px; }
+  .board-table-wrap { min-height: calc(100svh - 260px); padding: 0 3px 9px; }
+
+  /* ─── Mobile grid: 5 columns in 2 rows ─── */
+  .flight-table thead tr, .flight-table tbody tr:not(.board-placeholder) {
+    grid-template-columns: repeat(12,minmax(0,1fr));
+    grid-template-areas: "flight flight flight flight route route route route route route route route" "time time time time time gate gate gate status status status status";
+    column-gap: 5px;
+    padding: 0 3px;
+  }
+  .flight-table thead tr { min-height: 62px; grid-template-rows: 1fr 1fr; row-gap: 2px; border-bottom-width: 3px; }
+  .flight-table th { padding: 3px; font-size: 11px; letter-spacing: .07em; }
+  .flight-table tbody tr:not(.board-placeholder) { min-height: 112px; grid-template-rows: 1fr 1fr; row-gap: 3px; border-bottom-width: 3px; }
+  .flight-table tbody td { padding: 2px 3px; align-content: start; }
+  .flight-table thead th:nth-child(1), .flight-table tbody td[data-field="flight"] { grid-area: flight; }
+  .flight-table thead th:nth-child(2), .flight-table tbody td[data-field="route"] { grid-area: route; }
+  .flight-table thead th:nth-child(3), .flight-table tbody td[data-field="time"] { grid-area: time; }
+  .flight-table thead th:nth-child(4), .flight-table tbody td[data-field="gate"] { grid-area: gate; }
+  .flight-table thead th:nth-child(5), .flight-table tbody td[data-field="status"] { grid-area: status; }
+
+  /* ─── Mobile flap sizes: wide enough to be legible ─── */
+  .flap-bank--flight { --slot-w: clamp(12px,3.5vw,18px); --slot-h: 36px; gap: 2px; }
+  .flap-bank--route  { --slot-w: clamp(10px,3.1vw,15px); --slot-h: 36px; gap: 1px; }
+  .flap-bank--time   { --slot-w: clamp(13px,3.8vw,20px); --slot-h: 36px; gap: 2px; }
+  .flap-bank--gate   { --slot-w: clamp(14px,3.8vw,19px); --slot-h: 36px; gap: 2px; }
+  .flap-bank--status { --slot-w: clamp(10px,3.4vw,17px); --slot-h: 36px; gap: 1px; }
+  .airline-name, .flight-cell-sub { font-size: 13px; margin-top: 2px; }
+  .board-status-line { padding: 5px 8px; font-size: 9px; }
+  .board-disclaimer { padding: 10px 8px 16px; font-size: 10px; }
+}
+@media (max-width: 360px) {
+  .board-header-inner { grid-template-columns: 56px minmax(0,1fr) auto; gap: 5px; min-height: 91px; }
+  .board-marquee-symbol { width: 56px; height: 56px; }
+  .board-marquee-symbol img { width: 46px; height: 46px; }
+  .board-marquee-title-line strong { font-size: 25px; }
+  .board-marquee-copy p { font-size: 12px; }
+  .board-marquee-icons svg { width: 15px; height: 15px; }
+  .board-live-badge { font-size: 6px; }
+  .board-tabs button span { font-size: 14px; }
+  .board-tabs button small { font-size: 10px; }
+  .board-utilities button { font-size: 10px; }
+  .board-utilities button svg { width: 16px; height: 16px; }
+  .flap-bank--route { --slot-w: 9px; }
+  .flap-bank--status { --slot-w: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .flight-table tbody tr.is-entering { animation: none !important; } }

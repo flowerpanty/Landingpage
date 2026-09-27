@@ -6,6 +6,7 @@ const http = require("node:http");
 const crypto = require("node:crypto");
 const zlib = require("node:zlib");
 const { createWordpressJournalService } = require("./lib/wordpress-journal.js");
+const { createGimpoBoardService } = require("./lib/gimpo-board.js");
 
 const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -210,6 +211,13 @@ const wordpressJournal = createWordpressJournalService({
   fetchImpl: process.env.WORDPRESS_JOURNAL_OFFLINE === "1"
     ? async () => { throw new Error("wordpress_offline"); }
     : global.fetch
+});
+const boardTestApiUrl = process.env.GIMPO_BOARD_TEST_API_URL || "";
+const gimpoBoard = createGimpoBoardService({
+  // A loopback provider URL is allowed only for deterministic integration tests.
+  ...(process.env.NODE_ENV === "test" && /^http:\/\/127\.0\.0\.1:\d+\/info$/.test(boardTestApiUrl)
+    ? { apiUrl: boardTestApiUrl }
+    : {})
 });
 const LEGACY_PRODUCT_REDIRECTS = SITE_PAGE_DATA.redirects || {};
 
@@ -1971,6 +1979,28 @@ const server = http.createServer(async (req, res) => {
 
   if (requestUrl.pathname === "/api/journal") {
     await handleJournalFeed(req, res);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/gimpo-board/flights") {
+    if (req.method !== "GET") {
+      sendJson(res, 405, { error: "method_not_allowed" });
+      return;
+    }
+    try {
+      const payload = await gimpoBoard.getFlights({
+        type: requestUrl.searchParams.get("type") || "departure",
+        line: requestUrl.searchParams.get("line") || "all",
+        q: requestUrl.searchParams.get("q") || ""
+      });
+      sendJson(res, 200, payload);
+    } catch (error) {
+      if (error instanceof TypeError && error.message === "invalid_query") {
+        sendJson(res, 400, { error: "invalid_query" });
+      } else {
+        sendJson(res, 503, { error: "flight_data_unavailable" });
+      }
+    }
     return;
   }
 

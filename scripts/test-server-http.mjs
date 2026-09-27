@@ -6,6 +6,7 @@ import http from "node:http";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { startMockFlightProvider } from "./gimpo-board-test-provider.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "site-pages.json"), "utf8"));
@@ -55,7 +56,7 @@ function request(baseUrl, pathname, options = {}) {
   });
 }
 
-async function startServer() {
+async function startServer(extraEnv = {}) {
   const port = await reservePort();
   const output = [];
   const serverProcess = spawn(process.execPath, ["server.js"], {
@@ -64,7 +65,8 @@ async function startServer() {
       ...process.env,
       HOST: "127.0.0.1",
       PORT: String(port),
-      WORDPRESS_JOURNAL_OFFLINE: "1"
+      WORDPRESS_JOURNAL_OFFLINE: "1",
+      ...extraEnv
     },
     stdio: ["ignore", "pipe", "pipe"]
   });
@@ -102,7 +104,7 @@ async function stopServer(server) {
   if (server.process.exitCode === null) server.process.kill("SIGKILL");
 }
 
-const server = await startServer();
+const server = await startServer({ KAC_FLIGHT_API_KEY: "" });
 
 try {
   const serverSource = fs.readFileSync(path.join(ROOT, "server.js"), "utf8");
@@ -163,6 +165,9 @@ try {
   const journalPayload = JSON.parse(journal.body.toString("utf8"));
   assert.equal(journalPayload.source, "fallback");
   assert.deepEqual(journalPayload.items, []);
+  const unavailableBoard = await request(server.baseUrl, "/api/gimpo-board/flights");
+  assert.equal(unavailableBoard.status, 503, "board without a server-side key must fail safely");
+  assert.equal(unavailableBoard.body.toString("utf8").includes("serviceKey"), false);
 
   const notFound = await request(server.baseUrl, "/does-not-exist");
   assert.equal(notFound.status, 404);
@@ -183,6 +188,32 @@ try {
   assert.equal((await request(server.baseUrl, "/lucky")).headers.location, "https://nothingmatters.co.kr/out/fortune/");
 } finally {
   await stopServer(server);
+}
+
+const provider = await startMockFlightProvider();
+const boardServer = await startServer({ NODE_ENV: "test", GIMPO_BOARD_TEST_API_URL: provider.url, KAC_FLIGHT_API_KEY: "http-test-key" });
+try {
+  const departures = await request(boardServer.baseUrl, "/api/gimpo-board/flights?type=departure");
+  assert.equal(departures.status, 200);
+  const payload = JSON.parse(departures.body.toString("utf8"));
+  assert.equal(payload.data.length, 4);
+  assert.equal(payload.meta.airport, "GMP");
+  assert.equal(payload.meta.live, true);
+  assert.equal(departures.body.toString("utf8").includes("http-test-key"), false, "API key must not leak to clients");
+  assert.equal(provider.state.calls.length, 4, "one HTTP request should load exactly four stream pages");
+  const arrivals = JSON.parse((await request(boardServer.baseUrl, "/api/gimpo-board/flights?type=arrival")).body.toString("utf8"));
+  assert.equal(arrivals.data.length, 2);
+  assert.equal(arrivals.data.every((row) => row.type === "arrival"), true);
+  const domestic = JSON.parse((await request(boardServer.baseUrl, "/api/gimpo-board/flights?type=departure&line=domestic")).body.toString("utf8"));
+  assert.equal(domestic.data.length, 3);
+  const search = JSON.parse((await request(boardServer.baseUrl, "/api/gimpo-board/flights?type=departure&q=RS901")).body.toString("utf8"));
+  assert.deepEqual(search.data.map((row) => row.flightNumber), ["RS901"]);
+  assert.equal(provider.state.calls.length, 4, "filters/search must not trigger upstream calls");
+  assert.equal((await request(boardServer.baseUrl, "/api/gimpo-board/flights?line=invalid")).status, 400);
+  assert.equal((await request(boardServer.baseUrl, "/api/gimpo-board/flights", { method: "POST" })).status, 405);
+} finally {
+  await stopServer(boardServer);
+  await provider.close();
 }
 
 console.log("server HTTP delivery checks: passed");

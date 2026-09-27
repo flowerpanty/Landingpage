@@ -53,6 +53,11 @@ const PRODUCT_META = {
 };
 
 const ITEM_LISTS = {
+  "/gimpo/": [
+    ["COOKIE FLIGHT", "/products/cookie-flight/"],
+    ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/"],
+    ["AIRPLANE BUTTER COOKIE", "/products/airplane-cookie/"],
+  ],
   "/": [
     ...PRODUCT_CATALOG.map((product) => [product.name, product.detailPath]),
     ["결혼식 답례품 쿠키 가이드", "/guides/wedding-favor-cookie/"],
@@ -267,7 +272,7 @@ function getPageData(html, loc) {
 
 function getPageType(page) {
   if (["primary-product", "search-landing"].includes(page.urlRole)) return "ProductPage";
-  if (page.path === "/" || page.path === "/works/") return "CollectionPage";
+  if (page.path === "/" || page.path === "/works/" || page.path === "/gimpo/") return "CollectionPage";
   if (page.path === "/contact/") return "ContactPage";
   if (page.path === "/guides/") return "CollectionPage";
   if (page.path.startsWith("/products/")) return "ProductPage";
@@ -282,6 +287,8 @@ function buildBreadcrumb(page) {
 
   if (page.path.startsWith("/guides/") && page.path !== "/guides/") {
     items.push({ name: "가이드 허브", item: `${SITE_URL}/guides/` });
+  } else if (page.path === "/gimpo/pickup/") {
+    items.push({ name: "김포공항 여행 쿠키", item: `${SITE_URL}/gimpo/` });
   } else if (page.path.startsWith("/products/")) {
     items.push({ name: "쿠키 라인업", item: `${SITE_URL}/#ready-order` });
   }
@@ -436,6 +443,18 @@ function buildProduct(page) {
 }
 
 function buildService(page) {
+  if (page.path === "/gimpo/pickup/") {
+    return {
+      "@type": "Service",
+      "@id": `${page.pageUrl}#service`,
+      name: "김포공항 여행 쿠키 예약 픽업",
+      serviceType: "쿠키 예약 픽업",
+      provider: { "@id": LOCAL_BUSINESS_ID },
+      url: page.pageUrl,
+      areaServed: ["공항동", "김포공항", "송정역"],
+      description: "서울 강서구 송정로 25 1층 공항동 매장에서 예약한 쿠키를 수령합니다.",
+    };
+  }
   if (page.path === "/pickup/") {
     return {
       "@type": "Service",
@@ -509,7 +528,7 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
   if (page.indexing === "index" && page.lastmod) schema.dateModified = page.lastmod;
   if (breadcrumb) schema.breadcrumb = { "@id": breadcrumb["@id"] };
   if (page.path === "/") schema.about = { "@id": LOCAL_BUSINESS_ID };
-  if (["/magok-cookie/", "/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
+  if (["/magok-cookie/", "/pickup/", "/gimpo/", "/gimpo/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
   if (product) {
     schema.about = { "@id": product["@id"] };
   } else if (page.relatedProductPrimaryUrl) {

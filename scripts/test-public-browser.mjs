@@ -8,6 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { startMockFlightProvider } from "./gimpo-board-test-provider.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -26,7 +27,10 @@ const CRITICAL_PATHS = [
   "/bulk/",
   "/pickup/",
   "/contact/",
-  "/cookie-crew/"
+  "/cookie-crew/",
+  "/gimpo-board/",
+  "/gimpo/",
+  "/gimpo/pickup/"
 ];
 const MOBILE_WIDTHS = [320, 375, 390, 430];
 const PICKUP_MAP_URL = "https://map.naver.com/p/entry/place/1547319276?lng=126.8115357&lat=37.557402&placePath=%2Fhome%3Ffrom%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202609131310%26locale%3Dko%26svcName%3Dmap_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh";
@@ -53,11 +57,11 @@ function request(baseUrl, pathname) {
   });
 }
 
-async function startServer() {
+async function startServer(extraEnv = {}) {
   const port = await reservePort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd: ROOT,
-    env: { ...process.env, GALLERY_DATA_DIR: BROWSER_GALLERY_DATA_DIR, HOST: "127.0.0.1", PORT: String(port) },
+    env: { ...process.env, GALLERY_DATA_DIR: BROWSER_GALLERY_DATA_DIR, HOST: "127.0.0.1", PORT: String(port), ...extraEnv },
     stdio: "ignore"
   });
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -175,7 +179,92 @@ async function waitFor(cdp, callbackSource, message) {
   throw new Error(message);
 }
 
-const server = await startServer();
+async function verifyGimpoDesign(cdp, pathname, width) {
+  await setViewport(cdp, width, width === 1280 ? 900 : 844);
+  await navigate(cdp, `${server.baseUrl}${pathname}`);
+  const pickup = pathname.endsWith("/pickup/");
+  const visual = await evaluate(cdp, `() => {
+    const style = (selector) => getComputedStyle(document.querySelector(selector));
+    const border = (selector) => {
+      const computed = style(selector);
+      return { width: parseFloat(computed.borderTopWidth), color: computed.borderTopColor, radius: parseFloat(computed.borderTopLeftRadius) };
+    };
+    return {
+      viewport: innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      headings: [...document.querySelectorAll('main h1, main h2, main h3')].map((node) => ({ text: node.textContent.trim(), weight: getComputedStyle(node).fontWeight })),
+      wordmark: [style('.gimpo-header .wordmark').fontWeight, style('.gimpo-header .wordmark span').fontWeight],
+      nav: [...document.querySelectorAll('.gimpo-header nav a')].filter((node) => getComputedStyle(node).display !== 'none').map((node) => ({ text: node.textContent.trim(), weight: getComputedStyle(node).fontWeight })),
+      clipped: [...document.querySelectorAll('.gimpo-header .wordmark, .gimpo-header nav a, main h1')].filter((node) => getComputedStyle(node).display !== 'none' && (node.scrollWidth > node.clientWidth + 1 || node.getBoundingClientRect().left < -1 || node.getBoundingClientRect().right > innerWidth + 1)).map((node) => node.textContent.trim()),
+      hero: border('${pickup ? ".pickup-hero-art img" : ".hero-visual img"}'),
+      location: border('.location-photo img'),
+      products: ${pickup ? "[]" : "[...document.querySelectorAll('.cookie-image')].map((node) => { const computed = getComputedStyle(node); return { width: parseFloat(computed.borderTopWidth), color: computed.borderTopColor }; })"},
+      cards: ${pickup ? "[]" : "[...document.querySelectorAll('.cookie-card')].map((node) => { const computed = getComputedStyle(node); return { border: parseFloat(computed.borderTopWidth), background: computed.backgroundColor, shadow: computed.boxShadow }; })"},
+      bodyBackground: style('body').backgroundColor,
+      blueBackground: style('${pickup ? ".pickup-final" : ".final-section"}').backgroundColor,
+      accentBackground: style('${pickup ? ".pickup-alert" : ".experience-section"}').backgroundColor,
+      sticky: [...document.querySelectorAll('.mobile-sticky a')].map((node) => ({ height: node.getBoundingClientRect().height, visible: getComputedStyle(node).display !== 'none' })),
+      density: {
+        heroPaddingTop: parseFloat(style('${pickup ? ".pickup-hero" : ".gimpo-hero"}').paddingTop),
+        heroPaddingBottom: parseFloat(style('${pickup ? ".pickup-hero" : ".gimpo-hero"}').paddingBottom),
+        heroGap: parseFloat(style('${pickup ? ".pickup-hero" : ".gimpo-hero"}').gap),
+        sectionPadding: parseFloat(style('${pickup ? ".pickup-steps" : ".cookies-section"}').paddingTop),
+        sectionBottomPadding: parseFloat(style('${pickup ? ".pickup-location" : ".location-section"}').paddingBottom),
+        heroButtons: [...document.querySelectorAll('${pickup ? ".pickup-hero" : ".gimpo-hero"} .button')].map((node) => node.getBoundingClientRect().height),
+        imageHeight: document.querySelector('${pickup ? ".pickup-hero-art img" : ".hero-visual img"}').getBoundingClientRect().height,
+        imageWidth: document.querySelector('${pickup ? ".pickup-hero-art img" : ".hero-visual img"}').getBoundingClientRect().width,
+        productGap: ${pickup ? "null" : "parseFloat(style('.cookie-grid').rowGap)"},
+        productColumns: ${pickup ? "null" : "style('.cookie-grid').gridTemplateColumns.trim().split(/\\s+/).length"},
+        locationGap: parseFloat(style('${pickup ? ".pickup-location" : ".location-section"}').gap),
+        locationColumns: ${pickup ? "null" : "style('.location-section').gridTemplateColumns.trim().split(/\\s+/).length"},
+        quickInfoHeight: ${pickup ? "null" : "document.querySelector('.quick-info').getBoundingClientRect().height"},
+        boardWidth: ${pickup ? "null" : "document.querySelector('.gimpo-board').getBoundingClientRect().width"},
+        pickupRowHeights: ${pickup ? "[...document.querySelectorAll('.pickup-product-list > a')].map((node) => node.getBoundingClientRect().height)" : "[]"}
+      }
+    };
+  }`);
+  assert.equal(visual.viewport, width, `${pathname} viewport`);
+  assert.ok(visual.documentWidth <= width && visual.bodyWidth <= width, `${pathname} overflow at ${width}px: ${JSON.stringify(visual)}`);
+  assert.ok(visual.headings.length > 3 && visual.headings.every((heading) => heading.weight === "900"), `${pathname} headings must be full bold: ${JSON.stringify(visual.headings)}`);
+  assert.deepEqual(visual.wordmark, ["900", "900"], `${pathname} wordmark must be uniformly bold`);
+  assert.ok(visual.nav.every((item) => Number(item.weight) >= 700), `${pathname} navigation must be bold`);
+  assert.deepEqual(visual.clipped, [], `${pathname} header or H1 clipped at ${width}px`);
+  for (const frame of [visual.hero, visual.location, ...visual.products]) {
+    assert.ok(frame.width >= 2.5 && frame.color === "rgb(17, 17, 17)", `${pathname} photo frame must be black: ${JSON.stringify(frame)}`);
+  }
+  assert.equal(visual.products.length, pickup ? 0 : 3, `${pathname} product photos`);
+  assert.ok(visual.cards.every((card) => card.border === 0 && card.background === "rgba(0, 0, 0, 0)" && card.shadow === "none"), `${pathname} products should use editorial layout`);
+  assert.equal(visual.bodyBackground, "rgb(255, 255, 255)");
+  assert.equal(visual.blueBackground, "rgb(135, 193, 235)");
+  assert.equal(visual.accentBackground, pickup ? "rgb(221, 240, 255)" : "rgb(135, 193, 235)");
+  if (width === 390) {
+    assert.ok(visual.sticky.length === 2 && visual.sticky.every((link) => link.visible && link.height >= 44), `${pathname} mobile actions`);
+    assert.ok(visual.density.heroPaddingTop <= 42 && visual.density.heroPaddingBottom <= 42, `${pathname} hero mobile padding: ${JSON.stringify(visual.density)}`);
+    assert.ok(visual.density.heroGap <= 24, `${pathname} hero copy/image gap`);
+    assert.ok(visual.density.sectionPadding <= 56 && visual.density.sectionBottomPadding <= 56, `${pathname} section padding`);
+    assert.ok(visual.density.locationGap <= 28, `${pathname} location gap`);
+    assert.ok(visual.density.heroButtons.length === 2 && visual.density.heroButtons.every((height) => height >= 44), `${pathname} hero CTA touch targets`);
+    assert.ok(visual.density.imageHeight <= visual.density.imageWidth * .9, `${pathname} hero image should remain compact`);
+    if (pickup) assert.ok(visual.density.pickupRowHeights.length === 3 && visual.density.pickupRowHeights.every((height) => height <= 72), "pickup rows should remain compact");
+    else {
+      assert.ok(visual.density.productGap <= 30 && visual.density.productColumns === 2, "Gimpo mobile products should form a compact two-column grid");
+      assert.ok(visual.density.quickInfoHeight <= 210, "Gimpo quick info should remain compact");
+      assert.ok(visual.density.boardWidth >= width - 35, "Gimpo board should use almost the full mobile width");
+    }
+  }
+  if (width === 1280 && !pickup) {
+    assert.equal(visual.density.productColumns, 4, "Gimpo desktop layout should place the intro beside three products");
+    assert.equal(visual.density.locationColumns, 3, "Gimpo desktop location should have heading, photo, and address columns");
+  }
+  await evaluate(cdp, "() => { document.querySelectorAll('main img').forEach((image) => { image.loading = 'eager'; }); return true; }");
+  await waitFor(cdp, "() => [...document.querySelectorAll('main img')].every((image) => image.complete && image.naturalWidth > 0)", `${pathname} product and location images should load`);
+  const screenshot = await cdp.command("Page.captureScreenshot", { format: "png", captureBeyondViewport: true });
+  fs.writeFileSync(`/private/tmp/nm-gimpo-design-${pickup ? "pickup" : "landing"}-${width}.png`, screenshot.data, "base64");
+}
+
+const flightProvider = await startMockFlightProvider();
+const server = await startServer({ NODE_ENV: "test", GIMPO_BOARD_TEST_API_URL: flightProvider.url, KAC_FLIGHT_API_KEY: "browser-test-key" });
 const debugPort = await reservePort();
 const chrome = spawn(CHROME_PATH, [
   "--headless=new",
@@ -213,6 +302,184 @@ try {
       assert.ok(dimensions.bodyWidth <= dimensions.viewport, `${pathname}: body horizontal overflow at ${width}px`);
     }
   }
+
+  for (const width of [390, 1280]) {
+    await verifyGimpoDesign(cdp, "/gimpo/", width);
+    await verifyGimpoDesign(cdp, "/gimpo/pickup/", width);
+  }
+
+  await setViewport(cdp, 390);
+  await navigate(cdp, `${server.baseUrl}/gimpo/`);
+  const gimpoState = await evaluate(cdp, "() => ({ cards: [...document.querySelectorAll('.cookie-card')].map((card) => new URL(card.href).pathname), rows: [...document.querySelectorAll('.destination-row')].map((row) => ({ value: row.querySelector('.flap-bank')?.dataset.value, slots: row.querySelectorAll('.flap-slot').length })), map: document.querySelector('.mobile-sticky a:first-child')?.href, pickup: new URL(document.querySelector('.mobile-sticky a:last-child').href).pathname, sticky: getComputedStyle(document.querySelector('.mobile-sticky')).position, stickyBottom: Math.round(document.querySelector('.mobile-sticky').getBoundingClientRect().bottom), height: innerHeight, disclaimer: document.body.textContent.includes('실제 항공편 정보가 아닙니다.'), sound: window.NmSplitFlap.getSoundState(), productImages: [...document.querySelectorAll('.cookie-card img')].every((image) => image.complete && image.naturalWidth > 0) })");
+  assert.deepEqual(gimpoState.cards, ["/products/cookie-flight/", "/products/terminal-sand-cookie/", "/products/airplane-cookie/"]);
+  assert.deepEqual(gimpoState.rows.map((row) => row.value), ["JEJU", "BUSAN", "TOKYO", "OSAKA"]);
+  assert.ok(gimpoState.rows.every((row) => row.slots === 5), "Gimpo design board must use actual flap slots");
+  assert.equal(gimpoState.map, PICKUP_MAP_URL);
+  assert.equal(gimpoState.pickup, "/gimpo/pickup/");
+  assert.equal(gimpoState.sticky, "fixed");
+  assert.equal(gimpoState.stickyBottom, gimpoState.height);
+  assert.equal(gimpoState.disclaimer, true);
+  assert.equal(gimpoState.productImages, true, "all three product images should load");
+  assert.equal(gimpoState.sound.contextCreated, false, "Gimpo design board must not auto-play sound");
+  const gimpoTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .hero-copy h1, .hero-description')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
+  assert.ok(gimpoTextClipping.every((element) => !element.clipped), `Gimpo mobile text must fit: ${JSON.stringify(gimpoTextClipping)}`);
+  await evaluate(cdp, "() => { document.getElementById('gimpo-board-change').click(); return true; }");
+  await waitFor(cdp, "() => document.querySelector('.destination-row .flap-bank')?.dataset.value === 'BUSAN'", "Gimpo design board should change destinations through NmSplitFlap");
+  await cdp.command("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+  await navigate(cdp, `${server.baseUrl}/gimpo/`);
+  const gimpoReduced = await evaluate(cdp, "() => { document.getElementById('gimpo-board-change').click(); return { value: document.querySelector('.destination-row .flap-bank').dataset.value, animatedSlots: document.querySelectorAll('.gimpo-board .flap-slot.is-flipping').length, motion: matchMedia('(prefers-reduced-motion: reduce)').matches }; }");
+  assert.deepEqual(gimpoReduced, { value: "BUSAN", animatedSlots: 0, motion: true }, "Gimpo design board should settle immediately with reduced motion");
+  await cdp.command("Emulation.setEmulatedMedia", { features: [] });
+  await navigate(cdp, `${server.baseUrl}/gimpo/pickup/`);
+  const gimpoPickupState = await evaluate(cdp, "() => ({ steps: [...document.querySelectorAll('.pickup-steps li h3')].map((item) => item.textContent.trim()), products: [...document.querySelectorAll('.pickup-product-list a')].map((link) => new URL(link.href).pathname), sticky: [...document.querySelectorAll('.mobile-sticky a')].map((link) => ({ text: link.textContent.trim(), href: link.href })), position: getComputedStyle(document.querySelector('.mobile-sticky')).position, bottom: Math.round(document.querySelector('.mobile-sticky').getBoundingClientRect().bottom), height: innerHeight, map: document.querySelector('.pickup-location .button-dark')?.href, address: document.querySelector('.pickup-location address')?.textContent.trim() })");
+  assert.deepEqual(gimpoPickupState.steps, ["쿠키 선택", "픽업 예약", "공항동 매장에서 수령", "김포공항으로 이동"]);
+  assert.deepEqual(gimpoPickupState.products, ["/products/cookie-flight/", "/products/terminal-sand-cookie/", "/products/airplane-cookie/"]);
+  assert.deepEqual(gimpoPickupState.sticky, [
+    { text: "네이버예약 ↗", href: "https://m.place.naver.com/restaurant/1547319276/booking?entry=ple" },
+    { text: "주문하기 →", href: "https://pf.kakao.com/_QdCaK/chat" },
+  ]);
+  assert.equal(gimpoPickupState.position, "fixed");
+  assert.equal(gimpoPickupState.bottom, gimpoPickupState.height);
+  assert.equal(gimpoPickupState.map, PICKUP_MAP_URL);
+  assert.equal(gimpoPickupState.address, "서울 강서구 송정로 25 1층");
+  const gimpoPickupTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .pickup-hero h1, .pickup-hero-copy>p:not(.eyebrow)')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
+  assert.ok(gimpoPickupTextClipping.every((element) => !element.clipped), `Gimpo pickup mobile text must fit: ${JSON.stringify(gimpoPickupTextClipping)}`);
+  await setViewport(cdp, 390);
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "Gimpo departures should load from the mocked provider");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#board-loader .flap-bank').length"), 3, "initial airport loader should use three flap banks");
+  await waitFor(cdp, "() => document.getElementById('board-loader').hidden", "first-load airport loader should finish");
+  const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.brand-actions a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
+  assert.equal(boardMobile.title, "김포공항 실시간 항공편");
+  assert.equal(boardMobile.rows, 4);
+  assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION", "TIME", "GATE", "STATUS"], `board mobile columns at viewport ${boardMobile.viewport}`);
+  assert.deepEqual(boardMobile.links, ["/gimpo/", "/gimpo/pickup/"]);
+  assert.deepEqual([boardMobile.route, boardMobile.routeKorean], ["JEJU", "제주"], "English destination should be the main mechanical value with Korean below");
+  assert.deepEqual(boardMobile.halves, ["flap-static-top", "flap-static-bottom", "flap-flip-top", "flap-flip-bottom", "flap-hinge"]);
+  assert.equal(boardMobile.grid, "grid", "mobile board rows should use a physical two-line grid");
+  assert.equal(boardMobile.sound, "false", "mechanical sound must default to OFF");
+  assert.ok(boardMobile.headerHeight >= 90 && boardMobile.headerHeight <= 130 && boardMobile.boardTop < 20, `yellow reference marquee must sit inside the board frame: header=${boardMobile.headerHeight}, boardTop=${boardMobile.boardTop}`);
+  assert.equal(boardMobile.sweetFlow, true, "mobile sweet-flight copy should stay in the compact marquee flow");
+  assert.ok(boardMobile.sweetOffset >= 0 && boardMobile.sweetOffset <= 12, `mobile sweet-flight copy should sit close to the title: offset=${boardMobile.sweetOffset}`);
+  assert.match(boardMobile.planeFilter, /invert/);
+  assert.equal(boardMobile.searchInControls, false, "search must not dominate the board controls");
+  assert.equal(await evaluate(cdp, "() => document.querySelector('.board-shell').firstElementChild?.className === 'board-header' && document.getElementById('board-marquee-title').textContent === 'DEPARTURES'"), true, "the yellow departure marquee must be the first section inside the physical frame");
+  assert.equal(await evaluate(cdp, "() => getComputedStyle(document.querySelector('.board-plane-departure')).display !== 'none' && getComputedStyle(document.querySelector('.board-plane-arrival')).display === 'none'"), true, "departure marquee must show the departure plane icon");
+  const fixedMobileBanks = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); return Object.fromEntries(['flight','route','time','gate','status'].map((field) => { const bank = row.querySelector(`[data-field=${field}] .flap-bank`); return [field, { width: bank.children.length, blanks: [...bank.children].filter((slot) => slot.dataset.char === ' ').length }]; })); }");
+  assert.deepEqual(Object.fromEntries(Object.entries(fixedMobileBanks).map(([field, bank]) => [field, bank.width])), { flight: 7, route: 16, time: 5, gate: 2, status: 10 }, "each field must preserve a fixed physical bank width");
+  assert.equal(fixedMobileBanks.route.blanks, 12, "JEJU must be followed by twelve real blank flap slots");
+  const fixedUpdate = await evaluate(cdp, "() => { const bank = window.NmSplitFlap.createFlapBank('ABCDEFG', '', 7); window.NmSplitFlap.setFlapValue(bank, 'AB', { animate: false }); const shorter = { width: bank.children.length, blanks: [...bank.children].filter((slot) => slot.dataset.char === ' ').length }; window.NmSplitFlap.setFlapValue(bank, 'ABCDEFGHI', { animate: false }); return { shorter, longer: { width: bank.children.length, visible: [...bank.children].map((slot) => slot.dataset.char).join(''), label: bank.getAttribute('aria-label') } }; }");
+  assert.deepEqual(fixedUpdate, { shorter: { width: 7, blanks: 5 }, longer: { width: 7, visible: "ABCDEFG", label: "ABCDEFGHI" } }, "shorter and longer updates must not remove or append physical slots");
+  const mobileHousing = await evaluate(cdp, "() => { const rows = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')]; const first = rows[0]; const second = rows[1]; const style = getComputedStyle(first); const hinge = first.querySelector('.flap-hinge'); return { sameHousing: rows.every((row) => row.closest('.board-shell') === first.closest('.board-shell')), gap: second.getBoundingClientRect().top - first.getBoundingClientRect().bottom, margin: style.marginBottom, radius: style.borderRadius, shadow: style.boxShadow, divider: parseFloat(style.borderBottomWidth), hinge: hinge.getBoundingClientRect().height }; }");
+  assert.equal(mobileHousing.sameHousing, true, "mobile flights must share one physical board housing");
+  assert.ok(mobileHousing.gap <= 1 && mobileHousing.margin === "0px" && mobileHousing.radius === "0px" && mobileHousing.shadow === "none", "mobile rows must be continuous, not separate cards");
+  assert.ok(mobileHousing.divider <= 6 && mobileHousing.hinge === 1, "mobile rows need a physical groove and exactly 1px flap hinge");
+  const flapTypography = await evaluate(cdp, "() => { const slot = document.querySelector('#flight-rows [data-field=flight] .flap-slot'); const top = slot.querySelector('.flap-static-top .flap-glyph').getBoundingClientRect(); const bottom = slot.querySelector('.flap-static-bottom .flap-glyph').getBoundingClientRect(); const bounds = slot.getBoundingClientRect(); const hinge = slot.querySelector('.flap-hinge').getBoundingClientRect(); const status = document.querySelector('#flight-rows [data-field=status] .flap-slot'); const visibleSlots = [...document.querySelectorAll('#flight-rows .flap-slot')]; const allHingesOnePx = visibleSlots.every((item) => Math.round(item.querySelector('.flap-hinge').getBoundingClientRect().height) === 1); const allGlyphsFit = visibleSlots.every((item) => { const itemBounds = item.getBoundingClientRect(); const itemTop = item.querySelector('.flap-static-top .flap-glyph').getBoundingClientRect(); const itemBottom = item.querySelector('.flap-static-bottom .flap-glyph').getBoundingClientRect(); return itemTop.top >= itemBounds.top - 1 && itemBottom.bottom <= itemBounds.bottom + 1; }); return { font: getComputedStyle(slot).fontFamily, loaded: document.fonts.check('900 20px Futura'), statusColor: getComputedStyle(status).color, glyphOffset: Math.abs(top.top - bottom.top), hingeOffset: Math.abs((hinge.top + hinge.height / 2) - (bounds.top + bounds.height / 2)), glyphFits: top.top >= bounds.top - 1 && bottom.bottom <= bounds.bottom + 1, allHingesOnePx, allGlyphsFit }; }");
+  assert.ok(flapTypography.font.includes("Futura") && flapTypography.loaded, "board slots should use the requested Futura typeface");
+  assert.equal(flapTypography.statusColor, "rgb(255, 206, 0)", "every flight status should use airport yellow");
+  assert.ok(flapTypography.glyphOffset <= 1 && flapTypography.hingeOffset <= 1 && flapTypography.glyphFits && flapTypography.allHingesOnePx && flapTypography.allGlyphsFit, "top and bottom must show the same complete glyph split at the slot center");
+  assert.equal(await evaluate(cdp, "() => { const gate = document.querySelector('#flight-rows tr[data-flight-id] [data-field=gate]'); return getComputedStyle(gate).display !== 'none' && gate.querySelector('.flap-bank').children.length === 2; }"), true, "mobile gate must stay visible as two physical slots");
+  assert.equal(await evaluate(cdp, "() => Boolean(document.querySelector('.board-panel-top .board-clock')) && !document.querySelector('.board-header .board-clock')"), true, "Korea time belongs inside the physical board");
+  assert.deepEqual(await evaluate(cdp, "() => window.NmSplitFlap.getSoundState()"), { enabled: false, contextCreated: false }, "sound must not initialise automatically");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · LIVE", "fresh provider data must set the live badge");
+  assert.ok(boardMobile.documentWidth <= boardMobile.viewport, "Gimpo board must not overflow at 390px");
+  fs.writeFileSync("/private/tmp/nothingmatters-gimpo-board-mobile.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  const providerCalls = flightProvider.state.calls.length;
+  assert.equal(providerCalls, 4, "browser traffic should share one four-stream provider cache refresh");
+  for (const width of [320, 375, 390, 430]) {
+    await setViewport(cdp, width);
+    const fitted = await evaluate(cdp, "() => { const shell = document.querySelector('.board-shell').getBoundingClientRect(); const banks = [...document.querySelectorAll('#flight-rows .flap-bank')].filter((bank) => getComputedStyle(bank).display !== 'none'); return { viewport: innerWidth, documentWidth: document.documentElement.scrollWidth, bankRight: Math.max(...banks.map((bank) => bank.getBoundingClientRect().right)), shellRight: shell.right }; }");
+    assert.ok(fitted.documentWidth <= fitted.viewport && fitted.bankRight <= fitted.shellRight, `fixed physical banks must fit the ${width}px mobile board`);
+  }
+  await setViewport(cdp, 390);
+  await evaluate(cdp, "() => { document.getElementById('board-search-open').click(); return true; }");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('flight-search-sheet').open"), true, "flight search should open a separate sheet");
+  fs.writeFileSync("/private/tmp/nothingmatters-gimpo-board-search.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  await evaluate(cdp, "() => { const input = document.getElementById('flight-search'); input.value = 'RS901'; input.dispatchEvent(new Event('input', { bubbles: true })); return true; }");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length"), 1, "search should filter locally");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length"), 0, "search must not replay mechanical flips");
+  assert.equal(flightProvider.state.calls.length, providerCalls, "search keystrokes must not call the provider");
+  await evaluate(cdp, "() => { document.getElementById('board-search-done').click(); return true; }");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('flight-search-sheet').open"), false, "closing search should return to a clean board");
+  await waitFor(cdp, "() => document.activeElement?.id === 'board-search-open'", "closing search should restore trigger focus");
+  await evaluate(cdp, "() => { document.getElementById('board-search-open').click(); return true; }");
+  await evaluate(cdp, "() => { const input = document.getElementById('flight-search'); input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('input[value=international]').click(); return true; }");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length"), 1, "international filter should work locally");
+  await evaluate(cdp, "() => { document.getElementById('board-search-close').click(); return true; }");
+  await evaluate(cdp, "() => { document.querySelector('input[value=all]').click(); document.getElementById('arrivals-tab').click(); return true; }");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2 && document.getElementById('route-heading').textContent === 'ORIGIN'", "arrival board should show two origins");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-title').textContent"), "ARRIVALS", "marquee must follow the selected flight direction");
+  assert.equal(await evaluate(cdp, "() => getComputedStyle(document.querySelector('.board-plane-departure')).display === 'none' && getComputedStyle(document.querySelector('.board-plane-arrival')).display !== 'none'"), true, "arrival marquee must show the arrival plane icon");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-ko').textContent"), "도착", "Korean marquee label must follow arrivals");
+  assert.deepEqual((await evaluate(cdp, "() => [...document.querySelectorAll('#flight-rows [data-field=route]')].map((cell) => [cell.querySelector('.flap-bank').dataset.value, cell.querySelector('.route-korean').textContent])")).sort(([left], [right]) => left.localeCompare(right)), [["BUSAN/GIMHAE", "부산/김해"], ["TOKYO/HND", "도쿄/하네다"]]);
+  await evaluate(cdp, "() => { document.querySelector('#flight-rows .flight-number').focus(); document.querySelector('#flight-rows .flight-number').click(); return true; }");
+  const openDetail = await evaluate(cdp, "() => ({ open: document.getElementById('flight-detail').open, gate: [...document.querySelectorAll('#detail-fields dt')].some((dt) => dt.textContent === '게이트'), focused: document.activeElement?.id })");
+  assert.deepEqual(openDetail, { open: true, gate: false, focused: "detail-close" }, "arrival detail should open accessibly without an invented gate");
+  await press(cdp, "Escape", 27);
+  await waitFor(cdp, "() => !document.getElementById('flight-detail').open", "Escape should close flight detail");
+  assert.equal(await evaluate(cdp, "() => document.activeElement?.classList.contains('flight-number')"), true, "closing detail should restore flight focus");
+  await evaluate(cdp, "() => { document.getElementById('departures-tab').click(); return true; }");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "departure tab should restore departure rows");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-title').textContent"), "DEPARTURES");
+  await evaluate(cdp, "() => { const originalFetch = window.fetch.bind(window); window.__boardRevision = 1; window.__boardErrorMode = ''; window.fetch = async (...args) => { if (String(args[0]).includes('/api/gimpo-board/') && window.__boardErrorMode === 'checking') await new Promise((resolve) => { window.__boardRelease = resolve; }); if (window.__boardErrorMode === 'error' && String(args[0]).includes('/api/gimpo-board/')) throw new Error('simulated failure'); const response = await originalFetch(...args); if (!String(args[0]).includes('/api/gimpo-board/')) return response; const payload = await response.json(); if (window.__boardErrorMode === 'stale') { payload.meta.stale = true; payload.meta.live = false; } const row = payload.data.find((item) => item.flightNumber === 'RS901'); if (row) { row.revisedTime = window.__boardRevision === 1 ? '06:25' : '06:35'; row.status.en = window.__boardRevision === 1 ? 'DELAYED' : 'BOARDING'; row.status.ko = window.__boardRevision === 1 ? '지연' : '탑승 중'; } return new Response(JSON.stringify(payload), { status: response.status, headers: { 'Content-Type': 'application/json' } }); }; return true; }");
+  await evaluate(cdp, "() => { document.getElementById('board-refresh').click(); return true; }");
+  await waitFor(cdp, "() => document.querySelectorAll('[data-field=time] .flap-slot.is-flipping').length > 0", "changed time characters should flip on refresh");
+  const flapState = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const bank = row.querySelector('[data-field=time] .flap-bank'); return { changed: [...bank.children].filter((slot) => slot.classList.contains('is-flipping')).length, unchanged: [0, 1, 2, 4].every((index) => !bank.children[index].classList.contains('is-flipping')), target: bank.dataset.value }; }");
+  assert.ok(flapState.changed > 0 && flapState.unchanged && flapState.target === "06:25", "only changed split-flap characters should animate");
+  await waitFor(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const time = row?.querySelector('[data-field=time] .flap-bank'); const status = row?.querySelector('[data-field=status] .flap-bank'); return time && status && [...time.children].map((slot) => slot.dataset.char).join('') === '06:25' && [...status.children].map((slot) => slot.dataset.char).join('').trimEnd() === 'DELAYED' && !row.querySelector('.flap-slot.is-flipping'); }", "time and status should settle to exact mechanical values");
+  await waitFor(cdp, "() => !document.querySelector('#flight-rows .flap-slot.is-flipping')", "all prior row flips should finish before reduced-motion check");
+  await cdp.command("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+  await waitFor(cdp, "() => matchMedia('(prefers-reduced-motion: reduce)').matches", "browser should apply reduced-motion emulation");
+  await evaluate(cdp, "() => { window.__boardRevision = 2; document.getElementById('board-refresh').click(); return true; }");
+  await waitFor(cdp, "() => [...document.querySelectorAll('#flight-rows [data-field=time] .flap-bank')].some((bank) => bank.dataset.value === '06:35')", "reduced-motion refresh should update flight time");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('.flap-slot.is-flipping').length"), 0, "reduced motion should disable mechanical sequence");
+  assert.ok(await evaluate(cdp, "() => [...document.querySelectorAll('#flight-rows [data-field=status] .flap-bank')].some((bank) => bank.dataset.value === 'BOARDING')"), "reduced-motion status should settle directly");
+  assert.equal(await evaluate(cdp, "() => { const bank = [...document.querySelectorAll('#flight-rows [data-field=status] .flap-bank')].find((item) => item.dataset.value === 'BOARDING'); return bank.children.length === 10 && [...bank.children].slice(-2).every((slot) => slot.dataset.char === ' '); }"), true, "shorter status updates must retain two blank physical slots");
+  await cdp.command("Emulation.setEmulatedMedia", { features: [] });
+  await evaluate(cdp, "() => { window.__boardErrorMode = 'checking'; document.getElementById('board-refresh').click(); return true; }");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · CHECKING", "loading must not claim LIVE");
+  await evaluate(cdp, "() => { window.__boardErrorMode = ''; window.__boardRelease(); return true; }");
+  await waitFor(cdp, "() => !document.getElementById('board-refresh').disabled && document.getElementById('board-badge').textContent.includes('LIVE')", "fresh refresh should restore LIVE state");
+  await evaluate(cdp, "() => { window.__boardErrorMode = 'stale'; document.getElementById('board-refresh').click(); return true; }");
+  await waitFor(cdp, "() => document.getElementById('board-notice').textContent.includes('마지막으로 확인된')", "stale data notice should be shown");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · STALE", "stale cache must not claim LIVE");
+  await evaluate(cdp, "() => { window.__boardErrorMode = 'error'; document.getElementById('board-refresh').click(); return true; }");
+  await waitFor(cdp, "() => !document.getElementById('board-refresh').disabled && document.getElementById('board-badge').textContent.includes('STALE')", "provider error should leave the cached board in STALE state");
+  assert.match(await evaluate(cdp, "() => document.getElementById('board-live-state').textContent"), /TEMPORARILY UNAVAILABLE/);
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · STALE", "failed refresh with cached rows must show STALE");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length"), 4, "provider error should not erase board rows");
+  const blocker = await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "const boardOriginalFetch = window.fetch.bind(window); window.fetch = (...args) => String(args[0]).includes('/api/gimpo-board/') ? Promise.reject(new Error('simulated failure')) : boardOriginalFetch(...args);" });
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
+  await waitFor(cdp, "() => Boolean(document.querySelector('#board-notice button'))", "no-cache failure should show a retry button");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · OFFLINE", "initial API failure must show OFFLINE");
+  await cdp.command("Page.removeScriptToEvaluateOnNewDocument", { identifier: blocker.identifier });
+  await setViewport(cdp, 1280, 900);
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "desktop Gimpo board should load");
+  const boardDesktop = await evaluate(cdp, "() => ({ columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), grid: getComputedStyle(document.querySelector('#flight-rows tr[data-flight-id]')).display, slots: document.querySelectorAll('#flight-rows .flap-slot').length, documentWidth: document.documentElement.scrollWidth, viewport: innerWidth })");
+  assert.deepEqual(boardDesktop.columns, ["FLIGHT", "DESTINATION", "TIME", "GATE", "STATUS"]);
+  assert.equal(boardDesktop.grid, "grid", "desktop board should use mechanical grid rows");
+  assert.ok(boardDesktop.slots > 0, "desktop board should contain physical flap slots");
+  assert.ok(boardDesktop.documentWidth <= boardDesktop.viewport, "desktop Gimpo board must not overflow");
+  const desktopHousing = await evaluate(cdp, "() => { const rows = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')]; const first = rows[0]; const second = rows[1]; const style = getComputedStyle(first); const slot = first.querySelector('[data-field=route] .flap-slot'); const hinge = slot.querySelector('.flap-hinge'); const shell = getComputedStyle(document.querySelector('.board-shell')); return { gap: second.getBoundingClientRect().top - first.getBoundingClientRect().bottom, margin: style.marginBottom, radius: style.borderRadius, shadow: style.boxShadow, divider: parseFloat(style.borderBottomWidth), rowHeight: first.getBoundingClientRect().height, slotWidth: slot.getBoundingClientRect().width, slotHeight: slot.getBoundingClientRect().height, hinge: hinge.getBoundingClientRect().height, slotRadius: parseFloat(getComputedStyle(slot).borderTopLeftRadius), slotShadow: getComputedStyle(slot).boxShadow, slotBackground: getComputedStyle(slot).backgroundImage, faceBackground: getComputedStyle(slot.querySelector('.flap-static-top')).backgroundImage, shellBackground: shell.backgroundImage, topShadow: getComputedStyle(slot.querySelector('.flap-static-top')).boxShadow, bottomShadow: getComputedStyle(slot.querySelector('.flap-static-bottom')).boxShadow, flight: first.querySelector('[data-field=flight] .flap-bank').dataset.value, route: first.querySelector('[data-field=route] .flap-bank').dataset.value, time: first.querySelector('[data-field=time] .flap-bank').dataset.value, status: first.querySelector('[data-field=status] .flap-bank').dataset.value }; }");
+  assert.ok(desktopHousing.gap <= 1 && desktopHousing.margin === "0px" && desktopHousing.radius === "0px" && desktopHousing.shadow === "none", "desktop flights must form one continuous board, not cards");
+  assert.ok(desktopHousing.divider <= 6 && desktopHousing.hinge === 1 && desktopHousing.topShadow === "none" && desktopHousing.bottomShadow === "none", "flaps must have a single 1px seam without face inset shadows");
+  assert.ok(desktopHousing.slotRadius >= 2 && desktopHousing.slotShadow !== "none" && desktopHousing.slotBackground.includes("linear-gradient") && desktopHousing.faceBackground.includes("linear-gradient") && desktopHousing.shellBackground.includes("repeating-linear-gradient"), "physical flap and board surfaces must expose the 3D texture treatment");
+  assert.ok(desktopHousing.rowHeight >= 64 && desktopHousing.rowHeight <= 78, "desktop board rows should match the compact reference density");
+  assert.ok(desktopHousing.slotWidth >= 20 && desktopHousing.slotWidth <= 25 && desktopHousing.slotHeight >= 44 && desktopHousing.slotHeight <= 48, "desktop fixed banks should fit the physical board");
+  assert.deepEqual([desktopHousing.flight, desktopHousing.route, desktopHousing.time, desktopHousing.status], ["JL090", "TOKYO/HND", "06:00", "DEPARTED"], "primary row values must all use mechanical flap banks");
+  const entranceStart = Date.now();
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr.is-entering').length === 0", "initial board entrance should settle");
+  await waitFor(cdp, "() => document.getElementById('board-loader').hidden", "initial flight information loader should finish");
+  assert.ok(Date.now() - entranceStart < 2000, "initial board entrance must finish within two seconds");
+  fs.writeFileSync("/private/tmp/nothingmatters-gimpo-board-desktop.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  await evaluate(cdp, "() => { document.getElementById('board-sound').click(); return true; }");
+  assert.equal(await evaluate(cdp, "() => localStorage.getItem('gimpoBoardSound')"), "on", "sound preference should persist only after user activation");
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-sound').getAttribute('aria-pressed')"), "true", "sound toggle should restore saved preference");
+  assert.deepEqual(await evaluate(cdp, "() => window.NmSplitFlap.getSoundState()"), { enabled: true, contextCreated: false }, "restored preference must not auto-start Web Audio");
+  await evaluate(cdp, "() => { document.getElementById('board-sound').click(); return true; }");
+  assert.equal(await evaluate(cdp, "() => localStorage.getItem('gimpoBoardSound')"), "off");
 
   const stickyProducts = [
     ["/products/cookie-flight/", "cookie-flight"],
@@ -722,6 +989,7 @@ try {
   cdp?.close();
   chrome.kill("SIGTERM");
   await stop(server.child);
+  await flightProvider.close();
   fs.rmSync(BROWSER_GALLERY_DATA_DIR, { recursive: true, force: true });
 }
 

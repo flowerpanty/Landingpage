@@ -1,0 +1,71 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import { mockFlight, startMockFlightProvider } from "./gimpo-board-test-provider.mjs";
+
+const require = createRequire(import.meta.url);
+const { API_URL, createGimpoBoardService, normalizeFlight, parsePage, GimpoBoardUnavailableError } = require("../lib/gimpo-board.js");
+assert.equal(API_URL, "https://apis.data.go.kr/B551178/flight-search/info", "V1 must use flight-search, not flight-schedule");
+const provider = await startMockFlightProvider({ domesticDepartureCount: 101 });
+let clock = Date.parse("2026-09-27T06:00:00Z");
+const service = createGimpoBoardService({ key: "unit-test-key", apiUrl: provider.url, now: () => clock });
+
+try {
+  const responses = await Promise.all(Array.from({ length: 12 }, () => service.getFlights({ type: "departure" })));
+  assert.equal(provider.state.calls.length, 5, "one refresh should fetch five pages across four streams");
+  assert.ok(provider.state.calls.every((call) => call.rows === "100" && call.airport === "GMP" && call.format === "json" && !call.flightFilter && call.key), "every provider request should use 100 GMP rows without a flight-number restriction");
+  assert.deepEqual(provider.state.calls.filter((call) => call.line === "D" && call.io === "O").map((call) => call.page), [1, 2], "domestic departures should paginate until totalCount");
+  assert.equal(responses[0].data.length, 102, "departures should include domestic and international flights");
+  assert.equal(responses[0].meta.live, true);
+  assert.equal(responses[0].meta.source, "Korea Airports Corporation");
+  assert.equal(JSON.stringify(responses[0]).includes("unit-test-key"), false, "API key must never appear in public response");
+  const flight = responses[0].data.find((row) => row.flightNumber === "RS901");
+  assert.equal(flight.scheduledTime, "06:00");
+  assert.equal(flight.revisedTime, "06:15", "etd must remain a revised time, not an actual time");
+  assert.equal(flight.origin.code, "GMP");
+  assert.equal(flight.destination.code, "CJU");
+  assert.equal(mockFlight("D", "O", 0).arrivedCode, undefined, "provider fixture must not invent arrivedCode");
+  assert.equal(mockFlight("D", "I", 0).boardingCode, undefined, "provider fixture must not invent boardingCode");
+  assert.equal(flight.airline.ko, "에어서울");
+  assert.equal((await service.getFlights({ type: "arrival" })).data.length, 2);
+  const domesticArrival = (await service.getFlights({ type: "arrival", line: "domestic" })).data[0];
+  assert.equal(domesticArrival.origin.code, "PUS");
+  assert.equal(domesticArrival.destination.code, "GMP");
+  const internationalArrival = (await service.getFlights({ type: "arrival", line: "international" })).data[0];
+  assert.equal(internationalArrival.origin.code, "HND");
+  assert.equal(internationalArrival.destination.code, "GMP");
+  assert.equal((await service.getFlights({ type: "arrival" })).data[0].gate, null, "missing arrival gates stay null");
+  assert.equal((await service.getFlights({ type: "departure", q: "RS901" })).data.length, 1);
+  assert.equal((await service.getFlights({ type: "departure", q: "제주" })).data.length, 101);
+  assert.equal((await service.getFlights({ type: "departure", q: "CJU" })).data.length, 101);
+  assert.equal(normalizeFlight({ airFln: "RS901", airport: "GMP", city: "CJU", boardingKor: "서울/김포", arrivedKor: "미상" }, { type: "departure", lineType: "domestic" }).destination.code, "CJU", "city must win even when a name has no fallback code");
+  assert.equal(normalizeFlight({ airFln: "TW922", airport: "GMP", city: "PUS", boardingKor: "미상", arrivedKor: "서울/김포" }, { type: "arrival", lineType: "domestic" }).origin.code, "PUS");
+  assert.equal((await service.getFlights({ type: "departure", q: "에어서울" })).data.length, 102);
+  assert.equal(provider.state.calls.length, 5, "search and filters must use cached rows");
+  clock += 181_000;
+  provider.state.revision = 1;
+  const refreshed = await service.getFlights({ type: "departure", q: "RS901" });
+  assert.equal(refreshed.data[0].revisedTime, "06:25", "expired cache should refresh from the provider");
+  assert.equal(provider.state.calls.length, 10);
+  clock += 181_000;
+  provider.state.fail = true;
+  const stale = await service.getFlights({ type: "departure" });
+  assert.equal(stale.meta.stale, true);
+  assert.equal(stale.meta.live, false);
+  assert.equal(stale.data.length, 102, "provider failure should retain previous data");
+  const callsAfterFailure = provider.state.calls.length;
+  await service.getFlights({ type: "arrival" });
+  assert.equal(provider.state.calls.length, callsAfterFailure, "failed refresh must have a retry backoff");
+  const emptyService = createGimpoBoardService({ key: "", apiUrl: provider.url });
+  await assert.rejects(emptyService.getFlights(), GimpoBoardUnavailableError);
+  assert.throws(() => parsePage({ response: { header: { resultCode: "04" } } }), /provider_rejected/);
+  assert.equal(normalizeFlight({ airFln: "RS901", boardingKor: "서울/김포", arrivedKor: "제주", std: "0600", gate: "" }, { type: "departure", lineType: "domestic" }).gate, null);
+  const identityBefore = normalizeFlight({ airFln: "RS901", boardingKor: "서울/김포", arrivedKor: "제주", std: "0600" }, { type: "departure", lineType: "domestic" });
+  const identityAfter = normalizeFlight({ airFln: "RS901", boardingKor: "서울/김포", arrivedKor: "제주", std: "0610" }, { type: "departure", lineType: "domestic" });
+  assert.equal(identityBefore.id, identityAfter.id, "a scheduled-time revision should preserve the flight row identity for split-flap updates");
+  await assert.rejects(service.getFlights({ type: "bad" }), TypeError);
+  await assert.rejects(service.getFlights({ q: "x".repeat(81) }), TypeError);
+} finally {
+  await provider.close();
+}
+
+console.log("gimpo board service checks: passed");

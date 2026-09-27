@@ -17,7 +17,7 @@
     "public-perf:test": "node scripts/test-public-performance.mjs",
     "site:check": "npm run products:check && npm run schema:check && npm run public-seo:test && npm run public-perf:test && npm run a11y:check && npm run feed:check",
     "gallery:test": "node scripts/test-gallery-storage.mjs",
-    "server:test": "node scripts/test-server-http.mjs",
+    "server:test": "node scripts/test-gimpo-board.mjs && node scripts/test-server-http.mjs",
     "browser:test": "node scripts/test-public-browser.mjs",
     "journal:test": "node scripts/test-wordpress-journal.mjs",
     "prestart": "npm run site:build",
