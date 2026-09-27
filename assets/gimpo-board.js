@@ -22,6 +22,7 @@
   const flap = window.NmSplitFlap;
   const flights = window.NmGimpoFlights;
   const BANK_WIDTHS = { flight: 7, route: 16, time: 5, gate: 2, status: 10 };
+  const MOBILE_BANK_WIDTHS = { flight: 7, route: 11, time: 5, status: 9 };
   flap.bindSoundToggle(document.getElementById("board-sound"));
   flap.initClock(
     document.getElementById("clock-hh"),
@@ -89,6 +90,27 @@
     return /^[A-Z0-9 :/.-]+$/.test(english) && english.length <= 16 ? english : place?.code || "-";
   }
 
+  function compactPlace(place) {
+    const known = { CJU: "JEJU", PUS: "BUSAN/PUS", HND: "TOKYO/HND", KIX: "OSAKA/KIX", TSA: "TAIPEI/TSA", GMP: "GIMPO" };
+    const code = String(place?.code || "").toUpperCase();
+    if (known[code]) return known[code];
+    const english = String(place?.en || "").toUpperCase().trim();
+    if (/^[A-Z0-9 :/.-]+$/.test(english) && english.length <= MOBILE_BANK_WIDTHS.route) return english;
+    const city = english.split(/[\/,]/)[0].trim();
+    const cityAndCode = `${city}/${code}`;
+    if (city && /^[A-Z]{3}$/.test(code) && cityAndCode.length <= MOBILE_BANK_WIDTHS.route) return cityAndCode;
+    return /^[A-Z]{3}$/.test(code) ? code : "-";
+  }
+
+  function compactStatus(value) {
+    const full = String(value || "-").toUpperCase().trim();
+    if (/^[A-Z /-]+$/.test(full) && full.length <= MOBILE_BANK_WIDTHS.status) return full;
+    return "DETAIL";
+  }
+
+  function routeValue(place) { return mobileQuery.matches ? compactPlace(place) : mechanicalPlace(place); }
+  function statusValue(value) { return mobileQuery.matches ? compactStatus(value) : value || "-"; }
+
   function gateDisplay(gate) {
     if (!gate) return "--";
     const value = String(gate);
@@ -100,7 +122,7 @@
     td.dataset.field = field;
     td.setAttribute("role", "cell");
     td.setAttribute("aria-label", `${labelText} ${value}`);
-    const bank = flap.createFlapBank(value, `flap-bank--${field}`, BANK_WIDTHS[field]);
+    const bank = flap.createFlapBank(value, `flap-bank--${field}`, (mobileQuery.matches ? MOBILE_BANK_WIDTHS : BANK_WIDTHS)[field]);
     bank.setAttribute("aria-hidden", "true");
     td.append(bank);
     return { td, bank };
@@ -125,15 +147,16 @@
     flight.td.append(airlineName);
 
     const endpoint = type === "departure" ? row.destination : row.origin;
-    const route = bankCell("route", mechanicalPlace(endpoint), type === "departure" ? "목적지" : "출발지");
+    const route = bankCell("route", routeValue(endpoint), type === "departure" ? "목적지" : "출발지");
     const routeKorean = document.createElement("small"); routeKorean.className = "flight-cell-sub route-korean";
     routeKorean.textContent = endpoint.ko || "";
     route.td.setAttribute("aria-label", `${type === "departure" ? "목적지" : "출발지"} ${mechanicalPlace(endpoint)} ${endpoint.ko || ""}`.trim());
     route.td.append(routeKorean); tr.append(route.td);
 
     const time = bankCell("time", row.revisedTime || row.scheduledTime || "-", "시간"); tr.append(time.td);
-    const gate = bankCell("gate", gateDisplay(row.gate), "게이트"); tr.append(gate.td);
-    const status = bankCell("status", row.status.en || "-", "운항상태");
+    const gate = mobileQuery.matches ? null : bankCell("gate", gateDisplay(row.gate), "게이트");
+    if (gate) tr.append(gate.td);
+    const status = bankCell("status", statusValue(row.status.en), "운항상태");
     status.td.dataset.status = (row.status.en || "").toUpperCase();
     const statusKorean = document.createElement("small"); statusKorean.className = "flight-cell-sub status-korean";
     statusKorean.textContent = row.status.ko || "";
@@ -152,13 +175,14 @@
     if (tr._row === row) return;
     const endpoint = type === "departure" ? row.destination : row.origin;
     const values = {
-      flight: row.flightNumber, route: mechanicalPlace(endpoint), time: row.revisedTime || row.scheduledTime || "-",
-      gate: gateDisplay(row.gate), status: row.status.en || "-"
+      flight: row.flightNumber, route: routeValue(endpoint), time: row.revisedTime || row.scheduledTime || "-",
+      gate: gateDisplay(row.gate), status: statusValue(row.status.en)
     };
     const labels = { flight: "편명", route: type === "departure" ? "목적지" : "출발지", time: "시간", gate: "게이트", status: "운항상태" };
     const rowDelay = Math.min(rowIndex * 30 + Math.floor(Math.random() * 15), 250);
     for (const [name, value] of Object.entries(values)) {
       const part = tr._banks[name];
+      if (!part) continue;
       if (part.bank.dataset.value !== value) flap.setFlapValue(part.bank, value, { animate, rowDelay, onStep: flap.tick });
       const ariaLabel = `${labels[name]} ${value}`;
       if (part.td.getAttribute("aria-label") !== ariaLabel) part.td.setAttribute("aria-label", ariaLabel);
@@ -167,11 +191,11 @@
     if (tr._airlineName.textContent !== airline) tr._airlineName.textContent = airline;
     if (tr._routeKorean.textContent !== (endpoint.ko || "")) tr._routeKorean.textContent = endpoint.ko || "";
     if (tr._statusKorean.textContent !== (row.status.ko || "")) tr._statusKorean.textContent = row.status.ko || "";
-    const routeLabel = `${labels.route} ${values.route} ${endpoint.ko || ""}`.trim();
+    const routeLabel = `${labels.route} ${mechanicalPlace(endpoint)} ${endpoint.ko || ""}`.trim();
     if (tr._banks.route.td.getAttribute("aria-label") !== routeLabel) tr._banks.route.td.setAttribute("aria-label", routeLabel);
-    const statusLabel = `운항상태 ${values.status} ${row.status.ko || ""}`.trim();
+    const statusLabel = `운항상태 ${row.status.en || "-"} ${row.status.ko || ""}`.trim();
     if (tr._banks.status.td.getAttribute("aria-label") !== statusLabel) tr._banks.status.td.setAttribute("aria-label", statusLabel);
-    if (tr._banks.status.td.dataset.status !== values.status.toUpperCase()) tr._banks.status.td.dataset.status = values.status.toUpperCase();
+    if (tr._banks.status.td.dataset.status !== (row.status.en || "").toUpperCase()) tr._banks.status.td.dataset.status = (row.status.en || "").toUpperCase();
     tr._row = row;
   }
 
@@ -360,7 +384,12 @@
     clearTimeout(searchTimer); searchTerm = searchInput.value; extraPages = 0; render();
   }));
   moreButton.addEventListener("click", () => { extraPages += 1; render(); });
-  mobileQuery.addEventListener("change", () => { extraPages = 0; render(); });
+  mobileQuery.addEventListener("change", () => {
+    extraPages = 0;
+    rowElements.clear();
+    rowsElement.replaceChildren();
+    render();
+  });
   refreshButton.addEventListener("click", () => load(true));
   detailClose.addEventListener("click", () => dialog.close());
   dialog.addEventListener("close", () => lastTrigger?.focus());

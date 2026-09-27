@@ -22,7 +22,7 @@
   color: #f5f2e9;
   background: linear-gradient(90deg, #080808, #222 12%, #151515 55%, #090909);
   box-shadow: inset 1px 0 rgba(255,255,255,.06), inset -1px 0 rgba(0,0,0,.8);
-  font: 900 min(calc(var(--slot-h) * .68), calc(var(--slot-w) * 2.55))/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font: 900 var(--glyph-size, min(calc(var(--slot-h) * .68), calc(var(--slot-w) * 2.55)))/1 Futura, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .flap-slot:last-child { border-right: 0; }
 .flap-slot.is-flipping { perspective: 650px; transform-style: preserve-3d; }

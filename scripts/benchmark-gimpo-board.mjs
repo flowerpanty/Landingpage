@@ -97,7 +97,7 @@ try {
   if (verify) {
     assert.equal(payload.data.length, 501, "the API must retain every full-day flight");
     assert.equal(metrics.rows, 10, "mobile defaults to ten time-window rows");
-    assert.equal(metrics.slots, 400, "only visible rows should own mechanical slots");
+    assert.equal(metrics.slots, 320, "only visible mobile rows should own 7+11+5+9 mechanical slots");
     assert.equal(metrics.boardCount, "10 / 272 FLIGHTS", "the default time window should include only 05:30–10:30 KST flights, not the full day");
     assert.ok(metrics.documentWidth <= metrics.viewport, "mobile board must not overflow");
     assert.equal(await cdp.evaluate(`() => !document.getElementById('board-more').hidden`), true, "more relevant flights should be available progressively");
