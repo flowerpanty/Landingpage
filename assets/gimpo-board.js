@@ -142,17 +142,12 @@
   function setTimeMetadata(time, scheduled, row) {
     const changed = scheduleChanged(row);
     time.td.classList.toggle("is-revised", changed);
-    scheduled.hidden = !changed;
     if (changed) {
-      const prefix = document.createElement("span");
-      prefix.className = "changed-time-prefix";
-      prefix.textContent = "변경시간";
-      const original = document.createElement("span");
-      original.textContent = ` · 기존 ${row.scheduledTime}`;
-      scheduled.replaceChildren(prefix, original);
-    } else scheduled.replaceChildren();
+      scheduled.textContent = `기존 ${row.scheduledTime}`;
+      if (!scheduled.isConnected) time.td.append(scheduled);
+    } else scheduled.remove();
     time.td.setAttribute("aria-label", changed
-      ? `변경된 시간 ${row.revisedTime}, 기존 예정시간 ${row.scheduledTime}`
+      ? `시간 ${row.revisedTime}, 기존 ${row.scheduledTime}`
       : `시간 ${row.revisedTime || row.scheduledTime || "-"}`);
   }
 
@@ -196,7 +191,7 @@
     const time = bankCell("time", row.revisedTime || row.scheduledTime || "-", "시간", blank);
     const scheduled = document.createElement("small"); scheduled.className = "flight-cell-sub scheduled-time";
     setTimeMetadata(time, scheduled, row);
-    time.td.append(scheduled); tr.append(time.td);
+    tr.append(time.td);
     const gate = mobileQuery.matches ? null : bankCell("gate", gateDisplay(row.gate), "게이트", blank);
     if (gate) tr.append(gate.td);
     const status = bankCell("status", statusValue(row.status.en), "운항상태", blank);

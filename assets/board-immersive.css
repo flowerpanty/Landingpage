@@ -99,9 +99,7 @@
 .flight-number:hover .flap-slot, .flight-number:focus-visible .flap-slot { border-color: #ffcf09; }
 .flight-cell-sub, .airline-name { display: block; margin-top: 2px; color: #aaa; font: 900 clamp(10px,.95vw,14px)/1 "NmBoardDisplay", "Arial Black", sans-serif; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .airline-name { color: #ffcf09; }
-.scheduled-time { color: #aaa; font-size: 10px; letter-spacing: .05em; }
-.scheduled-time[hidden] { display: none; }
-.scheduled-time .changed-time-prefix { color: #ff654f; }
+.flight-cell-sub.scheduled-time { color: #aaa; font: 400 9px/1.15 "Helvetica Neue", Helvetica, Arial, "Apple SD Gothic Neo", sans-serif; letter-spacing: 0; }
 .flight-table td[data-field="time"].is-revised .flap-slot { color: #ff654f; }
 .route-korean { color: #ffcf09; font-family: Futura, "Helvetica Neue", Helvetica, Arial,"Apple SD Gothic Neo",sans-serif; letter-spacing: 0; }
 .status-korean { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
