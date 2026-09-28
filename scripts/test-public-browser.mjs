@@ -335,6 +335,8 @@ try {
   assert.equal(gimpoState.disclaimer, true);
   assert.equal(gimpoState.productImages, true, "all three product images should load");
   assert.equal(gimpoState.sound.contextCreated, false, "Gimpo design board must not auto-play sound");
+  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-tools a')].map((link) => new URL(link.href).pathname)"), ["/gimpo-board/", "/gimpo2/"], "Gimpo cookie hub should expose both flight tools");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('.gimpo-faq article').length"), 3, "Gimpo cookie hub should show three visible pickup answers");
   const gimpoTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .hero-copy h1, .hero-description')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
   assert.ok(gimpoTextClipping.every((element) => !element.clipped), `Gimpo mobile text must fit: ${JSON.stringify(gimpoTextClipping)}`);
   await evaluate(cdp, "() => { document.getElementById('gimpo-board-change').click(); return true; }");
@@ -356,15 +358,17 @@ try {
   assert.equal(gimpoPickupState.bottom, gimpoPickupState.height);
   assert.equal(gimpoPickupState.map, PICKUP_MAP_URL);
   assert.equal(gimpoPickupState.address, "서울 강서구 송정로 25 1층");
+  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-related a')].map((link) => new URL(link.href).pathname)"), ["/gimpo2/", "/gimpo-board/"], "pickup guide should link to the planner and board");
   const gimpoPickupTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .pickup-hero h1, .pickup-hero-copy>p:not(.eyebrow)')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
   assert.ok(gimpoPickupTextClipping.every((element) => !element.clipped), `Gimpo pickup mobile text must fit: ${JSON.stringify(gimpoPickupTextClipping)}`);
   await navigate(cdp, `${server.baseUrl}/gimpo2/`);
   await waitFor(cdp, "() => document.querySelectorAll('#g2-list .flight-row').length === 4", "Gimpo2 should show shared live departures");
   const gimpo2FirstView = await evaluate(cdp, "() => ({ h1: document.querySelector('h1')?.textContent.trim(), tabs: [...document.querySelectorAll('.flight-tabs button')].map((button) => button.textContent.trim()), searchVisible: document.getElementById('g2-search').getBoundingClientRect().top < innerHeight, rows: document.querySelectorAll('#g2-list .flight-row').length, boardHref: new URL(document.getElementById('g2-board-link').href).pathname, viewport: innerWidth, documentWidth: document.documentElement.scrollWidth })");
-  assert.equal(gimpo2FirstView.h1, "김포공항 실시간 출발·도착 항공편");
+  assert.equal(gimpo2FirstView.h1, "내 항공편 기준 쿠키 픽업 시간 확인");
   assert.equal(gimpo2FirstView.tabs.length, 2);
   assert.ok(gimpo2FirstView.searchVisible && gimpo2FirstView.documentWidth <= gimpo2FirstView.viewport, "Gimpo2 mobile search should fit in the first viewport");
   assert.equal(gimpo2FirstView.boardHref, "/gimpo-board/");
+  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.planner-links a')].map((link) => new URL(link.href).pathname)"), ["/gimpo/pickup/", "/gimpo/"], "planner should lead to booking guidance and the cookie hub");
   fs.writeFileSync("/private/tmp/nothingmatters-gimpo2-mobile.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
   await navigate(cdp, `${server.baseUrl}/gimpo2/?flight=RS901`);
   await waitFor(cdp, "() => document.getElementById('g2-flight-number')?.textContent === 'RS901'", "Gimpo2 flight query should select a departure");
@@ -399,7 +403,7 @@ try {
   assert.equal(boardMobile.title, "김포공항 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
   assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION"], `board mobile columns at viewport ${boardMobile.viewport}`);
-  assert.deepEqual(boardMobile.links, ["/gimpo2/"]);
+  assert.deepEqual(boardMobile.links, ["/gimpo2/", "/gimpo/"]);
   assert.deepEqual([boardMobile.route, boardMobile.routeKorean], ["JEJU", "제주 · CJU"], "English destination should be the main mechanical value with Korean and provider code below");
   assert.deepEqual(boardMobile.halves, ["flap-static-top", "flap-static-bottom", "flap-flip-top", "flap-flip-bottom", "flap-hinge"]);
   assert.equal(boardMobile.grid, "grid", "mobile board rows should use a physical two-line grid");

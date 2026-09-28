@@ -379,6 +379,7 @@ const boardHtml = readHtml(filePathForPathname("/gimpo-board/"));
 assert.match(boardHtml, /<title>김포공항 도착·출발 실시간 항공편 \| NOTHINGMATTERS<\/title>/);
 assert.equal(getCanonical(boardHtml), `${SITE_URL}/gimpo-board/`);
 assert.match(boardHtml, /href="\/gimpo2\/"/);
+assert.match(boardHtml, /href="\/gimpo\/"/, "flight board should link back to the cookie hub");
 assert.match(boardHtml, /id="detail-pickup-link"/, "selected board flight should link to pickup timing");
 assert.match(boardHtml, /id="board-badge"[^>]*>GMP · CHECKING<\/span>/, "board must not claim LIVE before fresh data loads");
 assert.doesNotMatch(boardHtml, /KAC_FLIGHT_API_KEY|serviceKey=/, "board HTML must not expose provider credentials");
@@ -386,7 +387,8 @@ assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "u
 
 for (const [pathname, title, h1, pageType] of [
   ["/gimpo/", "김포공항 비행기 쿠키 · 여행 선물 | NOTHINGMATTERS", "김포공항 가는 길, 쿠키도 챙겨가세요.", "CollectionPage"],
-  ["/gimpo2/", "김포공항 실시간 항공편·쿠키 픽업 | NOTHINGMATTERS", "김포공항 실시간 출발·도착 항공편", "WebPage"],
+  ["/gimpo-board/", "김포공항 도착·출발 실시간 항공편 | NOTHINGMATTERS", "김포공항 실시간 항공편", "WebPage"],
+  ["/gimpo2/", "김포공항 출발 전 쿠키 픽업 시간 확인 | NOTHINGMATTERS", "내 항공편 기준 쿠키 픽업 시간 확인", "WebPage"],
   ["/gimpo/pickup/", "김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS", "김포공항 가기 전, 예약한 쿠키를 픽업하세요.", "WebPage"],
 ]) {
   const entry = registryEntries.get(pathname);
@@ -394,10 +396,11 @@ for (const [pathname, title, h1, pageType] of [
   const graph = getStaticSchema(html)["@graph"];
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo2/" ? "2026-09-28" : "2026-09-27" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: "2026-09-28" },
     `${pathname}: registry must publish the new route`
   );
   assert.equal(getCanonical(html), `${SITE_URL}${pathname}`);
+  assert.match(getRobots(html), /^index,follow/, `${pathname}: should remain indexable`);
   assert.equal(getAttribute(html, /<title>([\s\S]*?)<\/title>/i), title);
   assert.equal(cleanText(getAttribute(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), h1);
   assert.ok(locSet.has(`${SITE_URL}${pathname}`));
@@ -408,7 +411,12 @@ for (const [pathname, title, h1, pageType] of [
   assert.doesNotMatch(html, /(?:도보|차로|차량으로|공항까지)\s*\d+\s*분|\d+\s*(?:km|m)\s*거리/i, `${pathname}: no unverified travel estimate`);
 }
 const gimpoHtml = readHtml(filePathForPathname("/gimpo/"));
+assert.match(gimpoHtml, /class="gimpo-tools"[\s\S]*?href="\/gimpo-board\/"[\s\S]*?href="\/gimpo2\/"/, "Gimpo hub should route to both flight tools");
+for (const question of ["NOTHINGMATTERS는 김포공항 안에 있나요?", "여행 당일에도 쿠키를 픽업할 수 있나요?", "어떤 쿠키를 픽업할 수 있나요?"]) {
+  assert.ok(gimpoHtml.includes(question), `Gimpo hub should answer: ${question}`);
+}
 const gimpoGraph = getStaticSchema(gimpoHtml)["@graph"];
+assert.equal(gimpoGraph.some((node) => node["@type"] === "FAQPage"), false, "Gimpo hub should not add FAQPage schema for the new visible Q&A");
 const gimpoItemList = gimpoGraph.find((node) => node["@type"] === "ItemList");
 assert.deepEqual(gimpoItemList?.itemListElement?.map((item) => [item.name, item.url]), [
   ["COOKIE FLIGHT", `${SITE_URL}/products/cookie-flight/`],
@@ -417,7 +425,16 @@ assert.deepEqual(gimpoItemList?.itemListElement?.map((item) => [item.name, item.
 ]);
 assert.equal((gimpoHtml.match(/class="cookie-card"/g) || []).length, 3, "Gimpo must display exactly three product cards");
 assert.ok(gimpoHtml.includes("실제 항공편 정보가 아닙니다."), "decorative board must be clearly labelled");
-const gimpoPickupGraph = getStaticSchema(readHtml(filePathForPathname("/gimpo/pickup/")))["@graph"];
+const gimpo2Html = readHtml(filePathForPathname("/gimpo2/"));
+assert.match(gimpo2Html, /id="g2-board-link" href="\/gimpo-board\/"/, "planner should link to the full live board");
+assert.match(gimpo2Html, /class="planner-links"[\s\S]*?href="\/gimpo\/pickup\/"[\s\S]*?href="\/gimpo\/"/, "planner should link to pickup guidance and the cookie hub");
+const gimpo2Graph = getStaticSchema(gimpo2Html)["@graph"];
+assert.equal(gimpo2Graph.find((node) => node["@type"] === "WebPage")?.name, "김포공항 출발 전 쿠키 픽업 시간 확인");
+assert.equal(gimpo2Graph.find((node) => node["@type"] === "WebPage")?.description, "김포공항 항공편을 선택해 출발까지 남은 시간과 공항동 NOTHINGMATTERS 쿠키 픽업 가능 시간을 참고하세요. 실시간 출발·도착 정보는 김포공항 전광판에서 확인할 수 있습니다.");
+assert.equal(gimpo2Graph.find((node) => node["@type"] === "BreadcrumbList")?.itemListElement?.at(-1)?.name, "김포공항 출발 전 쿠키 픽업 플래너");
+const gimpoPickupHtml = readHtml(filePathForPathname("/gimpo/pickup/"));
+assert.match(gimpoPickupHtml, /class="section gimpo-related"[\s\S]*?href="\/gimpo2\/"[\s\S]*?href="\/gimpo-board\/"/, "pickup guide should link to planner and flight board");
+const gimpoPickupGraph = getStaticSchema(gimpoPickupHtml)["@graph"];
 assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "WebPage")?.about, { "@id": `${SITE_URL}/#localbusiness` });
 assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "Service")?.provider, { "@id": `${SITE_URL}/#localbusiness` });
 
