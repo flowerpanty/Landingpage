@@ -438,6 +438,67 @@ const gimpoPickupGraph = getStaticSchema(gimpoPickupHtml)["@graph"];
 assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "WebPage")?.about, { "@id": `${SITE_URL}/#localbusiness` });
 assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "Service")?.provider, { "@id": `${SITE_URL}/#localbusiness` });
 
+const kimpoCorePages = ["/gimpo-board/", "/gimpo/", "/gimpo2/", "/gimpo/pickup/", "/pickup/"];
+const kimpoGuides = [
+  ["/guides/gimpo-airport-flight-status/", "김포공항 출발·도착 항공편 확인하는 방법"],
+  ["/guides/gimpo-airport-departure-checklist/", "김포공항 가기 전 확인할 것"],
+];
+const kimpoIntents = new Map();
+for (const pathname of [...kimpoCorePages, ...kimpoGuides.map(([route]) => route)]) {
+  const html = readHtml(filePathForPathname(pathname));
+  kimpoIntents.set(pathname, {
+    title: cleanText(getAttribute(html, /<title>([\s\S]*?)<\/title>/i)),
+    h1: cleanText(getAttribute(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i)),
+    description: getMeta(html, "name", "description"),
+  });
+}
+for (const field of ["title", "h1", "description"]) {
+  const values = [...kimpoIntents.values()].map((intent) => intent[field]);
+  assert.ok(values.every(Boolean) && new Set(values).size === values.length, `Kimpo cluster pages need distinct ${field} search intents`);
+}
+for (const [pathname, h1] of kimpoGuides) {
+  const entry = registryEntries.get(pathname);
+  const html = readHtml(filePathForPathname(pathname));
+  const graph = getStaticSchema(html)["@graph"];
+  const url = `${SITE_URL}${pathname}`;
+  assert.deepEqual(
+    { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
+    { status: "active", indexing: "index", sitemap: true, lastmod: "2026-09-28" },
+    `${pathname}: informational guide registry`
+  );
+  assert.equal(getCanonical(html), url);
+  assert.equal(isIndexFollow(html), true);
+  assert.equal(kimpoIntents.get(pathname).h1, h1);
+  assert.equal(locs.filter((loc) => loc === url).length, 1, `${pathname}: sitemap exactly once`);
+  assert.equal(feed.split(`<link>${url}</link>`).length - 1, 1, `${pathname}: feed exactly once`);
+  const webpage = graph.find((node) => node["@id"] === `${url}#webpage`);
+  assert.equal(webpage?.["@type"], "WebPage");
+  assert.equal(webpage?.dateModified, "2026-09-28");
+  assert.equal(webpage?.inLanguage, "ko-KR");
+  assert.deepEqual(webpage?.publisher, { "@id": `${SITE_URL}/#organization` });
+  assert.ok(graph.some((node) => node["@type"] === "BreadcrumbList"));
+  assert.equal(graph.some((node) => node["@type"] === "Product"), false, `${pathname}: informational guide must not invent a Product`);
+  assert.ok(html.includes('href="/gimpo-board/"'), `${pathname}: guide should reach the live board`);
+  assert.match(html, /한국공항공사 제공 자료/, `${pathname}: source attribution should be visible`);
+}
+for (const href of ["/gimpo2/", "/gimpo/pickup/", "/gimpo/"]) {
+  assert.ok(boardHtml.includes(`href="${href}"`), `flight board should link to ${href}`);
+}
+assert.match(boardHtml, /class="board-info"[\s\S]*?김포공항 실시간 항공편 확인[\s\S]*?한국공항공사 제공 자료/);
+assert.equal((boardHtml.match(/class="board-info-questions"[\s\S]*?<\/div>/)?.[0].match(/<article>/g) || []).length, 4, "board should answer four practical flight questions");
+assert.equal(getStaticSchema(boardHtml)["@graph"].some((node) => node["@type"] === "FAQPage"), false, "board Q&A should not add FAQPage markup purely for ranking");
+assert.ok(gimpoHtml.includes('href="/gimpo/pickup/"'), "travel-cookie hub should reach reservation pickup guidance");
+assert.ok(gimpoPickupHtml.includes('href="/gimpo/"'), "pickup guidance should link back to the travel-cookie hub");
+for (const html of [boardHtml, gimpoHtml, gimpo2Html, gimpoPickupHtml]) {
+  assert.match(html, /김포공항 내부가 아닌|김포공항 내부가 아니라/, "Kimpo pages must clarify that NOTHINGMATTERS is outside the airport");
+}
+const guideHubHtml = readHtml(filePathForPathname("/guides/"));
+const guideHubItems = getStaticSchema(guideHubHtml)["@graph"].find((node) => node["@type"] === "ItemList")?.itemListElement || [];
+for (const [pathname] of kimpoGuides) {
+  assert.ok(guideHubHtml.includes(`href=".${pathname.slice(7)}"`), `${pathname}: visible guide directory link`);
+  assert.ok(guideHubItems.some((item) => item.url === `${SITE_URL}${pathname}`), `${pathname}: guide directory ItemList`);
+}
+
 for (const entry of sitePages.pages || []) {
   if (entry.status !== "archive") continue;
   assert.equal(entry.indexing, "noindex", `${entry.path}: archive pages must be noindex in registry`);
@@ -580,8 +641,8 @@ assert.equal(
 assert.match(fs.readFileSync(path.join(ROOT, ".gitignore"), "utf8"), /^_handoff\/$/m, "handoff files must stay out of deploy commits");
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-14<\/lastmod>/,
-  "guides sitemap lastmod should reflect the cookie storage guide entry"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-28<\/lastmod>/,
+  "guides sitemap lastmod should reflect the updated guide directory"
 );
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(

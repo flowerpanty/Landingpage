@@ -23,6 +23,8 @@ const CRITICAL_PATHS = [
   "/magok-cookie/",
   "/guides/",
   "/guides/cookie-storage/",
+  "/guides/gimpo-airport-flight-status/",
+  "/guides/gimpo-airport-departure-checklist/",
   "/works/",
   "/bulk/",
   "/pickup/",
@@ -358,7 +360,7 @@ try {
   assert.equal(gimpoPickupState.bottom, gimpoPickupState.height);
   assert.equal(gimpoPickupState.map, PICKUP_MAP_URL);
   assert.equal(gimpoPickupState.address, "서울 강서구 송정로 25 1층");
-  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-related a')].map((link) => new URL(link.href).pathname)"), ["/gimpo2/", "/gimpo-board/"], "pickup guide should link to the planner and board");
+  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-related a')].map((link) => new URL(link.href).pathname)"), ["/gimpo2/", "/gimpo-board/", "/gimpo/"], "pickup guide should link to the planner, board and travel-cookie hub");
   const gimpoPickupTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .pickup-hero h1, .pickup-hero-copy>p:not(.eyebrow)')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
   assert.ok(gimpoPickupTextClipping.every((element) => !element.clipped), `Gimpo pickup mobile text must fit: ${JSON.stringify(gimpoPickupTextClipping)}`);
   await navigate(cdp, `${server.baseUrl}/gimpo2/`);
