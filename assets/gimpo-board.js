@@ -139,6 +139,23 @@
       /^\d{2}:\d{2}$/.test(row.revisedTime || "") && row.revisedTime !== row.scheduledTime;
   }
 
+  function setTimeMetadata(time, scheduled, row) {
+    const changed = scheduleChanged(row);
+    time.td.classList.toggle("is-revised", changed);
+    scheduled.hidden = !changed;
+    if (changed) {
+      const prefix = document.createElement("span");
+      prefix.className = "changed-time-prefix";
+      prefix.textContent = "변경시간";
+      const original = document.createElement("span");
+      original.textContent = ` · 기존 ${row.scheduledTime}`;
+      scheduled.replaceChildren(prefix, original);
+    } else scheduled.replaceChildren();
+    time.td.setAttribute("aria-label", changed
+      ? `변경된 시간 ${row.revisedTime}, 기존 예정시간 ${row.scheduledTime}`
+      : `시간 ${row.revisedTime || row.scheduledTime || "-"}`);
+  }
+
   function bankCell(field, value, labelText, blank = false) {
     const td = cell("");
     td.dataset.field = field;
@@ -178,9 +195,7 @@
 
     const time = bankCell("time", row.revisedTime || row.scheduledTime || "-", "시간", blank);
     const scheduled = document.createElement("small"); scheduled.className = "flight-cell-sub scheduled-time";
-    scheduled.hidden = !scheduleChanged(row);
-    scheduled.textContent = scheduled.hidden ? "" : `SCH ${row.scheduledTime}`;
-    if (!scheduled.hidden) time.td.setAttribute("aria-label", `변경시간 ${row.revisedTime} 예정시간 ${row.scheduledTime}`);
+    setTimeMetadata(time, scheduled, row);
     time.td.append(scheduled); tr.append(time.td);
     const gate = mobileQuery.matches ? null : bankCell("gate", gateDisplay(row.gate), "게이트", blank);
     if (gate) tr.append(gate.td);
@@ -215,10 +230,7 @@
       const ariaLabel = `${labels[name]} ${value}`;
       if (part.td.getAttribute("aria-label") !== ariaLabel) part.td.setAttribute("aria-label", ariaLabel);
     }
-    const changed = scheduleChanged(row);
-    tr._scheduled.hidden = !changed;
-    tr._scheduled.textContent = changed ? `SCH ${row.scheduledTime}` : "";
-    tr._banks.time.td.setAttribute("aria-label", changed ? `변경시간 ${row.revisedTime} 예정시간 ${row.scheduledTime}` : `시간 ${values.time}`);
+    setTimeMetadata(tr._banks.time, tr._scheduled, row);
     const airline = airlineLabel(row);
     if (tr._airlineName.textContent !== airline) tr._airlineName.textContent = airline;
     if (tr._routeKorean.textContent !== routeSecondaryLabel(endpoint)) tr._routeKorean.textContent = routeSecondaryLabel(endpoint);
