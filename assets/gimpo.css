@@ -198,7 +198,7 @@ body.gimpo-page {
 .info-number { font-size: 11px; font-weight: 900; letter-spacing: .14em; }
 .quick-info strong { font-size: 15px; font-weight: 800; word-break: keep-all; }
 
-.section { width: min(1380px, calc(100% - 64px)); margin: 0 auto; padding: clamp(58px, 6vw, 82px) 0; }
+.section { width: min(1380px, calc(100% - 64px)); margin: 0 auto; padding: clamp(48px, 4.8vw, 64px) 0; }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
 .section-heading h2 { margin-bottom: 0; }
 .section-heading > p { max-width: 310px; margin-bottom: 5px; color: var(--nm-copy); font-size: 15px; line-height: 1.8; }
@@ -216,9 +216,9 @@ body.gimpo-page {
 }
 .cookie-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
 .cookie-card:hover .cookie-image img { transform: scale(1.025); }
-.cookie-image-flight img { object-position: center 45%; }
+.cookie-image-flight img { object-fit: contain; background: var(--nm-white); }
 .cookie-image-terminal img { object-position: center; }
-.cookie-image-airplane img { object-fit: contain; padding: 13px; }
+.cookie-image-airplane img { object-fit: cover; object-position: center; }
 .cookie-card-meta { display: flex; justify-content: space-between; gap: 5px; margin: 10px 0 6px; font-size: 10px; font-weight: 800; letter-spacing: .06em; }
 .cookie-card h3 { margin: 0 0 5px; font-size: clamp(18px, 1.65vw, 22px); font-weight: 900; }
 .cookie-card p { margin: 0 0 7px; color: var(--nm-copy); font-size: 12px; }
@@ -268,7 +268,7 @@ body.gimpo-page {
 .location-details .button-row { gap: 7px; }
 .location-details .button { gap: 5px; padding-inline: 10px; font-size: 12px; }
 .location-photo { margin: 0; }
-.location-photo img { width: 100%; aspect-ratio: 1.25; border: 3px solid var(--nm-black); border-radius: 11px; background: var(--nm-neutral); object-fit: cover; }
+.location-photo img { width: 100%; height: clamp(280px, 27vw, 360px); border: 3px solid var(--nm-black); border-radius: 11px; background: var(--nm-neutral); object-fit: cover; }
 .location-photo figcaption { margin-top: 6px; font-size: 10px; font-weight: 800; letter-spacing: .04em; }
 
 .flow-section { background: var(--nm-white); }
@@ -314,8 +314,8 @@ body.gimpo-page {
 .pickup-steps li > span { color: #327eaf; font-size: 26px; font-weight: 900; }
 .pickup-steps h3 { margin: 0 0 5px; font-size: 23px; font-weight: 900; }
 .pickup-steps li p { margin: 0; color: var(--nm-copy); font-size: 14px; }
-.pickup-products { background: var(--nm-neutral); }
-.pickup-products .section { padding-top: 60px; padding-bottom: 60px; }
+.pickup-products { background: var(--nm-paper); }
+.pickup-products .section { padding-top: 48px; padding-bottom: 48px; }
 .pickup-product-list { border-top: 2px solid var(--nm-black); }
 .pickup-product-list > a { display: grid; grid-template-columns: 80px 1fr 160px 22px; align-items: center; gap: 18px; min-height: 72px; border-bottom: 1px solid #c5c5c1; }
 .pickup-product-list span { font-size: 11px; font-weight: 900; }
@@ -366,7 +366,7 @@ body.gimpo-page {
   .cookies-section .section-heading h2 { font-size: 36px; }
   .desktop-break { display: none; }
   .cookie-image { aspect-ratio: 1; border-radius: 10px; }
-  .cookie-image-airplane img { padding: 5px; }
+  .cookie-image-airplane img { padding: 0; }
   .cookie-card-meta { margin: 8px 0 5px; font-size: 8px; }
   .cookie-card h3 { margin-bottom: 4px; font-size: 16px; line-height: 1.12; }
   .cookie-card p { margin-bottom: 4px; font-size: 11px; line-height: 1.35; }
@@ -413,9 +413,9 @@ body.gimpo-page {
   .moments-grid { gap: 3px 12px; }
   .moments-grid span { font-size: 10px; }
   .moments-grid span:not(:last-child)::after { margin-left: 12px; }
-  .final-inner { padding: 42px 0 90px; }
+  .final-inner { padding: 42px 0; }
   .final-inner h2 { margin-bottom: 19px; font-size: clamp(35px, 9vw, 42px); }
-  .gimpo-footer { flex-wrap: wrap; padding: 22px 14px 98px; }
+  .gimpo-footer { flex-wrap: wrap; padding: 22px 14px calc(78px + env(safe-area-inset-bottom)); }
   .gimpo-footer > span:last-child { display: none; }
   .mobile-sticky {
     position: fixed;
@@ -430,8 +430,8 @@ body.gimpo-page {
     border-top: 2px solid var(--nm-black);
     background: var(--nm-white);
   }
-  .mobile-sticky a { display: flex; align-items: center; justify-content: center; min-height: 46px; border: 2px solid var(--nm-black); border-radius: 6px; font-size: 13px; font-weight: 900; }
-  .mobile-sticky a:last-child { background: var(--nm-black); color: var(--nm-white); }
+  .mobile-sticky a { display: flex; align-items: center; justify-content: center; min-height: 54px; border: 2px solid var(--nm-black); border-radius: 6px; background: var(--nm-white); color: var(--nm-black); font-size: 13px; font-weight: 900; }
+  .mobile-sticky a:last-child { background: #03c75a; color: var(--nm-black); }
   .pickup-alert { display: block; padding: 17px 14px; }
   .pickup-alert span { display: block; margin-bottom: 7px; }
   .pickup-alert strong { display: block; margin-bottom: 7px; font-size: 18px; }
