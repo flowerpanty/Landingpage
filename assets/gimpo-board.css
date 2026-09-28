@@ -1,3 +1,4 @@
+@font-face { font-family: "NmBoardDisplay"; src: url("https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/static/woff2/Pretendard-Black.woff2") format("woff2"); font-weight: 900; font-display: swap; }
 :root { --yellow: #f7cf33; --black: #131313; --paper: #e8e4d8; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -46,6 +47,7 @@ a { color: inherit; }
 .board-lines input:focus-visible + span { outline: 3px solid var(--yellow); outline-offset: 2px; }
 .search-sheet-body p { color: #b8b0a2; font-size: 12px; }
 #board-search-done { width: 100%; min-height: 55px; margin-top: 16px; border: 2px solid #111; border-radius: 11px; background: var(--yellow); color: #111; font-weight: 900; }
+.search-done-mobile { display: none; }
 
 /* Flight detail dialog. */
 .flight-detail { border: 4px solid var(--black); background: #f4f0e6; color: var(--black); padding: 0; width: min(540px, calc(100% - 24px)); max-height: min(80vh, 720px); box-shadow: 10px 10px 0 var(--yellow); }
@@ -62,12 +64,28 @@ a { color: inherit; }
 .flight-detail > p { margin: 20px; font-size: 12px; color: #555; }
 
 @media (max-width: 760px) {
+  html:has(.flight-search-sheet[open]) { overflow: hidden; }
   .brand-section { width: calc(100% - 24px); margin: 65px auto; display: block; }
   .brand-content h2 { font-size: 36px; }
   .brand-photos { margin-top: 25px; }
   .brand-photos img { height: 190px; }
   .board-footer { padding: 22px 12px; font-size: 10px; }
-  .search-sheet-body { padding: 17px; }
+  .flight-search-sheet { width: calc(100% - 8px); max-width: none; max-height: 70dvh; margin: 0 4px; border-radius: 18px 18px 0 0; overflow-y: auto; overscroll-behavior: contain; }
+  .flight-search-sheet::before { margin-top: 8px; }
+  .search-sheet-head { min-height: 60px; padding: 10px 16px 5px; }
+  .search-sheet-head p { display: none; }
+  .search-sheet-head h2 { font-size: 23px; }
+  .search-sheet-head button { flex: none; width: 44px; height: 44px; }
+  .search-sheet-body { padding: 8px 16px max(14px, env(safe-area-inset-bottom)); }
+  .board-search span { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .board-search input { min-height: 52px; margin-top: 0; font-size: 16px; }
+  .board-lines { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; margin-top: 13px; }
+  .board-lines legend { margin-bottom: 7px; }
+  .board-lines span { display: grid; place-items: center; min-height: 44px; padding: 8px 3px; }
+  .search-sheet-body p { display: none; }
+  #board-search-done { min-height: 52px; margin-top: 15px; }
+  .search-done-desktop { display: none; }
+  .search-done-mobile { display: inline; }
   .flight-detail { margin: auto 12px 0; width: calc(100% - 24px); max-height: 85vh; box-shadow: none; border-bottom: 0; position: fixed; inset: auto 0 0; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

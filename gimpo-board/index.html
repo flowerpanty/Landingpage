@@ -257,14 +257,14 @@
   <dialog id="flight-search-sheet" class="flight-search-sheet" aria-labelledby="flight-search-title">
     <div class="search-sheet-head"><div><p>GMP · FLIGHT FINDER</p><h2 id="flight-search-title">FLIGHT SEARCH</h2></div><button id="board-search-close" type="button" aria-label="검색 닫기">×</button></div>
     <div class="search-sheet-body">
-      <label class="board-search" for="flight-search">항공편명 · 목적지 · 출발지 · 항공사 검색<input id="flight-search" type="search" placeholder="항공편명 · 목적지 · 출발지 · 항공사 검색" autocomplete="off" maxlength="80"></label>
+      <label class="board-search" for="flight-search"><span>항공편명 · 목적지 · 출발지 · 항공사 검색</span><input id="flight-search" type="search" placeholder="편명 · 목적지 · 출발지 · 항공사" autocomplete="off" maxlength="80"></label>
       <fieldset class="board-lines"><legend>노선 선택</legend>
         <label><input type="radio" name="board-line" value="all" checked><span>전체</span></label>
         <label><input type="radio" name="board-line" value="domestic"><span>국내선</span></label>
         <label><input type="radio" name="board-line" value="international"><span>국제선</span></label>
       </fieldset>
       <p>검색과 노선 선택은 현재 전광판에 바로 반영됩니다.</p>
-      <button id="board-search-done" type="button">⌕ 검색</button>
+      <button id="board-search-done" type="button"><span class="search-done-desktop">⌕ 검색</span><span class="search-done-mobile">검색 결과 보기</span></button>
     </div>
   </dialog>
 

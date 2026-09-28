@@ -38,6 +38,7 @@
   let requestNumber = 0;
   let lastTrigger = null;
   let hasLoadedRows = false;
+  let hasPlayedInitialFlapReveal = false;
   let initialFlight = flights.flightQuery();
   let searchTerm = "";
   let searchTimer;
@@ -91,7 +92,7 @@
   }
 
   function compactPlace(place) {
-    const known = { CJU: "JEJU", PUS: "BUSAN/PUS", HND: "TOKYO/HND", KIX: "OSAKA/KIX", TSA: "TAIPEI/TSA", GMP: "GIMPO" };
+    const known = { CJU: "JEJU", PUS: "BUSAN/PUS", HND: "TOKYO/HND", KIX: "OSAKA/KIX", TSA: "TAIPEI/TSA", FUK: "FUKUOKA", DLC: "DALIAN/DLC", GMP: "GIMPO" };
     const code = String(place?.code || "").toUpperCase();
     if (known[code]) return known[code];
     const english = String(place?.en || "").toUpperCase().trim();
@@ -103,13 +104,29 @@
   }
 
   function compactStatus(value) {
-    const full = String(value || "-").toUpperCase().trim();
-    if (/^[A-Z /-]+$/.test(full) && full.length <= MOBILE_BANK_WIDTHS.status) return full;
-    return "DETAIL";
+    const full = String(value || "").toUpperCase().trim().replace(/\s+/g, " ");
+    // Preserve the provider's full status in aria/detail; only the mechanical display is shortened.
+    const known = {
+      "FINAL BOARDING": "BOARDING", "NOW BOARDING": "BOARDING", "BOARDING NOW": "BOARDING",
+      "ON SCHEDULE": "ON TIME", "DELAY": "DELAYED", "DELAYED DEPARTURE": "DELAYED",
+      "DEPARTURE COMPLETED": "DEPARTED", "ARRIVAL COMPLETED": "ARRIVED",
+      "CANCELED": "CANCELLED"
+    };
+    if (known[full]) return known[full];
+    return /^[A-Z0-9 /-]+$/.test(full) && full.length <= MOBILE_BANK_WIDTHS.status ? full : "CHECK";
   }
 
   function routeValue(place) { return mobileQuery.matches ? compactPlace(place) : mechanicalPlace(place); }
   function statusValue(value) { return mobileQuery.matches ? compactStatus(value) : value || "-"; }
+  function airlineLabel(row) {
+    const name = row.airline.en || row.airline.ko || "—";
+    return mobileQuery.matches ? `${name} · ${row.lineType === "international" ? "INT" : "DOM"}` : name;
+  }
+  function routeSecondaryLabel(place) {
+    const name = place?.ko || "";
+    const code = String(place?.code || "").toUpperCase();
+    return mobileQuery.matches ? [name, /^[A-Z]{3}$/.test(code) ? code : ""].filter(Boolean).join(" · ") : name;
+  }
 
   function gateDisplay(gate) {
     if (!gate) return "--";
@@ -117,22 +134,28 @@
     return /^\d$/.test(value) ? value.padStart(2, "0") : value;
   }
 
-  function bankCell(field, value, labelText, className = "") {
-    const td = cell("", className);
+  function scheduleChanged(row) {
+    return /^\d{2}:\d{2}$/.test(row.scheduledTime || "") &&
+      /^\d{2}:\d{2}$/.test(row.revisedTime || "") && row.revisedTime !== row.scheduledTime;
+  }
+
+  function bankCell(field, value, labelText, blank = false) {
+    const td = cell("");
     td.dataset.field = field;
     td.setAttribute("role", "cell");
     td.setAttribute("aria-label", `${labelText} ${value}`);
-    const bank = flap.createFlapBank(value, `flap-bank--${field}`, (mobileQuery.matches ? MOBILE_BANK_WIDTHS : BANK_WIDTHS)[field]);
+    const width = (mobileQuery.matches ? MOBILE_BANK_WIDTHS : BANK_WIDTHS)[field];
+    const bank = flap.createFlapBank(blank ? " ".repeat(width) : value, `flap-bank--${field}`, width);
     bank.setAttribute("aria-hidden", "true");
     td.append(bank);
-    return { td, bank };
+    return { td, bank, targetValue: value };
   }
 
-  function flightRow(row) {
+  function flightRow(row, blank = false) {
     const tr = document.createElement("tr");
     tr.setAttribute("role", "row");
     tr.dataset.flightId = row.id;
-    const flight = bankCell("flight", row.flightNumber, "편명");
+    const flight = bankCell("flight", row.flightNumber, "편명", blank);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "flight-number";
@@ -143,20 +166,25 @@
     tr.append(flight.td);
 
     const airlineName = document.createElement("small"); airlineName.className = "airline-name";
-    airlineName.textContent = row.airline.en || row.airline.ko || "—";
+    airlineName.textContent = airlineLabel(row);
     flight.td.append(airlineName);
 
     const endpoint = type === "departure" ? row.destination : row.origin;
-    const route = bankCell("route", routeValue(endpoint), type === "departure" ? "목적지" : "출발지");
+    const route = bankCell("route", routeValue(endpoint), type === "departure" ? "목적지" : "출발지", blank);
     const routeKorean = document.createElement("small"); routeKorean.className = "flight-cell-sub route-korean";
-    routeKorean.textContent = endpoint.ko || "";
+    routeKorean.textContent = routeSecondaryLabel(endpoint);
     route.td.setAttribute("aria-label", `${type === "departure" ? "목적지" : "출발지"} ${mechanicalPlace(endpoint)} ${endpoint.ko || ""}`.trim());
     route.td.append(routeKorean); tr.append(route.td);
 
-    const time = bankCell("time", row.revisedTime || row.scheduledTime || "-", "시간"); tr.append(time.td);
-    const gate = mobileQuery.matches ? null : bankCell("gate", gateDisplay(row.gate), "게이트");
+    const time = bankCell("time", row.revisedTime || row.scheduledTime || "-", "시간", blank);
+    const scheduled = document.createElement("small"); scheduled.className = "flight-cell-sub scheduled-time";
+    scheduled.hidden = !scheduleChanged(row);
+    scheduled.textContent = scheduled.hidden ? "" : `SCH ${row.scheduledTime}`;
+    if (!scheduled.hidden) time.td.setAttribute("aria-label", `변경시간 ${row.revisedTime} 예정시간 ${row.scheduledTime}`);
+    time.td.append(scheduled); tr.append(time.td);
+    const gate = mobileQuery.matches ? null : bankCell("gate", gateDisplay(row.gate), "게이트", blank);
     if (gate) tr.append(gate.td);
-    const status = bankCell("status", statusValue(row.status.en), "운항상태");
+    const status = bankCell("status", statusValue(row.status.en), "운항상태", blank);
     status.td.dataset.status = (row.status.en || "").toUpperCase();
     const statusKorean = document.createElement("small"); statusKorean.className = "flight-cell-sub status-korean";
     statusKorean.textContent = row.status.ko || "";
@@ -167,11 +195,12 @@
     tr._airlineName = airlineName;
     tr._routeKorean = routeKorean;
     tr._statusKorean = statusKorean;
+    tr._scheduled = scheduled;
     tr.addEventListener("click", (event) => { if (!event.target.closest("button")) openDetail(tr._row, button); });
     return tr;
   }
 
-  function updateRow(tr, row, rowIndex, animate) {
+  function updateRow(tr, row) {
     if (tr._row === row) return;
     const endpoint = type === "departure" ? row.destination : row.origin;
     const values = {
@@ -179,17 +208,20 @@
       gate: gateDisplay(row.gate), status: statusValue(row.status.en)
     };
     const labels = { flight: "편명", route: type === "departure" ? "목적지" : "출발지", time: "시간", gate: "게이트", status: "운항상태" };
-    const rowDelay = Math.min(rowIndex * 30 + Math.floor(Math.random() * 15), 250);
     for (const [name, value] of Object.entries(values)) {
       const part = tr._banks[name];
       if (!part) continue;
-      if (part.bank.dataset.value !== value) flap.setFlapValue(part.bank, value, { animate, rowDelay, onStep: flap.tick });
+      if (part.bank.dataset.value !== value) flap.setFlapValue(part.bank, value, { animate: false });
       const ariaLabel = `${labels[name]} ${value}`;
       if (part.td.getAttribute("aria-label") !== ariaLabel) part.td.setAttribute("aria-label", ariaLabel);
     }
-    const airline = row.airline.en || row.airline.ko || "—";
+    const changed = scheduleChanged(row);
+    tr._scheduled.hidden = !changed;
+    tr._scheduled.textContent = changed ? `SCH ${row.scheduledTime}` : "";
+    tr._banks.time.td.setAttribute("aria-label", changed ? `변경시간 ${row.revisedTime} 예정시간 ${row.scheduledTime}` : `시간 ${values.time}`);
+    const airline = airlineLabel(row);
     if (tr._airlineName.textContent !== airline) tr._airlineName.textContent = airline;
-    if (tr._routeKorean.textContent !== (endpoint.ko || "")) tr._routeKorean.textContent = endpoint.ko || "";
+    if (tr._routeKorean.textContent !== routeSecondaryLabel(endpoint)) tr._routeKorean.textContent = routeSecondaryLabel(endpoint);
     if (tr._statusKorean.textContent !== (row.status.ko || "")) tr._statusKorean.textContent = row.status.ko || "";
     const routeLabel = `${labels.route} ${mechanicalPlace(endpoint)} ${endpoint.ko || ""}`.trim();
     if (tr._banks.route.td.getAttribute("aria-label") !== routeLabel) tr._banks.route.td.setAttribute("aria-label", routeLabel);
@@ -207,14 +239,6 @@
     const matching = rows.filter((row) => (line === "all" || row.lineType === line) && flights.matches(row, query));
     const relevant = query ? matching : matching.filter((row) => inTimeWindow(row, nowMinutes));
     const visible = relevant.slice(0, pageSize() * (1 + extraPages));
-    const onscreenRows = new Set();
-    if (dataUpdate) {
-      for (const tr of rowElements.values()) {
-        if (!tr.isConnected) continue;
-        const bounds = tr.getBoundingClientRect();
-        if (bounds.bottom >= 0 && bounds.top <= window.innerHeight) onscreenRows.add(tr);
-      }
-    }
     count.textContent = `${visible.length} / ${relevant.length} FLIGHTS`;
     moreButton.hidden = visible.length >= relevant.length;
     if (!moreButton.hidden) moreButton.textContent = `다음 항공편 보기 (${relevant.length - visible.length}편 남음)`;
@@ -230,20 +254,13 @@
       const currentIds = new Set(rows.map((row) => row.id));
       for (const id of rowElements.keys()) if (!currentIds.has(id)) rowElements.delete(id);
     }
-    const initial = rowElements.size === 0 && !hasLoadedRows;
+    const reveal = dataUpdate && !hasPlayedInitialFlapReveal && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const elements = visible.map((row, index) => {
       let tr = rowElements.get(row.id);
       if (!tr) {
-        tr = flightRow(row);
+        tr = flightRow(row, reveal);
         rowElements.set(row.id, tr);
-        if (dataUpdate && index < 10) {
-          tr.classList.add("is-entering");
-          const delay = Math.min(index * 30, initial ? 600 : 150);
-          tr.style.setProperty("--row-delay", `${delay}ms`);
-          tr.addEventListener("animationend", () => tr.classList.remove("is-entering"), { once: true });
-          setTimeout(() => tr.classList.remove("is-entering"), delay + 280);
-        }
-      } else updateRow(tr, row, index, dataUpdate && onscreenRows.has(tr));
+      } else updateRow(tr, row);
       return tr;
     });
     if (rowsElement.children.length !== elements.length || elements.some((tr, index) => rowsElement.children[index] !== tr)) {
@@ -251,6 +268,26 @@
     }
     const displayedIds = new Set(visible.map((row) => row.id));
     for (const id of rowElements.keys()) if (!displayedIds.has(id)) rowElements.delete(id);
+    if (!hasPlayedInitialFlapReveal) {
+      hasPlayedInitialFlapReveal = true;
+      if (reveal) {
+        const slots = elements.flatMap((tr) => [...tr.querySelectorAll(".flap-slot")]);
+        performance.mark("gimpo-board-initial-blank", {
+          detail: { rows: elements.length, blankSlots: slots.filter((slot) => slot.dataset.char === " ").length, slots: slots.length }
+        });
+        setTimeout(() => {
+          let changedSlots = 0;
+          elements.forEach((tr, rowIndex) => {
+            if (!tr.isConnected) return;
+            for (const part of Object.values(tr._banks)) {
+              if (part && !part.bank.dataset.value.trim()) changedSlots += flap.setFlapValue(part.bank, part.targetValue, { animate: true, rowDelay: rowIndex * 50, charStagger: 20 });
+            }
+          });
+          performance.mark("gimpo-board-initial-flip", { detail: { changedSlots } });
+          setTimeout(() => performance.mark("gimpo-board-initial-settled"), 1100);
+        }, 50);
+      }
+    }
     if (dataUpdate && !hasLoadedRows) performance.mark("gimpo-board-first-render");
   }
 
@@ -311,7 +348,7 @@
       }
       if (!hasLoadedRows) {
         hasLoadedRows = true;
-        setTimeout(() => { loader.hidden = true; }, 500);
+        loader.hidden = true;
       }
     } catch {
       if (seq !== requestNumber) return;
@@ -376,9 +413,19 @@
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => { searchTerm = searchInput.value; extraPages = 0; render(); }, 180);
   });
-  searchOpen.addEventListener("click", () => { searchSheet.showModal(); searchInput.focus(); });
+  searchOpen.addEventListener("click", () => {
+    searchSheet.showModal();
+    if (mobileQuery.matches) searchClose.focus({ preventScroll: true });
+    else searchInput.focus();
+  });
   searchClose.addEventListener("click", () => searchSheet.close());
-  searchDone.addEventListener("click", () => searchSheet.close());
+  searchDone.addEventListener("click", () => {
+    clearTimeout(searchTimer);
+    searchTerm = searchInput.value;
+    extraPages = 0;
+    render();
+    searchSheet.close();
+  });
   searchSheet.addEventListener("close", () => searchOpen.focus());
   document.querySelectorAll('input[name="board-line"]').forEach((input) => input.addEventListener("change", () => {
     clearTimeout(searchTimer); searchTerm = searchInput.value; extraPages = 0; render();

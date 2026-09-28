@@ -97,7 +97,7 @@
       ALPHABET[(oldIndex + index + 1) % ALPHABET.length]), to];
   }
 
-  function setFlapValue(bank, value, { animate = true, rowDelay = 0, onStep } = {}) {
+  function setFlapValue(bank, value, { animate = true, rowDelay = 0, charStagger = 30, onStep } = {}) {
     const next = normalise(value);
     if (bank.dataset.value === next) return 0;
     const fixedWidth = Number(bank.dataset.fixedWidth) || 0;
@@ -115,7 +115,7 @@
       changed += 1;
       if (!animate || REDUCED_MOTION.matches) { settle(slot, target); return; }
       sequence(slot.dataset.char, target).forEach((char, stepIndex) => {
-        slot._timers.push(setTimeout(() => step(slot, char, onStep), rowDelay + (index % 5) * 30 + stepIndex * STEP_INTERVAL_MS));
+        slot._timers.push(setTimeout(() => step(slot, char, onStep), rowDelay + (index % 5) * charStagger + stepIndex * STEP_INTERVAL_MS));
       });
     });
     if (!fixedWidth && oldLength > next.length) {
