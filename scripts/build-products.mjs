@@ -400,16 +400,26 @@ function upsertExistingProductMetadata(html, product) {
     .replace(/[ \t]+(?=\r?\n)/g, "");
 }
 
+function syncExistingProductOrderLinks(html, product) {
+  return html.replace(/<a\b[^>]*>/gi, (tag) => {
+    if (!/\bdata-analytics-event=(["'])order_start\1/i.test(tag)) return tag;
+    if (!/\shref=(["'])[^"']*\1/i.test(tag)) {
+      throw new Error(`${product.detailPath} order_start CTA is missing an href`);
+    }
+    return tag.replace(/(\s)href=(["'])[^"']*\2/i, (_, space, quote) => `${space}href=${quote}${escapeHtml(product.orderUrl)}${quote}`);
+  });
+}
+
 function buildExistingProductPages() {
   products
     .filter((product) => product.detailPageMode === "existing")
     .forEach((product) => {
       const outputPath = path.join(ROOT, product.detailPath.slice(1), "index.html");
       const current = fs.readFileSync(outputPath, "utf8");
-      const expected = upsertExistingProductMetadata(current, product);
+      const expected = syncExistingProductOrderLinks(upsertExistingProductMetadata(current, product), product);
 
       if (isCheckMode) {
-        if (expected !== current) throw new Error(`${product.detailPath} existing product metadata is out of date`);
+        if (expected !== current) throw new Error(`${product.detailPath} existing product metadata or order CTA is out of date`);
         return;
       }
 
