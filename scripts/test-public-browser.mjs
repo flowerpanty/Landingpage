@@ -338,7 +338,7 @@ try {
   assert.equal(gimpoState.productImages, true, "all three product images should load");
   assert.equal(gimpoState.sound.contextCreated, false, "Gimpo design board must not auto-play sound");
   assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-tools a')].map((link) => new URL(link.href).pathname)"), ["/gimpo-board/", "/gimpo2/"], "Gimpo cookie hub should expose both flight tools");
-  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('.gimpo-faq article').length"), 3, "Gimpo cookie hub should show three visible pickup answers");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('.gimpo-faq article').length"), 5, "Gimpo cookie hub should retain three pickup answers and show two flight answers");
   const gimpoTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .hero-copy h1, .hero-description')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
   assert.ok(gimpoTextClipping.every((element) => !element.clipped), `Gimpo mobile text must fit: ${JSON.stringify(gimpoTextClipping)}`);
   await evaluate(cdp, "() => { document.getElementById('gimpo-board-change').click(); return true; }");
@@ -370,6 +370,7 @@ try {
   assert.equal(gimpo2FirstView.tabs.length, 2);
   assert.ok(gimpo2FirstView.searchVisible && gimpo2FirstView.documentWidth <= gimpo2FirstView.viewport, "Gimpo2 mobile search should fit in the first viewport");
   assert.equal(gimpo2FirstView.boardHref, "/gimpo-board/");
+  assert.deepEqual(await evaluate(cdp, "() => ({ heading: document.getElementById('live-title').textContent.trim(), answers: document.querySelectorAll('.flight-answers article').length, board: new URL(document.querySelector('.flight-answers a').href).pathname, overflow: document.documentElement.scrollWidth > innerWidth })"), { heading: "김포공항 출발·도착 항공편 선택", answers: 3, board: "/gimpo-board/", overflow: false }, "planner should expose concise arrival answers without mobile overflow");
   assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.planner-links a')].map((link) => new URL(link.href).pathname)"), ["/gimpo/pickup/", "/gimpo/"], "planner should lead to booking guidance and the cookie hub");
   fs.writeFileSync("/private/tmp/nothingmatters-gimpo2-mobile.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
   await navigate(cdp, `${server.baseUrl}/gimpo2/?flight=RS901`);
@@ -402,7 +403,7 @@ try {
   const revealTiming = await evaluate(cdp, "() => performance.getEntriesByName('gimpo-board-initial-settled')[0].startTime - performance.getEntriesByName('gimpo-board-initial-blank')[0].startTime");
   assert.ok(revealTiming <= 1400, `initial physical reveal must finish within 1.4 seconds, got ${revealTiming}ms`);
   const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.brand-actions a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
-  assert.equal(boardMobile.title, "김포공항 실시간 항공편");
+  assert.equal(boardMobile.title, "김포공항 도착정보·출발정보 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
   assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION"], `board mobile columns at viewport ${boardMobile.viewport}`);
   assert.deepEqual(boardMobile.links, ["/gimpo2/", "/gimpo/"]);
