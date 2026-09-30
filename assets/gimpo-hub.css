@@ -49,12 +49,14 @@
 .gimpo-hub-page .hub-situation-list article > span { padding-top: 4px; font-size: 11px; font-weight: 900; letter-spacing: .06em; }
 .gimpo-hub-page .hub-situation-list h3 { margin: 0 0 7px; }
 .gimpo-hub-page .hub-situation-list p { margin: 0; font-size: 14px; line-height: 1.65; }
-.gimpo-hub-page .hub-products { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+.gimpo-hub-page .hub-products { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 18px; }
 .gimpo-hub-page .hub-products article { min-width: 0; }
-.gimpo-hub-page .hub-products a { display: block; height: 100%; }
-.gimpo-hub-page .hub-products img { width: 100%; aspect-ratio: 1.18; object-fit: cover; border: 3px solid #111; border-radius: 12px; }
-.gimpo-hub-page .hub-products h3 { margin: 13px 0 5px; }
-.gimpo-hub-page .hub-products p { margin: 0 0 8px; font-size: 14px; }
+.gimpo-hub-page .hub-products a { display: block; }
+.gimpo-hub-page .hub-product-media { width: 100%; aspect-ratio: 1 / 1; margin: 0; overflow: hidden; border: 3px solid #111; border-radius: 11px; background: #f7f7f5; }
+.gimpo-hub-page .hub-product-media img { display: block; box-sizing: border-box; width: 100%; height: 100%; object-fit: contain; }
+.gimpo-hub-page .hub-products article:first-child img { padding: 9px; }
+.gimpo-hub-page .hub-products h3 { margin: 12px 0 5px; font-size: 20px; line-height: 1.12; }
+.gimpo-hub-page .hub-products p { margin: 0 0 8px; font-size: 14px; line-height: 1.4; }
 .gimpo-hub-page .hub-products a > span { font-size: 13px; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
 .gimpo-hub-page .hub-memory { background: #ddf0ff; }
 .gimpo-hub-page .hub-souvenir { display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 45px; }
@@ -127,10 +129,12 @@
   .gimpo-hub-page .hub-situation-list h3 { margin-bottom: 5px; font-size: 17px; }
   .gimpo-hub-page .hub-situation-list p { font-size: 12px; line-height: 1.5; }
   .gimpo-hub-page .hub-dessert { padding-bottom: 36px; }
-  .gimpo-hub-page .hub-products { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin-right: calc(var(--hub-gutter) * -1); padding-right: var(--hub-gutter); scrollbar-width: thin; }
-  .gimpo-hub-page .hub-products article { flex: 0 0 min(80%, 310px); scroll-snap-align: start; }
-  .gimpo-hub-page .hub-products img { aspect-ratio: 1.22; }
-  .gimpo-hub-page .hub-products h3 { font-size: 20px; }
+  .gimpo-hub-page .hub-products { grid-template-columns: repeat(2, minmax(0,1fr)); column-gap: 12px; row-gap: 26px; }
+  .gimpo-hub-page .hub-product-media { border-radius: 9px; }
+  .gimpo-hub-page .hub-products article:first-child img { padding: 7px; }
+  .gimpo-hub-page .hub-products h3 { margin-top: 9px; font-size: 16px; line-height: 1.12; }
+  .gimpo-hub-page .hub-products p { margin-bottom: 6px; font-size: 12px; line-height: 1.35; }
+  .gimpo-hub-page .hub-products a > span { font-size: 12px; }
   .gimpo-hub-page .hub-notice { display: block; margin-top: 26px; padding-top: 18px; }
   .gimpo-hub-page .hub-notice h2 { font-size: 30px; }
   .gimpo-hub-page .hub-notice p:last-child { font-size: 14px; }
@@ -156,5 +160,4 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .gimpo-hub-page .hub-button { transition: none; }
-  .gimpo-hub-page .hub-products { scroll-behavior: auto; }
 }

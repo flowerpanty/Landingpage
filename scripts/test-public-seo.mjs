@@ -426,14 +426,16 @@ const gimpoFaq = gimpoGraph.find((node) => node["@type"] === "FAQPage");
 assert.equal(gimpoFaq?.mainEntity.length, 5, "hub FAQPage must match five visible questions");
 assert.deepEqual(gimpoFaq.mainEntity.map((item) => item.name), [...gimpoHtml.matchAll(/<summary>([^<]+)<\/summary>/g)].map((match) => match[1]));
 assert.deepEqual(gimpoFaq.mainEntity.map((item) => item.acceptedAnswer.text), [...gimpoHtml.matchAll(/<details><summary>[^<]+<\/summary><p>([^<]+)<\/p><\/details>/g)].map((match) => match[1]));
+assert.match(gimpoFaq.mainEntity.find((item) => item.name === "김포공항 선물로 어떤 쿠키가 있나요?")?.acceptedAnswer.text || "", /COOKIE FLIGHT, TERMINAL SAND COOKIE, AIRPLANE BUTTER COOKIE, COOKIE CREW/);
 assert.deepEqual(gimpoGraph.find((node) => node["@type"] === "CollectionPage")?.about, { "@id": `${SITE_URL}/#localbusiness` });
 const gimpoItemList = gimpoGraph.find((node) => node["@type"] === "ItemList");
 assert.deepEqual(gimpoItemList?.itemListElement?.map((item) => [item.name, item.url]), [
   ["COOKIE FLIGHT", `${SITE_URL}/products/cookie-flight/`],
   ["TERMINAL SAND COOKIE", `${SITE_URL}/products/terminal-sand-cookie/`],
+  ["AIRPLANE BUTTER COOKIE", `${SITE_URL}/products/airplane-cookie/`],
   ["COOKIE CREW", `${SITE_URL}/cookie-crew/`],
 ]);
-assert.equal((gimpoHtml.match(/<div class="hub-products">[\s\S]*?<\/div>/)?.[0].match(/<article>/g) || []).length, 3, "hub must show only verified products");
+assert.equal((gimpoHtml.match(/<div class="hub-products">[\s\S]*?<\/div>/)?.[0].match(/<article>/g) || []).length, 4, "hub must show exactly four verified products");
 assert.equal(gimpoGraph.some((node) => node["@type"] === "Product"), false);
 const gimpo2Html = readHtml(filePathForPathname("/gimpo2/"));
 const gimpo2Entry = registryEntries.get("/gimpo2/");

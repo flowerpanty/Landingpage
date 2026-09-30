@@ -61,6 +61,7 @@ const ITEM_LISTS = {
   "/gimpo/": [
     ["COOKIE FLIGHT", "/products/cookie-flight/"],
     ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/"],
+    ["AIRPLANE BUTTER COOKIE", "/products/airplane-cookie/"],
     ["COOKIE CREW", "/cookie-crew/"],
   ],
   "/": [

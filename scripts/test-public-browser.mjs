@@ -297,17 +297,16 @@ async function verifyGimpoHub(cdp, width) {
       viewport: innerWidth, documentWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth,
       title: document.title, canonical: document.querySelector('link[rel=canonical]').href,
       h1s: [...document.querySelectorAll('h1')].map((node) => node.textContent.trim()),
-      headingWeights: [...document.querySelectorAll('h1,h2,h3')].map((node) => style('h1').fontWeight && getComputedStyle(node).fontWeight),
+      headingWeights: [...document.querySelectorAll('h1,h2,h3')].map((node) => getComputedStyle(node).fontWeight),
       intents: intentLinks.map((link) => ({ hash: link.hash, target: Boolean(document.querySelector(link.hash)), height: link.getBoundingClientRect().height })),
       products: productLinks.map((link) => new URL(link.href).pathname),
-      productImages: productLinks.map((link) => ({ border: parseFloat(getComputedStyle(link.querySelector('img')).borderTopWidth), color: getComputedStyle(link.querySelector('img')).borderTopColor })),
-      cardsBorderless: [...document.querySelectorAll('.hub-products article')].every((card) => parseFloat(getComputedStyle(card).borderTopWidth) === 0 && getComputedStyle(card).boxShadow === 'none'),
+      productCards: productLinks.map((link) => { const card = link.closest('article'); const media = link.querySelector('.hub-product-media'); const image = media.querySelector('img'); const title = link.querySelector('h3'); return { card: card.getBoundingClientRect().toJSON(), frame: media.getBoundingClientRect().toJSON(), image: image.getBoundingClientRect().toJSON(), title: title.getBoundingClientRect().toJSON(), titleClipped: title.scrollWidth > title.clientWidth + 1, border: parseFloat(getComputedStyle(media).borderTopWidth), borderColor: getComputedStyle(media).borderTopColor, fit: getComputedStyle(image).objectFit, cardBorder: parseFloat(getComputedStyle(card).borderTopWidth), cardBackground: getComputedStyle(card).backgroundColor, cardShadow: getComputedStyle(card).boxShadow }; }),
       heroBorder: parseFloat(style('.hub-hero-image img').borderTopWidth), heroImage: rect('.hub-hero-image img').toJSON(),
       heroPadding: [parseFloat(style('.hub-hero').paddingTop), parseFloat(style('.hub-hero').paddingBottom)],
       groupPaddings: [...document.querySelectorAll('.hub-group')].map((node) => [parseFloat(getComputedStyle(node).paddingTop),parseFloat(getComputedStyle(node).paddingBottom)]),
       searchColumns: style('.hub-intents').gridTemplateColumns.trim().split(/\\s+/).length,
       productDisplay: style('.hub-products').display, productColumns: style('.hub-products').gridTemplateColumns.trim().split(/\\s+/).length,
-      productPeek: document.querySelector('.hub-products article').getBoundingClientRect().width / rect('.hub-products').width,
+      productRowGap: parseFloat(style('.hub-products').rowGap), productSectionOverflow: document.querySelector('.hub-dessert').scrollWidth > document.querySelector('.hub-dessert').clientWidth + 1,
       faqCount: document.querySelectorAll('.hub-faq details').length,
       notice: document.getElementById('notice-title').textContent.trim(),
       address: document.querySelector('.hub-location address').textContent.trim(),
@@ -327,9 +326,14 @@ async function verifyGimpoHub(cdp, width) {
   assert.ok(state.headingWeights.every((weight) => weight === "900"), `hub headings must be black bold: ${JSON.stringify(state.headingWeights)}`);
   assert.deepEqual(state.intents.map((item) => item.hash), ["#gift", "#souvenir", "#dessert", "#cookie", "#domestic", "#crew"]);
   assert.ok(state.intents.every((item) => item.target && item.height >= 44));
-  assert.deepEqual(state.products, ["/products/cookie-flight/", "/products/terminal-sand-cookie/", "/cookie-crew/"]);
-  assert.ok(state.productImages.every((item) => item.border >= 2.5 && item.color === "rgb(17, 17, 17)"));
-  assert.ok(state.cardsBorderless && state.heroBorder >= 2.5);
+  assert.deepEqual(state.products, ["/products/cookie-flight/", "/products/terminal-sand-cookie/", "/products/airplane-cookie/", "/cookie-crew/"]);
+  assert.equal(state.productDisplay, "grid");
+  assert.equal(state.productSectionOverflow, false);
+  assert.ok(state.productCards.every(({ card, frame, image, title, titleClipped, border, borderColor, fit, cardBorder, cardBackground, cardShadow }) =>
+    border >= 2.5 && borderColor === "rgb(17, 17, 17)" && fit === "contain" && cardBorder === 0 && cardBackground === "rgba(0, 0, 0, 0)" && cardShadow === "none" && !titleClipped &&
+    image.left >= frame.left - 1 && image.right <= frame.right + 1 && image.top >= frame.top - 1 && image.bottom <= frame.bottom + 1 && title.top >= frame.bottom && card.width > 0));
+  assert.ok(Math.max(...state.productCards.map((item) => item.frame.height)) - Math.min(...state.productCards.map((item) => item.frame.height)) <= 1, "product image frames should match in height");
+  assert.ok(state.heroBorder >= 2.5);
   assert.equal(state.faqCount, 5);
   assert.equal(state.notice, "김포공항 안에서 판매하지 않습니다.");
   assert.equal(state.address, "서울특별시 강서구 송정로 25 1층");
@@ -342,8 +346,10 @@ async function verifyGimpoHub(cdp, width) {
     assert.ok(state.groupPaddings.every(([top, bottom]) => top <= 56 && bottom <= 56));
     assert.ok(state.heroImage.height < 330, `hub hero image should stay compact: ${JSON.stringify(state.heroImage)}`);
     assert.equal(state.searchColumns, 2);
-    assert.equal(state.productDisplay, "flex");
-    assert.ok(state.productPeek >= .75 && state.productPeek <= .85);
+    assert.equal(state.productColumns, 2);
+    assert.ok(state.productRowGap <= 30);
+    assert.ok(Math.abs(state.productCards[0].frame.width - state.productCards[1].frame.width) <= 1);
+    assert.ok(Math.abs(state.productCards[0].frame.top - state.productCards[1].frame.top) <= 1 && state.productCards[2].frame.top > state.productCards[0].card.bottom, "mobile products should form two rows without overlap");
     assert.equal(state.stickyPosition, "fixed");
     assert.deepEqual(state.sticky.map(({ text, href, background }) => [text, href, background]), [
       ["위치 보기", PICKUP_MAP_URL, "rgb(255, 255, 255)"],
@@ -353,8 +359,15 @@ async function verifyGimpoHub(cdp, width) {
     assert.ok(Math.abs(state.sticky[0].width - state.sticky[1].width) < 1);
   } else {
     assert.equal(state.searchColumns, 3);
-    assert.equal(state.productColumns, 3);
+    assert.equal(state.productColumns, 4);
+    assert.ok(state.productCards.every((item) => Math.abs(item.frame.top - state.productCards[0].frame.top) <= 1 && Math.abs(item.card.width - state.productCards[0].card.width) <= 1), "desktop products should form one row with equal card widths");
+    assert.ok(state.productCards.every((item, index) => index === 0 || item.card.left >= state.productCards[index - 1].card.right), "desktop cards should not overlap");
   }
+  await evaluate(cdp, "() => { document.getElementById('dessert').scrollIntoView({ block: 'start', behavior: 'instant' }); return true; }");
+  await waitFor(cdp, "() => [...document.querySelectorAll('.hub-products img')].every((image) => image.complete && image.naturalWidth > 0)", "all four Gimpo product photos should load");
+  const productScreenshot = await cdp.command("Page.captureScreenshot", { format: "png" });
+  fs.writeFileSync(`/private/tmp/nm-gimpo-products-${width}.png`, productScreenshot.data, "base64");
+  await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
   const screenshot = await cdp.command("Page.captureScreenshot", { format: "png" });
   fs.writeFileSync(`/private/tmp/nm-gimpo-hub-${width}.png`, screenshot.data, "base64");
 }
