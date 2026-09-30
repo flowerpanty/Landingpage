@@ -284,6 +284,81 @@ async function verifyGimpoDesign(cdp, pathname, width) {
   fs.writeFileSync(`/private/tmp/nm-gimpo-design-${pickup ? "pickup" : "landing"}-${width}.png`, screenshot.data, "base64");
 }
 
+async function verifyGimpoHub(cdp, width) {
+  await setViewport(cdp, width, width === 1280 ? 900 : 844);
+  await navigate(cdp, `${server.baseUrl}/gimpo/`);
+  const state = await evaluate(cdp, `() => {
+    const style = (selector) => getComputedStyle(document.querySelector(selector));
+    const rect = (selector) => document.querySelector(selector).getBoundingClientRect();
+    const productLinks = [...document.querySelectorAll('.hub-products article > a')];
+    const intentLinks = [...document.querySelectorAll('.hub-intents a')];
+    const sticky = [...document.querySelectorAll('.mobile-sticky a')];
+    return {
+      viewport: innerWidth, documentWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth,
+      title: document.title, canonical: document.querySelector('link[rel=canonical]').href,
+      h1s: [...document.querySelectorAll('h1')].map((node) => node.textContent.trim()),
+      headingWeights: [...document.querySelectorAll('h1,h2,h3')].map((node) => style('h1').fontWeight && getComputedStyle(node).fontWeight),
+      intents: intentLinks.map((link) => ({ hash: link.hash, target: Boolean(document.querySelector(link.hash)), height: link.getBoundingClientRect().height })),
+      products: productLinks.map((link) => new URL(link.href).pathname),
+      productImages: productLinks.map((link) => ({ border: parseFloat(getComputedStyle(link.querySelector('img')).borderTopWidth), color: getComputedStyle(link.querySelector('img')).borderTopColor })),
+      cardsBorderless: [...document.querySelectorAll('.hub-products article')].every((card) => parseFloat(getComputedStyle(card).borderTopWidth) === 0 && getComputedStyle(card).boxShadow === 'none'),
+      heroBorder: parseFloat(style('.hub-hero-image img').borderTopWidth), heroImage: rect('.hub-hero-image img').toJSON(),
+      heroPadding: [parseFloat(style('.hub-hero').paddingTop), parseFloat(style('.hub-hero').paddingBottom)],
+      groupPaddings: [...document.querySelectorAll('.hub-group')].map((node) => [parseFloat(getComputedStyle(node).paddingTop),parseFloat(getComputedStyle(node).paddingBottom)]),
+      searchColumns: style('.hub-intents').gridTemplateColumns.trim().split(/\\s+/).length,
+      productDisplay: style('.hub-products').display, productColumns: style('.hub-products').gridTemplateColumns.trim().split(/\\s+/).length,
+      productPeek: document.querySelector('.hub-products article').getBoundingClientRect().width / rect('.hub-products').width,
+      faqCount: document.querySelectorAll('.hub-faq details').length,
+      notice: document.getElementById('notice-title').textContent.trim(),
+      address: document.querySelector('.hub-location address').textContent.trim(),
+      boardHref: new URL(document.querySelector('.hub-live .hub-text-link').href).pathname,
+      mapHref: document.querySelector('.hub-location a').href,
+      sticky: sticky.map((link) => ({ text: link.textContent.trim(), href: link.href, height: link.getBoundingClientRect().height, width: link.getBoundingClientRect().width, top: link.getBoundingClientRect().top, background: getComputedStyle(link).backgroundColor })),
+      stickyPosition: style('.mobile-sticky').position,
+      clipped: [...document.querySelectorAll('.gimpo-header nav a,.hub-hero h1,.hub-products h3')].filter((node) => getComputedStyle(node).display !== 'none' && (node.scrollWidth > node.clientWidth + 1 || (!node.closest('.hub-products') && node.getBoundingClientRect().right > innerWidth + 1))).map((node) => node.textContent.trim()),
+      text: document.querySelector('main').textContent
+    };
+  }`);
+  assert.equal(state.viewport, width);
+  assert.ok(state.documentWidth <= width && state.bodyWidth <= width, `hub horizontal overflow at ${width}px`);
+  assert.equal(state.title, "김포공항 선물·디저트·기념품 | 비행기 쿠키 예약 픽업 - 낫띵메터스");
+  assert.equal(state.canonical, "https://nothingmatters.co.kr/gimpo/");
+  assert.deepEqual(state.h1s, ["김포공항 가는 날,조금 특별한 선물을 찾고 있다면."]);
+  assert.ok(state.headingWeights.every((weight) => weight === "900"), `hub headings must be black bold: ${JSON.stringify(state.headingWeights)}`);
+  assert.deepEqual(state.intents.map((item) => item.hash), ["#gift", "#souvenir", "#dessert", "#cookie", "#domestic", "#crew"]);
+  assert.ok(state.intents.every((item) => item.target && item.height >= 44));
+  assert.deepEqual(state.products, ["/products/cookie-flight/", "/products/terminal-sand-cookie/", "/cookie-crew/"]);
+  assert.ok(state.productImages.every((item) => item.border >= 2.5 && item.color === "rgb(17, 17, 17)"));
+  assert.ok(state.cardsBorderless && state.heroBorder >= 2.5);
+  assert.equal(state.faqCount, 5);
+  assert.equal(state.notice, "김포공항 안에서 판매하지 않습니다.");
+  assert.equal(state.address, "서울특별시 강서구 송정로 25 1층");
+  assert.equal(state.boardHref, "/gimpo-board/");
+  assert.equal(state.mapHref, PICKUP_MAP_URL);
+  assert.ok(!/SNS COOKIE|김포공항 5분|도보|주차|출구/.test(state.text));
+  assert.deepEqual(state.clipped, []);
+  if (width === 390) {
+    assert.ok(state.heroPadding[0] >= 28 && state.heroPadding[0] <= 34 && state.heroPadding[1] <= 40);
+    assert.ok(state.groupPaddings.every(([top, bottom]) => top <= 56 && bottom <= 56));
+    assert.ok(state.heroImage.height < 330, `hub hero image should stay compact: ${JSON.stringify(state.heroImage)}`);
+    assert.equal(state.searchColumns, 2);
+    assert.equal(state.productDisplay, "flex");
+    assert.ok(state.productPeek >= .75 && state.productPeek <= .85);
+    assert.equal(state.stickyPosition, "fixed");
+    assert.deepEqual(state.sticky.map(({ text, href, background }) => [text, href, background]), [
+      ["위치 보기", PICKUP_MAP_URL, "rgb(255, 255, 255)"],
+      ["네이버 예약 →", GIMPO_BOOKING_URL, "rgb(3, 199, 90)"]
+    ]);
+    assert.ok(state.sticky.every((item) => item.height >= 52));
+    assert.ok(Math.abs(state.sticky[0].width - state.sticky[1].width) < 1);
+  } else {
+    assert.equal(state.searchColumns, 3);
+    assert.equal(state.productColumns, 3);
+  }
+  const screenshot = await cdp.command("Page.captureScreenshot", { format: "png" });
+  fs.writeFileSync(`/private/tmp/nm-gimpo-hub-${width}.png`, screenshot.data, "base64");
+}
+
 const flightProvider = await startMockFlightProvider();
 const server = await startServer({ NODE_ENV: "test", GIMPO_BOARD_TEST_API_URL: flightProvider.url, KAC_FLIGHT_API_KEY: "browser-test-key" });
 const debugPort = await reservePort();
@@ -325,34 +400,24 @@ try {
   }
 
   for (const width of [390, 1280]) {
-    await verifyGimpoDesign(cdp, "/gimpo/", width);
+    await verifyGimpoHub(cdp, width);
     await verifyGimpoDesign(cdp, "/gimpo/pickup/", width);
   }
 
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/gimpo/`);
-  const gimpoState = await evaluate(cdp, "() => ({ cards: [...document.querySelectorAll('.cookie-card')].map((card) => new URL(card.href).pathname), rows: [...document.querySelectorAll('.destination-row')].map((row) => ({ value: row.querySelector('.flap-bank')?.dataset.value, slots: row.querySelectorAll('.flap-slot').length })), map: document.querySelector('.mobile-sticky a:first-child')?.href, booking: document.querySelector('.mobile-sticky a:last-child')?.href, sticky: getComputedStyle(document.querySelector('.mobile-sticky')).position, stickyBottom: Math.round(document.querySelector('.mobile-sticky').getBoundingClientRect().bottom), height: innerHeight, disclaimer: document.body.textContent.includes('실제 항공편 정보가 아닙니다.'), sound: window.NmSplitFlap.getSoundState(), productImages: [...document.querySelectorAll('.cookie-card img')].every((image) => image.complete && image.naturalWidth > 0) })");
-  assert.deepEqual(gimpoState.cards, ["/products/cookie-flight/", "/products/terminal-sand-cookie/", "/products/airplane-cookie/"]);
-  assert.deepEqual(gimpoState.rows.map((row) => row.value), ["JEJU", "BUSAN", "TOKYO", "OSAKA"]);
-  assert.ok(gimpoState.rows.every((row) => row.slots === 5), "Gimpo design board must use actual flap slots");
-  assert.equal(gimpoState.map, PICKUP_MAP_URL);
-  assert.equal(gimpoState.booking, GIMPO_BOOKING_URL);
-  assert.equal(gimpoState.sticky, "fixed");
-  assert.equal(gimpoState.stickyBottom, gimpoState.height);
-  assert.equal(gimpoState.disclaimer, true);
-  assert.equal(gimpoState.productImages, true, "all three product images should load");
-  assert.equal(gimpoState.sound.contextCreated, false, "Gimpo design board must not auto-play sound");
-  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-tools a')].map((link) => new URL(link.href).pathname)"), ["/gimpo-board/", "/gimpo2/"], "Gimpo cookie hub should expose both flight tools");
-  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('.gimpo-faq article').length"), 5, "Gimpo cookie hub should retain three pickup answers and show two flight answers");
-  const gimpoTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .hero-copy h1, .hero-description')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
-  assert.ok(gimpoTextClipping.every((element) => !element.clipped), `Gimpo mobile text must fit: ${JSON.stringify(gimpoTextClipping)}`);
-  await evaluate(cdp, "() => { document.getElementById('gimpo-board-change').click(); return true; }");
-  await waitFor(cdp, "() => document.querySelector('.destination-row .flap-bank')?.dataset.value === 'BUSAN'", "Gimpo design board should change destinations through NmSplitFlap");
-  await cdp.command("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+  await evaluate(cdp, "() => { document.getElementById('today-at-gimpo').scrollIntoView({ block: 'center', behavior: 'instant' }); return true; }");
+  await waitFor(cdp, "() => document.querySelectorAll('.hub-live-rows article').length > 0", "live Gimpo preview should render provider flights");
+  const livePreview = await evaluate(cdp, "() => ({ rows: [...document.querySelectorAll('.hub-live-rows article')].map((row) => row.textContent.trim()), state: document.querySelector('[data-preview-state]').textContent.trim(), board: new URL(document.querySelector('.hub-live .hub-text-link').href).pathname })");
+  assert.ok(livePreview.rows.length >= 3 && livePreview.rows.length <= 4, "preview should show only a few real flights");
+  assert.ok(livePreview.rows.every((row) => /[A-Z]{2}\d+/.test(row)), "flight preview should show provider flight numbers");
+  assert.equal(livePreview.board, "/gimpo-board/");
+  const previewBlocker = await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "const originalPreviewFetch = window.fetch.bind(window); window.fetch = (...args) => String(args[0]).includes('/api/gimpo-board/flights') ? Promise.reject(new Error('simulated failure')) : originalPreviewFetch(...args);" });
   await navigate(cdp, `${server.baseUrl}/gimpo/`);
-  const gimpoReduced = await evaluate(cdp, "() => { document.getElementById('gimpo-board-change').click(); return { value: document.querySelector('.destination-row .flap-bank').dataset.value, animatedSlots: document.querySelectorAll('.gimpo-board .flap-slot.is-flipping').length, motion: matchMedia('(prefers-reduced-motion: reduce)').matches }; }");
-  assert.deepEqual(gimpoReduced, { value: "BUSAN", animatedSlots: 0, motion: true }, "Gimpo design board should settle immediately with reduced motion");
-  await cdp.command("Emulation.setEmulatedMedia", { features: [] });
+  await evaluate(cdp, "() => { document.getElementById('today-at-gimpo').scrollIntoView({ block: 'center', behavior: 'instant' }); return true; }");
+  await waitFor(cdp, "() => document.querySelector('[data-preview-state]').textContent.includes('실시간 항공편 정보를 불러올 수 없습니다.')", "failed live preview should show its fallback");
+  assert.equal(await evaluate(cdp, "() => new URL(document.querySelector('.hub-live .hub-text-link').href).pathname"), "/gimpo-board/", "full board link must remain available after failure");
+  await cdp.command("Page.removeScriptToEvaluateOnNewDocument", { identifier: previewBlocker.identifier });
   await navigate(cdp, `${server.baseUrl}/gimpo/pickup/`);
   const gimpoPickupState = await evaluate(cdp, "() => ({ steps: [...document.querySelectorAll('.pickup-steps li h3')].map((item) => item.textContent.trim()), products: [...document.querySelectorAll('.pickup-product-list a')].map((link) => new URL(link.href).pathname), sticky: [...document.querySelectorAll('.mobile-sticky a')].map((link) => ({ text: link.textContent.trim(), href: link.href })), position: getComputedStyle(document.querySelector('.mobile-sticky')).position, bottom: Math.round(document.querySelector('.mobile-sticky').getBoundingClientRect().bottom), height: innerHeight, map: document.querySelector('.pickup-location .button-dark')?.href, address: document.querySelector('.pickup-location address')?.textContent.trim() })");
   assert.deepEqual(gimpoPickupState.steps, ["쿠키 선택", "픽업 예약", "공항동 매장에서 수령", "김포공항으로 이동"]);
@@ -365,7 +430,7 @@ try {
   assert.equal(gimpoPickupState.bottom, gimpoPickupState.height);
   assert.equal(gimpoPickupState.map, PICKUP_MAP_URL);
   assert.equal(gimpoPickupState.address, "서울 강서구 송정로 25 1층");
-  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-related a')].map((link) => new URL(link.href).pathname)"), ["/gimpo2/", "/gimpo-board/", "/gimpo/"], "pickup guide should link to the planner, board and travel-cookie hub");
+  assert.deepEqual(await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-related a')].map((link) => new URL(link.href).pathname)"), ["/gimpo-board/", "/gimpo/"], "pickup guide should link to the board and cookie hub");
   const gimpoPickupTextClipping = await evaluate(cdp, "() => [...document.querySelectorAll('.gimpo-header nav a, .pickup-hero h1, .pickup-hero-copy>p:not(.eyebrow)')].filter((element) => getComputedStyle(element).display !== 'none').map((element) => ({ text: element.textContent.trim(), clipped: element.scrollWidth > element.clientWidth + 1 || element.getBoundingClientRect().right > innerWidth + 1 }))");
   assert.ok(gimpoPickupTextClipping.every((element) => !element.clipped), `Gimpo pickup mobile text must fit: ${JSON.stringify(gimpoPickupTextClipping)}`);
   await navigate(cdp, `${server.baseUrl}/gimpo2/`);
@@ -391,7 +456,7 @@ try {
   const boardClock = await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "(() => { const NativeDate = Date; function FixedDate(...args) { return args.length ? new NativeDate(...args) : new NativeDate('2026-09-28T06:30:00+09:00'); } FixedDate.now = () => new NativeDate('2026-09-28T06:30:00+09:00').getTime(); FixedDate.parse = NativeDate.parse; FixedDate.UTC = NativeDate.UTC; FixedDate.prototype = NativeDate.prototype; window.Date = FixedDate; })();" });
   await navigate(cdp, `${server.baseUrl}/gimpo-board/?flight=RS901`);
   await waitFor(cdp, "() => document.getElementById('flight-detail')?.open", "board flight query should open the matching detail");
-  assert.equal(await evaluate(cdp, "() => document.getElementById('detail-pickup-link').getAttribute('href')"), "/gimpo2/?flight=RS901", "board detail should carry the selected flight into Gimpo2");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('detail-pickup-link').getAttribute('href')"), "/gimpo/pickup/", "board detail should link to reservation pickup guidance");
   assert.equal(await evaluate(cdp, "() => [...document.querySelectorAll('#detail-fields dt')].some((item) => item.textContent === '게이트')"), true, "mobile flight detail should retain gate information when provided");
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
@@ -411,7 +476,7 @@ try {
   assert.equal(boardMobile.title, "김포공항 도착정보·출발정보 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
   assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION"], `board mobile columns at viewport ${boardMobile.viewport}`);
-  assert.deepEqual(boardMobile.links, ["/gimpo2/", "/gimpo/"]);
+  assert.deepEqual(boardMobile.links, ["/gimpo/pickup/", "/gimpo/"]);
   assert.deepEqual([boardMobile.route, boardMobile.routeKorean], ["JEJU", "제주 · CJU"], "English destination should be the main mechanical value with Korean and provider code below");
   assert.deepEqual(boardMobile.halves, ["flap-static-top", "flap-static-bottom", "flap-flip-top", "flap-flip-bottom", "flap-hinge"]);
   assert.equal(boardMobile.grid, "grid", "mobile board rows should use a physical two-line grid");

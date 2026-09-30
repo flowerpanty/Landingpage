@@ -12,7 +12,6 @@
 - https://nothingmatters.co.kr/magok-cookie/
 - https://nothingmatters.co.kr/gimpo/
 - https://nothingmatters.co.kr/gimpo-board/
-- https://nothingmatters.co.kr/gimpo2/
 - https://nothingmatters.co.kr/gimpo/pickup/
 - https://nothingmatters.co.kr/guides/
 - https://nothingmatters.co.kr/products/brownie-cookie/
@@ -37,7 +36,7 @@
 - Korean name: 낫띵메터스
 - Contact phone: 010-2866-7976
 - Contact email: eddiefactory@naver.com
-- Pickup hub: https://nothingmatters.co.kr/pickup/
+- General reservation pickup guide: https://nothingmatters.co.kr/pickup/
 - Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
 - Nearby: 김포공항, 송정역
 - Pickup policy: 예약 픽업 전용 / 방문 전 일정 예약 필요
@@ -58,8 +57,9 @@
 - Magok is a nearby service area.
 - Vehicle quick is available only after consultation based on schedule and quantity.
 
-### 김포공항 디저트 선물·쿠키 픽업
-- Landing: https://nothingmatters.co.kr/pickup/
+### 일반 예약 픽업 안내
+- Guide: https://nothingmatters.co.kr/pickup/
+- General reservation pickup information for NOTHINGMATTERS cookies; the Gimpo Airport gift and dessert hub is https://nothingmatters.co.kr/gimpo/.
 - NOT inside Gimpo Airport.
 - Reservation-only workshop: 서울특별시 강서구 송정로 25 1층, 공항동.
 - Walk-in purchase without reservation is difficult.
@@ -67,11 +67,10 @@
 - Official Instagram: https://instagram.com/nothingmatters_c
 - Products: 브루키 / 수제꾸덕쿠키 / 행운쿠키 / 쿠키크루
 
-### 김포공항 여행 쿠키·항공편·예약 픽업
-- https://nothingmatters.co.kr/gimpo/ — 김포공항 근처 여행 쿠키·선물 및 NOTHINGMATTERS 공항동 매장 허브
-- https://nothingmatters.co.kr/gimpo-board/ — 김포공항 실시간 출발·도착 항공편 조회 전광판
-- https://nothingmatters.co.kr/gimpo2/ — 선택한 김포공항 항공편을 기준으로 출발 전 쿠키 픽업 가능 시간을 참고하는 플래너
-- https://nothingmatters.co.kr/gimpo/pickup/ — 공항동 NOTHINGMATTERS 쿠키 예약·픽업 방법과 위치 안내
+### GIMPO AIRPORT COOKIE & GIFT HUB — 김포공항 선물·디저트·기념품
+- https://nothingmatters.co.kr/gimpo/ — 김포공항 선물·디저트·기념품의 대표 허브. COOKIE FLIGHT 등 여행 쿠키와 선물 탐색, 제품 상세 연결.
+- https://nothingmatters.co.kr/gimpo/pickup/ — 김포공항 인근 공항동 작업실의 예약 픽업 방법·위치 안내.
+- https://nothingmatters.co.kr/gimpo-board/ — 김포공항 실시간 출발·도착 항공편 조회 전광판.
 
 ## Main ordering use cases
 - small handmade cookie gifts
@@ -88,7 +87,7 @@
 ## Main page routing
 - home: hub-style main page for choosing between small gifts and bulk/event orders
 - works: public archive of administrator-published cookie making photos and captions
-- pickup: Gimpo Airport and Songjeong Station nearby reservation pickup information
+- pickup: general cookie reservation pickup information; Gimpo Airport gifts and desserts are introduced at /gimpo/
 - bulk: preserved group-order landing page for wedding favors, corporate event snacks, school or institution snacks, and custom bulk consultation
 - small-gift: small gift hub for choosing handmade cookie, fortune cookie, or bear scone landing pages before ordering
 

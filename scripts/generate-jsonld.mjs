@@ -61,7 +61,7 @@ const ITEM_LISTS = {
   "/gimpo/": [
     ["COOKIE FLIGHT", "/products/cookie-flight/"],
     ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/"],
-    ["AIRPLANE BUTTER COOKIE", "/products/airplane-cookie/"],
+    ["COOKIE CREW", "/cookie-crew/"],
   ],
   "/": [
     ...PRODUCT_CATALOG.map((product) => [product.name, product.detailPath]),
@@ -295,7 +295,7 @@ function buildBreadcrumb(page) {
   if (page.path.startsWith("/guides/") && page.path !== "/guides/") {
     items.push({ name: "가이드 허브", item: `${SITE_URL}/guides/` });
   } else if (page.path === "/gimpo/pickup/") {
-    items.push({ name: "김포공항 여행 쿠키", item: `${SITE_URL}/gimpo/` });
+    items.push({ name: "김포공항 선물·디저트·기념품", item: `${SITE_URL}/gimpo/` });
   } else if (page.path.startsWith("/products/")) {
     items.push({ name: "쿠키 라인업", item: `${SITE_URL}/#ready-order` });
   }

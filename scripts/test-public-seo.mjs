@@ -378,17 +378,16 @@ assert.ok(locSet.has(`${SITE_URL}/gimpo-board/`), "Gimpo flight board should be 
 const boardHtml = readHtml(filePathForPathname("/gimpo-board/"));
 assert.match(boardHtml, /<title>김포공항 도착정보·출발정보 \| 실시간 항공편<\/title>/);
 assert.equal(getCanonical(boardHtml), `${SITE_URL}/gimpo-board/`);
-assert.match(boardHtml, /href="\/gimpo2\/"/);
+assert.doesNotMatch(boardHtml, /href="\/gimpo2\/"/);
 assert.match(boardHtml, /href="\/gimpo\/"/, "flight board should link back to the cookie hub");
-assert.match(boardHtml, /id="detail-pickup-link"/, "selected board flight should link to pickup timing");
+assert.match(boardHtml, /id="detail-pickup-link"[^>]*href="\/gimpo\/pickup\/"/, "selected board flight should link to pickup guidance");
 assert.match(boardHtml, /id="board-badge"[^>]*>GMP · CHECKING<\/span>/, "board must not claim LIVE before fresh data loads");
 assert.doesNotMatch(boardHtml, /KAC_FLIGHT_API_KEY|serviceKey=/, "board HTML must not expose provider credentials");
 assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "utf8"), /KAC_FLIGHT_API_KEY|serviceKey=/, "board client JS must not expose provider credentials");
 
 for (const [pathname, title, h1, pageType] of [
-  ["/gimpo/", "김포공항 비행기 쿠키 · 여행 선물 | NOTHINGMATTERS", "김포공항 가는 길, 쿠키도 챙겨가세요.", "CollectionPage"],
+  ["/gimpo/", "김포공항 선물·디저트·기념품 | 비행기 쿠키 예약 픽업 - 낫띵메터스", "김포공항 가는 날, 조금 특별한 선물을 찾고 있다면.", "CollectionPage"],
   ["/gimpo-board/", "김포공항 도착정보·출발정보 | 실시간 항공편", "김포공항 도착정보·출발정보 실시간 항공편", "WebPage"],
-  ["/gimpo2/", "김포공항 출발 전 쿠키 픽업 시간 확인 | NOTHINGMATTERS", "내 항공편 기준 쿠키 픽업 시간 확인", "WebPage"],
   ["/gimpo/pickup/", "김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS", "김포공항 가기 전, 예약한 쿠키를 픽업하세요.", "WebPage"],
 ]) {
   const entry = registryEntries.get(pathname);
@@ -396,7 +395,7 @@ for (const [pathname, title, h1, pageType] of [
   const graph = getStaticSchema(html)["@graph"];
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : "2026-09-29" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : pathname === "/gimpo/" ? "2026-09-30" : "2026-09-29" },
     `${pathname}: registry must publish the new route`
   );
   assert.equal(getCanonical(html), `${SITE_URL}${pathname}`);
@@ -404,7 +403,7 @@ for (const [pathname, title, h1, pageType] of [
   assert.equal(getAttribute(html, /<title>([\s\S]*?)<\/title>/i), title);
   assert.equal(cleanText(getAttribute(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), h1);
   assert.ok(locSet.has(`${SITE_URL}${pathname}`));
-  assert.ok(sitemap.includes(`<loc>${SITE_URL}${pathname}</loc>\n    <lastmod>${pathname === "/gimpo/pickup/" ? "2026-09-28" : "2026-09-29"}</lastmod>`), `${pathname}: sitemap lastmod must match the registry`);
+  assert.ok(sitemap.includes(`<loc>${SITE_URL}${pathname}</loc>\n    <lastmod>${entry.lastmod}</lastmod>`), `${pathname}: sitemap lastmod must match the registry`);
   assert.ok(graph.some((node) => node["@type"] === pageType));
   assert.ok(graph.some((node) => node["@type"] === "BreadcrumbList"));
   assert.equal(graph.some((node) => node["@type"] === "Product"), false, `${pathname}: no duplicate Product schema`);
@@ -412,28 +411,35 @@ for (const [pathname, title, h1, pageType] of [
   assert.doesNotMatch(html, /(?:도보|차로|차량으로|공항까지)\s*\d+\s*분|\d+\s*(?:km|m)\s*거리/i, `${pathname}: no unverified travel estimate`);
 }
 const gimpoHtml = readHtml(filePathForPathname("/gimpo/"));
-assert.match(gimpoHtml, /class="gimpo-tools"[\s\S]*?href="\/gimpo-board\/"[\s\S]*?href="\/gimpo2\/"/, "Gimpo hub should route to both flight tools");
-assert.match(gimpoHtml, /<h2 id="gimpo-tools-title">김포공항 항공편도 함께 확인하세요<\/h2>/);
-assert.match(gimpoHtml, /김포공항 도착정보/);
-assert.match(gimpoHtml, /김포공항 도착시간/);
-assert.match(gimpoHtml, /김포공항 출발정보|출발정보/);
-assert.match(gimpoHtml, /김포공항 도착정보는 어디서 확인하나요\?/);
-assert.match(gimpoHtml, /김포공항 도착시간과 쿠키 픽업은 어떻게 확인하나요\?/);
-assert.equal((gimpoHtml.match(/class="gimpo-faq-grid"[\s\S]*?<\/div>/)?.[0].match(/<article>/g) || []).length, 5, "Gimpo hub should keep three pickup answers and add two flight answers");
-for (const question of ["NOTHINGMATTERS는 김포공항 안에 있나요?", "여행 당일에도 쿠키를 픽업할 수 있나요?", "어떤 쿠키를 픽업할 수 있나요?"]) {
-  assert.ok(gimpoHtml.includes(question), `Gimpo hub should answer: ${question}`);
-}
+assert.equal(getMeta(gimpoHtml, "name", "description"), "김포공항 근처에서 특별한 선물이나 디저트를 찾고 있다면. 비행기 쿠키 COOKIE FLIGHT부터 터미널 쿠키, 공항 테마 선물까지 만나보세요. 김포공항·송정역 인근 공항동 예약 픽업.");
+assert.equal(getMeta(gimpoHtml, "property", "og:title"), "김포공항 가는 날, 조금 특별한 선물이 필요하다면");
+assert.equal(getMeta(gimpoHtml, "property", "og:url"), `${SITE_URL}/gimpo/`);
+assert.ok(gimpoHtml.includes('href="/gimpo-board/"'), "hub should link to the full flight board");
+assert.equal((gimpoHtml.match(/class="hub-intents"[\s\S]*?<\/nav>/)?.[0].match(/href="#/g) || []).length, 6, "hub needs six search-intent anchors");
+assert.equal((gimpoHtml.match(/class="hub-faq-list"[\s\S]*?<\/div>/)?.[0].match(/<details>/g) || []).length, 5, "hub needs five visible FAQ answers");
+assert.ok(gimpoHtml.includes("김포공항 안에서 판매하지 않습니다."));
+assert.ok(gimpoHtml.includes("서울특별시 강서구 송정로 25 1층"));
+assert.doesNotMatch(gimpoHtml, /(?:김포공항\s*5분|도보|주차|\d+번 출구)/);
+assert.doesNotMatch(gimpoHtml, /SNS COOKIE|href="\/gimpo2\/"/);
 const gimpoGraph = getStaticSchema(gimpoHtml)["@graph"];
-assert.equal(gimpoGraph.some((node) => node["@type"] === "FAQPage"), false, "Gimpo hub should not add FAQPage schema for the new visible Q&A");
+const gimpoFaq = gimpoGraph.find((node) => node["@type"] === "FAQPage");
+assert.equal(gimpoFaq?.mainEntity.length, 5, "hub FAQPage must match five visible questions");
+assert.deepEqual(gimpoFaq.mainEntity.map((item) => item.name), [...gimpoHtml.matchAll(/<summary>([^<]+)<\/summary>/g)].map((match) => match[1]));
+assert.deepEqual(gimpoFaq.mainEntity.map((item) => item.acceptedAnswer.text), [...gimpoHtml.matchAll(/<details><summary>[^<]+<\/summary><p>([^<]+)<\/p><\/details>/g)].map((match) => match[1]));
+assert.deepEqual(gimpoGraph.find((node) => node["@type"] === "CollectionPage")?.about, { "@id": `${SITE_URL}/#localbusiness` });
 const gimpoItemList = gimpoGraph.find((node) => node["@type"] === "ItemList");
 assert.deepEqual(gimpoItemList?.itemListElement?.map((item) => [item.name, item.url]), [
   ["COOKIE FLIGHT", `${SITE_URL}/products/cookie-flight/`],
   ["TERMINAL SAND COOKIE", `${SITE_URL}/products/terminal-sand-cookie/`],
-  ["AIRPLANE BUTTER COOKIE", `${SITE_URL}/products/airplane-cookie/`],
+  ["COOKIE CREW", `${SITE_URL}/cookie-crew/`],
 ]);
-assert.equal((gimpoHtml.match(/class="cookie-card"/g) || []).length, 3, "Gimpo must display exactly three product cards");
-assert.ok(gimpoHtml.includes("실제 항공편 정보가 아닙니다."), "decorative board must be clearly labelled");
+assert.equal((gimpoHtml.match(/<div class="hub-products">[\s\S]*?<\/div>/)?.[0].match(/<article>/g) || []).length, 3, "hub must show only verified products");
+assert.equal(gimpoGraph.some((node) => node["@type"] === "Product"), false);
 const gimpo2Html = readHtml(filePathForPathname("/gimpo2/"));
+const gimpo2Entry = registryEntries.get("/gimpo2/");
+assert.deepEqual({ status: gimpo2Entry.status, indexing: gimpo2Entry.indexing, sitemap: gimpo2Entry.sitemap }, { status: "active", indexing: "noindex", sitemap: false });
+assert.match(getRobots(gimpo2Html), /^noindex,follow/);
+assert.equal(locSet.has(`${SITE_URL}/gimpo2/`), false, "planner should be absent from sitemap while it remains a separate utility");
 assert.match(gimpo2Html, /<h2 id="live-title">김포공항 출발·도착 항공편 선택<\/h2>/);
 assert.match(gimpo2Html, /김포공항 도착정보/);
 assert.match(gimpo2Html, /김포공항 도착시간/);
@@ -447,8 +453,17 @@ assert.equal(gimpo2Graph.find((node) => node["@type"] === "WebPage")?.name, "김
 assert.equal(gimpo2Graph.find((node) => node["@type"] === "WebPage")?.description, getMeta(gimpo2Html, "name", "description"));
 assert.equal(gimpo2Graph.find((node) => node["@type"] === "BreadcrumbList")?.itemListElement?.at(-1)?.name, "김포공항 출발 전 쿠키 픽업 플래너");
 const gimpoPickupHtml = readHtml(filePathForPathname("/gimpo/pickup/"));
-assert.match(gimpoPickupHtml, /class="section gimpo-related"[\s\S]*?href="\/gimpo2\/"[\s\S]*?href="\/gimpo-board\/"/, "pickup guide should link to planner and flight board");
+assert.match(gimpoPickupHtml, /class="section gimpo-related"[\s\S]*?href="\/gimpo-board\/"/, "pickup guide should link to the flight board");
+for (const [name, content] of [
+  ["board", boardHtml],
+  ["pickup", gimpoPickupHtml],
+  ["flight guide", readHtml(filePathForPathname("/guides/gimpo-airport-flight-status/"))],
+  ["departure guide", readHtml(filePathForPathname("/guides/gimpo-airport-departure-checklist/"))],
+  ["llms", fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8")],
+]) assert.doesNotMatch(content, /(?:href="|https:\/\/nothingmatters\.co\.kr)\/gimpo2\//, `${name}: no internal planner link`);
+assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "utf8"), /flightUrl\("\/gimpo2\/"/, "board must not inject a planner link");
 const gimpoPickupGraph = getStaticSchema(gimpoPickupHtml)["@graph"];
+assert.equal(gimpoPickupGraph.find((node) => node["@type"] === "BreadcrumbList")?.itemListElement?.[1]?.name, "김포공항 선물·디저트·기념품", "pickup breadcrumb should name its Gimpo hub parent");
 assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "WebPage")?.about, { "@id": `${SITE_URL}/#localbusiness` });
 assert.deepEqual(gimpoPickupGraph.find((node) => node["@type"] === "Service")?.provider, { "@id": `${SITE_URL}/#localbusiness` });
 
@@ -495,7 +510,7 @@ for (const [pathname, h1] of kimpoGuides) {
   assert.ok(html.includes('href="/gimpo-board/"'), `${pathname}: guide should reach the live board`);
   assert.match(html, /한국공항공사 제공 자료/, `${pathname}: source attribution should be visible`);
 }
-for (const href of ["/gimpo2/", "/gimpo/pickup/", "/gimpo/"]) {
+for (const href of ["/gimpo/pickup/", "/gimpo/"]) {
   assert.ok(boardHtml.includes(`href="${href}"`), `flight board should link to ${href}`);
 }
 assert.match(boardHtml, /class="board-info"[\s\S]*?김포공항 도착정보와 출발정보 확인[\s\S]*?한국공항공사 제공 자료/);
@@ -507,7 +522,7 @@ assert.equal(getStaticSchema(boardHtml)["@graph"].some((node) => node["@type"] =
 assert.ok(gimpoHtml.includes('href="/gimpo/pickup/"'), "travel-cookie hub should reach reservation pickup guidance");
 assert.ok(gimpoPickupHtml.includes('href="/gimpo/"'), "pickup guidance should link back to the travel-cookie hub");
 for (const html of [boardHtml, gimpoHtml, gimpo2Html, gimpoPickupHtml]) {
-  assert.match(html, /김포공항 내부가 아닌|김포공항 내부가 아니라/, "Kimpo pages must clarify that NOTHINGMATTERS is outside the airport");
+  assert.match(html, /김포공항 내부가 아닌|김포공항 내부가 아니라|김포공항 안에서 판매하지 않습니다/, "Kimpo pages must clarify that NOTHINGMATTERS is outside the airport");
 }
 const guideHubHtml = readHtml(filePathForPathname("/guides/"));
 const guideHubItems = getStaticSchema(guideHubHtml)["@graph"].find((node) => node["@type"] === "ItemList")?.itemListElement || [];

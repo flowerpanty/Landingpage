@@ -384,10 +384,9 @@
 
   function openDetail(row, trigger) {
     lastTrigger = trigger;
-    document.getElementById("board-gimpo2-link").href = flights.flightUrl("/gimpo2/", row);
     const pickupLink = document.getElementById("detail-pickup-link");
-    pickupLink.href = flights.flightUrl("/gimpo2/", row);
-    pickupLink.textContent = row.type === "arrival" ? "도착 후 김포공항 근처 쿠키 보기 →" : "이 항공편으로 픽업 시간 확인 →";
+    pickupLink.href = "/gimpo/pickup/";
+    pickupLink.textContent = "공항동 쿠키 예약 픽업 안내 →";
     document.getElementById("detail-title").textContent = row.flightNumber;
     const fields = [
       ["항공사", [row.airline.ko, row.airline.en].filter(Boolean).join(" / ") || "—"],
