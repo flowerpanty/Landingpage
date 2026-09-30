@@ -661,14 +661,46 @@ try {
     assert.ok(mobileSticky.bodyPadding >= mobileSticky.stickyHeight, `${pathname}: body should reserve space for the sticky CTA`);
     assert.ok(mobileSticky.contentBottom <= mobileSticky.stickyTop + 1, `${pathname}: footer/content should not be obscured at the bottom (${mobileSticky.contentBottom} > ${mobileSticky.stickyTop})`);
     assert.ok(mobileSticky.documentWidth <= mobileSticky.viewport, `${pathname}: sticky CTA should not cause horizontal overflow`);
+    const mobilePlacement = await evaluate(cdp, "() => { const nav = document.querySelector('.nm-product-sticky'); const rect = nav.getBoundingClientRect(); const links = [...nav.querySelectorAll('a')]; return { position: getComputedStyle(nav).position, left: rect.left, right: rect.right, bottom: rect.bottom, viewport: innerWidth, height: innerHeight, widths: links.map((link) => link.getBoundingClientRect().width), colors: links.map((link) => getComputedStyle(link).backgroundColor) }; }");
+    assert.ok(mobilePlacement.position === "fixed" && Math.abs(mobilePlacement.left) <= 1 && Math.abs(mobilePlacement.right - mobilePlacement.viewport) <= 1 && Math.abs(mobilePlacement.bottom - mobilePlacement.height) <= 1, `${pathname}: mobile CTA should span the fixed bottom edge`);
+    assert.ok(Math.abs(mobilePlacement.widths[0] - mobilePlacement.widths[1]) < 1, `${pathname}: mobile CTA buttons should have equal width`);
+    assert.deepEqual(mobilePlacement.colors, ["rgb(3, 199, 90)", "rgb(135, 193, 235)"], `${pathname}: mobile CTA colors should remain unchanged`);
   }
   await setViewport(cdp, 1280, 900);
-  for (const [pathname] of stickyProducts) {
+  await cdp.command("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+  for (const [pathname, label] of stickyProducts) {
     await navigate(cdp, `${server.baseUrl}${pathname}`);
-    const desktopSticky = await evaluate(cdp, "() => ({ display: getComputedStyle(document.querySelector('.nm-product-sticky')).display, floatCount: document.querySelectorAll('.nm-float-icon, .nm-float-bubble, [data-kakao-float]').length })");
-    assert.equal(desktopSticky.display, "none", `${pathname}: mobile sticky should be hidden on desktop`);
-    assert.equal(desktopSticky.floatCount, 0, `${pathname}: Kakao float should also be absent on desktop`);
+    await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); dispatchEvent(new Event('scroll')); return true; }");
+    const desktopInitial = await evaluate(cdp, "() => { const nav = document.querySelector('.nm-product-sticky'); const style = getComputedStyle(nav); nav.querySelector('a').focus(); return { navCount: document.querySelectorAll('.nm-product-sticky').length, display: style.display, visibility: style.visibility, pointerEvents: style.pointerEvents, opacity: style.opacity, classVisible: nav.classList.contains('is-desktop-visible'), focusBlocked: !nav.contains(document.activeElement) }; }");
+    assert.deepEqual(desktopInitial, { navCount: 1, display: "grid", visibility: "hidden", pointerEvents: "none", opacity: "0", classVisible: false, focusBlocked: true }, `${pathname}: desktop dock must be hidden and unfocusable at the hero`);
+    await evaluate(cdp, "() => { const hero = document.querySelector('.hero').getBoundingClientRect(); scrollTo({ top: hero.top + scrollY + hero.height * .75, behavior: 'instant' }); dispatchEvent(new Event('scroll')); return true; }");
+    await waitFor(cdp, "() => { const nav = document.querySelector('.nm-product-sticky'); return nav.classList.contains('is-desktop-visible') && Number(getComputedStyle(nav).opacity) >= .98; }", `${pathname}: desktop dock should appear after the hero`);
+    const desktopSticky = await evaluate(cdp, "() => { const nav = document.querySelector('.nm-product-sticky'); const style = getComputedStyle(nav); const rect = nav.getBoundingClientRect(); const buttons = [...nav.querySelectorAll('a')].map((link) => { const bounds = link.getBoundingClientRect(); const computed = getComputedStyle(link); return { text: link.textContent.trim(), href: link.href, event: link.dataset.analyticsEvent, label: link.dataset.analyticsLabel, target: link.target, height: bounds.height, width: bounds.width, top: bounds.top, background: computed.backgroundColor, color: computed.color }; }); return { navCount: document.querySelectorAll('.nm-product-sticky').length, buttonCount: buttons.length, display: style.display, visibility: style.visibility, pointerEvents: style.pointerEvents, position: style.position, rect: { left: rect.left, right: rect.right, bottom: rect.bottom, width: rect.width }, viewport: innerWidth, height: innerHeight, documentWidth: document.documentElement.scrollWidth, buttons, floatCount: document.querySelectorAll('.nm-float-icon, .nm-float-bubble, [data-kakao-float]').length, disabled: document.body.hasAttribute('data-disable-kakao-float') }; }");
+    assert.equal(desktopSticky.navCount, 1, `${pathname}: one CTA nav on desktop`);
+    assert.equal(desktopSticky.buttonCount, 2, `${pathname}: two purchase buttons on desktop`);
+    assert.equal(desktopSticky.display, "grid");
+    assert.equal(desktopSticky.visibility, "visible");
+    assert.equal(desktopSticky.pointerEvents, "auto");
+    assert.equal(desktopSticky.position, "fixed");
+    assert.ok(desktopSticky.rect.left >= 0 && desktopSticky.rect.right <= desktopSticky.viewport - 16 && desktopSticky.rect.bottom <= desktopSticky.height - 16 && desktopSticky.rect.width <= 360, `${pathname}: desktop dock must fit inside viewport`);
+    assert.ok(Math.abs(desktopSticky.buttons[0].width - desktopSticky.buttons[1].width) < 1 && Math.abs(desktopSticky.buttons[0].top - desktopSticky.buttons[1].top) < 1 && desktopSticky.buttons.every((button) => button.height >= 48), `${pathname}: desktop buttons must share a row at equal width`);
+    assert.deepEqual(desktopSticky.buttons.map(({ text, href, event, label: buttonLabel, target, background, color }) => ({ text, href, event, label: buttonLabel, target, background, color })), [
+      { text: "네이버예약", href: GIMPO_BOOKING_URL, event: "naver_booking_click", label, target: "_blank", background: "rgb(3, 199, 90)", color: "rgb(255, 255, 255)" },
+      { text: "주문하기", href: expectedOrderUrls.get(pathname), event: "order_start", label, target: "_blank", background: "rgb(135, 193, 235)", color: "rgb(17, 17, 17)" }
+    ], `${pathname}: desktop dock links and colors must match`);
+    assert.ok(desktopSticky.documentWidth <= desktopSticky.viewport, `${pathname}: desktop dock must not overflow horizontally`);
+    assert.equal(desktopSticky.disabled, true, `${pathname}: Kakao float must remain disabled`);
+    assert.equal(desktopSticky.floatCount, 0, `${pathname}: Kakao float must remain absent`);
+    if (pathname === "/products/cookie-flight/") fs.writeFileSync("/private/tmp/nothingmatters-cookie-flight-desktop-dock.png", (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
   }
+  await setViewport(cdp, 800, 900);
+  await navigate(cdp, `${server.baseUrl}/products/cookie-flight/`);
+  await evaluate(cdp, "() => { const hero = document.querySelector('.hero').getBoundingClientRect(); scrollTo({ top: hero.top + scrollY + hero.height * .75, behavior: 'instant' }); dispatchEvent(new Event('scroll')); return true; }");
+  await waitFor(cdp, "() => document.querySelector('.nm-product-sticky').classList.contains('is-desktop-visible')", "compact desktop dock should appear after hero");
+  assert.equal(await evaluate(cdp, "() => { const nav = document.querySelector('.nm-product-sticky').getBoundingClientRect(); return nav.width === 330 && nav.right <= innerWidth - 16 && nav.bottom <= innerHeight - 16 && document.documentElement.scrollWidth <= innerWidth; }"), true, "800px desktop dock should fit its responsive inset");
+  assert.equal(await evaluate(cdp, "() => { const nav = document.querySelector('.nm-product-sticky'); return getComputedStyle(nav).transitionDuration === '0s' && getComputedStyle(nav.querySelector('a')).transitionDuration === '0s'; }"), true, "reduced motion should remove dock transitions");
+  await cdp.command("Emulation.setEmulatedMedia", { features: [] });
+  assert.equal(await evaluate(cdp, "() => getComputedStyle(document.querySelector('.nm-product-sticky')).transitionDuration.includes('0.2s')"), true, "desktop dock should have a brief transition in normal motion mode");
 
   const knownWorkHrefs = [
     "/out/",

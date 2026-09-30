@@ -89,6 +89,33 @@ document.querySelectorAll("img[data-fallback-label]").forEach((img) => {
 });
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const initProductSticky = () => {
+  const productSticky = document.querySelector(".nm-product-sticky");
+  const productHero = document.querySelector(".hero");
+  if (!productSticky || !productHero) return;
+
+  const desktopMedia = window.matchMedia("(min-width: 761px)");
+
+  const syncProductSticky = () => {
+    const heroBounds = productHero.getBoundingClientRect();
+    const revealAt = heroBounds.top + window.scrollY + heroBounds.height * .65;
+    const visible = desktopMedia.matches && window.scrollY >= revealAt;
+    productSticky.classList.toggle("is-desktop-visible", visible);
+    if (desktopMedia.matches && !visible && productSticky.contains(document.activeElement)) document.activeElement.blur();
+  };
+
+  window.addEventListener("scroll", syncProductSticky, { passive: true });
+  window.addEventListener("resize", syncProductSticky);
+  desktopMedia.addEventListener("change", syncProductSticky);
+  syncProductSticky();
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initProductSticky, { once: true });
+} else {
+  initProductSticky();
+}
+
 const revealTargets = document.querySelectorAll("[data-reveal]");
 const revealElement = (element, { immediate = false } = {}) => {
   element.classList.add("is-visible");
