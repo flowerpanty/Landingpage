@@ -82,6 +82,7 @@ try {
   await cdp.command("Page.enable");
   await cdp.command("Runtime.enable");
   await cdp.command("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "(() => { window.__boardMotion = { banks: 0, slotFlips: 0 }; document.addEventListener('animationstart', (event) => { if (event.target.matches?.('#flight-rows .flap-bank')) window.__boardMotion.banks += 1; }, true); const observer = new MutationObserver((records) => { for (const record of records) if (record.target.matches?.('#flight-rows .flap-slot.is-flipping')) window.__boardMotion.slotFlips += 1; }); observer.observe(document, { subtree: true, attributes: true, attributeFilter: ['class'] }); })();" });
   await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: `(() => { const NativeDate = Date; function FixedDate(...args) { return args.length ? new NativeDate(...args) : new NativeDate('2026-09-28T06:30:00+09:00'); } FixedDate.now = () => new NativeDate('2026-09-28T06:30:00+09:00').getTime(); FixedDate.parse = NativeDate.parse; FixedDate.UTC = NativeDate.UTC; FixedDate.prototype = NativeDate.prototype; window.Date = FixedDate; })();` });
   await cdp.command("Page.navigate", { url: `http://127.0.0.1:${appPort}/gimpo-board/` });
   let metrics;
@@ -92,14 +93,22 @@ try {
   }
   if (metrics.firstRenderMs === null) throw new Error("Board did not finish initial render");
   const frames = await cdp.evaluate(`async () => { const gaps = []; let previous = performance.now(); for (let i = 0; i < 24; i += 1) { await new Promise(requestAnimationFrame); const current = performance.now(); gaps.push(current - previous); previous = current; window.scrollBy(0, 72); } return gaps.sort((a,b) => a-b)[Math.floor(gaps.length * .95)]; }`);
+  for (let i = 0; i < 30; i += 1) {
+    if (await cdp.evaluate(`() => performance.getEntriesByName('gimpo-board-initial-settled').length === 1`)) break;
+    await wait(25);
+  }
+  const entrance = await cdp.evaluate(`() => { const start = performance.getEntriesByName('gimpo-board-initial-entrance')[0]; const end = performance.getEntriesByName('gimpo-board-initial-settled')[0]; return { durationMs: start && end ? Math.round(end.startTime - start.startTime) : null, detail: start?.detail ?? null, ...window.__boardMotion, loaderSlots: document.querySelectorAll('#board-loader .flap-slot').length, firstFlight: document.querySelector('#flight-rows [data-field=flight] .flap-bank')?.dataset.value, activeSlotFlips: document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length }; }`);
   const payload = await (await fetch(`http://127.0.0.1:${appPort}/api/gimpo-board/flights?type=departure`)).json();
-  console.log(JSON.stringify({ ...metrics, scrollFrameP95Ms: Math.round(frames), apiRows: payload.data.length }));
+  console.log(JSON.stringify({ ...metrics, scrollFrameP95Ms: Math.round(frames), apiRows: payload.data.length, entrance }));
   if (verify) {
     assert.equal(payload.data.length, 501, "the API must retain every full-day flight");
     assert.equal(metrics.rows, 10, "mobile defaults to ten time-window rows");
     assert.equal(metrics.slots, 320, "only visible mobile rows should own 7+11+5+9 mechanical slots");
     assert.equal(metrics.boardCount, "10 / 272 FLIGHTS", "the default time window should include only 05:30–10:30 KST flights, not the full day");
     assert.ok(metrics.documentWidth <= metrics.viewport, "mobile board must not overflow");
+    assert.ok(metrics.firstRenderMs < 500, `initial flight values should be ready promptly: ${metrics.firstRenderMs}ms`);
+    assert.ok(entrance.durationMs !== null && entrance.durationMs <= 500 && entrance.detail?.rows === 10 && entrance.detail?.banks === 40 && entrance.detail?.rowStaggerMs === 22 && entrance.banks > 0 && entrance.slotFlips === 0 && entrance.activeSlotFlips === 0 && entrance.loaderSlots === 0 && entrance.firstFlight, `mobile should use static values and a sub-500ms bank entrance: ${JSON.stringify(entrance)}`);
+    assert.ok(frames <= 45, `mobile scroll frame p95 should stay responsive: ${frames}ms`);
     assert.equal(await cdp.evaluate(`() => !document.getElementById('board-more').hidden`), true, "more relevant flights should be available progressively");
     await cdp.evaluate(`() => { document.getElementById('board-more').click(); return true; }`);
     assert.equal(await cdp.evaluate(`() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length`), 20, "more button should reveal one mobile page");
@@ -124,6 +133,15 @@ try {
     }
     assert.equal(await cdp.evaluate(`() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length`), 16, "desktop defaults to sixteen rows");
     assert.equal(await cdp.evaluate(`() => document.documentElement.scrollWidth <= innerWidth`), true, "desktop board must not overflow");
+    await cdp.command("Page.navigate", { url: `http://127.0.0.1:${appPort}/gimpo-board/` });
+    let desktopEntrance;
+    for (let i = 0; i < 80; i += 1) {
+      desktopEntrance = await cdp.evaluate(`() => { const start = performance.getEntriesByName('gimpo-board-initial-entrance')[0]; const end = performance.getEntriesByName('gimpo-board-initial-settled')[0]; return end ? { rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, slots: document.querySelectorAll('#flight-rows .flap-slot').length, nodes: document.querySelectorAll('*').length, documentWidth: document.documentElement.scrollWidth, viewport: innerWidth, durationMs: Math.round(end.startTime - start.startTime), detail: start.detail, ...window.__boardMotion } : null; }`);
+      if (desktopEntrance) break;
+      await wait(25);
+    }
+    assert.ok(desktopEntrance?.rows === 16 && desktopEntrance.slots === 640 && desktopEntrance.documentWidth <= desktopEntrance.viewport && desktopEntrance.durationMs <= 500 && desktopEntrance.detail?.banks === 80 && desktopEntrance.detail?.rowStaggerMs === 18 && desktopEntrance.banks > 0 && desktopEntrance.slotFlips === 0, `desktop should also use a sub-500ms bank entrance: ${JSON.stringify(desktopEntrance)}`);
+    console.log(JSON.stringify({ desktopEntrance }));
     console.log("gimpo board window regression: PASS");
   }
 } finally {

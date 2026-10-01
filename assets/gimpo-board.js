@@ -38,7 +38,7 @@
   let requestNumber = 0;
   let lastTrigger = null;
   let hasLoadedRows = false;
-  let hasPlayedInitialFlapReveal = false;
+  let hasPlayedInitialEntrance = false;
   let initialFlight = flights.flightQuery();
   let searchTerm = "";
   let searchTimer;
@@ -58,13 +58,6 @@
   }
 
   function pageSize() { return mobileQuery.matches ? 10 : 16; }
-
-  for (const [index, word] of ["GIMPO", "FLIGHT", "INFO"].entries()) {
-    const bank = flap.createFlapBank(" ".repeat(word.length), "flap-bank--loader");
-    bank.setAttribute("aria-hidden", "true");
-    loader.querySelector(".board-loader-banks").append(bank);
-    setTimeout(() => flap.setFlapValue(bank, word, { rowDelay: index * 50 }), 30);
-  }
 
   function label(airport) {
     return airport?.ko || airport?.en || airport?.code || "—";
@@ -151,23 +144,23 @@
       : `시간 ${row.revisedTime || row.scheduledTime || "-"}`);
   }
 
-  function bankCell(field, value, labelText, blank = false) {
+  function bankCell(field, value, labelText) {
     const td = cell("");
     td.dataset.field = field;
     td.setAttribute("role", "cell");
     td.setAttribute("aria-label", `${labelText} ${value}`);
     const width = (mobileQuery.matches ? MOBILE_BANK_WIDTHS : BANK_WIDTHS)[field];
-    const bank = flap.createFlapBank(blank ? " ".repeat(width) : value, `flap-bank--${field}`, width);
+    const bank = flap.createFlapBank(value, `flap-bank--${field}`, width);
     bank.setAttribute("aria-hidden", "true");
     td.append(bank);
-    return { td, bank, targetValue: value };
+    return { td, bank };
   }
 
-  function flightRow(row, blank = false) {
+  function flightRow(row) {
     const tr = document.createElement("tr");
     tr.setAttribute("role", "row");
     tr.dataset.flightId = row.id;
-    const flight = bankCell("flight", row.flightNumber, "편명", blank);
+    const flight = bankCell("flight", row.flightNumber, "편명");
     const button = document.createElement("button");
     button.type = "button";
     button.className = "flight-number";
@@ -182,19 +175,19 @@
     flight.td.append(airlineName);
 
     const endpoint = type === "departure" ? row.destination : row.origin;
-    const route = bankCell("route", routeValue(endpoint), type === "departure" ? "목적지" : "출발지", blank);
+    const route = bankCell("route", routeValue(endpoint), type === "departure" ? "목적지" : "출발지");
     const routeKorean = document.createElement("small"); routeKorean.className = "flight-cell-sub route-korean";
     routeKorean.textContent = routeSecondaryLabel(endpoint);
     route.td.setAttribute("aria-label", `${type === "departure" ? "목적지" : "출발지"} ${mechanicalPlace(endpoint)} ${endpoint.ko || ""}`.trim());
     route.td.append(routeKorean); tr.append(route.td);
 
-    const time = bankCell("time", row.revisedTime || row.scheduledTime || "-", "시간", blank);
+    const time = bankCell("time", row.revisedTime || row.scheduledTime || "-", "시간");
     const scheduled = document.createElement("small"); scheduled.className = "flight-cell-sub scheduled-time";
     setTimeMetadata(time, scheduled, row);
     tr.append(time.td);
-    const gate = mobileQuery.matches ? null : bankCell("gate", gateDisplay(row.gate), "게이트", blank);
+    const gate = mobileQuery.matches ? null : bankCell("gate", gateDisplay(row.gate), "게이트");
     if (gate) tr.append(gate.td);
-    const status = bankCell("status", statusValue(row.status.en), "운항상태", blank);
+    const status = bankCell("status", statusValue(row.status.en), "운항상태");
     status.td.dataset.status = (row.status.en || "").toUpperCase();
     const statusKorean = document.createElement("small"); statusKorean.className = "flight-cell-sub status-korean";
     statusKorean.textContent = row.status.ko || "";
@@ -261,13 +254,19 @@
       const currentIds = new Set(rows.map((row) => row.id));
       for (const id of rowElements.keys()) if (!currentIds.has(id)) rowElements.delete(id);
     }
-    const reveal = dataUpdate && !hasPlayedInitialFlapReveal && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const enter = dataUpdate && !hasPlayedInitialEntrance && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const rowStaggerMs = mobileQuery.matches ? 22 : 18;
+    const bankDurationMs = 140;
     const elements = visible.map((row, index) => {
       let tr = rowElements.get(row.id);
       if (!tr) {
-        tr = flightRow(row, reveal);
+        tr = flightRow(row);
         rowElements.set(row.id, tr);
       } else updateRow(tr, row);
+      if (enter) {
+        tr.style.setProperty("--entrance-delay", `${index * rowStaggerMs}ms`);
+        tr.classList.add("is-entering");
+      }
       return tr;
     });
     if (rowsElement.children.length !== elements.length || elements.some((tr, index) => rowsElement.children[index] !== tr)) {
@@ -275,24 +274,20 @@
     }
     const displayedIds = new Set(visible.map((row) => row.id));
     for (const id of rowElements.keys()) if (!displayedIds.has(id)) rowElements.delete(id);
-    if (!hasPlayedInitialFlapReveal) {
-      hasPlayedInitialFlapReveal = true;
-      if (reveal) {
-        const slots = elements.flatMap((tr) => [...tr.querySelectorAll(".flap-slot")]);
-        performance.mark("gimpo-board-initial-blank", {
-          detail: { rows: elements.length, blankSlots: slots.filter((slot) => slot.dataset.char === " ").length, slots: slots.length }
+    if (!hasPlayedInitialEntrance) {
+      hasPlayedInitialEntrance = true;
+      if (enter) {
+        const durationMs = bankDurationMs + (elements.length - 1) * rowStaggerMs;
+        performance.mark("gimpo-board-initial-entrance", {
+          detail: { rows: elements.length, banks: elements.reduce((total, tr) => total + Object.values(tr._banks).filter(Boolean).length, 0), rowStaggerMs, bankDurationMs, durationMs }
         });
         setTimeout(() => {
-          let changedSlots = 0;
-          elements.forEach((tr, rowIndex) => {
-            if (!tr.isConnected) return;
-            for (const part of Object.values(tr._banks)) {
-              if (part && !part.bank.dataset.value.trim()) changedSlots += flap.setFlapValue(part.bank, part.targetValue, { animate: true, rowDelay: rowIndex * 50, charStagger: 20 });
-            }
-          });
-          performance.mark("gimpo-board-initial-flip", { detail: { changedSlots } });
-          setTimeout(() => performance.mark("gimpo-board-initial-settled"), 1100);
-        }, 50);
+          for (const tr of elements) {
+            tr.classList.remove("is-entering");
+            tr.style.removeProperty("--entrance-delay");
+          }
+          performance.mark("gimpo-board-initial-settled");
+        }, durationMs);
       }
     }
     if (dataUpdate && !hasLoadedRows) performance.mark("gimpo-board-first-render");

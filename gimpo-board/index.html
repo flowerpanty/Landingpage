@@ -17,10 +17,10 @@
   <link rel="icon" type="image/svg+xml" href="../images/nm-bear-mark.svg">
   <link rel="stylesheet" href="../assets/gimpo-board.css?v=20261001a">
   <link rel="stylesheet" href="../assets/split-flap.css?v=20260928c">
-  <link rel="stylesheet" href="../assets/board-immersive.css?v=20260928c">
+  <link rel="stylesheet" href="../assets/board-immersive.css?v=20261001a">
   <script defer src="../assets/gimpo-flight-data.js?v=20260928c"></script>
   <script defer src="../assets/split-flap.js?v=20260928c"></script>
-  <script defer src="../assets/gimpo-board.js?v=20260928c"></script>
+  <script defer src="../assets/gimpo-board.js?v=20261001a"></script>
 <style data-nm-accessibility>
   .nm-skip-link { position: fixed; z-index: 10000; top: -80px; left: 12px; min-height: 44px; padding: 11px 16px; color: #111; background: #fff4cf; border: 3px solid #111; border-radius: 999px; font: 800 14px/1.2 system-ui, sans-serif; text-decoration: none; transition: top .16s ease; }
   .nm-skip-link:focus { top: 12px; }
@@ -273,7 +273,7 @@
         <div class="board-boardline visually-hidden"><div><span class="board-panel-code">GMP</span><span id="board-direction">DEPARTURES / 출발</span></div><span id="board-count">— FLIGHTS</span></div>
         <div id="board-notice" class="board-notice" role="status" aria-live="polite" hidden></div>
         <div class="board-table-wrap">
-          <div id="board-loader" class="board-loader" aria-live="polite"><span class="board-loader-banks" aria-hidden="true"></span><span class="board-loader-caption">PLEASE WAIT</span></div>
+          <div id="board-loader" class="board-loader" aria-live="polite"><span class="board-loader-text" aria-hidden="true">GIMPO · FLIGHT INFO</span><span class="board-loader-caption">PLEASE WAIT</span></div>
           <table class="flight-table" role="table">
             <caption class="visually-hidden">김포공항 실시간 항공편 목록. 편명을 선택하면 상세 정보를 볼 수 있습니다.</caption>
             <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">FLIGHT</th><th role="columnheader" scope="col" id="route-heading">DESTINATION</th><th role="columnheader" scope="col">TIME</th><th role="columnheader" scope="col">GATE</th><th role="columnheader" scope="col">STATUS</th></tr></thead>
