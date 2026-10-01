@@ -311,6 +311,7 @@ async function verifyGimpoHub(cdp, width) {
       notice: document.getElementById('notice-title').textContent.trim(),
       address: document.querySelector('.hub-location address').textContent.trim(),
       boardHref: new URL(document.querySelector('.hub-live .hub-text-link').href).pathname,
+      boardContext: document.querySelector('.hub-live .hub-section-lead > p').textContent.trim(),
       mapHref: document.querySelector('.hub-location a').href,
       sticky: sticky.map((link) => ({ text: link.textContent.trim(), href: link.href, height: link.getBoundingClientRect().height, width: link.getBoundingClientRect().width, top: link.getBoundingClientRect().top, background: getComputedStyle(link).backgroundColor })),
       stickyPosition: style('.mobile-sticky').position,
@@ -338,6 +339,7 @@ async function verifyGimpoHub(cdp, width) {
   assert.equal(state.notice, "김포공항 안에서 판매하지 않습니다.");
   assert.equal(state.address, "서울특별시 강서구 송정로 25 1층");
   assert.equal(state.boardHref, "/gimpo-board/");
+  assert.match(state.boardContext, /김포공항 도착정보·도착시간과 출발정보/);
   assert.equal(state.mapHref, PICKUP_MAP_URL);
   assert.ok(!/SNS COOKIE|김포공항 5분|도보|주차|출구/.test(state.text));
   assert.deepEqual(state.clipped, []);
@@ -370,6 +372,16 @@ async function verifyGimpoHub(cdp, width) {
   await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
   const screenshot = await cdp.command("Page.captureScreenshot", { format: "png" });
   fs.writeFileSync(`/private/tmp/nm-gimpo-hub-${width}.png`, screenshot.data, "base64");
+}
+
+async function verifyBoardAnswers(cdp, width) {
+  const state = await evaluate(cdp, "() => { const board = document.querySelector('.board-shell').getBoundingClientRect(); const info = document.querySelector('.board-info').getBoundingClientRect(); const faq = [...document.querySelectorAll('.board-info-questions details')]; const text = [...document.querySelectorAll('.board-info-answers h2, .board-info-questions summary')]; return { width: innerWidth, documentWidth: document.documentElement.scrollWidth, infoBelowBoard: info.top >= board.bottom - 1, mainStartsWithBoard: document.querySelector('main').firstElementChild?.classList.contains('board-shell'), answers: [...document.querySelectorAll('.board-info-answers h2')].map((node) => node.textContent.trim()), faqCount: faq.length, faqClipped: text.filter((node) => node.scrollWidth > node.clientWidth + 1 || node.getBoundingClientRect().right > innerWidth + 1).map((node) => node.textContent.trim()), tabs: [...document.querySelectorAll('[role=tab]')].map((tab) => tab.textContent.trim()) }; }");
+  assert.equal(state.width, width);
+  assert.ok(state.documentWidth <= width && state.infoBelowBoard && state.mainStartsWithBoard, `board answers must stay below the live board without overflow at ${width}px: ${JSON.stringify(state)}`);
+  assert.deepEqual(state.answers, ["김포공항 도착정보·도착시간 확인", "김포공항 출발정보·출발시간 확인"]);
+  assert.equal(state.faqCount, 4);
+  assert.deepEqual(state.faqClipped, [], `board FAQ text should fit at ${width}px`);
+  assert.deepEqual(state.tabs, ["DEPARTURES출발", "ARRIVALS도착"]);
 }
 
 const flightProvider = await startMockFlightProvider();
@@ -488,6 +500,7 @@ try {
   const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.brand-actions a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
   assert.equal(boardMobile.title, "김포공항 도착정보·출발정보 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
+  await verifyBoardAnswers(cdp, 390);
   assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION"], `board mobile columns at viewport ${boardMobile.viewport}`);
   assert.deepEqual(boardMobile.links, ["/gimpo/pickup/", "/gimpo/"]);
   assert.deepEqual([boardMobile.route, boardMobile.routeKorean], ["JEJU", "제주 · CJU"], "English destination should be the main mechanical value with Korean and provider code below");
@@ -668,6 +681,7 @@ try {
   assert.equal(boardDesktop.grid, "grid", "desktop board should use mechanical grid rows");
   assert.ok(boardDesktop.slots > 0, "desktop board should contain physical flap slots");
   assert.ok(boardDesktop.documentWidth <= boardDesktop.viewport, "desktop Gimpo board must not overflow");
+  await verifyBoardAnswers(cdp, 1280);
   const desktopMarquee = await evaluate(cdp, "() => { const title = document.getElementById('board-marquee-title'); const tagline = document.querySelector('.board-marquee-copy p'); const logo = document.querySelector('.board-logo'); return { title: title.textContent, titleRight: title.getBoundingClientRect().right, logoLeft: logo.getBoundingClientRect().left, headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, taglineWeight: Number(getComputedStyle(tagline).fontWeight), titleWeight: Number(getComputedStyle(title).fontWeight) }; }");
   assert.ok(desktopMarquee.title === "DEPARTURE" && desktopMarquee.titleRight < desktopMarquee.logoLeft && desktopMarquee.headerHeight >= 180 && desktopMarquee.titleWeight >= 800 && desktopMarquee.taglineWeight >= 800, `desktop marquee should match the bold reference without overlap: ${JSON.stringify(desktopMarquee)}`);
   for (const width of [800, 1024, 1100]) {

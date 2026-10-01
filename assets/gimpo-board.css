@@ -17,10 +17,14 @@ a { color: inherit; }
 .board-info { width: min(1180px, calc(100% - 40px)); margin: 36px auto 0; padding: 22px 24px; border-left: 5px solid var(--yellow); background: #f7f4ec; }
 .board-info h2 { margin: 0 0 12px; font-size: clamp(23px, 2.4vw, 32px); line-height: 1.2; }
 .board-info > p { max-width: 80ch; margin: 8px 0; line-height: 1.6; }
+.board-info-answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 20px 0; }
+.board-info-answers article { min-width: 0; padding-top: 12px; border-top: 1px solid #cbc5b9; }
+.board-info-answers h2 { margin: 0 0 6px; font-size: clamp(19px, 2vw, 23px); }
+.board-info-answers p { margin: 0; line-height: 1.55; }
 .board-info-questions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin-top: 20px; }
-.board-info-questions article { min-width: 0; padding-top: 12px; border-top: 1px solid #cbc5b9; }
-.board-info-questions h3 { margin: 0 0 6px; font-size: 16px; line-height: 1.35; }
-.board-info-questions p { margin: 0; line-height: 1.55; }
+.board-info-questions details { min-width: 0; padding-top: 12px; border-top: 1px solid #cbc5b9; }
+.board-info-questions summary { font-size: 16px; font-weight: 800; line-height: 1.35; cursor: pointer; word-break: keep-all; }
+.board-info-questions p { margin: 8px 0 0; line-height: 1.55; }
 .board-info a { text-underline-offset: 3px; }
 .board-info-links { display: flex; flex-wrap: wrap; gap: 8px 22px; font-weight: 800; }
 .brand-section { width: min(1180px, calc(100% - 40px)); margin: 90px auto 80px; display: block; }
@@ -75,8 +79,9 @@ a { color: inherit; }
 @media (max-width: 760px) {
   html:has(.flight-search-sheet[open]) { overflow: hidden; }
   .board-info { width: calc(100% - 24px); margin-top: 20px; padding: 18px 16px; }
+  .board-info-answers { grid-template-columns: 1fr; gap: 14px; }
   .board-info-questions { grid-template-columns: 1fr; gap: 14px; }
-  .board-info-questions h3 { font-size: 15px; }
+  .board-info-questions summary { font-size: 15px; }
   .brand-section { width: calc(100% - 24px); margin: 65px auto; display: block; }
   .brand-content h2 { font-size: 36px; }
   .brand-photos { margin-top: 25px; }

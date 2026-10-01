@@ -70,7 +70,7 @@
 ### GIMPO AIRPORT COOKIE & GIFT HUB — 김포공항 선물·디저트·기념품
 - https://nothingmatters.co.kr/gimpo/ — 김포공항 선물·디저트·기념품의 대표 허브. COOKIE FLIGHT 등 여행 쿠키와 선물 탐색, 제품 상세 연결.
 - https://nothingmatters.co.kr/gimpo/pickup/ — 김포공항 인근 공항동 작업실의 예약 픽업 방법·위치 안내.
-- https://nothingmatters.co.kr/gimpo-board/ — 김포공항 실시간 출발·도착 항공편 조회 전광판.
+- https://nothingmatters.co.kr/gimpo-board/ — 김포공항 도착정보·도착시간·출발정보·출발시간을 확인하는 실시간 항공편 조회 페이지. 편명, 출발지·목적지, 게이트와 운항상태를 한국공항공사 제공 자료를 바탕으로 표시합니다.
 
 ## Main ordering use cases
 - small handmade cookie gifts
