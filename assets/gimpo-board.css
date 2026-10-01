@@ -13,8 +13,8 @@ a { color: inherit; }
 .board-notice[hidden] { display: none; }
 .board-notice button { margin-left: 12px; border: 2px solid #111; background: #111; color: #fff; padding: 7px 10px; font-weight: 900; }
 
-/* Supporting brand section, after the physical board. */
-.board-info { width: min(1180px, calc(100% - 40px)); margin: 36px auto 0; padding: 22px 24px; border-left: 5px solid var(--yellow); background: #f7f4ec; }
+/* Brand invitation follows the board; flight answers remain below it. */
+.board-info { width: min(1180px, calc(100% - 40px)); margin: 36px auto 80px; padding: 22px 24px; border-left: 5px solid var(--yellow); background: #f7f4ec; }
 .board-info h2 { margin: 0 0 12px; font-size: clamp(23px, 2.4vw, 32px); line-height: 1.2; }
 .board-info > p { max-width: 80ch; margin: 8px 0; line-height: 1.6; }
 .board-info-answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 20px 0; }
@@ -27,7 +27,7 @@ a { color: inherit; }
 .board-info-questions p { margin: 8px 0 0; line-height: 1.55; }
 .board-info a { text-underline-offset: 3px; }
 .board-info-links { display: flex; flex-wrap: wrap; gap: 8px 22px; font-weight: 800; }
-.brand-section { width: min(1180px, calc(100% - 40px)); margin: 90px auto 80px; display: block; }
+.brand-section { width: min(1180px, calc(100% - 40px)); margin: 36px auto; display: block; }
 .brand-eyebrow { display: inline-block; background: var(--black); color: var(--yellow); padding: 9px 11px; letter-spacing: .12em; font: 900 12px/1 Arial, sans-serif; }
 .brand-content h2 { font-size: clamp(34px, 4vw, 55px); letter-spacing: -.06em; line-height: 1.17; margin: 18px 0 24px; }
 .brand-content > p:not(.brand-eyebrow) { font-size: 17px; line-height: 1.65; }
@@ -78,11 +78,11 @@ a { color: inherit; }
 
 @media (max-width: 760px) {
   html:has(.flight-search-sheet[open]) { overflow: hidden; }
-  .board-info { width: calc(100% - 24px); margin-top: 20px; padding: 18px 16px; }
+  .board-info { width: calc(100% - 24px); margin: 20px auto 65px; padding: 18px 16px; }
   .board-info-answers { grid-template-columns: 1fr; gap: 14px; }
   .board-info-questions { grid-template-columns: 1fr; gap: 14px; }
   .board-info-questions summary { font-size: 15px; }
-  .brand-section { width: calc(100% - 24px); margin: 65px auto; display: block; }
+  .brand-section { width: calc(100% - 24px); margin: 20px auto; display: block; }
   .brand-content h2 { font-size: 36px; }
   .brand-photos { margin-top: 25px; }
   .brand-photos img { height: 190px; }

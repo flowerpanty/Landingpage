@@ -524,6 +524,7 @@ for (const [pathname, h1] of kimpoGuides) {
 for (const href of ["/gimpo/pickup/", "/gimpo/"]) {
   assert.ok(boardHtml.includes(`href="${href}"`), `flight board should link to ${href}`);
 }
+assert.ok(boardHtml.indexOf('class="board-shell"') < boardHtml.indexOf('class="brand-section"') && boardHtml.indexOf('class="brand-section"') < boardHtml.indexOf('class="board-info"') && boardHtml.indexOf('class="board-info"') < boardHtml.indexOf('class="board-footer"'), "flight board, brand, information, and footer must follow DOM order");
 assert.match(boardHtml, /class="board-info"[\s\S]*?김포공항 도착정보와 출발정보 확인[\s\S]*?한국공항공사 제공 자료/);
 for (const term of ["김포공항 도착정보", "김포공항 도착시간", "김포공항 출발정보", "김포공항 출발시간"]) {
   assert.ok(boardHtml.includes(term), `flight board should answer ${term}`);
