@@ -66,6 +66,9 @@ const ITEM_LISTS = {
   ],
   "/": [
     ...PRODUCT_CATALOG.map((product) => [product.name, product.detailPath]),
+    ...(SITE_PAGE_DATA.pages || [])
+      .filter((page) => page.product?.homeCard)
+      .map((page) => [page.product.name, page.path]),
     ["결혼식 답례품 쿠키 가이드", "/guides/wedding-favor-cookie/"],
     ["기업행사 쿠키 가이드", "/guides/corporate-event-cookie/"],
     ["소량 선물 쿠키 고르기", "/small-gift/"],

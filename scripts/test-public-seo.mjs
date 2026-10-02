@@ -136,7 +136,7 @@ for (const page of searchLandingPages) {
 
 for (const [pathname, expectedProperties] of [
   ["/products/scone/", ["맛 구성", "예약 제작", "주문 기준", "수령 방식"]],
-  ["/products/terminal-sand-cookie/", ["주문 방식", "수령 방식"]],
+  ["/products/terminal-sand-cookie/", ["맛 구성", "주문 방식", "수령 방식"]],
 ]) {
   const html = readHtml(filePathForPathname(pathname));
   const graph = getStaticSchema(html)["@graph"] || [];
@@ -149,6 +149,36 @@ for (const [pathname, expectedProperties] of [
   assert.equal(productEntity?.offers, undefined, `${pathname}: Product must not infer a price`);
   assert.deepEqual(productEntity?.additionalProperty?.map((property) => property.name), expectedProperties, `${pathname}: Product should expose only confirmed properties`);
 }
+
+const terminalHtml = readHtml(filePathForPathname("/products/terminal-sand-cookie/"));
+const terminalGraph = getStaticSchema(terminalHtml)["@graph"] || [];
+const terminalProduct = terminalGraph.find((entry) => entry["@type"] === "Product");
+const terminalFaq = terminalGraph.find((entry) => entry["@type"] === "FAQPage");
+assert.equal(getAttribute(terminalHtml, /<title>([\s\S]*?)<\/title>/i), "TERMINAL 카라멜 샌드쿠키 선물 | 낫띵메터스");
+assert.equal(terminalProduct?.name, "TERMINAL 카라멜 샌드쿠키");
+assert.equal(terminalProduct?.offers, undefined, "TERMINAL must not publish an unverified price");
+assert.equal(getMeta(terminalHtml, "property", "og:image"), `${SITE_URL}/images/terminal/terminal-hero-package.jpg`);
+assert.deepEqual(terminalProduct?.image, [`${SITE_URL}/images/terminal/terminal-hero-package.jpg`]);
+const terminalFlavorPhotos = [...terminalHtml.matchAll(/<article class="flavor-card reveal">([\s\S]*?)<\/article>/g)].map(([, card]) => [
+  card.match(/<h3>([^<]+)<\/h3>/)?.[1],
+  card.match(/<img src="([^"]+)"/)?.[1],
+]);
+assert.deepEqual(terminalFlavorPhotos, [
+  ["피스타치오", "../../images/terminal/flavor-pistachio.jpg"],
+  ["패션프루츠코코넛", "../../images/terminal/flavor-passionfruit-coconut.jpg"],
+  ["제주말차레몬", "../../images/terminal/flavor-matcha-lemon.jpg"],
+  ["흑임자", "../../images/terminal/flavor-black-sesame.jpg"],
+  ["커피 밀크 초콜릿", "../../images/terminal/flavor-coffee-milk-chocolate.jpg"],
+  ["무화과피칸", "../../images/terminal/flavor-fig-pecan.jpg"],
+]);
+assert.deepEqual(terminalFaq?.mainEntity.map((item) => item.name), [
+  "TERMINAL은 어떤 쿠키인가요?",
+  "어떤 맛이 있나요?",
+  "어떻게 보관하나요?",
+  "김포공항 근처에서 픽업할 수 있나요?",
+  "단체 주문이나 일정 상담이 가능한가요?",
+]);
+assert.doesNotMatch(terminalHtml, /SEARCH KEYWORDS|BENEFIT FIRST|전환이 올라갑니다|placeholder\.com/);
 
 for (const [pathname, { title, description, optimizedImage }] of [
   ["/brookie/", { title: "브루키 답례품·커스텀 쿠키 | 낫띵메터스", description: /브루키 답례품·커스텀 쿠키/, optimizedImage: "/images/main-order-brookie-thumb-optimized.jpg" }],
@@ -710,7 +740,7 @@ assert.match(
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-09-24" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-10-02" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }

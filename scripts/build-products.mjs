@@ -337,7 +337,12 @@ function buildHome() {
   const next = replaceManagedBlock(
     replaceManagedBlock(home, "NM_NEW_ARRIVAL", ""),
     "NM_PRODUCT_GRID",
-    products.map(renderProductCard).join("\n")
+    [
+      ...products,
+      ...(sitePageData.pages || [])
+        .filter((page) => page.product?.homeCard)
+        .map((page) => ({ ...page.product, detailPath: page.path }))
+    ].map(renderProductCard).join("\n")
   );
 
   if (isCheckMode) {
