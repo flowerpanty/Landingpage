@@ -791,10 +791,12 @@
   transition: transform 180ms ease;
 }
 
+.nm-pickup-page .nm-pickup-links .nm-pickup-package-thumb,
 .nm-pickup-page .nm-pickup-links .nm-pickup-cookie-thumb {
   background: #fffdf7;
 }
 
+.nm-pickup-page .nm-pickup-links .nm-pickup-package-thumb img,
 .nm-pickup-page .nm-pickup-links .nm-pickup-cookie-thumb img {
   object-fit: contain;
 }

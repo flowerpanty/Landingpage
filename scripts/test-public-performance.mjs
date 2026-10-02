@@ -143,24 +143,22 @@ const brookieHero = brookieHtml.match(/<img\b[^>]*\bsrc=["']([^"']*main-order-br
 assert.equal(brookieHero, "images/main-order-brookie-thumb-optimized.jpg", "brookie should use the optimized hero image");
 assert.ok(imageSize(brookieHero, brookieHtmlPath) <= MAX_PRIMARY_IMAGE_BYTES, "brookie optimized hero image must be 500KB or smaller");
 const pickupHtml = fs.readFileSync(pickupHtmlPath, "utf8");
-const pickupCard = pickupHtml.match(/<figure class="nm-pickup-cookie-thumb">([\s\S]*?)<\/figure>/i)?.[1] || "";
-const pickupSources = [...pickupCard.matchAll(/<source\b[^>]*\bsrcset=["']([^"']+)["'][^>]*>/gi)].map((match) => match[1]);
-const pickupFallback = pickupCard.match(/<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/i)?.[1] || "";
-
-assert.deepEqual(
-  pickupSources,
-  ["../images/pickup-cute-cookie-optimized.webp", "../images/pickup-cute-cookie-optimized.png"],
-  "pickup Cookie Crew card must prioritize WebP and retain the optimized PNG fallback"
-);
-assert.equal(pickupFallback, "../images/pickup-cute-cookie.png", "pickup Cookie Crew card must retain the original PNG fallback");
-const pickupOptimizedSize = imageSize(pickupSources[0], pickupHtmlPath);
-const pickupPngFallbackSize = imageSize(pickupSources[1], pickupHtmlPath);
-const pickupFallbackSize = imageSize(pickupFallback, pickupHtmlPath);
-assert.ok(pickupOptimizedSize != null, "optimized pickup Cookie Crew image must exist");
-assert.ok(pickupPngFallbackSize != null, "optimized PNG pickup Cookie Crew image must exist");
-assert.ok(pickupFallbackSize != null, "pickup Cookie Crew fallback image must exist");
-assert.ok(pickupOptimizedSize <= MAX_PICKUP_COOKIE_BYTES, "optimized pickup Cookie Crew image must be 500KB or smaller");
-assert.ok(pickupPngFallbackSize <= MAX_PICKUP_COOKIE_BYTES, "optimized PNG pickup Cookie Crew image must be 500KB or smaller");
-assert.ok(pickupFallbackSize > MAX_PRIMARY_IMAGE_BYTES, "pickup Cookie Crew fallback fixture should remain a large source image");
+const homeHtml = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+for (const [route, thumbnail] of [
+  ["products/terminal-sand-cookie/", "images/terminal/terminal-hero-package.jpg"],
+  ["products/cookie-flight/", "images/cookie-flight-box-open.jpg"],
+  ["cookie-crew/", "images/cookie-crew-group-scene.jpg"]
+]) {
+  const pickupCard = [...pickupHtml.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)]
+    .find((match) => match[1] === `../${route}` && match[2].includes("<figure"))?.[2] || "";
+  const homeCard = [...homeHtml.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)]
+    .find((match) => match[1] === route && match[2].includes("<figure"))?.[2] || "";
+  const pickupImage = pickupCard.match(/<img\b[^>]*\bsrc="([^"]+)"/i)?.[1] || "";
+  const homeImage = homeCard.match(/<img\b[^>]*\bsrc="([^"]+)"/i)?.[1] || "";
+  assert.equal(homeImage, thumbnail, `${route}: home card thumbnail`);
+  assert.equal(pickupImage, `../${homeImage}`, `${route}: pickup should use the same thumbnail as OUR COOKIES`);
+  const bytes = imageSize(pickupImage, pickupHtmlPath);
+  assert.ok(bytes != null && bytes <= MAX_PICKUP_COOKIE_BYTES, `${route}: pickup thumbnail must exist and be 500KB or smaller`);
+}
 
 console.log(`public performance checks: passed ${discoverHtmlFiles().length} pages`);

@@ -746,8 +746,8 @@ for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corpo
 }
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-09-22<\/lastmod>/,
-  "pickup sitemap lastmod should reflect the Gimpo Airport dessert gift guide"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-10-02<\/lastmod>/,
+  "pickup sitemap lastmod should reflect the updated product lineup"
 );
 
 const cookieStoragePath = "/guides/cookie-storage/";
@@ -889,7 +889,7 @@ assert.ok(guidesItemList?.itemListElement?.some((item) => item.url === `${SITE_U
 
 const pickupPath = "/pickup/";
 const pickupEntry = registryEntries.get(pickupPath);
-assert.equal(pickupEntry?.lastmod, "2026-09-22", "pickup registry lastmod should reflect COOKIE FLIGHT activation");
+assert.equal(pickupEntry?.lastmod, "2026-10-02", "pickup registry lastmod should reflect the updated product lineup");
 const pickupHtml = readHtml(filePathForPathname(pickupPath));
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /김포공항/);
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /디저트/);
@@ -909,18 +909,19 @@ const pickupItemList = pickupSchema["@graph"].find((entry) => entry["@type"] ===
 assert.deepEqual(
   pickupItemList?.itemListElement?.map((item) => [item.name, item.url]),
   [
+    ["TERMINAL 카라멜 샌드쿠키", `${SITE_URL}/products/terminal-sand-cookie/`],
+    ["COOKIE FLIGHT", `${SITE_URL}/products/cookie-flight/`],
+    ["쿠키크루", `${SITE_URL}/cookie-crew/`],
     ["브루키", `${SITE_URL}/brookie/`],
     ["수제꾸덕쿠키", `${SITE_URL}/out/`],
-    ["행운쿠키", `${SITE_URL}/out/fortune/`],
-    ["쿠키크루", `${SITE_URL}/cookie-crew/`],
-    ["COOKIE FLIGHT", `${SITE_URL}/products/cookie-flight/`]
+    ["행운쿠키", `${SITE_URL}/out/fortune/`]
   ],
-  "pickup ItemList should match the five pickup order products"
+  "pickup ItemList should match the six pickup order products"
 );
 const pickupFaq = pickupSchema["@graph"].find((entry) => entry["@type"] === "FAQPage");
 assert.equal(pickupFaq?.mainEntity?.length, 7, "pickup FAQPage should contain seven AEO questions");
 const pickupProductsQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "김포공항 디저트 선물은 어떤 제품이 있나요?");
-for (const productName of ["브루키", "수제꾸덕쿠키", "행운쿠키", "쿠키크루", "COOKIE FLIGHT"]) {
+for (const productName of ["TERMINAL", "COOKIE FLIGHT", "쿠키크루", "브루키", "수제꾸덕쿠키", "행운쿠키"]) {
   assert.match(pickupProductsQuestion?.acceptedAnswer?.text || "", new RegExp(productName), `pickup FAQ should list ${productName}`);
 }
 const pickupFlightQuestion = pickupFaq?.mainEntity?.find((item) => item.name === "김포공항 근처에서 비행기 모양 쿠키를 살 수 있나요?");

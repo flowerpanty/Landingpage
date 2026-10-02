@@ -100,11 +100,12 @@ const ITEM_LISTS = {
   ],
   "/works/": WORK_ITEM_LIST,
   "/pickup/": [
+    ["TERMINAL 카라멜 샌드쿠키", "/products/terminal-sand-cookie/"],
+    ["COOKIE FLIGHT", "/products/cookie-flight/"],
+    ["쿠키크루", "/cookie-crew/"],
     ["브루키", "/brookie/"],
     ["수제꾸덕쿠키", "/out/"],
     ["행운쿠키", "/out/fortune/"],
-    ["쿠키크루", "/cookie-crew/"],
-    ["COOKIE FLIGHT", "/products/cookie-flight/"],
   ],
   "/magok-cookie/": [
     ["브루키", "/brookie/"],
