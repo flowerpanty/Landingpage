@@ -207,15 +207,15 @@
     { "id": "default-brownie", "src": "/images/work-new-01.jpg", "caption": "짧은 문구를 더한 브라우니", "href": "/products/brownie-cookie/" }
   ],
   "pages": [
-    { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-02" },
+    { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04" },
     { "path": "/bulk/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/small-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/contact/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },
     { "path": "/works/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
     { "path": "/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-02" },
     { "path": "/magok-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "마곡 쿠키·답례품" },
-    { "path": "/gimpo-board/", "status": "active", "indexing": "index", "sitemap": true, "productionReady": true, "lastmod": "2026-10-01", "breadcrumbName": "김포공항 실시간 항공편" },
-    { "path": "/gimpo/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-01", "breadcrumbName": "김포공항 선물·디저트·기념품" },
+    { "path": "/gimpo-board/", "status": "active", "indexing": "index", "sitemap": true, "productionReady": true, "lastmod": "2026-10-04", "breadcrumbName": "김포공항 실시간 항공편", "about": { "@type": "Airport", "@id": "https://nothingmatters.co.kr/#gimpo-airport", "name": "김포국제공항", "alternateName": ["Gimpo International Airport", "GMP"], "iataCode": "GMP" } },
+    { "path": "/gimpo/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04", "breadcrumbName": "김포공항 선물·디저트·기념품" },
     { "path": "/gimpo2/", "status": "active", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-29", "breadcrumbName": "김포공항 출발 전 쿠키 픽업 플래너" },
     { "path": "/gimpo/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-28", "breadcrumbName": "김포공항 쿠키 픽업" },
     { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-28" },

@@ -410,6 +410,11 @@
       event.preventDefault(); selectTab(tabs[next], true);
     });
   });
+  document.getElementById("board-arrivals-link").addEventListener("click", (event) => {
+    event.preventDefault();
+    selectTab(document.getElementById("arrivals-tab"), true);
+    document.querySelector(".board-controls").scrollIntoView({ block: "start", behavior: "instant" });
+  });
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => { searchTerm = searchInput.value; extraPages = 0; render(); }, 180);

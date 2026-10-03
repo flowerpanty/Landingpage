@@ -6,6 +6,7 @@
 - `detailPageMode: "generated"` creates `/products/{slug}/index.html` from the shared template.
 - `detailPageMode: "existing"` keeps the current hand-written product page.
 - Update `updatedAt` when a generated product changes.
+- A page's optional `about` object describes its subject in the generated WebPage schema. It does not change the brand publisher or business entity.
 
 After editing the catalog, run:
 

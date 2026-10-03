@@ -399,7 +399,7 @@ for (const entry of sourceHtmlEntries) {
 
 const boardEntry = (sitePages.pages || []).find((page) => page.path === "/gimpo-board/");
 assert.equal(boardEntry?.productionReady, true, "Gimpo board must be production-ready");
-assert.equal(boardEntry?.lastmod, "2026-10-01", "Gimpo board lastmod must reflect this update");
+assert.equal(boardEntry?.lastmod, "2026-10-04", "Gimpo board lastmod must reflect this update");
 assert.deepEqual(
   { status: boardEntry?.status, indexing: boardEntry?.indexing, sitemap: boardEntry?.sitemap },
   { status: "active", indexing: "index", sitemap: true },
@@ -407,14 +407,21 @@ assert.deepEqual(
 );
 assert.ok(locSet.has(`${SITE_URL}/gimpo-board/`), "Gimpo flight board should be in the sitemap");
 const boardHtml = readHtml(filePathForPathname("/gimpo-board/"));
-assert.match(boardHtml, /<title>김포공항 도착정보·출발정보 \| 실시간 항공편<\/title>/);
+const boardTitle = "김포공항 도착정보·도착시간 | 출발·도착 실시간 항공편";
+assert.equal(getAttribute(boardHtml, /<title>([\s\S]*?)<\/title>/i), boardTitle);
+assert.equal(getMeta(boardHtml, "property", "og:title"), boardTitle);
+assert.equal(getMeta(boardHtml, "name", "twitter:title"), boardTitle);
+assert.equal(sourceHtmlEntries.filter((entry) => getAttribute(readHtml(entry.filePath), /<title>([\s\S]*?)<\/title>/i) === boardTitle).length, 1, "arrival title should identify one public page");
+assert.equal([...boardHtml.matchAll(/<h1\b[^>]*>/g)].length, 1, "board should have exactly one semantic H1");
+assert.match(boardHtml, /<h1 class="board-page-title"><span>김포공항 도착정보·도착시간<\/span> <span>실시간 항공편<\/span><\/h1>/, "arrival H1 should be visible in static HTML");
+assert.match(boardHtml, /class="board-arrival-answer"[\s\S]*?ARRIVALS 탭에서 김포공항 도착 항공편[\s\S]*?예정시간과 변경시간이 다르면 두 시간을 함께 표시합니다\.[\s\S]*?id="board-arrivals-link" href="#arrivals-tab"/, "concise arrival answer should lead to the arrivals tab");
 assert.equal(getCanonical(boardHtml), `${SITE_URL}/gimpo-board/`);
 assert.match(getRobots(boardHtml), /^index,follow/);
 const boardDescription = getMeta(boardHtml, "name", "description");
 assert.equal(boardDescription, "김포공항 도착정보와 출발정보를 실시간 항공편 전광판에서 확인하세요. 김포공항 도착시간·출발시간, 편명, 출발지·목적지, 게이트와 운항상태를 확인할 수 있습니다. 한국공항공사 제공 자료를 바탕으로 표시합니다.");
 assert.equal(getMeta(boardHtml, "property", "og:description"), boardDescription);
 assert.equal(getMeta(boardHtml, "name", "twitter:description"), boardDescription);
-assert.ok(sitemap.includes(`<loc>${SITE_URL}/gimpo-board/</loc>\n    <lastmod>2026-10-01</lastmod>`));
+assert.ok(sitemap.includes(`<loc>${SITE_URL}/gimpo-board/</loc>\n    <lastmod>2026-10-04</lastmod>`));
 assert.doesNotMatch(boardHtml, /href="\/gimpo2\/"/);
 assert.match(boardHtml, /href="\/gimpo\/"/, "flight board should link back to the cookie hub");
 assert.match(boardHtml, /id="detail-pickup-link"[^>]*href="\/gimpo\/pickup\/"/, "selected board flight should link to pickup guidance");
@@ -424,7 +431,7 @@ assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "u
 
 for (const [pathname, title, h1, pageType] of [
   ["/gimpo/", "김포공항 선물·디저트·기념품 | 비행기 쿠키 예약 픽업 - 낫띵메터스", "김포공항 가는 날, 조금 특별한 선물을 찾고 있다면.", "CollectionPage"],
-  ["/gimpo-board/", "김포공항 도착정보·출발정보 | 실시간 항공편", "김포공항 도착정보·출발정보 실시간 항공편", "WebPage"],
+  ["/gimpo-board/", boardTitle, "김포공항 도착정보·도착시간 실시간 항공편", "WebPage"],
   ["/gimpo/pickup/", "김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS", "김포공항 가기 전, 예약한 쿠키를 픽업하세요.", "WebPage"],
 ]) {
   const entry = registryEntries.get(pathname);
@@ -432,7 +439,7 @@ for (const [pathname, title, h1, pageType] of [
   const graph = getStaticSchema(html)["@graph"];
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : "2026-10-01" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : "2026-10-04" },
     `${pathname}: registry must publish the new route`
   );
   assert.equal(getCanonical(html), `${SITE_URL}${pathname}`);
@@ -452,6 +459,8 @@ assert.equal(getMeta(gimpoHtml, "name", "description"), "김포공항 근처에�
 assert.equal(getMeta(gimpoHtml, "property", "og:title"), "김포공항 가는 날, 조금 특별한 선물이 필요하다면");
 assert.equal(getMeta(gimpoHtml, "property", "og:url"), `${SITE_URL}/gimpo/`);
 assert.ok(gimpoHtml.includes('href="/gimpo-board/"'), "hub should link to the full flight board");
+assert.match(gimpoHtml, /class="hub-shell hub-live"[\s\S]*?href="\/gimpo-board\/">김포공항 도착정보·도착시간 확인 →<\/a>/, "supporting hub should send arrival intent to the board");
+assert.match(readHtml(filePathForPathname("/")), /class="showroom-visit-order-links"[\s\S]*?href="\/gimpo-board\/">김포공항 실시간 도착·출발정보 →<\/a>/, "home pickup context should link to flight information");
 const gimpoLiveTeaser = gimpoHtml.match(/<section class="[^"]*hub-live[^"]*"[\s\S]*?<\/section>/)?.[0] || "";
 assert.ok(gimpoLiveTeaser.includes("김포공항 도착정보·도착시간과 출발정보") && gimpoLiveTeaser.includes('href="/gimpo-board/"'), "hub teaser should describe the live board's arrival and departure information");
 assert.equal((gimpoHtml.match(/class="hub-intents"[\s\S]*?<\/nav>/)?.[0].match(/href="#/g) || []).length, 6, "hub needs six search-intent anchors");
@@ -571,6 +580,10 @@ assert.deepEqual(boardVisibleFaq.map(([question]) => question), [
 ]);
 const boardGraph = getStaticSchema(boardHtml)["@graph"];
 assert.equal(boardGraph.find((node) => node["@type"] === "WebPage")?.description, boardDescription);
+const boardWebPage = boardGraph.find((node) => node["@type"] === "WebPage");
+assert.equal(boardWebPage.dateModified, "2026-10-04");
+assert.deepEqual(boardWebPage.about, { "@type": "Airport", "@id": `${SITE_URL}/#gimpo-airport`, name: "김포국제공항", alternateName: ["Gimpo International Airport", "GMP"], iataCode: "GMP" });
+assert.deepEqual(boardWebPage.publisher, { "@id": `${SITE_URL}/#organization` }, "airport is the subject, while NOTHINGMATTERS remains the publisher");
 assert.ok(boardGraph.some((node) => node["@type"] === "BreadcrumbList"));
 const boardFaq = boardGraph.find((node) => node["@type"] === "FAQPage");
 assert.deepEqual(boardFaq?.mainEntity.map((item) => [item.name, item.acceptedAnswer.text]), boardVisibleFaq, "board FAQ schema must match the visible questions and answers");
@@ -740,7 +753,7 @@ assert.match(
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-10-02" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-10-04" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }

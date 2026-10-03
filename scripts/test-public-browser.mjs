@@ -384,6 +384,30 @@ async function verifyBoardAnswers(cdp, width) {
   assert.equal(state.faqCount, 4);
   assert.deepEqual(state.faqClipped, [], `board FAQ text should fit at ${width}px`);
   assert.deepEqual(state.tabs, ["DEPARTURES출발", "ARRIVALS도착"]);
+  const arrival = await evaluate(cdp, `() => {
+    const heading = document.querySelector('h1');
+    const bounds = heading.getBoundingClientRect();
+    const style = getComputedStyle(heading);
+    const header = document.querySelector('.board-header').getBoundingClientRect();
+    const answer = document.querySelector('.board-arrival-answer');
+    const answerBounds = answer.getBoundingClientRect();
+    const panel = document.querySelector('.board-panel').getBoundingClientRect();
+    const textFits = [...heading.querySelectorAll('span')].every((span) => {
+      const range = document.createRange(); range.selectNodeContents(span);
+      return [...range.getClientRects()].every((rect) => rect.left >= 0 && rect.right <= innerWidth + 1 && rect.bottom <= header.bottom + 1);
+    });
+    return { count: document.querySelectorAll('h1').length, text: heading.textContent.trim(), visible: style.display !== 'none' && style.visibility === 'visible' && style.clip === 'auto' && bounds.width > 100 && bounds.height > 10 && bounds.top >= 0 && bounds.bottom <= header.bottom && bounds.bottom < innerHeight, textFits, headerHeight: header.height, answerInBoard: document.querySelector('.board-shell').lastElementChild === answer, answerBelowPanel: answerBounds.top >= panel.bottom - 1, answerFits: answerBounds.left >= 0 && answerBounds.right <= innerWidth + 1, answerLength: answer.querySelector('p').textContent.length, link: answer.querySelector('a').getAttribute('href') };
+  }`);
+  assert.equal(arrival.count, 1);
+  assert.equal(arrival.text, "김포공항 도착정보·도착시간 실시간 항공편");
+  assert.ok(arrival.visible && arrival.textFits && arrival.answerInBoard && arrival.answerBelowPanel && arrival.answerFits && arrival.answerLength < 150, `arrival heading and concise answer must be visible and fit at ${width}px: ${JSON.stringify(arrival)}`);
+  assert.equal(arrival.link, "#arrivals-tab");
+  if (width <= 760) assert.ok(arrival.headerHeight <= 110, `arrival H1 should fit the existing compact mobile header at ${width}px: ${arrival.headerHeight}`);
+  if (width === 390 || width === 1280) {
+    await evaluate(cdp, "() => { document.querySelector('.board-arrival-answer').scrollIntoView({ block: 'start', behavior: 'instant' }); return true; }");
+    fs.writeFileSync(`/private/tmp/nothingmatters-gimpo-board-answer-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+    await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
+  }
 }
 
 const flightProvider = await startMockFlightProvider();
@@ -498,7 +522,7 @@ try {
   const mobileMotion = await evaluate(cdp, "() => ({ duration: performance.getEntriesByName('gimpo-board-initial-settled')[0].startTime - performance.getEntriesByName('gimpo-board-initial-entrance')[0].startTime, ...window.__boardMotion, flipping: document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length, entering: document.querySelectorAll('#flight-rows tr.is-entering').length })");
   assert.ok(mobileMotion.duration <= 500 && mobileMotion.banks > 0 && mobileMotion.slotFlips === 0 && mobileMotion.flipping === 0 && mobileMotion.entering === 0, `mobile bank entrance must finish within 500ms without slot flips: ${JSON.stringify(mobileMotion)}`);
   const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.brand-actions a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
-  assert.equal(boardMobile.title, "김포공항 도착정보·출발정보 실시간 항공편");
+  assert.equal(boardMobile.title, "김포공항 도착정보·도착시간 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
   await verifyBoardAnswers(cdp, 390);
   assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION"], `board mobile columns at viewport ${boardMobile.viewport}`);
@@ -558,6 +582,7 @@ try {
     assert.equal(fitted.airlineColor, "rgba(255, 207, 9, 0.8)", "airline label should use subdued airport yellow");
     assert.equal(fitted.routeColor, "rgba(255, 207, 9, 0.8)", "Korean route label should use subdued airport yellow");
     assert.ok(fitted.titleRight < fitted.logoLeft && fitted.titleWeight >= 800 && fitted.taglineWeight >= 800, `bold marquee text must fit beside the brand at ${width}px: ${JSON.stringify(fitted)}`);
+    await verifyBoardAnswers(cdp, width);
     if (width === 320 || width === 360) fs.writeFileSync(`/private/tmp/nothingmatters-gimpo-board-mobile-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
   }
   await setViewport(cdp, 320, 720);
@@ -609,8 +634,9 @@ try {
   await evaluate(cdp, "() => { const input = document.getElementById('flight-search'); input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('input[value=international]').click(); return true; }");
   assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length"), 1, "international filter should work locally");
   await evaluate(cdp, "() => { document.getElementById('board-search-close').click(); return true; }");
-  await evaluate(cdp, "() => { document.querySelector('input[value=all]').click(); document.getElementById('arrivals-tab').click(); return true; }");
+  await evaluate(cdp, "() => { document.querySelector('input[value=all]').click(); document.getElementById('board-arrivals-link').click(); return true; }");
   await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2 && document.getElementById('route-heading').textContent === 'ORIGIN'", "arrival board should show two origins");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('arrivals-tab').getAttribute('aria-selected') === 'true' && document.activeElement.id === 'arrivals-tab' && document.querySelector('.board-controls').getBoundingClientRect().top >= -1"), true, "arrival answer link should select and focus ARRIVALS and scroll back to the board controls");
   assert.equal(await evaluate(cdp, "() => document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length"), 0, "tab switch must not replay entrance animation");
   assert.equal(await evaluate(cdp, "() => document.getElementById('board-marquee-title').textContent"), "ARRIVAL", "marquee must follow the selected flight direction");
   assert.equal(await evaluate(cdp, "() => getComputedStyle(document.querySelector('.board-plane-departure')).display === 'none' && getComputedStyle(document.querySelector('.board-plane-arrival')).display !== 'none'"), true, "arrival marquee must show the arrival plane icon");

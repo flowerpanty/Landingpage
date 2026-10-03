@@ -279,6 +279,7 @@ function getPageData(html, loc) {
     lastmod: registryPage?.lastmod || registryPage?.updatedAt || "",
     urlRole: registryPage?.urlRole || "",
     relatedProductPrimaryUrl: registryPage?.relatedProductPrimaryUrl || "",
+    about: registryPage?.about || null,
   };
 }
 
@@ -541,6 +542,7 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
   if (breadcrumb) schema.breadcrumb = { "@id": breadcrumb["@id"] };
   if (page.path === "/") schema.about = { "@id": LOCAL_BUSINESS_ID };
   if (["/magok-cookie/", "/pickup/", "/gimpo/", "/gimpo2/", "/gimpo/pickup/"].includes(page.path)) schema.about = { "@id": LOCAL_BUSINESS_ID };
+  if (page.about) schema.about = page.about;
   if (product) {
     schema.about = { "@id": product["@id"] };
   } else if (page.relatedProductPrimaryUrl) {
