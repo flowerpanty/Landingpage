@@ -23,6 +23,7 @@ const CRITICAL_PATHS = [
   "/magok-cookie/",
   "/guides/",
   "/guides/cookie-storage/",
+  "/guides/cookie-minimum-order/",
   "/guides/gimpo-airport-flight-status/",
   "/guides/gimpo-airport-departure-checklist/",
   "/works/",

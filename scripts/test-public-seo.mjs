@@ -747,13 +747,13 @@ assert.equal(
 assert.match(fs.readFileSync(path.join(ROOT, ".gitignore"), "utf8"), /^_handoff\/$/m, "handoff files must stay out of deploy commits");
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-28<\/lastmod>/,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-10-04<\/lastmod>/,
   "guides sitemap lastmod should reflect the updated guide directory"
 );
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-10-04" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" || pathname === "/bulk/" ? "2026-10-04" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
@@ -803,6 +803,25 @@ assert.deepEqual(
   cookieStorageFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
   "cookie storage visible FAQ and FAQPage should remain synchronized"
 );
+
+const quantityPath = "/guides/cookie-minimum-order/";
+const quantityHtml = readHtml(filePathForPathname(quantityPath));
+const quantityTable = quantityHtml.match(/<table class="nm-table nm-quantity-table">([\s\S]*?)<\/table>/)?.[1] || "";
+assert.equal(registryEntries.get(quantityPath)?.lastmod, "2026-10-04", "minimum-order guide should record its publication date");
+assert.match(cleanText(getAttribute(quantityHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), /답례품 쿠키는 몇 개부터 주문할 수 있나요/);
+assert.equal((quantityTable.match(/<th scope="row">/g) || []).length, 3, "minimum-order guide should expose three source-backed product rows");
+for (const [name, href, minimum, sourceMinimum] of [
+  ["브루키", "../../brookie/", "12개부터", /12개/],
+  ["수제꾸덕쿠키", "../../out/", "대부분 최소 수량 없음", /대부분 최소 수량 없음/],
+  ["행운쿠키", "../../out/fortune/", "1세트부터", /1세트/],
+]) {
+  assert.match(sitePages.products.find((product) => product.name === name)?.minOrder || "", sourceMinimum, `${name}: public guide fact must match the product registry`);
+  assert.ok(quantityTable.includes(`href="${href}"`), `${name}: guide row must link to the primary product page`);
+  assert.ok(cleanText(quantityTable).includes(minimum), `${name}: minimum must be visible without JavaScript`);
+}
+assert.ok(guideHubHtml.includes('href="./cookie-minimum-order/"'), "guide hub must link to the minimum-order answer");
+assert.ok(readHtml(filePathForPathname("/bulk/")).includes('href="../guides/cookie-minimum-order/"'), "bulk landing must link to the minimum-order answer");
+assert.ok(guideHubItems.some((item) => item.url === `${SITE_URL}${quantityPath}`), "guide ItemList must include the minimum-order answer");
 
 const magokPath = "/magok-cookie/";
 const magokEntry = registryEntries.get(magokPath);

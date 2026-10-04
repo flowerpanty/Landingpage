@@ -88,6 +88,7 @@ const ITEM_LISTS = {
   ],
   "/guides/": [
     ["쿠키 보관방법·맛있게 드시는 기간", "/guides/cookie-storage/"],
+    ["답례품 쿠키 최소 주문 수량", "/guides/cookie-minimum-order/"],
     ["김포공항 출발·도착 항공편 확인 방법", "/guides/gimpo-airport-flight-status/"],
     ["김포공항 출발 전 확인할 것", "/guides/gimpo-airport-departure-checklist/"],
     ["마곡 쿠키·답례품", "/magok-cookie/"],
