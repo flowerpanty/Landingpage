@@ -332,17 +332,33 @@ ${recommendations}
 
 function buildHome() {
   const home = fs.readFileSync(HOME_PATH, "utf8");
+  const featuredWorks = (sitePageData.works || []).slice(0, 5);
+  if (!featuredWorks.length) throw new Error("Homepage needs at least one registry-backed work");
+  const workSizes = ["tall", "square", "large", "wide", "square"];
+  const workFallback = featuredWorks.map((work, index) => {
+    if (!work.src || !work.caption || !work.href || !work.imageWidth || !work.imageHeight) {
+      throw new Error(`Homepage work ${work.id || index} is missing its image, caption, link, or dimensions`);
+    }
+    return `            <a class="showroom-made-item showroom-made-item--fallback" data-size="${workSizes[index]}" href="${escapeHtml(homeLinkPath(work.href))}" aria-label="${escapeHtml(work.caption)} 자세히 보기">
+              <img src="${escapeHtml(homeAssetPath(work.src))}" alt="${escapeHtml(work.caption)}" width="${work.imageWidth}" height="${work.imageHeight}" loading="lazy" decoding="async">
+              <span class="showroom-made-caption">${escapeHtml(work.caption)}</span>
+            </a>`;
+  }).join("\n");
   // NEW products are identified by their card badge inside OUR COOKIES.
   // Keep the managed block as a build contract, but intentionally render no standalone section.
   const next = replaceManagedBlock(
-    replaceManagedBlock(home, "NM_NEW_ARRIVAL", ""),
-    "NM_PRODUCT_GRID",
-    [
-      ...products,
-      ...(sitePageData.pages || [])
-        .filter((page) => page.product?.homeCard)
-        .map((page) => ({ ...page.product, detailPath: page.path }))
-    ].map(renderProductCard).join("\n")
+    replaceManagedBlock(
+      replaceManagedBlock(home, "NM_NEW_ARRIVAL", ""),
+      "NM_PRODUCT_GRID",
+      [
+        ...products,
+        ...(sitePageData.pages || [])
+          .filter((page) => page.product?.homeCard)
+          .map((page) => ({ ...page.product, detailPath: page.path }))
+      ].map(renderProductCard).join("\n")
+    ),
+    "NM_MADE_FALLBACK",
+    workFallback
   );
 
   if (isCheckMode) {

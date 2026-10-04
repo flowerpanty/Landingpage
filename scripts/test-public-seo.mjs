@@ -1024,7 +1024,22 @@ assert.equal((homeHtml.match(/data-analytics-label="COOKIE FLIGHT"/g) || []).len
 assert.match(homeHtml, /href="products\/cookie-flight\/"/, "home COOKIE FLIGHT card should use its public product URL");
 assert.match(homeHtml, /href="pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "home should use a descriptive pickup hub anchor");
 assert.match(homeHtml, /김포공항·송정역 인근 공항동의 예약 픽업과 마곡 답례품·기업행사 상담/, "home visit copy should clarify both local intent hubs");
+const homeWorkFallback = homeHtml.match(/<!-- NM_MADE_FALLBACK:START -->([\s\S]*?)<!-- NM_MADE_FALLBACK:END -->/)?.[1] || "";
+assert.equal((homeWorkFallback.match(/class="showroom-made-item showroom-made-item--fallback"/g) || []).length, (sitePages.works || []).length, "homepage should expose registry-backed production cases without JavaScript");
+for (const work of sitePages.works || []) {
+  assert.ok(homeWorkFallback.includes(`href="${work.href.slice(1)}"`), `homepage production case should link to ${work.href}`);
+  assert.ok(homeWorkFallback.includes(`src="${work.src.slice(1)}"`), `homepage should expose the ${work.id} image in HTML`);
+  assert.ok(homeWorkFallback.includes(work.caption), `homepage should expose the ${work.id} caption in HTML`);
+}
+assert.match(homeHtml, /<a class="showroom-made-open" href="works\/" data-open-made-overlay>/, "production archive control should link to the works page without JavaScript");
+assert.match(homeHtml, /href="guides\/cookie-minimum-order\/">제품별 최소 주문 수량 자세히 보기<\/a>/, "homepage minimum-order answer should link to its source guide");
+assert.match(homeHtml, /href="guides\/cookie-storage\/">제품별 보관 기간과 냉동 방법 확인하기<\/a>/, "homepage storage answer should link to its source guide");
 const homeSchema = getStaticSchema(homeHtml);
+const homeFaq = homeSchema["@graph"].find((item) => item["@type"] === "FAQPage");
+const homeFaqMarkup = homeHtml.match(/<div class="showroom-faq-list"[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/section>/)?.[1] || "";
+const homeVisibleFaq = [...homeFaqMarkup.matchAll(/<details><summary>([\s\S]*?)<\/summary><div class="showroom-faq-answer">([\s\S]*?)<\/div><\/details>/g)]
+  .map((match) => ({ name: cleanText(match[1]), text: cleanText(match[2]) }));
+assert.deepEqual(homeVisibleFaq, homeFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [], "homepage visible FAQ and FAQPage schema should match");
 const homeWebPage = homeSchema["@graph"].find((item) => item["@type"] === "CollectionPage");
 assert.deepEqual(homeWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "homepage should identify the actual LocalBusiness");
 const homeBakery = homeSchema["@graph"].find((item) => item["@type"] === "Bakery");
