@@ -563,7 +563,17 @@ for (const [pathname, h1] of kimpoGuides) {
 for (const href of ["/gimpo/pickup/", "/gimpo/"]) {
   assert.ok(boardHtml.includes(`href="${href}"`), `flight board should link to ${href}`);
 }
-assert.ok(boardHtml.indexOf('class="board-shell"') < boardHtml.indexOf('class="brand-section"') && boardHtml.indexOf('class="brand-section"') < boardHtml.indexOf('class="board-info"') && boardHtml.indexOf('class="board-info"') < boardHtml.indexOf('class="board-footer"'), "flight board, brand, information, and footer must follow DOM order");
+const boardSectionOrder = ["board-shell", "board-arrival-answer", "board-collection", "board-info", "board-footer"].map((name) => boardHtml.indexOf(`class="${name}"`));
+assert.ok(boardSectionOrder.every((position, index) => position >= 0 && (index === 0 || position > boardSectionOrder[index - 1])), "flight board, answer, collection, information, and footer must follow DOM order");
+assert.doesNotMatch(boardHtml, /BEFORE YOU BOARD|class="brand-section"|쿠키도 챙겨가세요/);
+const boardCollection = boardHtml.match(/<section class="board-collection"[\s\S]*?<\/section>/)?.[0] || "";
+assert.match(boardCollection, /GIMPO DESSERT COLLECTION/);
+assert.match(boardCollection, /김포공항 가는 날<br>골라보는 쿠키/);
+assert.match(boardCollection, /김포공항 내부 매장이 아니라 서울 강서구 공항동·송정역 인근/);
+const productCardIdentity = (html) => [...html.matchAll(/<article><a[^>]*href="([^"]+)"[^>]*>[\s\S]*?<img src="([^"]+)" alt="([^"]+)"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>[\s\S]*?<\/article>/g)].map((match) => [match[4], match[1], match[2], match[3]]);
+const hubDessert = gimpoHtml.match(/<section class="hub-group hub-dessert"[\s\S]*?<\/section>/)?.[0] || "";
+assert.equal(productCardIdentity(boardCollection).length, 4, "board collection must show exactly four products");
+assert.deepEqual(productCardIdentity(boardCollection), productCardIdentity(hubDessert), "board collection must reuse the hub's actual products, images, and alt text in order");
 assert.match(boardHtml, /class="board-info"[\s\S]*?김포공항 도착정보와 출발정보 확인[\s\S]*?한국공항공사 제공 자료/);
 for (const term of ["김포공항 도착정보", "김포공항 도착시간", "김포공항 출발정보", "김포공항 출발시간"]) {
   assert.ok(boardHtml.includes(term), `flight board should answer ${term}`);
@@ -596,7 +606,7 @@ assert.match(readHtml(filePathForPathname("/guides/gimpo-airport-departure-check
 assert.ok(gimpoHtml.includes('href="/gimpo/pickup/"'), "travel-cookie hub should reach reservation pickup guidance");
 assert.ok(gimpoPickupHtml.includes('href="/gimpo/"'), "pickup guidance should link back to the travel-cookie hub");
 for (const html of [boardHtml, gimpoHtml, gimpo2Html, gimpoPickupHtml]) {
-  assert.match(html, /김포공항 내부가 아닌|김포공항 내부가 아니라|김포공항 안에서 판매하지 않습니다/, "Kimpo pages must clarify that NOTHINGMATTERS is outside the airport");
+  assert.match(html, /김포공항 내부가 아닌|김포공항 내부가 아니라|김포공항 내부 매장이 아니라|김포공항 안에서 판매하지 않습니다/, "Kimpo pages must clarify that NOTHINGMATTERS is outside the airport");
 }
 const guideHubHtml = readHtml(filePathForPathname("/guides/"));
 const guideHubItems = getStaticSchema(guideHubHtml)["@graph"].find((node) => node["@type"] === "ItemList")?.itemListElement || [];
