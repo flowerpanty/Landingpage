@@ -2,36 +2,9 @@
 
 > NOTHINGMATTERS is a Korean handcrafted cookie brand in Gonghang-dong, Gangseo-gu, Seoul. It prepares cookie gifts, wedding favors, corporate and group orders, and reservation pickup.
 
-## Canonical site
-- https://nothingmatters.co.kr/
-- https://nothingmatters.co.kr/bulk/
-- https://nothingmatters.co.kr/small-gift/
-- https://nothingmatters.co.kr/contact/
-- https://nothingmatters.co.kr/works/
-- https://nothingmatters.co.kr/pickup/
-- https://nothingmatters.co.kr/magok-cookie/
-- https://nothingmatters.co.kr/gimpo/
-- https://nothingmatters.co.kr/gimpo-board/
-- https://nothingmatters.co.kr/gimpo/pickup/
-- https://nothingmatters.co.kr/guides/
-- https://nothingmatters.co.kr/products/brownie-cookie/
-- https://nothingmatters.co.kr/products/custom-brownie-cookie/
-- https://nothingmatters.co.kr/products/handmade-cookie/
-- https://nothingmatters.co.kr/products/lucky-cookie/
-- https://nothingmatters.co.kr/products/scone/
-- https://nothingmatters.co.kr/products/terminal-sand-cookie/
-- https://nothingmatters.co.kr/guides/wedding-favor-cookie/
-- https://nothingmatters.co.kr/guides/corporate-event-cookie/
-- https://nothingmatters.co.kr/guides/teacher-snack-gift/
-- https://nothingmatters.co.kr/guides/farewell-favor-cookie/
-- https://nothingmatters.co.kr/guides/dessert-gift-set/
-- https://nothingmatters.co.kr/guides/lucky-cheering-cookie/
+This file is a guide to public website information. Crawler access is defined by /robots.txt; llms.txt does not grant or restrict access. Prices, available products, minimum quantities and pickup schedules should be confirmed on the linked product pages or through the official consultation channel. Flight information can change; confirm travel decisions with the airline or airport.
 
-## Official channels
-- Instagram: https://instagram.com/nothingmatters_c
-- Kakao channel: https://pf.kakao.com/_QdCaK
-
-## Business facts
+**Business facts**
 - Brand name: nothingmatters
 - Korean name: 낫띵메터스
 - Contact phone: 010-2866-7976
@@ -48,16 +21,16 @@
 - Magok: 마곡 인근 공항동 작업실 / 일정·수량에 따른 차량 퀵 상담
 - Magok cookie & favor hub: https://nothingmatters.co.kr/magok-cookie/
 
-## Local intent hubs
+**Local intent hubs**
 
-### 마곡 답례품·쿠키 선물
+**마곡 답례품·쿠키 선물**
 - Landing: https://nothingmatters.co.kr/magok-cookie/
 - Actual workshop is NOT in Magok.
 - Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
 - Magok is a nearby service area.
 - Vehicle quick is available only after consultation based on schedule and quantity.
 
-### 일반 예약 픽업 안내
+**일반 예약 픽업 안내**
 - Guide: https://nothingmatters.co.kr/pickup/
 - General reservation pickup information for NOTHINGMATTERS cookies; the Gimpo Airport gift and dessert hub is https://nothingmatters.co.kr/gimpo/.
 - NOT inside Gimpo Airport.
@@ -67,12 +40,12 @@
 - Official Instagram: https://instagram.com/nothingmatters_c
 - Products: 브루키 / 수제꾸덕쿠키 / 행운쿠키 / 쿠키크루
 
-### GIMPO AIRPORT COOKIE & GIFT HUB — 김포공항 선물·디저트·기념품
+**GIMPO AIRPORT COOKIE & GIFT HUB — 김포공항 선물·디저트·기념품**
 - https://nothingmatters.co.kr/gimpo/ — 김포공항 선물·디저트·기념품의 대표 허브. COOKIE FLIGHT 등 여행 쿠키와 선물 탐색, 제품 상세 연결.
 - https://nothingmatters.co.kr/gimpo/pickup/ — 김포공항 인근 공항동 작업실의 예약 픽업 방법·위치 안내.
 - https://nothingmatters.co.kr/gimpo-board/ — 김포공항 도착정보·도착시간·출발정보·출발시간을 확인하는 실시간 항공편 조회 페이지. 편명, 출발지·목적지, 게이트와 운항상태를 한국공항공사 제공 자료를 바탕으로 표시합니다.
 
-## Main ordering use cases
+**Main ordering use cases**
 - small handmade cookie gifts
 - wedding favors
 - corporate event snacks
@@ -84,14 +57,14 @@
 - lucky or cheering cookie gifts
 - Gimpo Airport and Songjeong Station pickup dessert gifts
 
-## Main page routing
+**Main page routing**
 - home: hub-style main page for choosing between small gifts and bulk/event orders
 - works: public archive of administrator-published cookie making photos and captions
 - pickup: general cookie reservation pickup information; Gimpo Airport gifts and desserts are introduced at /gimpo/
 - bulk: preserved group-order landing page for wedding favors, corporate event snacks, school or institution snacks, and custom bulk consultation
 - small-gift: small gift hub for choosing handmade cookie, fortune cookie, or bear scone landing pages before ordering
 
-## Use-case guides
+**Use-case guides**
 - guides/: guide hub for wedding favors, corporate event cookies, teacher snack gifts, farewell favors, dessert gift sets, and lucky cheering cookies
 - wedding-favor-cookie: wedding favors, wedding cookie favors, neat favor packaging
 - corporate-event-cookie: corporate event cookies, company favor cookies, office event snacks
@@ -100,7 +73,7 @@
 - dessert-gift-set: baked gift sets, cookie gift sets, premium dessert gifts
 - lucky-cheering-cookie: fortune cookies, cheering cookies, graduation or thank-you treats
 
-## Product facts
+**Product facts**
 - Brownie Cookie: basic order and custom order consultation available
 - Custom Brownie Cookie: message sticker and design customization, minimum 12 for custom flow
 - Handmade Cookie: seven flavors and multiple package options
@@ -108,9 +81,65 @@
 - Fortune Cookie: four emotion themes for small gifts and support
 - Terminal Sand Cookie: premium mood-forward gift line
 
-## Inquiry essentials
+**Inquiry essentials**
 - desired pickup date or event date
 - approximate quantity
 - product interest or package type
 - intended use case
 - whether pickup or quick delivery is needed
+
+## Main pages
+
+- [낫띵메터스 | 강서구 수제쿠키·답례품 · 김포공항 픽업](https://nothingmatters.co.kr/): 서울 강서구 공항동에서 수제쿠키와 답례품을 예약 제작하는 낫띵메터스입니다. 김포공항·송정역 인근 예약 픽업과 마곡 기업행사·단체 주문을 상담합니다.
+- [단체·행사 답례품 쿠키 주문](https://nothingmatters.co.kr/bulk/): 결혼식, 기업행사, 학교·기관 간식에 맞는 단체 쿠키와 포장, 문구, 수량을 상담합니다.
+- [소량 쿠키 선물 고르기](https://nothingmatters.co.kr/small-gift/): 감사, 생일, 응원 선물에 어울리는 수제쿠키와 행운쿠키, 곰돌이 스콘을 한눈에 비교하세요.
+- [쿠키 주문 상담 준비](https://nothingmatters.co.kr/contact/): 낫띵메터스 쿠키 주문 상담 준비 페이지입니다. 수량, 날짜, 용도, 포장 방향과 문의 방식을 정리해 답례품·행사 쿠키 상담을 빠르게 시작하세요.
+- [실제 제작 사례](https://nothingmatters.co.kr/works/): 낫띵메터스 공항동 작업실에서 실제로 만든 쿠키와 답례품 제작 사례를 사진으로 확인하세요.
+
+## Products and product guides
+
+- [브라우니쿠키 답례품](https://nothingmatters.co.kr/products/brownie-cookie/): 결혼식과 회사 답례에 어울리는 브라우니쿠키입니다. 최소 12개부터 문구와 포장을 상담합니다.
+- [문구 커스텀 브라우니쿠키](https://nothingmatters.co.kr/products/custom-brownie-cookie/): 퇴사, 승진, 육아휴직 답례에 짧은 문구와 스티커를 더하는 커스텀 브라우니쿠키입니다.
+- [수제 꾸덕쿠키 선물세트](https://nothingmatters.co.kr/products/handmade-cookie/): 7가지 맛과 1구·2구·4구 포장을 고르는 수제 꾸덕쿠키입니다. 답례품과 간식 선물로 주문할 수 있어요.
+- [행운쿠키 응원 선물세트](https://nothingmatters.co.kr/products/lucky-cookie/): HAPPY, RESET, MONEY, UP 네 가지 감정을 담은 행운쿠키 세트입니다. 응원과 감사 선물로 주문하세요.
+- [곰돌이 스콘·구움과자 선물](https://nothingmatters.co.kr/products/scone/): 플레인과 초코맛을 고르는 곰돌이 스콘입니다. 최소 12개부터 답례품과 기업 선물 포장을 상담합니다.
+- [TERMINAL 카라멜 샌드쿠키 선물](https://nothingmatters.co.kr/products/terminal-sand-cookie/): ‘수고했어’를 한 입으로 전하는 TERMINAL 카라멜 샌드쿠키. 천천히 끓인 카라멜과 6가지 맛, 선물 패키지와 공항동 예약 픽업 안내를 확인하세요.
+- [COOKIE FLIGHT 비행기 쿠키 4종 선물세트](https://nothingmatters.co.kr/products/cookie-flight/): 클래식버터, 오렌지, 제주말차, 더블초코 4가지 맛을 전용 박스에 담은 4개입 세트.
+- [비행기 버터쿠키 단품](https://nothingmatters.co.kr/products/airplane-cookie/): 비행기 모양 버터쿠키를 개별 포장한 작은 선물용 단품.
+- [브루키 답례품·커스텀 쿠키](https://nothingmatters.co.kr/brookie/): 캐릭터와 짧은 문구를 골라 만드는 브루키 답례품·커스텀 쿠키.
+- [수제꾸덕쿠키 선물세트](https://nothingmatters.co.kr/out/): 7가지 맛과 패키지를 고르는 수제꾸덕쿠키 선물세트.
+- [행운쿠키 응원 선물세트](https://nothingmatters.co.kr/out/fortune/): HAPPY, RESET, MONEY, UP 메시지를 담은 행운쿠키·응원 선물세트.
+- [쿠키크루 캐릭터 쿠키 선물](https://nothingmatters.co.kr/cookie-crew/): 캐릭터 쿠키와 굿즈를 함께 고르는 COOKIE CREW 선물.
+
+## Gimpo Airport and local pickup
+
+- [김포공항 쿠키 픽업 · 디저트 선물·답례품](https://nothingmatters.co.kr/pickup/): 김포공항·송정역 인근 공항동에서 예약 픽업하는 수제쿠키와 디저트 선물, 답례품을 확인하세요. TERMINAL·COOKIE FLIGHT·쿠키크루·브루키·수제꾸덕쿠키·행운쿠키를 고른 뒤 네이버플레이스에서 픽업 일정을 예약할 수 있습니다.
+- [마곡 쿠키 · 마곡 답례품 | 수제쿠키 선물·단체주문 - 낫띵메터스](https://nothingmatters.co.kr/magok-cookie/): 마곡 인근 공항동에서 만드는 수제쿠키와 답례품을 확인하세요. 쿠키 선물, 회사·기업행사 단체주문, 공항동 예약 픽업과 일정·수량에 따른 마곡 차량 퀵을 상담합니다.
+- [김포공항 도착정보·도착시간 | 출발·도착 실시간 항공편](https://nothingmatters.co.kr/gimpo-board/): 김포공항 도착정보와 출발정보를 실시간 항공편 전광판에서 확인하세요. 김포공항 도착시간·출발시간, 편명, 출발지·목적지, 게이트와 운항상태를 확인할 수 있습니다. 한국공항공사 제공 자료를 바탕으로 표시합니다.
+- [김포공항 선물·디저트·기념품 | 비행기 쿠키 예약 픽업 - 낫띵메터스](https://nothingmatters.co.kr/gimpo/): 김포공항 근처에서 특별한 선물이나 디저트를 찾고 있다면. 비행기 쿠키 COOKIE FLIGHT부터 터미널 쿠키, 공항 테마 선물까지 만나보세요. 김포공항·송정역 인근 공항동 예약 픽업.
+- [김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS](https://nothingmatters.co.kr/gimpo/pickup/): 김포공항 가기 전 공항동에서 쿠키를 예약 픽업하는 방법. 쿠키 선택, 네이버 픽업 예약, 서울 강서구 송정로 25 1층 매장 수령을 안내합니다.
+
+## Gift and care guides
+
+- [쿠키 선물·답례품 가이드](https://nothingmatters.co.kr/guides/): 결혼식 답례, 기업행사, 선생님 간식, 퇴사 선물에 맞는 쿠키와 포장 선택법을 정리했습니다.
+- [쿠키 보관방법·맛있게 드시는 기간](https://nothingmatters.co.kr/guides/cookie-storage/): 낫띵메터스 쿠키 보관방법과 맛있게 드시는 기간을 제품별로 빠르게 확인하세요. 쿠키크루, 브루키, 수제 꾸덕쿠키, 행운쿠키 안내와 자주 묻는 질문을 정리했습니다.
+- [김포공항 출발·도착 항공편 확인 방법 | 운항정보 보는 법](https://nothingmatters.co.kr/guides/gimpo-airport-flight-status/): 김포공항 항공편을 편명으로 찾고 예정시간·변경시간과 운항상태를 구분해 확인하는 방법. 한국공항공사 제공 자료와 항공사 최종 안내를 함께 확인하세요.
+- [김포공항 출발 전 확인할 것 | 항공편·픽업 체크리스트](https://nothingmatters.co.kr/guides/gimpo-airport-departure-checklist/): 김포공항 출발 전에 편명·운항상태, 예정·변경 시간, 항공사 최종 안내와 공항동 쿠키 예약 픽업 일정을 차례로 확인하는 실용 체크리스트입니다.
+- [결혼식 답례쿠키 주문 가이드](https://nothingmatters.co.kr/guides/wedding-favor-cookie/): 결혼식 답례쿠키와 웨딩 답례품 주문 가이드. 문구·스티커·수량을 상담하고 강서구 공항동 픽업 또는 차량 퀵으로 받을 수 있습니다.
+- [마곡 기업행사 쿠키 · 회사 답례품](https://nothingmatters.co.kr/guides/corporate-event-cookie/): 마곡 기업행사 쿠키와 회사 답례품 주문 가이드. 로고 스티커, 행사 문구, 단체 수량과 공항동 픽업·차량 퀵을 상담합니다.
+- [선생님 간식·어린이집 선물](https://nothingmatters.co.kr/guides/teacher-snack-gift/): 유치원과 어린이집 선생님께 전하기 좋은 수제쿠키, 행운쿠키, 곰돌이 스콘 구성을 비교합니다.
+- [퇴사·승진·육아휴직 답례품](https://nothingmatters.co.kr/guides/farewell-favor-cookie/): 퇴사, 승진, 육아휴직 인사에 어울리는 문구 쿠키와 포장, 수량 선택법을 정리했습니다.
+- [디저트 선물세트·구움과자](https://nothingmatters.co.kr/guides/dessert-gift-set/): 김포공항·송정역 인근에서 픽업하는 구움과자와 디저트 선물세트 가이드. 공항동 수제쿠키 공방에서 제품과 포장을 상담합니다.
+- [행운쿠키·응원 선물 가이드](https://nothingmatters.co.kr/guides/lucky-cheering-cookie/): 졸업, 응원, 감사 인사에 어울리는 행운쿠키 구성과 수량, 선물 선택법을 정리했습니다.
+
+## Official channels
+
+- [Kakao channel](https://pf.kakao.com/_QdCaK): Product, quantity, customization and pickup consultation.
+- [Instagram](https://instagram.com/nothingmatters_c): Official product photos and brand updates.
+- [Naver Place](https://naver.me/Gsj2pwAu): Official workshop location and reservation pickup information.
+
+## Optional
+
+- [Sitemap](https://nothingmatters.co.kr/sitemap.xml): Public indexable page directory.
+- [RSS feed](https://nothingmatters.co.kr/feed.xml): Published gift and travel guides.
+- [Crawler access policy](https://nothingmatters.co.kr/robots.txt): Crawler rules for public, administrator and API paths.
