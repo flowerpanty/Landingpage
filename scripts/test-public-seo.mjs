@@ -426,6 +426,8 @@ assert.doesNotMatch(boardHtml, /href="\/gimpo2\/"/);
 assert.match(boardHtml, /href="\/gimpo\/"/, "flight board should link back to the cookie hub");
 assert.match(boardHtml, /id="detail-pickup-link"[^>]*href="\/gimpo\/pickup\/"/, "selected board flight should link to pickup guidance");
 assert.match(boardHtml, /id="board-badge"[^>]*>GMP · CHECKING<\/span>/, "board must not claim LIVE before fresh data loads");
+assert.match(boardHtml, /<noscript>[\s\S]*?자바스크립트가 필요합니다\.[\s\S]*?https:\/\/www\.airport\.co\.kr\/gimpo\/cms\/frCon\/index\.do\?CONTENTS_NO=2&amp;MENU_ID=1010[\s\S]*?<\/noscript>/, "board should offer the official flight information when JavaScript is unavailable");
+assert.match(boardHtml, /항공편 정보는 한국공항공사 제공 자료를 바탕으로 표시합니다\. <a href="https:\/\/www\.airport\.co\.kr\/gimpo\/cms\/frCon\/index\.do\?CONTENTS_NO=2&amp;MENU_ID=1010">한국공항공사 김포공항 출발·도착 안내<\/a>/, "board should visibly link to its official data source");
 assert.doesNotMatch(boardHtml, /KAC_FLIGHT_API_KEY|serviceKey=/, "board HTML must not expose provider credentials");
 assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "utf8"), /KAC_FLIGHT_API_KEY|serviceKey=/, "board client JS must not expose provider credentials");
 
