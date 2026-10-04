@@ -376,11 +376,32 @@ async function verifyGimpoHub(cdp, width) {
 }
 
 async function verifyBoardAnswers(cdp, width) {
-  const state = await evaluate(cdp, "() => { const board = document.querySelector('.board-shell').getBoundingClientRect(); const brand = document.querySelector('.brand-section').getBoundingClientRect(); const info = document.querySelector('.board-info').getBoundingClientRect(); const footer = document.querySelector('.board-footer').getBoundingClientRect(); const faq = [...document.querySelectorAll('.board-info-questions details')]; const text = [...document.querySelectorAll('.board-info-answers h2, .board-info-questions summary')]; return { width: innerWidth, documentWidth: document.documentElement.scrollWidth, sections: [...document.querySelector('main').children].map((node) => node.className), brandBelowBoard: brand.top >= board.bottom - 1, infoBelowBrand: info.top >= brand.bottom - 1, footerBelowInfo: footer.top >= info.bottom - 1, brandFits: brand.left >= 0 && brand.right <= innerWidth + 1, brandLinks: [...document.querySelectorAll('.brand-actions a')].map((link) => new URL(link.href).pathname), answers: [...document.querySelectorAll('.board-info-answers h2')].map((node) => node.textContent.trim()), faqCount: faq.length, faqClipped: text.filter((node) => node.scrollWidth > node.clientWidth + 1 || node.getBoundingClientRect().right > innerWidth + 1).map((node) => node.textContent.trim()), tabs: [...document.querySelectorAll('[role=tab]')].map((tab) => tab.textContent.trim()) }; }");
+  const state = await evaluate(cdp, `() => {
+    const board = document.querySelector('.board-shell').getBoundingClientRect();
+    const answer = document.querySelector('.board-arrival-answer').getBoundingClientRect();
+    const collection = document.querySelector('.board-collection').getBoundingClientRect();
+    const info = document.querySelector('.board-info').getBoundingClientRect();
+    const footer = document.querySelector('.board-footer').getBoundingClientRect();
+    const text = [...document.querySelectorAll('.board-info-answers h2, .board-info-questions summary')];
+    return {
+      width: innerWidth, documentWidth: document.documentElement.scrollWidth,
+      sections: [...document.querySelector('main').children].map((node) => node.className),
+      answerBelowBoard: answer.top >= board.bottom - 1,
+      collectionBelowAnswer: collection.top >= answer.bottom - 1,
+      infoBelowCollection: info.top >= collection.bottom - 1,
+      footerBelowInfo: footer.top >= info.bottom - 1,
+      collectionFits: collection.left >= 0 && collection.right <= innerWidth + 1,
+      collectionLinks: [...document.querySelectorAll('.board-collection-links a')].map((link) => new URL(link.href).pathname),
+      answers: [...document.querySelectorAll('.board-info-answers h2')].map((node) => node.textContent.trim()),
+      faqCount: document.querySelectorAll('.board-info-questions details').length,
+      faqClipped: text.filter((node) => node.scrollWidth > node.clientWidth + 1 || node.getBoundingClientRect().right > innerWidth + 1).map((node) => node.textContent.trim()),
+      tabs: [...document.querySelectorAll('[role=tab]')].map((tab) => tab.textContent.trim())
+    };
+  }`);
   assert.equal(state.width, width);
-  assert.deepEqual(state.sections, ["board-shell", "brand-section", "board-info", "board-footer"], "board sections should follow the intended DOM order");
-  assert.ok(state.documentWidth <= width && state.brandBelowBoard && state.infoBelowBrand && state.footerBelowInfo && state.brandFits, `board, brand, answers, and footer must remain ordered without overflow at ${width}px: ${JSON.stringify(state)}`);
-  assert.deepEqual(state.brandLinks, ["/gimpo/pickup/", "/gimpo/"], "brand section should retain both Gimpo links");
+  assert.deepEqual(state.sections, ["board-shell", "board-arrival-answer", "board-collection", "board-info", "board-footer"], "board sections should follow the intended DOM order");
+  assert.ok(state.documentWidth <= width && state.answerBelowBoard && state.collectionBelowAnswer && state.infoBelowCollection && state.footerBelowInfo && state.collectionFits, `board, answer, collection, information, and footer must remain ordered without overflow at ${width}px: ${JSON.stringify(state)}`);
+  assert.deepEqual(state.collectionLinks, ["/gimpo/", "/gimpo/pickup/"], "collection should link to the dessert hub and pickup guidance");
   assert.deepEqual(state.answers, ["김포공항 도착정보·도착시간 확인", "김포공항 출발정보·출발시간 확인"]);
   assert.equal(state.faqCount, 4);
   assert.deepEqual(state.faqClipped, [], `board FAQ text should fit at ${width}px`);
@@ -397,11 +418,11 @@ async function verifyBoardAnswers(cdp, width) {
       const range = document.createRange(); range.selectNodeContents(span);
       return [...range.getClientRects()].every((rect) => rect.left >= 0 && rect.right <= innerWidth + 1 && rect.bottom <= header.bottom + 1);
     });
-    return { count: document.querySelectorAll('h1').length, text: heading.textContent.trim(), visible: style.display !== 'none' && style.visibility === 'visible' && style.clip === 'auto' && bounds.width > 100 && bounds.height > 10 && bounds.top >= 0 && bounds.bottom <= header.bottom && bounds.bottom < innerHeight, textFits, headerHeight: header.height, answerInBoard: document.querySelector('.board-shell').lastElementChild === answer, answerBelowPanel: answerBounds.top >= panel.bottom - 1, answerFits: answerBounds.left >= 0 && answerBounds.right <= innerWidth + 1, answerLength: answer.querySelector('p').textContent.length, link: answer.querySelector('a').getAttribute('href') };
+    return { count: document.querySelectorAll('h1').length, text: heading.textContent.trim(), visible: style.display !== 'none' && style.visibility === 'visible' && style.clip === 'auto' && bounds.width > 100 && bounds.height > 10 && bounds.top >= 0 && bounds.bottom <= header.bottom && bounds.bottom < innerHeight, textFits, headerHeight: header.height, answerAfterBoard: document.querySelector('.board-shell').nextElementSibling === answer, answerBelowPanel: answerBounds.top >= panel.bottom - 1, answerFits: answerBounds.left >= 0 && answerBounds.right <= innerWidth + 1, answerLength: answer.querySelector('p').textContent.length, link: answer.querySelector('a').getAttribute('href') };
   }`);
   assert.equal(arrival.count, 1);
   assert.equal(arrival.text, "김포공항 도착정보·도착시간 실시간 항공편");
-  assert.ok(arrival.visible && arrival.textFits && arrival.answerInBoard && arrival.answerBelowPanel && arrival.answerFits && arrival.answerLength < 150, `arrival heading and concise answer must be visible and fit at ${width}px: ${JSON.stringify(arrival)}`);
+  assert.ok(arrival.visible && arrival.textFits && arrival.answerAfterBoard && arrival.answerBelowPanel && arrival.answerFits && arrival.answerLength < 150, `arrival heading and concise answer must be visible and fit at ${width}px: ${JSON.stringify(arrival)}`);
   assert.equal(arrival.link, "#arrivals-tab");
   if (width <= 760) assert.ok(arrival.headerHeight <= 110, `arrival H1 should fit the existing compact mobile header at ${width}px: ${arrival.headerHeight}`);
   if (width === 390 || width === 1280) {
@@ -409,6 +430,34 @@ async function verifyBoardAnswers(cdp, width) {
     fs.writeFileSync(`/private/tmp/nothingmatters-gimpo-board-answer-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
     await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
   }
+  await evaluate(cdp, "() => { document.querySelector('.board-collection').scrollIntoView({ block: 'start', behavior: 'instant' }); return true; }");
+  await waitFor(cdp, "() => [...document.querySelectorAll('.board-collection-card img')].every((image) => image.complete && image.naturalWidth > 0)", "collection should reuse four working product photos");
+  const products = await evaluate(cdp, `() => [...document.querySelectorAll('.board-collection-card')].map((card) => {
+    const rect = card.getBoundingClientRect();
+    const image = card.querySelector('img');
+    const texts = [...card.querySelectorAll('h3, p, span')];
+    return {
+      name: card.querySelector('h3').textContent.trim(), href: new URL(card.href).pathname,
+      src: image.getAttribute('src'), alt: image.alt,
+      top: rect.top, left: rect.left, right: rect.right, width: rect.width, height: rect.height,
+      textFits: texts.every((node) => node.scrollWidth <= node.clientWidth + 1 && node.getBoundingClientRect().right <= rect.right),
+      fontSize: parseFloat(getComputedStyle(card.querySelector('h3')).fontSize),
+      imageFits: getComputedStyle(image).objectFit === 'contain'
+    };
+  })`);
+  assert.deepEqual(products.map(({ name, href, src, alt }) => [name, href, src, alt]), [
+    ["COOKIE FLIGHT", "/products/cookie-flight/", "../images/cookie-flight-box-open.jpg", "박스에 담긴 COOKIE FLIGHT 비행기 쿠키 4종"],
+    ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/", "../images/terminal-hero-optimized.webp", "터미널을 모티브로 만든 샌드쿠키"],
+    ["AIRPLANE BUTTER COOKIE", "/products/airplane-cookie/", "../images/airplane-cookie-handheld.png", "손에 들고 있는 비행기 모양 버터쿠키"],
+    ["COOKIE CREW", "/cookie-crew/", "../images/cookie-crew/cookie-crew-hero-main.jpg", "세 가지 스카프 색상의 COOKIE CREW 캐릭터 쿠키"]
+  ]);
+  const columns = width <= 760 ? 2 : 4;
+  assert.ok(products.slice(0, columns).every((card) => Math.abs(card.top - products[0].top) < 1), `collection should show ${columns} columns at ${width}px`);
+  if (columns === 2) assert.ok(products[2].top >= products[0].top + products[0].height, "mobile collection should use two compact rows");
+  assert.ok(products.every((card) => card.left >= 0 && card.right <= width + 1 && card.width >= 140 && card.height <= 400 && card.textFits && card.fontSize >= 13 && card.imageFits), `collection cards should be readable, compact, and unclipped at ${width}px: ${JSON.stringify(products)}`);
+  for (const card of products) assert.equal(await request(server.baseUrl, card.href), 200, `collection product target should be available: ${card.href}`);
+  fs.writeFileSync(`/private/tmp/nm-gimpo-board-collection-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
 }
 
 const flightProvider = await startMockFlightProvider();
@@ -522,12 +571,12 @@ try {
   await waitFor(cdp, "() => performance.getEntriesByName('gimpo-board-initial-settled').length === 1", "first bank entrance should settle promptly");
   const mobileMotion = await evaluate(cdp, "() => ({ duration: performance.getEntriesByName('gimpo-board-initial-settled')[0].startTime - performance.getEntriesByName('gimpo-board-initial-entrance')[0].startTime, ...window.__boardMotion, flipping: document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length, entering: document.querySelectorAll('#flight-rows tr.is-entering').length })");
   assert.ok(mobileMotion.duration <= 500 && mobileMotion.banks > 0 && mobileMotion.slotFlips === 0 && mobileMotion.flipping === 0 && mobileMotion.entering === 0, `mobile bank entrance must finish within 500ms without slot flips: ${JSON.stringify(mobileMotion)}`);
-  const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.brand-actions a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
+  const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.board-collection-links a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
   assert.equal(boardMobile.title, "김포공항 도착정보·도착시간 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
   await verifyBoardAnswers(cdp, 390);
   assert.deepEqual(boardMobile.columns, ["FLIGHT", "DESTINATION"], `board mobile columns at viewport ${boardMobile.viewport}`);
-  assert.deepEqual(boardMobile.links, ["/gimpo/pickup/", "/gimpo/"]);
+  assert.deepEqual(boardMobile.links, ["/gimpo/", "/gimpo/pickup/"]);
   assert.deepEqual([boardMobile.route, boardMobile.routeKorean], ["JEJU", "제주 · CJU"], "English destination should be the main mechanical value with Korean and provider code below");
   assert.deepEqual(boardMobile.halves, ["flap-static-top", "flap-static-bottom", "flap-flip-top", "flap-flip-bottom", "flap-hinge"]);
   assert.equal(boardMobile.grid, "grid", "mobile board rows should use a physical two-line grid");
