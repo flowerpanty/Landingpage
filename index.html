@@ -272,7 +272,15 @@
             "name": "몇 개부터 주문할 수 있나요?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "브루키는 최소 12개, 행운쿠키는 최소 1세트부터 주문할 수 있어요. 수제꾸덕쿠키는 대부분 최소 수량이 없으며 구성별 조건은 주문 화면에서 확인해주세요. 쿠키크루는 상담으로 수량과 가격을 안내합니다."
+              "text": "브루키는 최소 12개, 행운쿠키는 최소 1세트부터 주문할 수 있어요. 수제꾸덕쿠키는 대부분 최소 수량이 없으며 구성별 조건은 주문 화면에서 확인해주세요. 쿠키크루는 상담으로 수량과 가격을 안내합니다. 제품별 최소 주문 수량 자세히 보기"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "쿠키는 어떻게 보관하나요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "제품마다 보관 기간이 다릅니다. 실제 수령한 쿠키의 포장 라벨을 먼저 확인해 주세요. 제품별 보관 기간과 냉동 방법 확인하기"
             }
           },
           {
@@ -562,12 +570,35 @@
           <header class="showroom-made-header" data-reveal>
             <div>
               <h2 id="recent-title">MADE BY NOTHINGMATTERS</h2>
-              <p class="showroom-made-subcopy">요즘 이런 것들을 만들고 있어요.</p>
+              <p class="showroom-made-subcopy">직접 만든 쿠키와 답례품을 사진으로 확인해 보세요.</p>
             </div>
             <p class="showroom-made-doodle" aria-hidden="true">made in our tiny kitchen :)</p>
-            <button class="showroom-made-open" type="button" data-open-made-overlay>전체 작업 보기 →</button>
+            <a class="showroom-made-open" href="works/" data-open-made-overlay>전체 작업 보기 →</a>
           </header>
-          <div class="showroom-made-gallery" data-recent-gallery aria-label="낫띵메터스 최근 제작 아카이브"></div>
+          <div class="showroom-made-gallery" data-recent-gallery aria-label="낫띵메터스 제작 사례">
+            <!-- NM_MADE_FALLBACK:START -->
+            <a class="showroom-made-item showroom-made-item--fallback" data-size="tall" href="out/" aria-label="귀여운 표정을 고른 작은 선물 자세히 보기">
+              <img src="images/case-handmade-cookie.jpeg" alt="귀여운 표정을 고른 작은 선물" width="960" height="1280" loading="lazy" decoding="async">
+              <span class="showroom-made-caption">귀여운 표정을 고른 작은 선물</span>
+            </a>
+            <a class="showroom-made-item showroom-made-item--fallback" data-size="square" href="guides/wedding-favor-cookie/" aria-label="결혼식 날 건넨 감사 쿠키 자세히 보기">
+              <img src="images/case-wedding-favor.jpeg" alt="결혼식 날 건넨 감사 쿠키" width="1192" height="1280" loading="lazy" decoding="async">
+              <span class="showroom-made-caption">결혼식 날 건넨 감사 쿠키</span>
+            </a>
+            <a class="showroom-made-item showroom-made-item--fallback" data-size="large" href="guides/corporate-event-cookie/" aria-label="브랜드 행사에 맞춘 단체 구성 자세히 보기">
+              <img src="images/case-corporate-favor.jpeg" alt="브랜드 행사에 맞춘 단체 구성" width="960" height="1280" loading="lazy" decoding="async">
+              <span class="showroom-made-caption">브랜드 행사에 맞춘 단체 구성</span>
+            </a>
+            <a class="showroom-made-item showroom-made-item--fallback" data-size="wide" href="out/fortune/" aria-label="응원하는 마음을 담은 행운쿠키 자세히 보기">
+              <img src="images/case-lucky-cookie.jpeg" alt="응원하는 마음을 담은 행운쿠키" width="1280" height="1176" loading="lazy" decoding="async">
+              <span class="showroom-made-caption">응원하는 마음을 담은 행운쿠키</span>
+            </a>
+            <a class="showroom-made-item showroom-made-item--fallback" data-size="square" href="products/brownie-cookie/" aria-label="짧은 문구를 더한 브라우니 자세히 보기">
+              <img src="images/work-new-01.jpg" alt="짧은 문구를 더한 브라우니" width="768" height="1024" loading="lazy" decoding="async">
+              <span class="showroom-made-caption">짧은 문구를 더한 브라우니</span>
+            </a>
+        <!-- NM_MADE_FALLBACK:END -->
+          </div>
         </div>
       </section>
 
@@ -660,7 +691,8 @@
             <p>아직 정하지 못한 내용이 있어도 괜찮아요. 필요한 기준부터 함께 정리해드릴게요.</p>
           </div>
           <div class="showroom-faq-list" data-reveal>
-            <details><summary>몇 개부터 주문할 수 있나요?</summary><div class="showroom-faq-answer">브루키는 최소 12개, 행운쿠키는 최소 1세트부터 주문할 수 있어요. 수제꾸덕쿠키는 대부분 최소 수량이 없으며 구성별 조건은 주문 화면에서 확인해주세요. 쿠키크루는 상담으로 수량과 가격을 안내합니다.</div></details>
+            <details><summary>몇 개부터 주문할 수 있나요?</summary><div class="showroom-faq-answer">브루키는 최소 12개, 행운쿠키는 최소 1세트부터 주문할 수 있어요. 수제꾸덕쿠키는 대부분 최소 수량이 없으며 구성별 조건은 주문 화면에서 확인해주세요. 쿠키크루는 상담으로 수량과 가격을 안내합니다. <a href="guides/cookie-minimum-order/">제품별 최소 주문 수량 자세히 보기</a></div></details>
+            <details><summary>쿠키는 어떻게 보관하나요?</summary><div class="showroom-faq-answer">제품마다 보관 기간이 다릅니다. 실제 수령한 쿠키의 포장 라벨을 먼저 확인해 주세요. <a href="guides/cookie-storage/">제품별 보관 기간과 냉동 방법 확인하기</a></div></details>
             <details><summary>언제까지 예약해야 하나요?</summary><div class="showroom-faq-answer">예약 제작으로 진행하며 상품과 수량에 따라 가능한 일정이 달라요. 필요한 날짜와 수량을 알려주시면 제작 가능 여부를 확인해드려요. 픽업 일정은 예약 확정 후 안내합니다.</div></details>
             <details><summary>네이버예약과 커스텀주문은 어떻게 이용하나요?</summary><div class="showroom-faq-answer">네이버예약 버튼은 네이버플레이스로 연결됩니다. 커스텀주문에서는 브루키, 꾸덕쿠키, 행운쿠키의 옵션과 수량을 골라 상담용 견적서를 만들 수 있어요. 견적서 작성 후 일정과 예약 확정 여부를 확인해주세요.</div></details>
             <details><summary>어디서 수령하고, 퀵 배송도 가능한가요?</summary><div class="showroom-faq-answer">김포공항·송정역 인근 서울 강서구 송정로 25 1층 공항동 작업실에서 예약 픽업할 수 있어요. 차량 퀵은 일정과 수량에 따라 가능 여부를 안내합니다.</div></details>

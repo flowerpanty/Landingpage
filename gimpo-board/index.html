@@ -15,7 +15,7 @@
   <meta property="og:image" content="https://nothingmatters.co.kr/images/cookie-flight-box-open.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="../images/nm-bear-mark.svg">
-  <link rel="stylesheet" href="../assets/gimpo-board.css?v=20261004a">
+  <link rel="stylesheet" href="../assets/gimpo-board.css?v=20261004b">
   <link rel="stylesheet" href="../assets/split-flap.css?v=20260928c">
   <link rel="stylesheet" href="../assets/board-immersive.css?v=20261001a">
   <script defer src="../assets/gimpo-flight-data.js?v=20260928c"></script>
@@ -281,6 +281,7 @@
         <div class="board-panel-top visually-hidden"><strong>GIMPO AIRPORT</strong><div class="board-clock" aria-label="현재 한국 시간" role="timer"><span class="board-clock-label">KOREA<br>TIME</span><span id="clock-hh" class="flap-bank flap-bank--clock" role="img" aria-hidden="true"></span><span class="clock-separator" aria-hidden="true">:</span><span id="clock-mm" class="flap-bank flap-bank--clock" role="img" aria-hidden="true"></span></div></div>
         <div class="board-boardline visually-hidden"><div><span class="board-panel-code">GMP</span><span id="board-direction">DEPARTURES / 출발</span></div><span id="board-count">— FLIGHTS</span></div>
         <div id="board-notice" class="board-notice" role="status" aria-live="polite" hidden></div>
+        <noscript><style>.board-controls,.board-table-wrap,.board-status-line,.board-arrival-answer a{display:none!important}</style><p class="board-notice">이 전광판의 항공편 목록을 보려면 자바스크립트가 필요합니다. <a href="https://www.airport.co.kr/gimpo/cms/frCon/index.do?CONTENTS_NO=2&amp;MENU_ID=1010">한국공항공사 김포공항 출발·도착 안내</a>에서도 확인할 수 있습니다.</p></noscript>
         <div class="board-table-wrap">
           <div id="board-loader" class="board-loader" aria-live="polite"><span class="board-loader-text" aria-hidden="true">GIMPO · FLIGHT INFO</span><span class="board-loader-caption">PLEASE WAIT</span></div>
           <table class="flight-table" role="table">
@@ -293,14 +294,29 @@
         <div class="board-status-line"><span id="board-live-state" class="board-live-state" role="status" aria-live="polite">항공편 정보를 불러오는 중입니다.</span><time id="board-updated" datetime="">UPDATED —</time></div>
         <p class="board-disclaimer">항공편 정보는 한국공항공사 제공 자료입니다. 변경시간은 실제 출발·도착 시각이 아닐 수 있습니다. 탑승 전 항공사와 공항 안내를 다시 확인하세요.</p>
       </div>
-      <aside class="board-arrival-answer" aria-labelledby="board-arrival-title">
-        <div><h2 id="board-arrival-title">김포공항 도착정보</h2><p>ARRIVALS 탭에서 김포공항 도착 항공편의 편명, 출발지, 도착시간과 운항상태를 확인할 수 있습니다. 예정시간과 변경시간이 다르면 두 시간을 함께 표시합니다.</p></div>
-        <a id="board-arrivals-link" href="#arrivals-tab">김포공항 도착 항공편 보기 →</a>
-      </aside>
     </section>
 
-    <section class="brand-section" aria-labelledby="brand-title">
-      <div class="brand-content"><p class="brand-eyebrow">BEFORE YOU BOARD</p><h2 id="brand-title">김포공항 가는 길,<br>쿠키도 챙겨가세요.</h2><p>NOTHINGMATTERS는 김포공항 내부가 아닌 서울 강서구 공항동 송정로 25 1층에 있습니다. 예약한 쿠키는 송정역 인근 작업실에서 픽업할 수 있습니다.</p><div class="brand-actions"><a href="/gimpo/pickup/">공항동 쿠키 예약 픽업 안내 →</a><a href="/gimpo/">김포공항 여행 쿠키 보기 →</a></div></div>
+    <aside class="board-arrival-answer" aria-labelledby="board-arrival-title">
+      <div><h2 id="board-arrival-title">김포공항 도착정보</h2><p>ARRIVALS 탭에서 김포공항 도착 항공편의 편명, 출발지, 도착시간과 운항상태를 확인할 수 있습니다. 예정시간과 변경시간이 다르면 두 시간을 함께 표시합니다.</p></div>
+      <a id="board-arrivals-link" href="#arrivals-tab">김포공항 도착 항공편 보기 →</a>
+    </aside>
+
+    <section class="board-collection" aria-labelledby="board-collection-title">
+      <div class="board-collection-inner">
+        <p class="board-collection-eyebrow">GIMPO DESSERT COLLECTION</p>
+        <div class="board-collection-lead">
+          <h2 id="board-collection-title">김포공항 가는 날<br>골라보는 쿠키</h2>
+          <p>공항과 여행의 이야기를 담은 네 가지 쿠키를 골라보세요.<br>구성과 주문 방법은 각 제품 상세페이지에서 확인할 수 있습니다.</p>
+        </div>
+        <div class="board-collection-products">
+          <article><a class="board-collection-card" href="/products/cookie-flight/"><figure><img src="../images/cookie-flight-box-open.jpg" alt="박스에 담긴 COOKIE FLIGHT 비행기 쿠키 4종" width="1084" height="1341" loading="lazy" decoding="async"></figure><h3>COOKIE FLIGHT</h3><p>비행기 모양 쿠키 4종 세트.</p><span>제품 보기 ↗</span></a></article>
+          <article><a class="board-collection-card" href="/products/terminal-sand-cookie/"><figure><img src="../images/terminal-hero-optimized.webp" alt="터미널을 모티브로 만든 샌드쿠키" width="1024" height="600" loading="lazy" decoding="async"></figure><h3>TERMINAL SAND COOKIE</h3><p>터미널을 모티브로 만든 샌드쿠키.</p><span>제품 보기 ↗</span></a></article>
+          <article><a class="board-collection-card" href="/products/airplane-cookie/"><figure><img src="../images/airplane-cookie-handheld.png" alt="손에 들고 있는 비행기 모양 버터쿠키" width="639" height="560" loading="lazy" decoding="async"></figure><h3>AIRPLANE BUTTER COOKIE</h3><p>하나씩 챙기기 좋은 비행기 모양 버터쿠키.</p><span>제품 보기 ↗</span></a></article>
+          <article><a class="board-collection-card" href="/cookie-crew/"><figure><img src="../images/cookie-crew/cookie-crew-hero-main.jpg" alt="세 가지 스카프 색상의 COOKIE CREW 캐릭터 쿠키" width="629" height="477" loading="lazy" decoding="async"></figure><h3>COOKIE CREW</h3><p>CREW 캐릭터 쿠키와 마그넷 굿즈.</p><span>제품 보기 ↗</span></a></article>
+        </div>
+        <div class="board-collection-links"><a href="/gimpo/">김포공항 선물·디저트 전체 보기 →</a><a href="/gimpo/pickup/">예약 픽업 안내 →</a></div>
+        <p class="board-collection-note">NOTHINGMATTERS는 김포공항 내부 매장이 아니라 서울 강서구 공항동·송정역 인근에 있습니다. 예약한 쿠키는 공항동 작업실에서 픽업할 수 있습니다.</p>
+      </div>
     </section>
 
     <section class="board-info" aria-labelledby="board-info-title">
@@ -310,7 +326,7 @@
         <article><h2>김포공항 도착정보·도착시간 확인</h2><p>김포공항 도착 항공편은 ARRIVALS 탭에서 확인할 수 있습니다. 편명, 출발지, 현재 표시되는 도착시간과 운항상태를 함께 확인하세요.</p></article>
         <article><h2>김포공항 출발정보·출발시간 확인</h2><p>김포공항 출발 항공편은 DEPARTURES 탭에서 확인할 수 있습니다. 편명, 목적지, 현재 표시되는 출발시간, 게이트와 운항상태를 함께 확인하세요.</p></article>
       </div>
-      <p>항공편 정보는 한국공항공사 제공 자료를 바탕으로 표시합니다.</p>
+      <p>항공편 정보는 한국공항공사 제공 자료를 바탕으로 표시합니다. <a href="https://www.airport.co.kr/gimpo/cms/frCon/index.do?CONTENTS_NO=2&amp;MENU_ID=1010">한국공항공사 김포공항 출발·도착 안내</a>에서 원본 정보를 확인할 수 있습니다.</p>
       <p>이 전광판은 공식 공항 사이트가 아닙니다. 변경시간은 실제 출발·도착 시각이 아닐 수 있으므로 탑승 전 항공사·공항 안내를 다시 확인하세요.</p>
       <div class="board-info-questions" aria-label="김포공항 항공편 자주 묻는 질문">
         <details><summary>김포공항 도착정보는 어디서 확인하나요?</summary><p>이 페이지의 ARRIVALS 도착 탭에서 김포공항 도착 항공편의 편명, 출발지, 도착시간과 운항상태를 확인할 수 있습니다. 항공편 정보는 한국공항공사 제공 자료를 바탕으로 표시합니다.</p></details>

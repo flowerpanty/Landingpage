@@ -84,6 +84,16 @@
     .heading h2{font-size:clamp(36px,4.5vw,58px);line-height:1.06;letter-spacing:-.055em;margin-bottom:14px}
     .heading p{font-size:17px;margin:0;max-width:760px}
 
+    .storage-summary{margin-bottom:30px;overflow-x:auto;border:var(--line);border-radius:20px;background:#fff}
+    .storage-summary table{width:100%;min-width:610px;border-collapse:collapse;text-align:left}
+    .storage-summary caption{padding:15px 18px;background:var(--yellow);font-size:20px;font-weight:900;text-align:left}
+    .storage-summary th,.storage-summary td{padding:13px 18px;border-top:2px solid #000;vertical-align:top}
+    .storage-summary thead th{background:var(--sky)}
+    .storage-summary tbody th{white-space:nowrap}
+    .storage-summary tbody a{text-decoration:underline;text-underline-offset:3px}
+    .storage-summary tbody tr:nth-child(even){background:var(--paper)}
+    .storage-summary>p{margin:0;padding:13px 18px;border-top:2px solid #000;font-size:14px}
+
     .product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
     .product-card{appearance:none;width:100%;text-align:left;border:var(--line);border-radius:22px;background:#fff;padding:14px;box-shadow:var(--shadow);cursor:pointer;transition:.14s;position:relative}
     .product-card:hover,.product-card.active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000}

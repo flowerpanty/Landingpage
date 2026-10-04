@@ -200,15 +200,15 @@
     }
   ],
   "works": [
-    { "id": "default-handmade", "src": "/images/case-handmade-cookie.jpeg", "caption": "귀여운 표정을 고른 작은 선물", "href": "/out/" },
-    { "id": "default-wedding", "src": "/images/case-wedding-favor.jpeg", "caption": "결혼식 날 건넨 감사 쿠키", "href": "/guides/wedding-favor-cookie/" },
-    { "id": "default-corporate", "src": "/images/case-corporate-favor.jpeg", "caption": "브랜드 행사에 맞춘 단체 구성", "href": "/guides/corporate-event-cookie/" },
-    { "id": "default-lucky", "src": "/images/case-lucky-cookie.jpeg", "caption": "응원하는 마음을 담은 행운쿠키", "href": "/out/fortune/" },
-    { "id": "default-brownie", "src": "/images/work-new-01.jpg", "caption": "짧은 문구를 더한 브라우니", "href": "/products/brownie-cookie/" }
+    { "id": "default-handmade", "src": "/images/case-handmade-cookie.jpeg", "imageWidth": 960, "imageHeight": 1280, "caption": "귀여운 표정을 고른 작은 선물", "href": "/out/" },
+    { "id": "default-wedding", "src": "/images/case-wedding-favor.jpeg", "imageWidth": 1192, "imageHeight": 1280, "caption": "결혼식 날 건넨 감사 쿠키", "href": "/guides/wedding-favor-cookie/" },
+    { "id": "default-corporate", "src": "/images/case-corporate-favor.jpeg", "imageWidth": 960, "imageHeight": 1280, "caption": "브랜드 행사에 맞춘 단체 구성", "href": "/guides/corporate-event-cookie/" },
+    { "id": "default-lucky", "src": "/images/case-lucky-cookie.jpeg", "imageWidth": 1280, "imageHeight": 1176, "caption": "응원하는 마음을 담은 행운쿠키", "href": "/out/fortune/" },
+    { "id": "default-brownie", "src": "/images/work-new-01.jpg", "imageWidth": 768, "imageHeight": 1024, "caption": "짧은 문구를 더한 브라우니", "href": "/products/brownie-cookie/" }
   ],
   "pages": [
     { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04" },
-    { "path": "/bulk/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
+    { "path": "/bulk/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04" },
     { "path": "/small-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/contact/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },
     { "path": "/works/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22" },
@@ -218,8 +218,9 @@
     { "path": "/gimpo/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04", "breadcrumbName": "김포공항 선물·디저트·기념품" },
     { "path": "/gimpo2/", "status": "active", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-29", "breadcrumbName": "김포공항 출발 전 쿠키 픽업 플래너" },
     { "path": "/gimpo/pickup/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-28", "breadcrumbName": "김포공항 쿠키 픽업" },
-    { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-28" },
-    { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
+    { "path": "/guides/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04" },
+    { "path": "/guides/cookie-storage/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04", "breadcrumbName": "쿠키 보관방법·맛있게 드시는 기간" },
+    { "path": "/guides/cookie-minimum-order/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04", "breadcrumbName": "답례품 쿠키 최소 주문 수량" },
     { "path": "/guides/gimpo-airport-flight-status/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-01", "breadcrumbName": "김포공항 항공편 확인 방법" },
     { "path": "/guides/gimpo-airport-departure-checklist/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-01", "breadcrumbName": "김포공항 출발 전 체크리스트" },
     { "path": "/products/brownie-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-22", "urlRole": "search-landing", "relatedProductPrimaryUrl": "/brookie/", "workCardLabel": "짧은 문구를 더한 브라우니", "workCardDetails": { "product": "브라우니쿠키", "packaging": "짧은 문구 추가" }, "workCardActionLabel": "브라우니쿠키 자세히 보기 →", "product": { "name": "nothingmatters 브루키 / 브라우니쿠키", "lowPrice": 7800, "minOrder": "최소 주문 수량 12개", "category": "브라우니쿠키 답례품", "primaryUrl": "/products/brownie-cookie/" } },

@@ -426,6 +426,8 @@ assert.doesNotMatch(boardHtml, /href="\/gimpo2\/"/);
 assert.match(boardHtml, /href="\/gimpo\/"/, "flight board should link back to the cookie hub");
 assert.match(boardHtml, /id="detail-pickup-link"[^>]*href="\/gimpo\/pickup\/"/, "selected board flight should link to pickup guidance");
 assert.match(boardHtml, /id="board-badge"[^>]*>GMP · CHECKING<\/span>/, "board must not claim LIVE before fresh data loads");
+assert.match(boardHtml, /<noscript>[\s\S]*?자바스크립트가 필요합니다\.[\s\S]*?https:\/\/www\.airport\.co\.kr\/gimpo\/cms\/frCon\/index\.do\?CONTENTS_NO=2&amp;MENU_ID=1010[\s\S]*?<\/noscript>/, "board should offer the official flight information when JavaScript is unavailable");
+assert.match(boardHtml, /항공편 정보는 한국공항공사 제공 자료를 바탕으로 표시합니다\. <a href="https:\/\/www\.airport\.co\.kr\/gimpo\/cms\/frCon\/index\.do\?CONTENTS_NO=2&amp;MENU_ID=1010">한국공항공사 김포공항 출발·도착 안내<\/a>/, "board should visibly link to its official data source");
 assert.doesNotMatch(boardHtml, /KAC_FLIGHT_API_KEY|serviceKey=/, "board HTML must not expose provider credentials");
 assert.doesNotMatch(fs.readFileSync(path.join(ROOT, "assets/gimpo-board.js"), "utf8"), /KAC_FLIGHT_API_KEY|serviceKey=/, "board client JS must not expose provider credentials");
 
@@ -563,7 +565,17 @@ for (const [pathname, h1] of kimpoGuides) {
 for (const href of ["/gimpo/pickup/", "/gimpo/"]) {
   assert.ok(boardHtml.includes(`href="${href}"`), `flight board should link to ${href}`);
 }
-assert.ok(boardHtml.indexOf('class="board-shell"') < boardHtml.indexOf('class="brand-section"') && boardHtml.indexOf('class="brand-section"') < boardHtml.indexOf('class="board-info"') && boardHtml.indexOf('class="board-info"') < boardHtml.indexOf('class="board-footer"'), "flight board, brand, information, and footer must follow DOM order");
+const boardSectionOrder = ["board-shell", "board-arrival-answer", "board-collection", "board-info", "board-footer"].map((name) => boardHtml.indexOf(`class="${name}"`));
+assert.ok(boardSectionOrder.every((position, index) => position >= 0 && (index === 0 || position > boardSectionOrder[index - 1])), "flight board, answer, collection, information, and footer must follow DOM order");
+assert.doesNotMatch(boardHtml, /BEFORE YOU BOARD|class="brand-section"|쿠키도 챙겨가세요/);
+const boardCollection = boardHtml.match(/<section class="board-collection"[\s\S]*?<\/section>/)?.[0] || "";
+assert.match(boardCollection, /GIMPO DESSERT COLLECTION/);
+assert.match(boardCollection, /김포공항 가는 날<br>골라보는 쿠키/);
+assert.match(boardCollection, /김포공항 내부 매장이 아니라 서울 강서구 공항동·송정역 인근/);
+const productCardIdentity = (html) => [...html.matchAll(/<article><a[^>]*href="([^"]+)"[^>]*>[\s\S]*?<img src="([^"]+)" alt="([^"]+)"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>[\s\S]*?<\/article>/g)].map((match) => [match[4], match[1], match[2], match[3]]);
+const hubDessert = gimpoHtml.match(/<section class="hub-group hub-dessert"[\s\S]*?<\/section>/)?.[0] || "";
+assert.equal(productCardIdentity(boardCollection).length, 4, "board collection must show exactly four products");
+assert.deepEqual(productCardIdentity(boardCollection), productCardIdentity(hubDessert), "board collection must reuse the hub's actual products, images, and alt text in order");
 assert.match(boardHtml, /class="board-info"[\s\S]*?김포공항 도착정보와 출발정보 확인[\s\S]*?한국공항공사 제공 자료/);
 for (const term of ["김포공항 도착정보", "김포공항 도착시간", "김포공항 출발정보", "김포공항 출발시간"]) {
   assert.ok(boardHtml.includes(term), `flight board should answer ${term}`);
@@ -596,7 +608,7 @@ assert.match(readHtml(filePathForPathname("/guides/gimpo-airport-departure-check
 assert.ok(gimpoHtml.includes('href="/gimpo/pickup/"'), "travel-cookie hub should reach reservation pickup guidance");
 assert.ok(gimpoPickupHtml.includes('href="/gimpo/"'), "pickup guidance should link back to the travel-cookie hub");
 for (const html of [boardHtml, gimpoHtml, gimpo2Html, gimpoPickupHtml]) {
-  assert.match(html, /김포공항 내부가 아닌|김포공항 내부가 아니라|김포공항 안에서 판매하지 않습니다/, "Kimpo pages must clarify that NOTHINGMATTERS is outside the airport");
+  assert.match(html, /김포공항 내부가 아닌|김포공항 내부가 아니라|김포공항 내부 매장이 아니라|김포공항 안에서 판매하지 않습니다/, "Kimpo pages must clarify that NOTHINGMATTERS is outside the airport");
 }
 const guideHubHtml = readHtml(filePathForPathname("/guides/"));
 const guideHubItems = getStaticSchema(guideHubHtml)["@graph"].find((node) => node["@type"] === "ItemList")?.itemListElement || [];
@@ -747,13 +759,13 @@ assert.equal(
 assert.match(fs.readFileSync(path.join(ROOT, ".gitignore"), "utf8"), /^_handoff\/$/m, "handoff files must stay out of deploy commits");
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-28<\/lastmod>/,
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-10-04<\/lastmod>/,
   "guides sitemap lastmod should reflect the updated guide directory"
 );
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-10-04" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" || pathname === "/bulk/" ? "2026-10-04" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
@@ -765,14 +777,17 @@ assert.match(
 
 const cookieStoragePath = "/guides/cookie-storage/";
 const cookieStorageEntry = registryEntries.get(cookieStoragePath);
-assert.equal(cookieStorageEntry?.lastmod, "2026-09-22", "cookie storage registry lastmod should reflect the answer-first update");
+assert.equal(cookieStorageEntry?.lastmod, "2026-10-04", "cookie storage registry lastmod should reflect the static storage guidance");
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/cookie-storage\/<\/loc>\s*<lastmod>2026-09-22<\/lastmod>/,
-  "cookie storage sitemap lastmod should reflect the answer-first update"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/cookie-storage\/<\/loc>\s*<lastmod>2026-10-04<\/lastmod>/,
+  "cookie storage sitemap lastmod should reflect the static storage guidance"
 );
 const cookieStorageHtml = readHtml(filePathForPathname(cookieStoragePath));
 assert.match(cleanText(getAttribute(cookieStorageHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), /쿠키 보관방법과\s*맛있게 드시는 기간/, "cookie storage H1 should answer the search intent directly");
+const cookieStorageSummary = cookieStorageHtml.match(/<div class="storage-summary"[^>]*>([\s\S]*?)<\/div>/)?.[1] || "";
+assert.equal((cookieStorageSummary.match(/<tr><th scope="row">/g) || []).length, 4, "cookie storage should expose all four product periods in HTML without JavaScript");
+assert.match(cleanText(cookieStorageSummary), /쿠키크루.*수령일 포함 3일 이내.*브루키.*수령일 포함 3일 이내.*수제 꾸덕쿠키.*수령일 포함 3일 이내.*행운쿠키.*수령일 포함 7일 이내/s);
 const cookieStorageSchema = getStaticSchema(cookieStorageHtml);
 const cookieStorageBreadcrumb = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
 assert.equal(
@@ -800,6 +815,25 @@ assert.deepEqual(
   cookieStorageFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [],
   "cookie storage visible FAQ and FAQPage should remain synchronized"
 );
+
+const quantityPath = "/guides/cookie-minimum-order/";
+const quantityHtml = readHtml(filePathForPathname(quantityPath));
+const quantityTable = quantityHtml.match(/<table class="nm-table nm-quantity-table">([\s\S]*?)<\/table>/)?.[1] || "";
+assert.equal(registryEntries.get(quantityPath)?.lastmod, "2026-10-04", "minimum-order guide should record its publication date");
+assert.match(cleanText(getAttribute(quantityHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), /답례품 쿠키는 몇 개부터 주문할 수 있나요/);
+assert.equal((quantityTable.match(/<th scope="row">/g) || []).length, 3, "minimum-order guide should expose three source-backed product rows");
+for (const [name, href, minimum, sourceMinimum] of [
+  ["브루키", "../../brookie/", "12개부터", /12개/],
+  ["수제꾸덕쿠키", "../../out/", "대부분 최소 수량 없음", /대부분 최소 수량 없음/],
+  ["행운쿠키", "../../out/fortune/", "1세트부터", /1세트/],
+]) {
+  assert.match(sitePages.products.find((product) => product.name === name)?.minOrder || "", sourceMinimum, `${name}: public guide fact must match the product registry`);
+  assert.ok(quantityTable.includes(`href="${href}"`), `${name}: guide row must link to the primary product page`);
+  assert.ok(cleanText(quantityTable).includes(minimum), `${name}: minimum must be visible without JavaScript`);
+}
+assert.ok(guideHubHtml.includes('href="./cookie-minimum-order/"'), "guide hub must link to the minimum-order answer");
+assert.ok(readHtml(filePathForPathname("/bulk/")).includes('href="../guides/cookie-minimum-order/"'), "bulk landing must link to the minimum-order answer");
+assert.ok(guideHubItems.some((item) => item.url === `${SITE_URL}${quantityPath}`), "guide ItemList must include the minimum-order answer");
 
 const magokPath = "/magok-cookie/";
 const magokEntry = registryEntries.get(magokPath);
@@ -1002,7 +1036,22 @@ assert.equal((homeHtml.match(/data-analytics-label="COOKIE FLIGHT"/g) || []).len
 assert.match(homeHtml, /href="products\/cookie-flight\/"/, "home COOKIE FLIGHT card should use its public product URL");
 assert.match(homeHtml, /href="pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "home should use a descriptive pickup hub anchor");
 assert.match(homeHtml, /김포공항·송정역 인근 공항동의 예약 픽업과 마곡 답례품·기업행사 상담/, "home visit copy should clarify both local intent hubs");
+const homeWorkFallback = homeHtml.match(/<!-- NM_MADE_FALLBACK:START -->([\s\S]*?)<!-- NM_MADE_FALLBACK:END -->/)?.[1] || "";
+assert.equal((homeWorkFallback.match(/class="showroom-made-item showroom-made-item--fallback"/g) || []).length, (sitePages.works || []).length, "homepage should expose registry-backed production cases without JavaScript");
+for (const work of sitePages.works || []) {
+  assert.ok(homeWorkFallback.includes(`href="${work.href.slice(1)}"`), `homepage production case should link to ${work.href}`);
+  assert.ok(homeWorkFallback.includes(`src="${work.src.slice(1)}"`), `homepage should expose the ${work.id} image in HTML`);
+  assert.ok(homeWorkFallback.includes(work.caption), `homepage should expose the ${work.id} caption in HTML`);
+}
+assert.match(homeHtml, /<a class="showroom-made-open" href="works\/" data-open-made-overlay>/, "production archive control should link to the works page without JavaScript");
+assert.match(homeHtml, /href="guides\/cookie-minimum-order\/">제품별 최소 주문 수량 자세히 보기<\/a>/, "homepage minimum-order answer should link to its source guide");
+assert.match(homeHtml, /href="guides\/cookie-storage\/">제품별 보관 기간과 냉동 방법 확인하기<\/a>/, "homepage storage answer should link to its source guide");
 const homeSchema = getStaticSchema(homeHtml);
+const homeFaq = homeSchema["@graph"].find((item) => item["@type"] === "FAQPage");
+const homeFaqMarkup = homeHtml.match(/<div class="showroom-faq-list"[^>]*>([\s\S]*?)<\/div>\s*<\/div>\s*<\/section>/)?.[1] || "";
+const homeVisibleFaq = [...homeFaqMarkup.matchAll(/<details><summary>([\s\S]*?)<\/summary><div class="showroom-faq-answer">([\s\S]*?)<\/div><\/details>/g)]
+  .map((match) => ({ name: cleanText(match[1]), text: cleanText(match[2]) }));
+assert.deepEqual(homeVisibleFaq, homeFaq?.mainEntity?.map((item) => ({ name: item.name, text: item.acceptedAnswer?.text })) || [], "homepage visible FAQ and FAQPage schema should match");
 const homeWebPage = homeSchema["@graph"].find((item) => item["@type"] === "CollectionPage");
 assert.deepEqual(homeWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "homepage should identify the actual LocalBusiness");
 const homeBakery = homeSchema["@graph"].find((item) => item["@type"] === "Bakery");

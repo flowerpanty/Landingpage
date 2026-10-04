@@ -278,7 +278,10 @@ const madeArchiveItems = [
 
   closeButton?.addEventListener("click", () => closeOverlay());
   archiveOpenButtons.forEach((button) => {
-    button.addEventListener("click", () => openOverlay(button));
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      openOverlay(button);
+    });
   });
   overlay?.addEventListener("click", (event) => {
     if (event.target === overlay) closeOverlay();
@@ -314,7 +317,7 @@ const madeArchiveItems = [
   });
 
   clearStaleOverlayHistory();
-  renderHomeSkeleton();
+  if (!homeGallery?.querySelector(".showroom-made-item")) renderHomeSkeleton();
   renderOverlayArchive(madeArchiveItems);
 
   getUploadedItems().then(({ items: uploadedItems }) => {

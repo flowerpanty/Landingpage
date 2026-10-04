@@ -1744,6 +1744,12 @@ body.theme-showroom,
   background: #f7f7f5;
 }
 
+.theme-showroom .showroom-made-item--fallback {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .theme-showroom .showroom-made-item[data-size="square"] {
   grid-row: span 2;
 }
@@ -2881,6 +2887,7 @@ body.is-made-overlay-open {
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 1;
+  text-decoration: none;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
