@@ -448,7 +448,7 @@ async function verifyBoardAnswers(cdp, width) {
     ["COOKIE FLIGHT", "/products/cookie-flight/", "../images/cookie-flight-box-open.jpg", "박스에 담긴 COOKIE FLIGHT 비행기 쿠키 4종"],
     ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/", "../images/terminal-hero-optimized.webp", "터미널을 모티브로 만든 샌드쿠키"],
     ["AIRPLANE BUTTER COOKIE", "/products/airplane-cookie/", "../images/airplane-cookie-handheld.png", "손에 들고 있는 비행기 모양 버터쿠키"],
-    ["COOKIE CREW", "/cookie-crew/", "../images/cookie-crew/cookie-crew-hero-main.jpg", "세 가지 스카프 색상의 COOKIE CREW 캐릭터 쿠키"]
+    ["COOKIE CREW", "/cookie-crew/", "../images/cookie-crew-bear-poster.jpg", "곰돌이 쿠키와 패키지가 담긴 COOKIE CREW 포스터"]
   ]);
   const columns = width <= 760 ? 2 : 4;
   assert.ok(products.slice(0, columns).every((card) => Math.abs(card.top - products[0].top) < 1), `collection should show ${columns} columns at ${width}px`);
@@ -1131,10 +1131,10 @@ try {
     assert.equal(pickupOrders.hasGtag, true, `pickup should expose the GA4 gtag bootstrap at ${width}px`);
     const cookieCrewThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); const sources = [...document.querySelectorAll('.nm-pickup-cookie-thumb picture source')].map((source) => source.getAttribute('srcset') || ''); return { src: image ? new URL(image.src).pathname : '', currentSrc: image?.currentSrc ? new URL(image.currentSrc).pathname : '', sources, objectFit: image ? getComputedStyle(image).objectFit : '', naturalWidth: image?.naturalWidth || 0, naturalHeight: image?.naturalHeight || 0 }; }");
     assert.deepEqual(cookieCrewThumbnail.sources, [], `pickup Cookie Crew card should use the homepage thumbnail directly at ${width}px`);
-    assert.equal(cookieCrewThumbnail.currentSrc, "/images/cookie-crew-group-scene.jpg", `pickup Cookie Crew card should load the homepage thumbnail at ${width}px`);
-    assert.equal(cookieCrewThumbnail.src, "/images/cookie-crew-group-scene.jpg", `pickup Cookie Crew card should use the homepage thumbnail at ${width}px`);
+    assert.equal(cookieCrewThumbnail.currentSrc, "/images/cookie-crew-bear-poster.jpg", `pickup Cookie Crew card should load the homepage thumbnail at ${width}px`);
+    assert.equal(cookieCrewThumbnail.src, "/images/cookie-crew-bear-poster.jpg", `pickup Cookie Crew card should use the homepage thumbnail at ${width}px`);
     assert.equal(cookieCrewThumbnail.objectFit, "contain", `pickup Cookie Crew thumbnail should not crop the provided cookie image at ${width}px`);
-    assert.equal(cookieCrewThumbnail.naturalWidth / cookieCrewThumbnail.naturalHeight, 629 / 477, `pickup Cookie Crew thumbnail should preserve the homepage source ratio at ${width}px`);
+    assert.equal(cookieCrewThumbnail.naturalWidth / cookieCrewThumbnail.naturalHeight, 1086 / 1448, `pickup Cookie Crew thumbnail should preserve the homepage source ratio at ${width}px`);
     assert.ok(pickupOrders.cards.every((card) => card.imageLoaded && card.right <= width && card.figureRight <= card.textLeft && card.titleFits && card.actionFits), `pickup order cards should remain readable without image overlap at ${width}px: ${JSON.stringify(pickupOrders.cards)}`);
     const pickupItemList = await evaluate(cdp, "() => { const schema = JSON.parse(document.querySelector('script[data-nm-schema=\"static\"]')?.textContent || '{}'); const itemList = schema['@graph']?.find((entry) => entry['@type'] === 'ItemList'); return (itemList?.itemListElement || []).map((item) => [item.name, new URL(item.url).pathname]); }");
     assert.deepEqual(pickupItemList, pickupOrders.cards.map((card) => [card.title, card.href]), `pickup ItemList should match all six visible product cards at ${width}px`);
@@ -1190,8 +1190,8 @@ try {
   await waitFor(cdp, "() => [...document.querySelectorAll('.nm-pickup-links img')].every((image) => image.complete && image.naturalWidth > 0)", "pickup order thumbnails should load at desktop width");
   const pickupDesktopThumbnail = await evaluate(cdp, "() => { const image = document.querySelector('.nm-pickup-cookie-thumb img'); const sources = [...document.querySelectorAll('.nm-pickup-cookie-thumb picture source')].map((source) => source.getAttribute('srcset') || ''); const figure = document.querySelector('.nm-pickup-cookie-thumb')?.getBoundingClientRect(); const title = document.querySelector('.nm-pickup-cookie-thumb')?.nextElementSibling?.getBoundingClientRect(); return { src: image ? new URL(image.src).pathname : '', currentSrc: image?.currentSrc ? new URL(image.currentSrc).pathname : '', sources, objectFit: image ? getComputedStyle(image).objectFit : '', figureBottom: figure?.bottom || 0, titleTop: title?.top || 0, viewport: window.innerWidth, documentWidth: document.documentElement.scrollWidth }; }");
   assert.deepEqual(pickupDesktopThumbnail.sources, [], "desktop pickup Cookie Crew card should use the homepage thumbnail directly");
-  assert.equal(pickupDesktopThumbnail.currentSrc, "/images/cookie-crew-group-scene.jpg", "desktop pickup Cookie Crew card should load the homepage thumbnail");
-  assert.equal(pickupDesktopThumbnail.src, "/images/cookie-crew-group-scene.jpg", "desktop pickup Cookie Crew card should use the homepage thumbnail");
+  assert.equal(pickupDesktopThumbnail.currentSrc, "/images/cookie-crew-bear-poster.jpg", "desktop pickup Cookie Crew card should load the homepage thumbnail");
+  assert.equal(pickupDesktopThumbnail.src, "/images/cookie-crew-bear-poster.jpg", "desktop pickup Cookie Crew card should use the homepage thumbnail");
   assert.equal(pickupDesktopThumbnail.objectFit, "contain", "desktop pickup Cookie Crew thumbnail should not crop the homepage image");
   assert.ok(pickupDesktopThumbnail.figureBottom <= pickupDesktopThumbnail.titleTop, "desktop pickup card image should not overlap its text");
   assert.ok(pickupDesktopThumbnail.documentWidth <= pickupDesktopThumbnail.viewport, "desktop pickup page should not horizontally overflow");

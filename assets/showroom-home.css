@@ -3635,6 +3635,9 @@ body.is-made-overlay-open .nm-floating-actions {
 .theme-showroom .showroom-section--products .showroom-product-card:nth-child(-n+3) .showroom-product-photo img {
   padding: 0;
 }
+.theme-showroom .showroom-section--products .showroom-product-card[href="cookie-crew/"] .showroom-product-photo img {
+  object-fit: contain;
+}
 .theme-showroom .showroom-section--products .showroom-product-copy {
   padding: 10px 8px 8px;
 }

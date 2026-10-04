@@ -147,7 +147,7 @@ const homeHtml = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 for (const [route, thumbnail] of [
   ["products/terminal-sand-cookie/", "images/terminal/terminal-hero-package.jpg"],
   ["products/cookie-flight/", "images/cookie-flight-box-open.jpg"],
-  ["cookie-crew/", "images/cookie-crew-group-scene.jpg"]
+  ["cookie-crew/", "images/cookie-crew-bear-poster.jpg"]
 ]) {
   const pickupCard = [...pickupHtml.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)]
     .find((match) => match[1] === `../${route}` && match[2].includes("<figure"))?.[2] || "";
