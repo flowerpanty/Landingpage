@@ -14,6 +14,15 @@
 - https://nothingmatters.co.kr/gimpo-board/
 - https://nothingmatters.co.kr/gimpo/pickup/
 - https://nothingmatters.co.kr/guides/
+- https://nothingmatters.co.kr/guides/cookie-storage/
+- https://nothingmatters.co.kr/guides/gimpo-airport-flight-status/
+- https://nothingmatters.co.kr/guides/gimpo-airport-departure-checklist/
+- https://nothingmatters.co.kr/products/cookie-flight/
+- https://nothingmatters.co.kr/products/airplane-cookie/
+- https://nothingmatters.co.kr/brookie/
+- https://nothingmatters.co.kr/out/
+- https://nothingmatters.co.kr/out/fortune/
+- https://nothingmatters.co.kr/cookie-crew/
 - https://nothingmatters.co.kr/products/brownie-cookie/
 - https://nothingmatters.co.kr/products/custom-brownie-cookie/
 - https://nothingmatters.co.kr/products/handmade-cookie/
@@ -93,6 +102,9 @@
 
 ## Use-case guides
 - guides/: guide hub for wedding favors, corporate event cookies, teacher snack gifts, farewell favors, dessert gift sets, and lucky cheering cookies
+- cookie-storage: product-specific storage advice; the package label for the purchased product takes priority
+- gimpo-airport-flight-status: how to interpret departure and arrival times; confirm current flight details with the airline
+- gimpo-airport-departure-checklist: departure checks and reservation pickup planning near Gimpo Airport
 - wedding-favor-cookie: wedding favors, wedding cookie favors, neat favor packaging
 - corporate-event-cookie: corporate event cookies, company favor cookies, office event snacks
 - teacher-snack-gift: kindergarten teacher snacks, daycare snack gifts, light thank-you gifts

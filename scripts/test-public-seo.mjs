@@ -765,14 +765,17 @@ assert.match(
 
 const cookieStoragePath = "/guides/cookie-storage/";
 const cookieStorageEntry = registryEntries.get(cookieStoragePath);
-assert.equal(cookieStorageEntry?.lastmod, "2026-09-22", "cookie storage registry lastmod should reflect the answer-first update");
+assert.equal(cookieStorageEntry?.lastmod, "2026-10-04", "cookie storage registry lastmod should reflect the static storage guidance");
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/cookie-storage\/<\/loc>\s*<lastmod>2026-09-22<\/lastmod>/,
-  "cookie storage sitemap lastmod should reflect the answer-first update"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/cookie-storage\/<\/loc>\s*<lastmod>2026-10-04<\/lastmod>/,
+  "cookie storage sitemap lastmod should reflect the static storage guidance"
 );
 const cookieStorageHtml = readHtml(filePathForPathname(cookieStoragePath));
 assert.match(cleanText(getAttribute(cookieStorageHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), /쿠키 보관방법과\s*맛있게 드시는 기간/, "cookie storage H1 should answer the search intent directly");
+const cookieStorageSummary = cookieStorageHtml.match(/<div class="storage-summary"[^>]*>([\s\S]*?)<\/div>/)?.[1] || "";
+assert.equal((cookieStorageSummary.match(/<tr><th scope="row">/g) || []).length, 4, "cookie storage should expose all four product periods in HTML without JavaScript");
+assert.match(cleanText(cookieStorageSummary), /쿠키크루.*수령일 포함 3일 이내.*브루키.*수령일 포함 3일 이내.*수제 꾸덕쿠키.*수령일 포함 3일 이내.*행운쿠키.*수령일 포함 7일 이내/s);
 const cookieStorageSchema = getStaticSchema(cookieStorageHtml);
 const cookieStorageBreadcrumb = cookieStorageSchema["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
 assert.equal(
