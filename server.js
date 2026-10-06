@@ -7,6 +7,7 @@ const crypto = require("node:crypto");
 const zlib = require("node:zlib");
 const { createWordpressJournalService } = require("./lib/wordpress-journal.js");
 const { createGimpoBoardService } = require("./lib/gimpo-board.js");
+const { createOrderApiHandler } = require("./lib/order-api.js");
 
 const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -72,7 +73,7 @@ const TRACKED_DASHBOARD_EVENTS = [
     name: "order_start",
     label: "주문 시작",
     type: "order",
-    description: "외부 주문 페이지로 이동"
+    description: "사이트 주문 페이지로 이동"
   },
   {
     name: "consult_click",
@@ -220,6 +221,7 @@ const gimpoBoard = createGimpoBoardService({
     : {})
 });
 const LEGACY_PRODUCT_REDIRECTS = SITE_PAGE_DATA.redirects || {};
+const handleOrderApi = createOrderApiHandler();
 
 let googleTokenCache = {
   accessToken: "",
@@ -1974,6 +1976,11 @@ const server = http.createServer(async (req, res) => {
 
   if (requestUrl.pathname === "/api/gallery" || requestUrl.pathname.startsWith("/api/gallery/")) {
     await handleGalleryApi(req, res, requestUrl);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/landing-orders") {
+    await handleOrderApi(req, res);
     return;
   }
 

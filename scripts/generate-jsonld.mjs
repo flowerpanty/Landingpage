@@ -53,6 +53,7 @@ const PRODUCT_META = {
 };
 
 const ITEM_LISTS = {
+  "/order": (SITE_PAGE_DATA.orderProducts || []).map((product) => [product.name, `/order/${product.slug}`]),
   "/gimpo2/": [
     ["COOKIE FLIGHT", "/products/cookie-flight/"],
     ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/"],
@@ -285,7 +286,7 @@ function getPageData(html, loc) {
 
 function getPageType(page) {
   if (["primary-product", "search-landing"].includes(page.urlRole)) return "ProductPage";
-  if (page.path === "/" || page.path === "/works/" || page.path === "/gimpo/") return "CollectionPage";
+  if (page.path === "/" || page.path === "/works/" || page.path === "/gimpo/" || page.path === "/order") return "CollectionPage";
   if (page.path === "/contact/") return "ContactPage";
   if (page.path === "/guides/") return "CollectionPage";
   if (page.path.startsWith("/products/")) return "ProductPage";

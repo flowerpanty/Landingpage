@@ -7,6 +7,8 @@
 - `detailPageMode: "existing"` keeps the current hand-written product page.
 - Update `updatedAt` when a generated product changes.
 - A page's optional `about` object describes its subject in the generated WebPage schema. It does not change the brand publisher or business entity.
+- `/order` intentionally has no trailing slash. Its original product builder UIs live at `/order/{slug}`, and `orderProducts` records those slugs and their existing product canonical URLs. Only the order hub is added to the sitemap; the builders retain product-detail canonicals.
+- `order/assets` is a self-contained snapshot of the original Railway UI, not a generated product-detail page. Keep quantity, pricing, validation, quote and confirmation behavior aligned with the order backend when updating it.
 
 After editing the catalog, run:
 

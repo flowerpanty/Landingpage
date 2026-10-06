@@ -9,6 +9,23 @@
     "/out/404/"
   ],
   "redirects": {
+    "/order/": "/order",
+    "/order.html": "/order",
+    "/order/index.html": "/order",
+    "/order/brookie/": "/order/brookie",
+    "/order/brookie.html": "/order/brookie",
+    "/order/cookies/": "/order/cookies",
+    "/order/cookies.html": "/order/cookies",
+    "/order/lucky/": "/order/lucky",
+    "/order/lucky.html": "/order/lucky",
+    "/order/cookie-flight/": "/order/cookie-flight",
+    "/order/cookie-flight.html": "/order/cookie-flight",
+    "/order/airplane-butter-cookie/": "/order/airplane-butter-cookie",
+    "/order/airplane-butter-cookie.html": "/order/airplane-butter-cookie",
+    "/order/cookie-crew/": "/order/cookie-crew",
+    "/order/cookie-crew.html": "/order/cookie-crew",
+    "/order/terminal-cookie/": "/order/terminal-cookie",
+    "/order/terminal-cookie.html": "/order/terminal-cookie",
     "/brookie": "/brookie/",
     "/brookie.html": "/brookie/",
     "/cookies": "/out/",
@@ -18,6 +35,43 @@
     "/blog": "https://blog.nothingmatters.co.kr/",
     "/blog/": "https://blog.nothingmatters.co.kr/"
   },
+  "orderProducts": [
+    {
+      "slug": "brookie",
+      "name": "브루키",
+      "detailUrl": "/products/custom-brownie-cookie/"
+    },
+    {
+      "slug": "cookies",
+      "name": "꾸덕쿠키",
+      "detailUrl": "/products/handmade-cookie/"
+    },
+    {
+      "slug": "lucky",
+      "name": "럭키쿠키 세트",
+      "detailUrl": "/products/lucky-cookie/"
+    },
+    {
+      "slug": "cookie-flight",
+      "name": "쿠키 플라이트",
+      "detailUrl": "/products/cookie-flight/"
+    },
+    {
+      "slug": "airplane-butter-cookie",
+      "name": "비행기 버터쿠키",
+      "detailUrl": "/products/airplane-cookie/"
+    },
+    {
+      "slug": "cookie-crew",
+      "name": "쿠키크루",
+      "detailUrl": "/cookie-crew/"
+    },
+    {
+      "slug": "terminal-cookie",
+      "name": "터미널쿠키",
+      "detailUrl": "/products/terminal-sand-cookie/"
+    }
+  ],
   "products": [
     {
       "name": "COOKIE FLIGHT",
@@ -33,7 +87,7 @@
       "sitemap": true,
       "category": "비행기 쿠키 4종 선물세트",
       "price": 16000,
-      "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookie-flight",
+      "orderUrl": "/order/cookie-flight",
       "primaryUrl": "/products/cookie-flight/",
       "urlRole": "primary-product",
       "detailPageMode": "existing",
@@ -65,7 +119,7 @@
       "sitemap": true,
       "category": "비행기 버터쿠키 단품",
       "price": 2500,
-      "orderUrl": "https://thingmattersreserve-production.up.railway.app/airplane-butter-cookie",
+      "orderUrl": "/order/airplane-butter-cookie",
       "primaryUrl": "/products/airplane-cookie/",
       "urlRole": "primary-product",
       "detailPageMode": "existing",
@@ -92,7 +146,7 @@
       "category": "브루키",
       "lowPrice": 7800,
       "minOrder": "최소 주문 수량 12개",
-      "orderUrl": "https://thingmattersreserve-production.up.railway.app/brookie",
+      "orderUrl": "/order/brookie",
       "primaryUrl": "/brookie/",
       "urlRole": "primary-product",
       "publicName": "브루키",
@@ -121,7 +175,7 @@
       "category": "수제꾸덕쿠키",
       "lowPrice": 4500,
       "minOrder": "대부분 최소 수량 없음",
-      "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookies",
+      "orderUrl": "/order/cookies",
       "primaryUrl": "/out/",
       "urlRole": "primary-product",
       "publicName": "수제꾸덕쿠키",
@@ -152,7 +206,7 @@
       "category": "행운쿠키",
       "price": 15000,
       "minOrder": "최소 1세트",
-      "orderUrl": "https://thingmattersreserve-production.up.railway.app/lucky?step=1",
+      "orderUrl": "/order/lucky?step=1",
       "primaryUrl": "/out/fortune/",
       "urlRole": "primary-product",
       "publicName": "행운쿠키",
@@ -183,7 +237,7 @@
       "indexing": "index",
       "sitemap": true,
       "category": "쿠키크루",
-      "orderUrl": "https://thingmattersreserve-production.up.railway.app/cookie-crew",
+      "orderUrl": "/order/cookie-crew",
       "primaryUrl": "/cookie-crew/",
       "urlRole": "primary-product",
       "publicName": "쿠키크루",
@@ -208,6 +262,7 @@
   ],
   "pages": [
     { "path": "/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-04" },
+    { "path": "/order", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-10-06", "breadcrumbName": "쿠키 주문" },
     { "path": "/bulk/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/small-gift/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-18" },
     { "path": "/contact/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-09-11" },

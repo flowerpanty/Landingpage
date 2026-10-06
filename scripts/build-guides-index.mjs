@@ -79,7 +79,7 @@ const html = `<!DOCTYPE html>
             </div>
             <div class="nm-button-row">
               <a class="nm-btn nm-btn--primary" href="#directory">가이드 전체 보기</a>
-              <a class="nm-btn nm-btn--secondary" href="https://thingmattersreserve-production.up.railway.app">무료견적내러가기</a>
+              <a class="nm-btn nm-btn--secondary" href="/order">무료견적내러가기</a>
             </div>
           </div>
 

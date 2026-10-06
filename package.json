@@ -20,7 +20,10 @@
     "server:test": "node scripts/test-gimpo-board.mjs && node scripts/test-server-http.mjs",
     "browser:test": "node scripts/test-public-browser.mjs && node scripts/benchmark-gimpo-board.mjs --verify",
     "journal:test": "node scripts/test-wordpress-journal.mjs",
+    "order:test": "node scripts/test-order-migration.mjs && node scripts/test-order-confirmation.mjs",
     "prestart": "npm run site:build",
-    "start": "node server.js"
+    "start": "node server.js",
+    "order:browser:test": "node scripts/test-order-browser.mjs",
+    "order:verify-live": "node scripts/verify-order-deployment.mjs"
   }
 }

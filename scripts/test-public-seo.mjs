@@ -217,6 +217,7 @@ function normalizePathname(pathname) {
   const value = String(pathname || "/").trim().normalize("NFC") || "/";
   const withLeadingSlash = value.startsWith("/") ? value : `/${value}`;
   if (withLeadingSlash === "/") return "/";
+  if (withLeadingSlash === "/order" || withLeadingSlash === "/order/") return "/order";
   return withLeadingSlash.endsWith("/") ? withLeadingSlash : `${withLeadingSlash}/`;
 }
 
@@ -340,6 +341,8 @@ function filePathForPathname(pathname) {
   if (path.extname(decodedPathname)) {
     return path.join(ROOT, decodedPathname.slice(1));
   }
+  const htmlPath = path.join(ROOT, `${decodedPathname.slice(1)}.html`);
+  if (fs.existsSync(htmlPath)) return htmlPath;
   return path.join(ROOT, decodedPathname.slice(1), "index.html");
 }
 

@@ -40,9 +40,9 @@ const PICKUP_MAP_URL = "https://map.naver.com/p/entry/place/1547319276?lng=126.8
 const GIMPO_BOOKING_URL = "https://m.place.naver.com/restaurant/1547319276/booking?entry=ple";
 const PICKUP_RESERVATION_URL = "https://m.place.naver.com/restaurant/1547319276/home?utm_source=nothingmatters.co.kr&utm_medium=owned&utm_campaign=pickup_reservation";
 const expectedOrderUrls = new Map([
-  ["/products/cookie-flight/", "https://thingmattersreserve-production.up.railway.app/cookie-flight"],
-  ["/products/airplane-cookie/", "https://thingmattersreserve-production.up.railway.app/airplane-butter-cookie"],
-  ["/cookie-crew/", "https://thingmattersreserve-production.up.railway.app/cookie-crew"]
+  ["/products/cookie-flight/", "/order/cookie-flight"],
+  ["/products/airplane-cookie/", "/order/airplane-butter-cookie"],
+  ["/cookie-crew/", "/order/cookie-crew"]
 ]);
 const BROWSER_GALLERY_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "nm-public-browser-gallery-"));
 
@@ -806,10 +806,10 @@ try {
     assert.equal(productOrderUrls.get(pathname), orderUrl, `${pathname}: product orderUrl must match the dedicated order page`);
   }
   assert.deepEqual([productOrderUrls.get("/brookie/"), productOrderUrls.get("/out/"), productOrderUrls.get("/out/fortune/")], [
-    "https://thingmattersreserve-production.up.railway.app/brookie",
-    "https://thingmattersreserve-production.up.railway.app/cookies",
-    "https://thingmattersreserve-production.up.railway.app/lucky?step=1"
-  ], "other product order URLs must stay unchanged");
+    "/order/brookie",
+    "/order/cookies",
+    "/order/lucky?step=1"
+  ], "product order URLs must use the main site's relative routes");
   await setViewport(cdp, 390);
   for (const [pathname, label] of stickyProducts) {
     await navigate(cdp, `${server.baseUrl}${pathname}`);
@@ -825,7 +825,7 @@ try {
     assert.equal(mobileSticky.sameRow, true, `${pathname}: equal-width buttons should share a row`);
     assert.deepEqual(mobileSticky.buttons.map(({ text, href, event, label: buttonLabel, target }) => ({ text, href, event, label: buttonLabel, target })), [
       { text: "네이버예약", href: "https://m.place.naver.com/restaurant/1547319276/booking?entry=ple", event: "naver_booking_click", label, target: "_blank" },
-      { text: "주문하기", href: expectedOrderUrls.get(pathname), event: "order_start", label, target: "_blank" }
+      { text: "주문하기", href: new URL(expectedOrderUrls.get(pathname), server.baseUrl).href, event: "order_start", label, target: "_blank" }
     ], `${pathname}: sticky CTA links and analytics should match`);
     assert.ok(mobileSticky.buttons.every((button) => button.height >= 48), `${pathname}: buttons should have touch-friendly height`);
     assert.ok(mobileSticky.bodyPadding >= mobileSticky.stickyHeight, `${pathname}: body should reserve space for the sticky CTA`);
@@ -856,7 +856,7 @@ try {
     assert.ok(Math.abs(desktopSticky.buttons[0].width - desktopSticky.buttons[1].width) < 1 && Math.abs(desktopSticky.buttons[0].top - desktopSticky.buttons[1].top) < 1 && desktopSticky.buttons.every((button) => button.height >= 48), `${pathname}: desktop buttons must share a row at equal width`);
     assert.deepEqual(desktopSticky.buttons.map(({ text, href, event, label: buttonLabel, target, background, color }) => ({ text, href, event, label: buttonLabel, target, background, color })), [
       { text: "네이버예약", href: GIMPO_BOOKING_URL, event: "naver_booking_click", label, target: "_blank", background: "rgb(3, 199, 90)", color: "rgb(255, 255, 255)" },
-      { text: "주문하기", href: expectedOrderUrls.get(pathname), event: "order_start", label, target: "_blank", background: "rgb(135, 193, 235)", color: "rgb(17, 17, 17)" }
+      { text: "주문하기", href: new URL(expectedOrderUrls.get(pathname), server.baseUrl).href, event: "order_start", label, target: "_blank", background: "rgb(135, 193, 235)", color: "rgb(17, 17, 17)" }
     ], `${pathname}: desktop dock links and colors must match`);
     assert.ok(desktopSticky.documentWidth <= desktopSticky.viewport, `${pathname}: desktop dock must not overflow horizontally`);
     assert.equal(desktopSticky.disabled, true, `${pathname}: Kakao float must remain disabled`);
@@ -935,7 +935,7 @@ try {
   assert.equal(airplaneState.heroLoaded, true, "airplane butter cookie hero should load");
   assert.ok(airplaneState.documentWidth <= airplaneState.viewport, "airplane butter cookie should not horizontally overflow on mobile");
   const airplaneBodyOrders = await evaluate(cdp, "() => [...document.querySelectorAll('main a[data-analytics-event=\"order_start\"]')].map((link) => ({ text: link.textContent.trim(), href: link.href, event: link.dataset.analyticsEvent, label: link.dataset.analyticsLabel, target: link.target }))");
-  assert.deepEqual(airplaneBodyOrders, [{ text: "주문하기 →", href: expectedOrderUrls.get("/products/airplane-cookie/"), event: "order_start", label: "airplane-cookie", target: "_blank" }], "airplane cookie body order CTA must use its dedicated order page");
+  assert.deepEqual(airplaneBodyOrders, [{ text: "주문하기 →", href: new URL(expectedOrderUrls.get("/products/airplane-cookie/"), server.baseUrl).href, event: "order_start", label: "airplane-cookie", target: "_blank" }], "airplane cookie body order CTA must use its dedicated order page");
   await setViewport(cdp, 1280, 900);
   await navigate(cdp, `${server.baseUrl}/magok-cookie/`);
   const magokFavorGuideDesktop = await evaluate(cdp, "() => { const grid = document.querySelector('#magok-favor-guide .magok-favor-guide-grid'); const cards = [...document.querySelectorAll('#magok-favor-guide .magok-favor-guide-card')]; return { columns: getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).length, documentWidth: document.documentElement.scrollWidth, cards: cards.map((card) => ({ right: card.getBoundingClientRect().right, titleFits: (card.querySelector('h3')?.scrollWidth || 0) <= (card.querySelector('h3')?.clientWidth || 0), linkFits: (card.querySelector('a')?.scrollWidth || 0) <= (card.querySelector('a')?.clientWidth || 0) })) }; }");
@@ -1288,7 +1288,7 @@ try {
   assert.deepEqual(bookingActions.map(a => a.text), ['네이버예약', '커스텀주문', '상담하기']);
   assert.ok(bookingActions.every(a => a.height >= 44));
   assert.equal(bookingActions[0].href, PICKUP_RESERVATION_URL);
-  assert.equal(bookingActions[1].href, 'https://thingmattersreserve-production.up.railway.app/');
+  assert.equal(bookingActions[1].href, `${server.baseUrl}/order`);
   assert.equal(bookingActions[2].href, 'https://pf.kakao.com/_QdCaK/chat');
   for (const section of ['#actual-cases', '#local-pickup', '#contact']) {
     await evaluate(cdp, `() => document.querySelector('${section}').scrollIntoView()`);

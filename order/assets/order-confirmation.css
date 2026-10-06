@@ -1,0 +1,34 @@
+.order-confirm-warning, .order-confirm-status { box-sizing: border-box; min-width: 0; padding: 18px; border: 2px solid #e7ad48; border-radius: 16px; background: #fff7df; color: #513c22; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; word-break: keep-all; }
+.order-confirm-warning .order-confirm-warning-title { margin: 0 0 10px; padding: 0; border: 0; background: none; font-size: 18px; font-weight: 900; color: #713e13; }
+.order-confirm-warning p, .order-confirm-status p { margin: 9px 0; }
+.order-confirm-warning-critical { color: #ad3418; font-weight: 900; font-size: 16px; }
+.order-confirm-note { margin: 10px 0; color: #713e13; font-size: 13px; line-height: 1.6; text-align: center; font-weight: 700; word-break: keep-all; }
+.order-confirm-status { margin-top: 16px; border-color: #9ab9a7; background: #edf8f0; color: #264c36; }
+.order-confirm-status[hidden], .order-confirm-error[hidden] { display: none !important; }
+.order-confirm-status h3 { margin: 0; font-size: 18px; }
+.order-confirm-kakao { display: block; width: 100%; min-height: 52px; margin-top: 15px; padding: 13px; border: 1px solid #d2b529; border-radius: 12px; background: #fee500; color: #211d18; font: inherit; font-weight: 900; cursor: pointer; white-space: normal; word-break: keep-all; }
+.order-confirm-other { display: block; padding: 14px; color: #264c36; text-align: center; font-weight: 700; }
+.order-confirm-error { padding: 12px; border-radius: 10px; background: #fff0f1; color: #a12b3f; font-size: 14px; font-weight: 700; }
+.order-confirm-cta { min-width: 0; white-space: normal !important; word-break: keep-all; line-height: 1.5 !important; }
+.order-confirm-quote-active .nm-order-floating-inner { flex-wrap: wrap; }
+.order-confirm-quote-active #nm-floating-next { flex: 0 0 100%; min-height: 52px; }
+.order-confirm-quote-active .floatingInner { grid-template-columns: auto minmax(0, 1fr) auto; }
+.order-confirm-quote-active #nextButton { grid-column: 1 / -1; width: 100%; min-height: 52px; }
+.order-confirm-quote-active #nextButton::after { content: none; }
+.order-confirm-quote-active .nm-order-actions { flex-wrap: wrap; }
+.order-confirm-quote-active #nm-order-submit { flex: 0 0 100%; width: 100%; }
+.order-confirm-quote-active .nm-order-flow, body.order-confirm-quote-active:not(:has(.nm-order-flow)) { padding-bottom: calc(185px + env(safe-area-inset-bottom)); }
+.order-confirm-quote-active .quoteGrid { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 430px) {
+  .siteHeader .headerInner { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 8px; }
+  .siteHeader .brand { margin-bottom: 0; font-size: 14px; letter-spacing: -.03em; text-align: left; }
+  .siteHeader .orderHubLink { position: static; display: inline-flex; min-height: 44px; align-items: center; font-size: 11px; white-space: nowrap; }
+  .siteHeader .mobileStepStatus, .siteHeader .stepIndicator { grid-column: 1 / -1; }
+  .order-confirm-warning, .order-confirm-status { padding: 14px; font-size: 13px; }
+  .order-confirm-warning .order-confirm-warning-title { font-size: 16px; }
+  .order-confirm-warning-critical { font-size: 15px; }
+  .order-confirm-quote-active .floatingInner { grid-template-columns: minmax(0, 1fr) !important; }
+  .order-confirm-quote-active .floatingCart { grid-column: 1; width: auto; }
+  .order-confirm-quote-active #nextButton { min-height: 56px !important; padding: 10px 14px !important; font-size: 14px; }
+  .order-confirm-quote-active .floatingMeta { display: none; }
+}

@@ -337,6 +337,10 @@ const getLegacyDashboardEventNameForLink = (link) => {
   const href = link?.href || "";
 
   if (href.includes("pf.kakao.com/_QdCaK")) return "consult_kakao_click";
+  const orderPath = (() => { try { return new URL(href).pathname; } catch { return ""; } })();
+  if (orderPath === "/order/brookie") return "order_brookie_click";
+  if (orderPath === "/order/cookies") return "order_cookies_click";
+  if (orderPath === "/order/lucky") return "order_lucky_click";
   if (href.includes("thingmattersreserve-production.up.railway.app/brookie")) return "order_brookie_click";
   if (href.includes("thingmattersreserve-production.up.railway.app/cookies")) return "order_cookies_click";
   if (href.includes("thingmattersreserve-production.up.railway.app/lucky")) return "order_lucky_click";
@@ -364,7 +368,7 @@ const getBehaviorAnalyticsEventNames = (link, clickedElement) => {
     events.push("product_click");
   }
 
-  if (href.includes("thingmattersreserve-production.up.railway.app")) {
+  if (pathname === "/order" || pathname.startsWith("/order/") || href.includes("thingmattersreserve-production.up.railway.app")) {
     events.push("order_start");
   }
 
@@ -500,7 +504,7 @@ if (floatingOrderCta && floatingOrderLabel && "IntersectionObserver" in window) 
   const defaultOrderCta = {
     key: "default",
     label: "쿠키 주문하기",
-    href: "https://thingmattersreserve-production.up.railway.app"
+    href: "/order"
   };
   const ctaContexts = [
     {
@@ -511,7 +515,7 @@ if (floatingOrderCta && floatingOrderLabel && "IntersectionObserver" in window) 
       selector: "#use-case-guide",
       key: "gift",
       label: "선물 주문하기",
-      href: "https://thingmattersreserve-production.up.railway.app"
+      href: "/order"
     },
     {
       selector: "#local-pickup",
