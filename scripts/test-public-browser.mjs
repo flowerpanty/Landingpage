@@ -27,6 +27,9 @@ const CRITICAL_PATHS = [
   "/guides/gimpo-airport-departure-checklist/",
   "/works/",
   "/bulk/",
+  "/wedding-favor/",
+  "/first-birthday-favor/",
+  "/corporate-gift/",
   "/pickup/",
   "/contact/",
   "/cookie-crew/",
@@ -498,6 +501,72 @@ try {
       assert.ok(dimensions.bodyWidth <= dimensions.viewport, `${pathname}: body horizontal overflow at ${width}px`);
     }
   }
+
+  const occasionPaths = ["/wedding-favor/", "/first-birthday-favor/", "/corporate-gift/"];
+  const occasionScreenshotDir = path.join(ROOT, "output/playwright/occasion-landings");
+  fs.mkdirSync(occasionScreenshotDir, { recursive: true });
+  for (const width of [360, 390, 430, 1280]) {
+    await setViewport(cdp, width);
+    await navigate(cdp, `${server.baseUrl}/`);
+    const showroomStyleSource = `() => {
+      const style = (selector, properties) => {
+        const computed = getComputedStyle(document.querySelector(selector));
+        return Object.fromEntries(properties.map(property => [property, computed[property]]));
+      };
+      return {
+        body: style('body', ['backgroundColor', 'fontFamily', 'color']),
+        header: style('.showroom-header', ['backgroundColor', 'paddingTop', 'position']),
+        logo: style('.showroom-logo', ['fontFamily', 'fontSize', 'fontWeight']),
+        navigation: style('.showroom-nav', ['fontFamily', 'fontSize', 'gap']),
+        primary: style('.showroom-button--hero-primary', ['backgroundColor', 'color', 'borderRadius', 'borderWidth', 'boxShadow', 'fontFamily']),
+        secondary: style('.showroom-button--hero-secondary', ['backgroundColor', 'color', 'borderRadius', 'borderWidth', 'boxShadow', 'fontFamily'])
+      };
+    }`;
+    const homepageStyle = await evaluate(cdp, showroomStyleSource);
+    for (const pathname of occasionPaths) {
+      const eventStart = cdp.events.length;
+      await navigate(cdp, `${server.baseUrl}${pathname}`);
+      await evaluate(cdp, "() => { document.querySelectorAll('img').forEach(image => { image.loading = 'eager'; }); return true; }");
+      await waitFor(cdp, "() => [...document.querySelectorAll('img')].every(image => image.complete && image.naturalWidth > 0)", `${pathname}: all original images should load`);
+      assert.deepEqual(await evaluate(cdp, showroomStyleSource), homepageStyle, `${pathname}: shared UI styles must match the homepage at ${width}px`);
+      const state = await evaluate(cdp, `() => {
+        const gallery = document.querySelector('.occasion-gallery');
+        const primary = [...document.querySelectorAll('.occasion-actions .showroom-button--hero-primary')];
+        const price = document.querySelector('.occasion-price');
+        const schema = JSON.parse(document.querySelector('[data-nm-schema="static"]').textContent)['@graph'];
+        const fits = node => { const box = node.getBoundingClientRect(); return box.left >= -1 && box.right <= innerWidth + 1 && node.scrollWidth <= node.clientWidth + 1; };
+        return {
+          canonical: document.querySelector('link[rel=canonical]').href,
+          viewport: innerWidth, documentWidth: document.documentElement.scrollWidth,
+          logoFits: fits(document.querySelector('.showroom-logo')),
+          navFits: [...document.querySelectorAll('.showroom-nav a')].every(fits),
+          heroPrice: document.querySelector('.occasion-hero-price').textContent.trim(),
+          primary: primary.map(link => ({ path: new URL(link.href).pathname, origin: new URL(link.href).origin, height: link.getBoundingClientRect().height, fits: fits(link) })),
+          priceFits: fits(price), priceTextFits: [...price.querySelectorAll('strong,p,h3')].every(fits),
+          galleryColumns: getComputedStyle(gallery).gridTemplateColumns.split(' ').length,
+          galleryFits: [...gallery.querySelectorAll('figure,figcaption')].every(fits),
+          photoRatios: [...gallery.querySelectorAll('img')].map(image => image.getBoundingClientRect().height / image.getBoundingClientRect().width),
+          sections: [...document.querySelectorAll('main > section')].map(section => section.id),
+          products: schema.filter(node => node['@type'] === 'Product').length,
+          secondary: [...document.querySelectorAll('.occasion-actions .showroom-button--hero-secondary')].map(link => new URL(link.href).pathname + new URL(link.href).hash)
+        };
+      }`);
+      assert.equal(state.canonical, `https://nothingmatters.co.kr${pathname}`);
+      assert.ok(state.documentWidth <= width && state.logoFits && state.navFits, `${pathname}: header/page should fit at ${width}px: ${JSON.stringify(state)}`);
+      assert.equal(state.heroPrice, "브루키 기본형 1구 7,800원 · 최소 12개");
+      assert.equal(state.primary.length, 2);
+      assert.ok(state.primary.every(link => link.path === "/order/brookie" && link.origin === server.baseUrl && link.height >= 44 && link.fits), `${pathname}: direct quote CTAs should fit and be tappable`);
+      assert.ok(state.priceFits && state.priceTextFits && state.galleryFits, `${pathname}: price and gallery should fit at ${width}px`);
+      assert.equal(state.galleryColumns, width <= 760 ? 2 : 3);
+      assert.ok(state.photoRatios.every(ratio => Math.abs(ratio - 4 / 3) < .02), `${pathname}: photos should retain their gallery proportions`);
+      assert.deepEqual(state.sections, ["hero", "order-info", "real-cases", "choose", "price", "how-to-order", "receipt", "faq", "final-quote"]);
+      assert.equal(state.products, 0);
+      assert.ok(state.secondary.every(href => href === (pathname === "/corporate-gift/" ? "/order" : `${pathname}#real-cases`)));
+      assert.equal(cdp.events.slice(eventStart).some(event => event.method === "Runtime.exceptionThrown" || (event.method === "Runtime.consoleAPICalled" && event.params.type === "error")), false, `${pathname}: no runtime/console errors`);
+      fs.writeFileSync(path.join(occasionScreenshotDir, `${pathname.split('/')[1]}-${width}.png`), (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+    }
+  }
+  console.log("occasion browser checks: 3 routes at 360/390/430/1280px, homepage UI style parity, direct quote CTAs, original images, header/price/gallery fit, section order and no duplicate Product/runtime errors PASS");
 
   for (const width of [390, 1280]) {
     await verifyGimpoHub(cdp, width);
