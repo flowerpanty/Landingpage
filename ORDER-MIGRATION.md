@@ -1,6 +1,6 @@
 # 주문 URL 통합 작업 보고
 
-작업일: 2026-10-06 (한국 시간). **로컬 코드 구현·검증 완료. 운영 배포와 기존 URL의 301 활성화는 아직 하지 않았습니다.**
+작업일: 2026-10-06 (한국 시간). **메인 페이지 운영 배포와 기존 Railway `/order`의 301 활성화를 완료했습니다.** 새 URL은 200, 기존 공개 주문 URL은 새 URL로 301이며 상품 화면·이미지·SEO·API 응답까지 읽기 전용으로 확인했습니다. 실제 주문은 생성하지 않았습니다.
 
 ## 변경한 파일
 
@@ -53,7 +53,8 @@
 | `scripts/test-order-browser.mjs` | 실제 Chrome에서 모바일·데스크톱 표시와 모의 저장·오류·validation·가격·중복 방지 검사. |
 | `scripts/verify-order-deployment.mjs` | 주문을 생성하지 않는 운영 GET 검사. `--require-redirect`로 기존 URL의 301도 검사. |
 | `/Users/nahmsoochan/주문/server/vite.ts` | 기존 Railway `/order` 공개 화면 전용 301을 환경변수로 제어. 기본 비활성. |
-| `ORDER-MIGRATION.md` | 이 보고서와 배포 순서. |
+| `/Users/nahmsoochan/주문/railway.json` | 기존 production 환경의 시작 명령을 `env ORDER_PAGE_REDIRECT_ENABLED=1 npm start`로 설정하여 301 활성화. 기본 환경 시작 명령·healthcheck·빌드 설정 유지. |
+| `ORDER-MIGRATION.md` | 이 보고서와 운영 확인 결과. |
 
 ## 최종 구조
 
@@ -89,13 +90,13 @@ POST https://nothingmatters.co.kr/api/landing-orders
 ORDER_API_ORIGIN=https://thingmattersreserve-production.up.railway.app
 ```
 
-기존 Railway 주문 프로젝트에 **새 페이지 배포·검증 후에만** 설정할 변수:
+기존 Railway 주문 프로젝트의 production 시작 명령에 다음 값이 적용되어 있습니다.
 
-```dotenv
-ORDER_PAGE_REDIRECT_ENABLED=1
+```text
+env ORDER_PAGE_REDIRECT_ENABLED=1 npm start
 ```
 
-그 전에는 이 변수를 설정하지 않거나 `0`으로 둡니다. `.env`의 기존 사용자 변경을 건드리지 않았습니다.
+이 설정은 `railway.json`의 `environments.production.deploy.startCommand`에 저장되어 있습니다. Railway Variables에서 별도로 값을 입력할 필요가 없습니다. 다른 환경은 기존 `npm start`를 사용합니다. `.env`의 기존 사용자 변경은 건드리지 않았습니다.
 
 아래는 실제 주문 서버 코드에서 참조하는 변수 이름과 위치입니다. 이 값들은 기존 Railway에 유지하며 메인 프로젝트로 복사할 필요가 없습니다.
 
@@ -125,11 +126,9 @@ ORDER_PAGE_REDIRECT_ENABLED=1
 
 ## 기존 Railway URL
 
-조사 시점의 Railway `/order`는 200이며 canonical은 이미 메인 `/order`를 가리키고 있었습니다. 메인 운영 `/order`는 아직 404였으므로 요청 원칙에 따라 기존 화면은 유지했습니다.
+기존 `https://thingmattersreserve-production.up.railway.app/order`는 현재 `https://nothingmatters.co.kr/order`로 **301 Permanent Redirect**합니다. `/order.html`과 후행 슬래시 별칭도 동일하며 query string을 보존합니다. 새 주문 허브는 200입니다.
 
-301 코드는 추가하고 로컬에서 검증했지만 **운영 301은 활성화하지 않았습니다**. 새 메인 페이지를 먼저 배포·검증하고 주문 서비스에서 `ORDER_PAGE_REDIRECT_ENABLED=1`을 적용하면 기존 `/order`만 301로 바뀝니다. `/order.html`과 후행 슬래시 별칭도 같은 처리이며 query string을 보존합니다. 다른 상품 화면과 모든 `/api/*`는 그대로입니다.
-
-따라서 두 공개 주문 허브가 동시에 200을 반환하는 상태를 최종 해소하는 마지막 단계는 이 변수 활성화입니다.
+production 활성화 설정은 주문 저장소 커밋 `0895ef0`으로 푸시했고 Railway 배포 성공을 확인했습니다. 기존 `/brookie` 상품 화면과 `/healthz`는 200, 공개 주문 API의 OPTIONS는 204로 유지되며 리다이렉트하지 않습니다. 두 공개 주문 허브가 동시에 200을 반환하는 상태는 해소되었습니다.
 
 ## 빌드 및 검증
 
@@ -145,18 +144,15 @@ ORDER_PAGE_REDIRECT_ENABLED=1
 
 ## 배포 후 내가 해야 할 일
 
-1. 현재 메인 프로젝트의 변경을 `flowerpanty/Landingpage`에 반영하고, **`nothingmatters.co.kr`을 서비스하는 기존 Railway 서비스**를 먼저 배포합니다. 시작 명령은 기존 `npm start` 그대로입니다. 정적 파일만 배포하면 주문 저장 어댑터가 작동하지 않으므로 기존 Node 서버를 실행해야 합니다.
-2. 메인 Railway 서비스 → **Variables → New Variable**에서 선택적으로 `ORDER_API_ORIGIN`과 위 값을 추가합니다. 변수 변경은 staged changes에서 **Details → Deploy**를 적용해야 활성화됩니다. [Railway 변수 안내](https://docs.railway.com/variables), [변경 배포 안내](https://docs.railway.com/deployments/staged-changes).
-3. 메인 배포 후 프로젝트 폴더에서 `npm run order:verify-live`를 실행합니다. 이는 GET만 사용하며 `/order`의 200·정확한 canonical·7개 UI·이미지·sitemap·robots·API 어댑터 존재를 검사합니다. 모바일 입력 확인은 주문 접수 버튼을 누르기 전까지 할 수 있습니다. 실제 주문 테스트는 수행하지 않았습니다.
-4. 수정한 `/Users/nahmsoochan/주문/server/vite.ts`를 `flowerpanty/ThingMattersReserve`에 반영해 주문 서비스를 배포합니다. 변수 미설정 시 기존 `/order`는 계속 유지됩니다.
-5. 3단계가 성공한 후 **기존 주문 Railway 서비스 → Variables → New Variable**에서 `ORDER_PAGE_REDIRECT_ENABLED` 값을 `1`로 추가하고 **Deploy**합니다.
-6. `npm run order:verify-live -- --require-redirect`를 실행하여 기존 Railway `/order`가 정확한 새 URL로 301인지 확인합니다. 이 검사는 주문을 만들지 않습니다.
+메인 서비스 배포, 주문 서비스 production 301 활성화, 운영 확인까지 완료했습니다. DNS·Vercel·Supabase·Railway Variables에서 추가로 설정할 값은 없습니다.
 
-DNS·Vercel·Supabase 메뉴에서 별도로 바꿀 값은 이번 구조에 없습니다. 기존 메인 도메인과 기존 주문 백엔드를 그대로 사용합니다.
+필요할 때 프로젝트 폴더에서 `npm run order:verify-live -- --require-redirect`로 읽기 전용 상태 검사를 다시 실행할 수 있습니다. 이 명령은 주문을 생성하지 않습니다.
+
+301을 비활성화하려면 주문 저장소 `railway.json`의 `environments.production.deploy.startCommand`를 `npm start`로 되돌려 배포하고 `ORDER_PAGE_REDIRECT_ENABLED`가 미설정 또는 `0`인지 확인합니다. 현재 설정은 시작 명령에서 값을 지정하므로 Variables의 `0`만으로는 비활성화되지 않습니다.
 
 ## Search Console 등록 후 작업
 
-메인 배포와 위 검사가 성공하면 색인 요청을 할 수 있는 코드 상태입니다. 현재는 미배포 상태이므로 운영 URL 검증 완료로 보아서는 안 됩니다.
+운영 배포와 읽기 전용 검증을 완료했으므로 `/order`의 색인 요청을 진행할 수 있습니다.
 
 Google Search Console에서 `nothingmatters.co.kr` 속성을 선택 → 상단 URL 검사에 `https://nothingmatters.co.kr/order` 입력 → **실제 URL 테스트** → 200·색인 허용·사용자 선언 canonical 확인 → **색인 생성 요청**. **Sitemaps** 메뉴에 기존 `https://nothingmatters.co.kr/sitemap.xml`을 제출 또는 확인합니다. [Google URL 검사 안내](https://support.google.com/webmasters/answer/9012289), [사이트맵 안내](https://support.google.com/webmasters/answer/10351509).
 
