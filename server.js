@@ -7,6 +7,7 @@ const crypto = require("node:crypto");
 const zlib = require("node:zlib");
 const { createWordpressJournalService } = require("./lib/wordpress-journal.js");
 const { createGimpoBoardService } = require("./lib/gimpo-board.js");
+const { renderGimpoBoardPage } = require("./lib/gimpo-board-html.js");
 const { createOrderApiHandler } = require("./lib/order-api.js");
 
 const ROOT = process.cwd();
@@ -74,6 +75,12 @@ const TRACKED_DASHBOARD_EVENTS = [
     label: "주문 시작",
     type: "order",
     description: "사이트 주문 페이지로 이동"
+  },
+  {
+    name: "store_shop_click",
+    label: "온라인 스토어 구매 이동",
+    type: "order",
+    description: "nothingmatters.kr 온라인 스토어 구매 이동"
   },
   {
     name: "consult_click",
@@ -1524,7 +1531,7 @@ function buildSeriesRows(sessionReport = {}, eventSeriesReport = {}, range) {
     const point = ensurePoint(row.dimensions[seriesDimension]);
     const count = Number(row.metrics.eventCount || 0);
 
-    if (eventName.startsWith("order_")) point.orderClicks += count;
+    if (eventName.startsWith("order_") || eventName === "store_shop_click") point.orderClicks += count;
     if (eventName.startsWith("consult_")) point.consultClicks += count;
     point.totalActionClicks += count;
   });
@@ -2056,6 +2063,16 @@ const server = http.createServer(async (req, res) => {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
   const stat = fs.statSync(filePath);
+
+  if (ext === ".html" && path.relative(ROOT, filePath) === path.join("gimpo-board", "index.html")) {
+    const cached = gimpoBoard.getCachedFlights({ type: "arrival" });
+    // The API and this background refresh share the existing provider cache and pending request.
+    if (!cached || cached.meta.stale) gimpoBoard.getFlights({ type: "arrival" }).catch(() => {});
+    sendBufferResponse(req, res, 200, renderGimpoBoardPage(fs.readFileSync(filePath, "utf8"), cached), {
+      contentType, cacheControl: "no-store", ext, allowRange: false
+    });
+    return;
+  }
 
   const isHomeHtml =
     ext === ".html" &&

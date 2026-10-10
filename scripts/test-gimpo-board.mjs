@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
+import fs from "node:fs";
 import { mockFlight, startMockFlightProvider } from "./gimpo-board-test-provider.mjs";
 
 const require = createRequire(import.meta.url);
 const { API_URL, createGimpoBoardService, normalizeFlight, parsePage, GimpoBoardUnavailableError } = require("../lib/gimpo-board.js");
+const { renderGimpoBoardPage, MAX_SERVER_ROWS } = require("../lib/gimpo-board-html.js");
 assert.equal(API_URL, "https://apis.data.go.kr/B551178/flight-search/info", "V1 must use flight-search, not flight-schedule");
 const provider = await startMockFlightProvider({ domesticDepartureCount: 101 });
 let clock = Date.parse("2026-09-27T06:00:00Z");
 const service = createGimpoBoardService({ key: "unit-test-key", apiUrl: provider.url, now: () => clock });
+assert.equal(service.getCachedFlights(), null, "cold HTML must not fetch or invent flight data");
 
 try {
   const responses = await Promise.all(Array.from({ length: 12 }, () => service.getFlights({ type: "departure" })));
@@ -18,6 +21,38 @@ try {
   assert.equal(responses[0].meta.live, true);
   assert.equal(responses[0].meta.source, "Korea Airports Corporation");
   assert.equal(JSON.stringify(responses[0]).includes("unit-test-key"), false, "API key must never appear in public response");
+  const cachedArrivals = service.getCachedFlights();
+  assert.equal(cachedArrivals.data.length, 2);
+  assert.ok(cachedArrivals.data.every(row => row.type === "arrival"));
+  assert.equal(provider.state.calls.length, 5, "HTML snapshots must reuse the cache without provider calls");
+  const template = fs.readFileSync(new URL("../gimpo-board/index.html", import.meta.url), "utf8");
+  const render = payload => renderGimpoBoardPage(template, payload, { now: clock });
+  const coldHtml = render(null);
+  assert.match(coldHtml, /id="today-arrivals-date" datetime="2026-09-27">2026년 9월 27일/);
+  assert.doesNotMatch(coldHtml, /data-server-flight=|TW922|MM763|RS901/, "cold dates must not fabricate flights");
+  assert.doesNotMatch(template, /\d{4}년\s*\d{1,2}월\s*\d{1,2}일/, "request date must not be hardcoded in source HTML");
+  const rendered = render(cachedArrivals);
+  assert.equal((rendered.match(/data-server-flight=/g) || []).length, 2);
+  assert.ok(rendered.includes("TW922") && rendered.includes("MM763") && !rendered.includes("RS901"));
+  const malicious = { ...cachedArrivals, data: Array.from({ length: 50 }, () => ({ ...cachedArrivals.data[0], flightNumber: '<script>alert("x")</script>', origin: { ko: '<img src=x onerror=alert(1)>' } })) };
+  const safe = render(malicious);
+  assert.equal((safe.match(/data-server-flight=/g) || []).length, MAX_SERVER_ROWS, "SSR must bound plain rows independently of full-day data");
+  assert.ok(safe.includes("&lt;script&gt;") && safe.includes("&lt;img"));
+  assert.equal(safe.includes('<script>alert("x")</script>'), false);
+  const realArrival = cachedArrivals.data[0];
+  assert.ok(rendered.includes(`편명 ${realArrival.flightNumber}`));
+  assert.ok(rendered.includes(`출발지 ${realArrival.origin.ko} · 김포공항 도착`));
+  assert.ok(rendered.includes(`김포공항 예정 도착시간 ${realArrival.scheduledTime}`));
+  assert.ok(rendered.includes(`변경 도착시간 ${realArrival.revisedTime || "정보 없음"}`));
+  assert.ok(rendered.includes(`운항상태 ${realArrival.status.ko}`));
+  const changed = render({ ...cachedArrivals, data: [{ ...realArrival, revisedTime: "06:20", status: { ko: "지연", en: "DELAYED" } }] });
+  assert.match(changed, /김포공항 예정 도착시간 06:00 · 변경 도착시간 06:20/);
+  assert.match(changed, /운항상태 지연/);
+  assert.equal(render({ ...cachedArrivals, meta: { updatedAt: "invalid" } }), coldHtml);
+  const beforeKstMidnight = { ...cachedArrivals, meta: { ...cachedArrivals.meta, updatedAt: "2026-10-09T14:59:00Z" } };
+  const nextKstDay = renderGimpoBoardPage(template, beforeKstMidnight, { now: Date.parse("2026-10-09T15:00:00Z") });
+  assert.match(nextKstDay, /datetime="2026-10-10">2026년 10월 10일/);
+  assert.doesNotMatch(nextKstDay, /data-server-flight=|TW922|MM763/, "KST midnight must reject yesterday's rows even within the same UTC date");
   const flight = responses[0].data.find((row) => row.flightNumber === "RS901");
   assert.equal(flight.scheduledTime, "06:00");
   assert.equal(flight.revisedTime, "06:15", "etd must remain a revised time, not an actual time");
@@ -52,6 +87,8 @@ try {
   assert.equal(stale.meta.stale, true);
   assert.equal(stale.meta.live, false);
   assert.equal(stale.data.length, 102, "provider failure should retain previous data");
+  assert.equal(service.getCachedFlights().meta.stale, true);
+  assert.match(render(service.getCachedFlights()), /id="today-arrivals-status"[^>]*>마지막으로 확인된 도착정보 · 최신 자료 확인 중/);
   const callsAfterFailure = provider.state.calls.length;
   await service.getFlights({ type: "arrival" });
   assert.equal(provider.state.calls.length, callsAfterFailure, "failed refresh must have a retry backoff");
@@ -64,6 +101,9 @@ try {
   assert.equal(identityBefore.id, identityAfter.id, "a scheduled-time revision should preserve the flight row identity for split-flap updates");
   await assert.rejects(service.getFlights({ type: "bad" }), TypeError);
   await assert.rejects(service.getFlights({ q: "x".repeat(81) }), TypeError);
+  clock += 24 * 60 * 60 * 1000;
+  assert.equal(service.getCachedFlights(), null, "yesterday's data must not appear as today's server-rendered arrivals");
+  await assert.rejects(service.getFlights({ type: "arrival" }), GimpoBoardUnavailableError, "API must not reintroduce yesterday's rows under today's date after failed refresh");
 } finally {
   await provider.close();
 }

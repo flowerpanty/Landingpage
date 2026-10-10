@@ -64,7 +64,7 @@ class Cdp {
   close() { this.socket.close(); }
 }
 
-const provider = await startMockFlightProvider({ domesticDepartureCount: verify ? 500 : 160 });
+const provider = await startMockFlightProvider({ domesticDepartureCount: verify ? 500 : 160, domesticArrivalCount: verify ? 500 : 160 });
 const appPort = await port();
 const debugPort = await port();
 const server = spawn(process.execPath, ["server.js"], {
@@ -98,7 +98,7 @@ try {
     await wait(25);
   }
   const entrance = await cdp.evaluate(`() => { const start = performance.getEntriesByName('gimpo-board-initial-entrance')[0]; const end = performance.getEntriesByName('gimpo-board-initial-settled')[0]; return { durationMs: start && end ? Math.round(end.startTime - start.startTime) : null, detail: start?.detail ?? null, ...window.__boardMotion, loaderSlots: document.querySelectorAll('#board-loader .flap-slot').length, firstFlight: document.querySelector('#flight-rows [data-field=flight] .flap-bank')?.dataset.value, activeSlotFlips: document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length }; }`);
-  const payload = await (await fetch(`http://127.0.0.1:${appPort}/api/gimpo-board/flights?type=departure`)).json();
+  const payload = await (await fetch(`http://127.0.0.1:${appPort}/api/gimpo-board/flights?type=arrival`)).json();
   console.log(JSON.stringify({ ...metrics, scrollFrameP95Ms: Math.round(frames), apiRows: payload.data.length, entrance }));
   if (verify) {
     assert.equal(payload.data.length, 501, "the API must retain every full-day flight");

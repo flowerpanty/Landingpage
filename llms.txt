@@ -123,7 +123,7 @@ This file is a guide to public website information. Crawler access is defined by
 
 - [쿠키 선물·답례품 가이드](https://nothingmatters.co.kr/guides/): 결혼식 답례, 기업행사, 선생님 간식, 퇴사 선물에 맞는 쿠키와 포장 선택법을 정리했습니다.
 - [쿠키 보관방법·맛있게 드시는 기간](https://nothingmatters.co.kr/guides/cookie-storage/): 낫띵메터스 쿠키 보관방법과 맛있게 드시는 기간을 제품별로 빠르게 확인하세요. 쿠키크루, 브루키, 수제 꾸덕쿠키, 행운쿠키 안내와 자주 묻는 질문을 정리했습니다.
-- [김포공항 출발·도착 항공편 확인 방법 | 운항정보 보는 법](https://nothingmatters.co.kr/guides/gimpo-airport-flight-status/): 김포공항 항공편을 편명으로 찾고 예정시간·변경시간과 운항상태를 구분해 확인하는 방법. 한국공항공사 제공 자료와 항공사 최종 안내를 함께 확인하세요.
+- [김포공항 도착시간 보는 법 | 편명·예정시간·변경시간·지연 확인](https://nothingmatters.co.kr/guides/gimpo-airport-flight-status/): 김포공항 도착시간을 읽는 방법을 안내합니다. 편명과 출발·도착 구분, 예정시간·변경시간, 지연과 운항상태를 확인하고 현재 항공편은 도착 전광판에서 조회하세요.
 - [김포공항 출발 전 확인할 것 | 항공편·픽업 체크리스트](https://nothingmatters.co.kr/guides/gimpo-airport-departure-checklist/): 김포공항 출발 전에 편명·운항상태, 예정·변경 시간, 항공사 최종 안내와 공항동 쿠키 예약 픽업 일정을 차례로 확인하는 실용 체크리스트입니다.
 - [결혼식 답례쿠키 주문 가이드](https://nothingmatters.co.kr/guides/wedding-favor-cookie/): 결혼식 답례쿠키와 웨딩 답례품 주문 가이드. 문구·스티커·수량을 상담하고 강서구 공항동 픽업 또는 차량 퀵으로 받을 수 있습니다.
 - [마곡 기업행사 쿠키 · 회사 답례품](https://nothingmatters.co.kr/guides/corporate-event-cookie/): 마곡 기업행사 쿠키와 회사 답례품 주문 가이드. 로고 스티커, 행사 문구, 단체 수량과 공항동 픽업·차량 퀵을 상담합니다.
@@ -131,6 +131,14 @@ This file is a guide to public website information. Crawler access is defined by
 - [퇴사·승진·육아휴직 답례품](https://nothingmatters.co.kr/guides/farewell-favor-cookie/): 퇴사, 승진, 육아휴직 인사에 어울리는 문구 쿠키와 포장, 수량 선택법을 정리했습니다.
 - [디저트 선물세트·구움과자](https://nothingmatters.co.kr/guides/dessert-gift-set/): 김포공항·송정역 인근에서 픽업하는 구움과자와 디저트 선물세트 가이드. 공항동 수제쿠키 공방에서 제품과 포장을 상담합니다.
 - [행운쿠키·응원 선물 가이드](https://nothingmatters.co.kr/guides/lucky-cheering-cookie/): 졸업, 응원, 감사 인사에 어울리는 행운쿠키 구성과 수량, 선물 선택법을 정리했습니다.
+
+**Christmas / Holiday gifts**
+
+- Landing: https://nothingmatters.co.kr/christmas/
+- Seasonal products: 산타 브루키 / 크리스마스 트리 브루키 / 크리스마스 얼굴쿠키 4구
+- Use cases: 크리스마스 답례품, 기업·회사 연말 행사, 어린이집·유치원 크리스마스 선물, 친구·동료 선물
+- Exact seasonal price, quantity and order deadline: confirm on the Christmas landing page or official consultation channel.
+- Seasonal ordering schedule: announced after orders open. General Brookie prices and minimum quantities do not establish Christmas seasonal conditions.
 
 ## Official channels
 

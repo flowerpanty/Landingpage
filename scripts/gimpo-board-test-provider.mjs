@@ -23,14 +23,14 @@ export function mockFlight(lineCode, ioCode, index, revision = 0) {
   };
 }
 
-export async function startMockFlightProvider({ domesticDepartureCount = 3 } = {}) {
+export async function startMockFlightProvider({ domesticDepartureCount = 3, domesticArrivalCount = 1 } = {}) {
   const state = { calls: [], fail: false, revision: 0 };
   const server = http.createServer((req, res) => {
     const url = new URL(req.url || "/", "http://localhost");
     const line = url.searchParams.get("schLineType");
     const io = url.searchParams.get("schIOType");
     const page = Number(url.searchParams.get("pageNo"));
-    const count = line === "D" && io === "O" ? domesticDepartureCount : 1;
+    const count = line === "D" ? io === "O" ? domesticDepartureCount : domesticArrivalCount : 1;
     state.calls.push({ line, io, page, rows: url.searchParams.get("numOfRows"), airport: url.searchParams.get("schAirCode"), format: url.searchParams.get("type"), flightFilter: url.searchParams.has("schFln"), key: Boolean(url.searchParams.get("serviceKey")) });
     if (state.fail) { res.writeHead(503); res.end("provider unavailable"); return; }
     const start = (page - 1) * 100;

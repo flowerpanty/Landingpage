@@ -1,0 +1,977 @@
+/* ============================================
+   🎄 NOTHINGMATTERS CHRISTMAS — CUTE HAND-DRAWN THEME
+   손그림 느낌의 귀여운 크리스마스 테마
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+/* ── Design Tokens ── */
+:root {
+  --xmas-cream: #FFF8F0;
+  --xmas-warm-white: #FEF3E7;
+  --xmas-cookie: #F5DEB8;
+  --xmas-gingerbread: #D5A26F;
+  --xmas-brown: #8B6F47;
+  --xmas-dark: #4A3728;
+  --xmas-red: #C4504A;
+  --xmas-red-soft: #E8847E;
+  --xmas-red-deep: #9B3B36;
+  --xmas-green: #5B8C5A;
+  --xmas-green-soft: #8FBC8B;
+  --xmas-green-deep: #3A6B4C;
+  --xmas-gold: #E8C87A;
+  --xmas-gold-bright: #FFD700;
+  --xmas-berry: #A44A5E;
+  --xmas-snow: #FFFFFF;
+  --xmas-shadow: rgba(74, 55, 40, 0.08);
+  --xmas-shadow-md: rgba(74, 55, 40, 0.12);
+  --xmas-font-display: 'Gaegu', cursive;
+  --xmas-font-body: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --xmas-radius-blob: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --xmas-radius-soft: 20px 4px 18px 4px / 4px 18px 4px 20px;
+  --xmas-border-sketch: 2.5px solid var(--xmas-dark);
+  --xmas-border-dashed: 2px dashed var(--xmas-red-soft);
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--xmas-font-body);
+  background: var(--xmas-cream);
+  color: var(--xmas-dark);
+  line-height: 1.75;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(232, 200, 122, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(196, 80, 74, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 50% 90%, rgba(91, 140, 90, 0.04) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Typography ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--xmas-font-display) !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: var(--xmas-dark) !important;
+  letter-spacing: 0 !important;
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3.2rem) !important; }
+h2 { font-size: clamp(1.6rem, 4vw, 2.6rem) !important; }
+h3 { font-size: clamp(1.3rem, 3vw, 1.8rem) !important; }
+
+p, li, dd, address, figcaption {
+  font-family: var(--xmas-font-body) !important;
+  font-size: clamp(0.9rem, 2vw, 1.05rem) !important;
+  line-height: 1.8 !important;
+  color: var(--xmas-brown) !important;
+}
+
+/* ── Links ── */
+a {
+  color: var(--xmas-red) !important;
+  text-decoration-style: wavy !important;
+  text-underline-offset: 3px !important;
+  transition: color 0.3s ease, transform 0.2s ease !important;
+}
+a:hover {
+  color: var(--xmas-red-deep) !important;
+  transform: scale(1.02);
+}
+
+/* ── Layout Wrapper ── */
+.showroom-wrap {
+  max-width: 960px !important;
+  margin: 0 auto !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Snowfall ── */
+.snowfall-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.snowflake {
+  position: absolute;
+  top: -20px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  animation: snowfall linear infinite;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+  will-change: transform;
+}
+
+@keyframes snowfall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+/* ── HEADER ── */
+.showroom-header {
+  background: var(--xmas-warm-white) !important;
+  border-bottom: var(--xmas-border-dashed) !important;
+  padding: 12px 0 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.showroom-header::after {
+  content: '🎄';
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  animation: gentle-sway 3s ease-in-out infinite;
+}
+
+@keyframes gentle-sway {
+  0%, 100% { transform: translateY(-50%) rotate(-5deg); }
+  50% { transform: translateY(-50%) rotate(5deg); }
+}
+
+.showroom-header strong,
+.showroom-header a {
+  font-family: var(--xmas-font-display) !important;
+  color: var(--xmas-dark) !important;
+  font-weight: 700 !important;
+}
+
+.showroom-header nav a {
+  text-decoration: none !important;
+  padding: 6px 12px !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  transition: all 0.3s ease !important;
+}
+
+.showroom-header nav a:hover {
+  background: var(--xmas-cookie) !important;
+  color: var(--xmas-red) !important;
+}
+
+/* ── HERO ── */
+.christmas-hero {
+  background: linear-gradient(175deg, var(--xmas-red) 0%, var(--xmas-red-deep) 50%, var(--xmas-green-deep) 100%) !important;
+  padding: 80px 0 60px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  text-align: center !important;
+}
+
+.christmas-hero::before {
+  content: '❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄ ✦ ❄';
+  position: absolute;
+  top: 8px;
+  left: 0;
+  width: 200%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.7rem;
+  letter-spacing: 8px;
+  pointer-events: none;
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.christmas-hero h1,
+.christmas-hero .christmas-display span {
+  color: var(--xmas-snow) !important;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.1) !important;
+}
+
+.christmas-hero p,
+.christmas-hero .christmas-kicker,
+.christmas-hero .christmas-letter-label,
+.christmas-hero .christmas-handnote,
+.christmas-hero .christmas-note {
+  color: rgba(255, 248, 240, 0.9) !important;
+}
+
+.christmas-hero .christmas-display {
+  font-family: var(--xmas-font-display) !important;
+  font-size: clamp(3rem, 10vw, 6rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+  margin: 20px 0 !important;
+  display: block !important;
+}
+
+.christmas-hero .christmas-display span {
+  display: block !important;
+  animation: bounce-in 0.8s ease-out both;
+}
+.christmas-hero .christmas-display span:nth-child(1) { animation-delay: 0.2s; }
+.christmas-hero .christmas-display span:nth-child(2) { animation-delay: 0.4s; }
+.christmas-hero .christmas-display span:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes bounce-in {
+  0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+  60% { transform: translateY(-5px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Hero SVG */
+.christmas-holiday-art {
+  max-width: 100px !important;
+  height: auto !important;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.1)) !important;
+  animation: float 4s ease-in-out infinite !important;
+}
+
+.christmas-holiday-art--hat { animation-delay: 0s !important; }
+.christmas-holiday-art--tree { max-width: 120px !important; animation-delay: 0.5s !important; }
+.christmas-holiday-art--smile { animation-delay: 1s !important; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.christmas-hero-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 32px !important;
+}
+
+.christmas-hero-main {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+/* ── BUTTONS ── */
+.christmas-button,
+.showroom-button {
+  display: inline-block !important;
+  font-family: var(--xmas-font-display) !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  padding: 14px 32px !important;
+  background: var(--xmas-gold) !important;
+  color: var(--xmas-dark) !important;
+  border: 3px solid var(--xmas-dark) !important;
+  border-radius: var(--xmas-radius-blob) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  position: relative !important;
+  box-shadow: 4px 4px 0 var(--xmas-dark) !important;
+}
+
+.christmas-button:hover,
+.showroom-button:hover {
+  background: var(--xmas-gold-bright) !important;
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 6px 6px 0 var(--xmas-dark) !important;
+}
+
+.christmas-button:active,
+.showroom-button:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0 var(--xmas-dark) !important;
+}
+
+.christmas-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  justify-content: center !important;
+  margin: 24px 0 !important;
+}
+
+/* Quick Picks */
+.christmas-quick-picks {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  justify-content: center !important;
+}
+
+.christmas-quick-picks a {
+  font-family: var(--xmas-font-display) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: var(--xmas-snow) !important;
+  padding: 8px 20px !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  border: 2px dashed rgba(255, 255, 255, 0.4) !important;
+  text-decoration: none !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.christmas-quick-picks a:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Paper Edge */
+.christmas-paper-edge {
+  color: var(--xmas-cream) !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  margin-top: -1px !important;
+}
+
+/* ── KICKER ── */
+.christmas-kicker {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 2px !important;
+  color: var(--xmas-red-soft) !important;
+  text-transform: uppercase !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+/* ── SECTIONS ── */
+.christmas-section {
+  padding: 80px 0 !important;
+  position: relative !important;
+}
+
+.christmas-section:nth-child(even) { background: var(--xmas-warm-white) !important; }
+.christmas-section:nth-child(odd) { background: var(--xmas-cream) !important; }
+
+.christmas-section::before {
+  content: '· · · ✦ · · ·';
+  display: block;
+  text-align: center;
+  font-family: var(--xmas-font-display);
+  color: var(--xmas-cookie);
+  font-size: 1.2rem;
+  letter-spacing: 6px;
+  margin-bottom: 32px;
+  opacity: 0.7;
+}
+
+/* ── BREADCRUMB ── */
+.christmas-breadcrumb {
+  list-style: none !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  font-family: var(--xmas-font-display) !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 20px !important;
+}
+
+.christmas-breadcrumb li + li::before {
+  content: '→' !important;
+  margin-right: 4px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.christmas-breadcrumb a { color: rgba(255, 255, 255, 0.7) !important; text-decoration: none !important; }
+
+/* ── PRODUCTS ── */
+.christmas-product-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 48px !important;
+  margin-top: 40px !important;
+}
+
+.christmas-product {
+  background: var(--xmas-snow) !important;
+  border: var(--xmas-border-sketch) !important;
+  border-radius: var(--xmas-radius-blob) !important;
+  padding: 32px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 24px !important;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease !important;
+  box-shadow: 6px 6px 0 var(--xmas-cookie) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+@media (min-width: 640px) {
+  .christmas-product { grid-template-columns: 280px 1fr !important; padding: 40px !important; }
+}
+
+.christmas-product:hover {
+  transform: translateY(-4px) rotate(-0.5deg) !important;
+  box-shadow: 10px 10px 0 var(--xmas-cookie) !important;
+}
+
+.christmas-product::after {
+  content: '✦';
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 1.2rem;
+  color: var(--xmas-gold);
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.christmas-product:nth-child(1)::after { content: '⭐'; animation-delay: 0s; }
+.christmas-product:nth-child(2)::after { content: '🎄'; animation-delay: 0.3s; }
+.christmas-product:nth-child(3)::after { content: '🎁'; animation-delay: 0.6s; }
+
+/* Image Placeholder */
+.christmas-image-slot {
+  background: linear-gradient(135deg, var(--xmas-cookie), var(--xmas-warm-white)) !important;
+  border: var(--xmas-border-dashed) !important;
+  border-radius: 18px 4px 16px 4px / 4px 16px 4px 18px !important;
+  min-height: 200px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.christmas-image-slot span {
+  font-family: var(--xmas-font-display) !important;
+  color: var(--xmas-gingerbread) !important;
+  font-size: 0.9rem !important;
+  text-align: center !important;
+  letter-spacing: 2px !important;
+}
+
+.christmas-product-media figcaption {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 0.75rem !important;
+  color: var(--xmas-gingerbread) !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  letter-spacing: 1px !important;
+}
+
+.christmas-product-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.christmas-product-line {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 1.2rem !important;
+  color: var(--xmas-red) !important;
+  font-weight: 700 !important;
+}
+
+.christmas-note {
+  font-size: 0.85rem !important;
+  color: var(--xmas-gingerbread) !important;
+  font-style: italic !important;
+  padding: 12px 16px !important;
+  background: var(--xmas-warm-white) !important;
+  border-left: 3px solid var(--xmas-gold) !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+.christmas-text-link {
+  font-family: var(--xmas-font-display) !important;
+  font-weight: 700 !important;
+  color: var(--xmas-red) !important;
+  text-decoration: none !important;
+  border-bottom: 2px dashed var(--xmas-red-soft) !important;
+  padding-bottom: 2px !important;
+  transition: all 0.3s ease !important;
+  display: inline-block !important;
+}
+
+.christmas-text-link:hover {
+  color: var(--xmas-red-deep) !important;
+  border-bottom-color: var(--xmas-red-deep) !important;
+  transform: translateX(4px) !important;
+}
+
+/* ── OCCASION GRID ── */
+.christmas-occasion-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 20px !important;
+  margin-top: 32px !important;
+}
+
+.christmas-occasion-grid article {
+  background: var(--xmas-snow) !important;
+  border: var(--xmas-border-sketch) !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  padding: 28px 24px !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  box-shadow: 4px 4px 0 var(--xmas-cookie) !important;
+  position: relative !important;
+}
+
+.christmas-occasion-grid article:hover {
+  transform: translateY(-4px) rotate(1deg) !important;
+  box-shadow: 7px 7px 0 var(--xmas-cookie) !important;
+  border-color: var(--xmas-red) !important;
+}
+
+.christmas-occasion-grid article span {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: var(--xmas-gold) !important;
+  display: block !important;
+  margin-bottom: 8px !important;
+}
+
+/* ── EDITORIAL GRID ── */
+.christmas-editorial-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 32px !important;
+}
+
+@media (min-width: 640px) {
+  .christmas-editorial-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+.christmas-editorial-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+/* ── KIDS ── */
+.christmas-kids { background: linear-gradient(180deg, var(--xmas-cream), var(--xmas-warm-white)) !important; }
+
+.christmas-kids-answers {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 20px !important;
+  margin: 24px 0 !important;
+}
+
+.christmas-kids-answers article {
+  background: var(--xmas-snow) !important;
+  border: 2px solid var(--xmas-cookie) !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  padding: 24px !important;
+  box-shadow: 3px 3px 0 var(--xmas-cookie) !important;
+  transition: all 0.3s ease !important;
+}
+
+.christmas-kids-answers article:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 5px 5px 0 var(--xmas-cookie) !important;
+}
+
+/* ── TABLE ── */
+.christmas-table-wrap {
+  overflow-x: auto !important;
+  margin: 24px 0 !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  border: var(--xmas-border-sketch) !important;
+  box-shadow: 4px 4px 0 var(--xmas-cookie) !important;
+}
+
+.christmas-table-wrap table { width: 100% !important; border-collapse: collapse !important; }
+
+.christmas-table-wrap caption {
+  font-family: var(--xmas-font-display) !important;
+  padding: 16px !important;
+  font-size: 1rem !important;
+  color: var(--xmas-dark) !important;
+  background: var(--xmas-warm-white) !important;
+  text-align: left !important;
+}
+
+.christmas-table-wrap th, .christmas-table-wrap td {
+  padding: 14px 18px !important;
+  text-align: left !important;
+  border-bottom: 1px dashed var(--xmas-cookie) !important;
+  font-size: 0.95rem !important;
+}
+
+.christmas-table-wrap thead th {
+  background: var(--xmas-red) !important;
+  color: var(--xmas-snow) !important;
+  font-family: var(--xmas-font-display) !important;
+  font-weight: 700 !important;
+}
+
+.christmas-table-wrap tbody tr:hover { background: var(--xmas-warm-white) !important; }
+
+/* ── ORDER ── */
+.christmas-order { background: var(--xmas-green-deep) !important; }
+
+.christmas-order h2, .christmas-order .christmas-kicker { color: var(--xmas-snow) !important; }
+.christmas-order p, .christmas-order dd, .christmas-order dt, .christmas-order address { color: rgba(255, 248, 240, 0.9) !important; }
+
+.christmas-order-fields {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 16px !important;
+  margin: 32px 0 !important;
+}
+
+.christmas-order-fields > div {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 2px dashed rgba(255, 255, 255, 0.25) !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  padding: 20px !important;
+  transition: all 0.3s ease !important;
+}
+
+.christmas-order-fields > div:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.christmas-order-fields dt {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: var(--xmas-gold) !important;
+  margin-bottom: 4px !important;
+}
+
+.christmas-workshop {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 2px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  padding: 28px !important;
+  margin-top: 24px !important;
+}
+
+/* ── TIMELINE ── */
+.christmas-timeline {
+  list-style: none !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  gap: 16px !important;
+  margin: 32px 0 !important;
+  counter-reset: timeline !important;
+}
+
+.christmas-timeline li {
+  background: var(--xmas-snow) !important;
+  border: var(--xmas-border-sketch) !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  padding: 24px 20px !important;
+  text-align: center !important;
+  position: relative !important;
+  box-shadow: 3px 3px 0 var(--xmas-cookie) !important;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  counter-increment: timeline !important;
+}
+
+.christmas-timeline li::before {
+  content: counter(timeline);
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  background: var(--xmas-red);
+  color: var(--xmas-snow);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--xmas-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid var(--xmas-dark);
+}
+
+.christmas-timeline li:hover {
+  transform: translateY(-4px) rotate(-1deg) !important;
+  box-shadow: 5px 5px 0 var(--xmas-cookie) !important;
+}
+
+.christmas-timeline li span {
+  font-family: var(--xmas-font-display) !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  color: var(--xmas-red) !important;
+  display: block !important;
+  margin-top: 8px !important;
+  margin-bottom: 4px !important;
+}
+
+/* ── FAQ ── */
+.christmas-faq-section { background: var(--xmas-warm-white) !important; }
+
+.christmas-faq {
+  margin-top: 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.christmas-faq details {
+  background: var(--xmas-snow) !important;
+  border: 2px solid var(--xmas-cookie) !important;
+  border-radius: var(--xmas-radius-soft) !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 2px 2px 0 var(--xmas-cookie) !important;
+}
+
+.christmas-faq details:hover { border-color: var(--xmas-red-soft) !important; box-shadow: 3px 3px 0 var(--xmas-cookie) !important; }
+.christmas-faq details[open] { border-color: var(--xmas-red) !important; box-shadow: 4px 4px 0 var(--xmas-cookie) !important; }
+
+.christmas-faq summary {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  padding: 18px 24px !important;
+  cursor: pointer !important;
+  color: var(--xmas-dark) !important;
+  transition: all 0.3s ease !important;
+  list-style: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.christmas-faq summary::-webkit-details-marker { display: none !important; }
+
+.christmas-faq summary::before {
+  content: '🎁';
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.christmas-faq details[open] summary::before {
+  content: '🎄';
+  transform: rotate(15deg);
+}
+
+.christmas-faq summary:hover { background: var(--xmas-warm-white) !important; color: var(--xmas-red) !important; }
+
+.christmas-faq details p {
+  padding: 0 24px 20px !important;
+  animation: faq-open 0.3s ease-out !important;
+}
+
+@keyframes faq-open {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── FINAL CTA ── */
+.christmas-final {
+  background: linear-gradient(175deg, var(--xmas-red-deep), var(--xmas-red)) !important;
+  text-align: center !important;
+  padding: 100px 0 80px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.christmas-final::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255, 215, 0, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(255, 215, 0, 0.08) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.christmas-final h2 { color: var(--xmas-snow) !important; font-size: clamp(1.8rem, 5vw, 3rem) !important; }
+.christmas-final p { color: rgba(255, 248, 240, 0.85) !important; }
+.christmas-final .christmas-display span { color: var(--xmas-snow) !important; }
+
+.christmas-signature {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 0.9rem !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  margin-top: 32px !important;
+  letter-spacing: 2px !important;
+}
+
+/* ── SVG DOODLES ── */
+.christmas-doodle {
+  max-width: 60px !important;
+  height: auto !important;
+  color: var(--xmas-gold) !important;
+  margin: 8px auto !important;
+  display: block !important;
+}
+
+.christmas-doodle--star { animation: spin-slow 8s linear infinite !important; }
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.christmas-doodle--ribbon { max-width: 80px !important; color: var(--xmas-red-soft) !important; }
+.christmas-doodle--tree { max-width: 50px !important; color: var(--xmas-green) !important; }
+
+/* ── FOOTER ── */
+.showroom-footer {
+  background: var(--xmas-dark) !important;
+  color: var(--xmas-cookie) !important;
+  padding: 48px 0 !important;
+  text-align: center !important;
+  position: relative !important;
+}
+
+.showroom-footer::before {
+  content: '❄ 🎄 ❄ 🎄 ❄ 🎄 ❄ 🎄 ❄ 🎄 ❄';
+  display: block;
+  text-align: center;
+  font-size: 0.8rem;
+  margin-bottom: 24px;
+  opacity: 0.4;
+  letter-spacing: 8px;
+}
+
+.showroom-footer strong {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 1.5rem !important;
+  color: var(--xmas-snow) !important;
+  display: block !important;
+  margin-bottom: 8px !important;
+}
+
+.showroom-footer p { color: var(--xmas-cookie) !important; font-size: 0.85rem !important; }
+.showroom-footer a { color: var(--xmas-gold) !important; text-decoration-style: wavy !important; }
+.showroom-footer a:hover { color: var(--xmas-gold-bright) !important; }
+
+.showroom-footer-links {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 8px 16px !important;
+  margin-top: 16px !important;
+}
+
+.showroom-footer-links a {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 0.9rem !important;
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.showroom-footer-links a:hover { background: rgba(255, 255, 255, 0.1) !important; }
+
+/* ── SCROLL REVEAL ── */
+.xmas-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.xmas-reveal.xmas-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.xmas-reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.xmas-reveal-stagger.xmas-visible > *:nth-child(1) { transition-delay: 0.05s; opacity: 1; transform: translateY(0); }
+.xmas-reveal-stagger.xmas-visible > *:nth-child(2) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+.xmas-reveal-stagger.xmas-visible > *:nth-child(3) { transition-delay: 0.15s; opacity: 1; transform: translateY(0); }
+.xmas-reveal-stagger.xmas-visible > *:nth-child(4) { transition-delay: 0.2s; opacity: 1; transform: translateY(0); }
+.xmas-reveal-stagger.xmas-visible > *:nth-child(5) { transition-delay: 0.25s; opacity: 1; transform: translateY(0); }
+.xmas-reveal-stagger.xmas-visible > *:nth-child(6) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+
+/* ── CURSOR SPARKLE ── */
+.cursor-sparkle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  font-size: 0.8rem;
+  animation: sparkle-fade 0.8s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes sparkle-fade {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(180deg) translateY(-30px); }
+}
+
+.christmas-handnote, .christmas-letter-label {
+  font-family: var(--xmas-font-display) !important;
+  font-size: 1.1rem !important;
+  letter-spacing: 1px !important;
+}
+
+.christmas-related {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-top: 16px !important;
+}
+
+.christmas-narrow {
+  max-width: 720px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.christmas-answer {
+  max-width: 640px !important;
+  margin: 16px auto !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .christmas-hero { padding: 60px 0 40px !important; }
+  .christmas-hero .christmas-display { font-size: clamp(2.2rem, 12vw, 3.5rem) !important; }
+  .christmas-section { padding: 56px 0 !important; }
+  .christmas-product { padding: 24px !important; }
+  .christmas-button, .showroom-button { font-size: 1rem !important; padding: 12px 24px !important; width: 100% !important; text-align: center !important; }
+  .christmas-occasion-grid { grid-template-columns: 1fr !important; }
+  .christmas-timeline { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media print {
+  .snowfall-container, .cursor-sparkle, body::before { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snowflake, .cursor-sparkle, .christmas-holiday-art, .christmas-doodle--star { animation: none !important; }
+  .xmas-reveal { opacity: 1; transform: none; }
+  .xmas-reveal-stagger > * { opacity: 1; transform: none; }
+}

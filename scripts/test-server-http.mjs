@@ -168,6 +168,12 @@ try {
   const unavailableBoard = await request(server.baseUrl, "/api/gimpo-board/flights");
   assert.equal(unavailableBoard.status, 503, "board without a server-side key must fail safely");
   assert.equal(unavailableBoard.body.toString("utf8").includes("serviceKey"), false);
+  const boardFallback = await request(server.baseUrl, "/gimpo-board/");
+  assert.equal(boardFallback.status, 200);
+  assert.equal(boardFallback.body.toString("utf8").includes("data-server-flight="), false);
+  const todayKst = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" });
+  assert.ok(boardFallback.body.toString("utf8").includes(`id="today-arrivals-date" datetime="${todayKst}"`), "request date must be rendered in KST even without cache");
+  assert.match(boardFallback.body.toString("utf8"), /현재 김포공항 도착정보[\s\S]*?편명[\s\S]*?출발지[\s\S]*?예정시간[\s\S]*?변경시간[\s\S]*?운항상태/);
 
   const notFound = await request(server.baseUrl, "/does-not-exist");
   assert.equal(notFound.status, 404);
@@ -204,6 +210,21 @@ try {
   const arrivals = JSON.parse((await request(boardServer.baseUrl, "/api/gimpo-board/flights?type=arrival")).body.toString("utf8"));
   assert.equal(arrivals.data.length, 2);
   assert.equal(arrivals.data.every((row) => row.type === "arrival"), true);
+  const boardPage = await request(boardServer.baseUrl, "/gimpo-board/");
+  const boardHtml = boardPage.body.toString("utf8");
+  assert.equal(boardPage.status, 200);
+  assert.match(boardPage.headers["cache-control"], /no-store/);
+  assert.equal((boardHtml.match(/data-server-flight=/g) || []).length, 2);
+  assert.ok(boardHtml.includes("TW922") && boardHtml.includes("MM763"));
+  assert.ok(boardHtml.includes(`id="today-arrivals-date" datetime="${new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" })}"`));
+  assert.match(boardHtml, /출발지 부산\/김해 · 김포공항 도착/);
+  assert.match(boardHtml, /김포공항 예정 도착시간 06:00 · 변경 도착시간 정보 없음/);
+  assert.match(boardHtml, /운항상태 도착/);
+  const queryHtml = (await request(boardServer.baseUrl, "/gimpo-board/?flight=TW922")).body.toString("utf8");
+  assert.match(queryHtml, /rel="canonical" href="https:\/\/nothingmatters.co.kr\/gimpo-board\/"/);
+  assert.doesNotMatch(queryHtml, /rel="canonical"[^>]*\?flight=/);
+  assert.equal(boardHtml.includes("http-test-key"), false);
+  assert.equal(provider.state.calls.length, 4, "server-rendered arrivals must share the API cache");
   const domestic = JSON.parse((await request(boardServer.baseUrl, "/api/gimpo-board/flights?type=departure&line=domestic")).body.toString("utf8"));
   assert.equal(domestic.data.length, 3);
   const search = JSON.parse((await request(boardServer.baseUrl, "/api/gimpo-board/flights?type=departure&q=RS901")).body.toString("utf8"));

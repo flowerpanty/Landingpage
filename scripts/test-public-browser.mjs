@@ -30,6 +30,7 @@ const CRITICAL_PATHS = [
   "/wedding-favor/",
   "/first-birthday-favor/",
   "/corporate-gift/",
+  "/flight-attendant-gift/",
   "/pickup/",
   "/contact/",
   "/cookie-crew/",
@@ -380,32 +381,37 @@ async function verifyGimpoHub(cdp, width) {
 async function verifyBoardAnswers(cdp, width) {
   const state = await evaluate(cdp, `() => {
     const board = document.querySelector('.board-shell').getBoundingClientRect();
+    const today = document.getElementById('today-arrivals').getBoundingClientRect();
     const answer = document.querySelector('.board-arrival-answer').getBoundingClientRect();
     const collection = document.querySelector('.board-collection').getBoundingClientRect();
     const info = document.querySelector('.board-info').getBoundingClientRect();
     const footer = document.querySelector('.board-footer').getBoundingClientRect();
-    const text = [...document.querySelectorAll('.board-info-answers h2, .board-info-questions summary')];
+    const text = [...document.querySelectorAll('.board-info-answers h3, .board-info-questions summary')];
     return {
       width: innerWidth, documentWidth: document.documentElement.scrollWidth,
       sections: [...document.querySelector('main').children].map((node) => node.className),
-      answerBelowBoard: answer.top >= board.bottom - 1,
-      collectionBelowAnswer: collection.top >= answer.bottom - 1,
-      infoBelowCollection: info.top >= collection.bottom - 1,
-      footerBelowInfo: footer.top >= info.bottom - 1,
+      todayBelowBoard: today.top >= board.bottom - 1,
+      answerBelowToday: answer.top >= today.bottom - 1,
+      todayFits: today.left >= 0 && today.right <= innerWidth + 1,
+      searchCopyFits: document.getElementById('board-flight-search-title').scrollWidth <= document.getElementById('board-flight-search-title').clientWidth + 1,
+      searchHeight: document.getElementById('board-arrival-search').getBoundingClientRect().height,
+      infoBelowAnswer: info.top >= answer.bottom - 1,
+      collectionBelowInfo: collection.top >= info.bottom - 1,
+      footerBelowCollection: footer.top >= collection.bottom - 1,
       collectionFits: collection.left >= 0 && collection.right <= innerWidth + 1,
       collectionLinks: [...document.querySelectorAll('.board-collection-links a')].map((link) => new URL(link.href).pathname),
-      answers: [...document.querySelectorAll('.board-info-answers h2')].map((node) => node.textContent.trim()),
+      answers: [...document.querySelectorAll('.board-info-answers h3')].map((node) => node.textContent.trim()),
       faqCount: document.querySelectorAll('.board-info-questions details').length,
       faqClipped: text.filter((node) => node.scrollWidth > node.clientWidth + 1 || node.getBoundingClientRect().right > innerWidth + 1).map((node) => node.textContent.trim()),
       tabs: [...document.querySelectorAll('[role=tab]')].map((tab) => tab.textContent.trim())
     };
   }`);
   assert.equal(state.width, width);
-  assert.deepEqual(state.sections, ["board-shell", "board-arrival-answer", "board-collection", "board-info", "board-footer"], "board sections should follow the intended DOM order");
-  assert.ok(state.documentWidth <= width && state.answerBelowBoard && state.collectionBelowAnswer && state.infoBelowCollection && state.footerBelowInfo && state.collectionFits, `board, answer, collection, information, and footer must remain ordered without overflow at ${width}px: ${JSON.stringify(state)}`);
+  assert.deepEqual(state.sections, ["board-shell", "board-today", "board-arrival-answer", "board-info", "board-collection", "board-footer"], "today arrivals, answers and FAQ should precede the dessert collection");
+  assert.ok(state.documentWidth <= width && state.todayBelowBoard && state.answerBelowToday && state.todayFits && state.searchCopyFits && state.searchHeight >= 44 && state.infoBelowAnswer && state.collectionBelowInfo && state.footerBelowCollection && state.collectionFits, `board, today arrivals, answer, information, collection, and footer must remain ordered without overflow at ${width}px: ${JSON.stringify(state)}`);
   assert.deepEqual(state.collectionLinks, ["/gimpo/", "/gimpo/pickup/"], "collection should link to the dessert hub and pickup guidance");
-  assert.deepEqual(state.answers, ["김포공항 도착정보·도착시간 확인", "김포공항 출발정보·출발시간 확인"]);
-  assert.equal(state.faqCount, 4);
+  assert.deepEqual(state.answers, ["실시간 도착정보", "도착시간 확인", "운항상태 확인"]);
+  assert.equal(state.faqCount, 8);
   assert.deepEqual(state.faqClipped, [], `board FAQ text should fit at ${width}px`);
   assert.deepEqual(state.tabs, ["DEPARTURES출발", "ARRIVALS도착"]);
   const arrival = await evaluate(cdp, `() => {
@@ -420,7 +426,7 @@ async function verifyBoardAnswers(cdp, width) {
       const range = document.createRange(); range.selectNodeContents(span);
       return [...range.getClientRects()].every((rect) => rect.left >= 0 && rect.right <= innerWidth + 1 && rect.bottom <= header.bottom + 1);
     });
-    return { count: document.querySelectorAll('h1').length, text: heading.textContent.trim(), visible: style.display !== 'none' && style.visibility === 'visible' && style.clip === 'auto' && bounds.width > 100 && bounds.height > 10 && bounds.top >= 0 && bounds.bottom <= header.bottom && bounds.bottom < innerHeight, textFits, headerHeight: header.height, answerAfterBoard: document.querySelector('.board-shell').nextElementSibling === answer, answerBelowPanel: answerBounds.top >= panel.bottom - 1, answerFits: answerBounds.left >= 0 && answerBounds.right <= innerWidth + 1, answerLength: answer.querySelector('p').textContent.length, link: answer.querySelector('a').getAttribute('href') };
+    return { count: document.querySelectorAll('h1').length, text: heading.textContent.trim(), visible: style.display !== 'none' && style.visibility === 'visible' && style.clip === 'auto' && bounds.width > 100 && bounds.height > 10 && bounds.top >= 0 && bounds.bottom <= header.bottom && bounds.bottom < innerHeight, textFits, headerHeight: header.height, answerAfterBoard: document.querySelector('.board-shell').nextElementSibling.id === 'today-arrivals' && document.getElementById('today-arrivals').nextElementSibling === answer, answerBelowPanel: answerBounds.top >= panel.bottom - 1, answerFits: answerBounds.left >= 0 && answerBounds.right <= innerWidth + 1, answerLength: answer.querySelector('p').textContent.length, link: answer.querySelector('a').getAttribute('href') };
   }`);
   assert.equal(arrival.count, 1);
   assert.equal(arrival.text, "김포공항 도착정보·도착시간 실시간 항공편");
@@ -462,6 +468,100 @@ async function verifyBoardAnswers(cdp, width) {
   await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
 }
 
+async function verifyFlightAttendantGift(cdp, baseUrl) {
+  const screenshots = path.join(ROOT, "output/playwright/flight-attendant-gift");
+  fs.mkdirSync(screenshots, { recursive: true });
+  const labels = ["hero", "cookie-flight", "cookie-crew", "terminal", "captain", "dadama", "combo", "final"].map(label => `flight-attendant-${label}`);
+  for (const width of [360, 390, 430, 1280]) {
+    await setViewport(cdp, width);
+    const eventStart = cdp.events.length;
+    await navigate(cdp, `${baseUrl}/flight-attendant-gift/`);
+    await evaluate(cdp, "() => { document.querySelectorAll('img').forEach(image => image.loading = 'eager'); return true; }");
+    await waitFor(cdp, "() => [...document.images].every(image => image.complete && image.naturalWidth > 0)", "gift photos must load");
+    await evaluate(cdp, "async () => { await Promise.all([...document.images].map(image => image.decode())); return true; }");
+    const state = await evaluate(cdp, `() => {
+      const fits = node => { const box = node.getBoundingClientRect(); return box.left >= -1 && box.right <= innerWidth + 1 && node.scrollWidth <= node.clientWidth + 1; };
+      const links = [...document.querySelectorAll('[data-analytics-event="store_shop_click"]')];
+      const graph = JSON.parse(document.querySelector('[data-nm-schema="static"]').textContent)['@graph'];
+      return {
+        canonical: document.querySelector('link[rel=canonical]').href,
+        robots: document.querySelector('meta[name=robots]').content,
+        h1: [...document.querySelectorAll('h1')].map(node => node.textContent.replace(/\\s+/g,' ').trim()),
+        width: document.documentElement.scrollWidth,
+        headerFits: [...document.querySelectorAll('.showroom-logo,.showroom-nav a')].every(fits),
+        bodyBackground: getComputedStyle(document.body).backgroundColor,
+        cards: [...document.querySelectorAll('[data-gift-product]')].map(card => ({
+          slug: card.dataset.giftProduct, text: card.textContent, fits: fits(card),
+          contentFits: [...card.querySelectorAll('h3,p,li,a,.flight-gift-graphic')].every(fits),
+          images: card.querySelectorAll('img').length
+        })),
+        links: links.map(link => ({ href: link.href, target: link.target, label: link.dataset.analyticsLabel, height: link.getBoundingClientRect().height, fits: fits(link) })),
+        combos: document.querySelectorAll('#gift-combos article').length,
+        combosFit: [...document.querySelectorAll('#gift-combos article,#gift-combos h3')].every(fits),
+        comboLinks: document.querySelectorAll('#gift-combos a').length,
+        finalHeight: document.querySelector('[data-analytics-label="flight-attendant-final"]').getBoundingClientRect().height,
+        faq: document.querySelectorAll('#faq details').length,
+        productsInSchema: graph.filter(node => node['@type'] === 'Product').length
+      };
+    }`);
+    assert.equal(state.canonical, "https://nothingmatters.co.kr/flight-attendant-gift/");
+    assert.match(state.robots, /^index,follow/);
+    assert.equal(state.h1.length, 1);
+    assert.ok(state.h1[0].includes("승무원 친구에게,") && state.h1[0].includes("닮은 선물."));
+    assert.equal(state.bodyBackground, "rgb(255, 255, 255)");
+    assert.ok(state.width <= width && state.headerFits, `gift header/page should fit at ${width}px`);
+    assert.deepEqual(state.cards.map(card => card.slug), ["cookie-flight", "cookie-crew", "terminal", "captain", "dadama"]);
+    assert.deepEqual(state.cards.map(card => card.images), [1, 1, 1, 0, 0]);
+    assert.ok(state.cards[0].text.includes("16,000원"));
+    assert.ok(state.cards.every(card => card.fits && card.contentFits), `gift cards must not clip at ${width}px: ${JSON.stringify(state.cards)}`);
+    assert.deepEqual(state.links.map(link => link.label), labels);
+    assert.ok(state.links.every(link => link.href === "https://nothingmatters.kr/" && link.target === "" && link.height >= 44 && link.fits), `same-tab store CTAs should fit at ${width}px`);
+    assert.equal(state.combos, 3);
+    assert.ok(state.combosFit);
+    assert.equal(state.comboLinks, 1);
+    assert.ok(state.finalHeight >= 48);
+    assert.equal(state.faq, 6);
+    assert.equal(state.productsInSchema, 0);
+
+    const analytics = await evaluate(cdp, `() => {
+      const calls = [];
+      window.gtag = (...args) => calls.push(args);
+      for (const link of document.querySelectorAll('[data-analytics-event="store_shop_click"]')) {
+        link.addEventListener('click', event => event.preventDefault(), { once: true });
+        link.click();
+      }
+      const faq = document.querySelector('#faq details');
+      faq.querySelector('summary').click();
+      return { calls, faqOpen: faq.open, faqAnswer: faq.querySelector('p').getBoundingClientRect().height };
+    }`);
+    assert.equal(analytics.calls.length, 8, "each purchase CTA must fire exactly one event");
+    assert.deepEqual(analytics.calls.map(call => [call[0], call[1], call[2].event_label]), labels.map(label => ["event", "store_shop_click", label]));
+    assert.ok(analytics.calls.every(call => call[2].link_url === "https://nothingmatters.kr/" && call[2].page_path === "/flight-attendant-gift/" && call[2].transport_type === "beacon"));
+    assert.ok(analytics.faqOpen && analytics.faqAnswer > 0, "FAQ must expand and expose its answer");
+    assert.equal(cdp.events.slice(eventStart).some(event => event.method === "Runtime.exceptionThrown" || (event.method === "Runtime.consoleAPICalled" && event.params.type === "error")), false, "gift page must not produce runtime errors");
+    for (const [name, selector] of [["hero", "#hero"], ["lineup", "#gift-lineup"], ["goods", "#gift-captain"], ["combos", "#gift-combos"], ["final", "#gift-final"]]) {
+      await evaluate(cdp, `() => { document.querySelector('${selector}').scrollIntoView({ behavior:'instant', block:'start' }); return true; }`);
+      await wait(80);
+      fs.writeFileSync(path.join(screenshots, `${width}-${name}.png`), (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+    }
+  }
+  // Fulfill the outbound navigation locally: verify same-tab behavior without contacting the shop or placing an order.
+  await cdp.command("Fetch.enable", { patterns: [{ urlPattern: "https://nothingmatters.kr/*", requestStage: "Request" }] });
+  const start = cdp.events.length;
+  await evaluate(cdp, "() => { document.querySelector('[data-analytics-label=\"flight-attendant-final\"]').click(); return true; }");
+  let paused;
+  for (let attempt = 0; attempt < 40 && !paused; attempt += 1) {
+    paused = cdp.events.slice(start).find(event => event.method === "Fetch.requestPaused");
+    if (!paused) await wait(50);
+  }
+  assert.ok(paused, "purchase CTA should start store navigation in the current tab");
+  assert.equal(paused.params.request.url, "https://nothingmatters.kr/");
+  await cdp.command("Fetch.fulfillRequest", { requestId: paused.params.requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "text/html; charset=utf-8" }], body: Buffer.from("<!doctype html><title>Store navigation test</title><p>Navigation verified</p>").toString("base64") });
+  await waitFor(cdp, "() => location.href === 'https://nothingmatters.kr/' && document.title === 'Store navigation test'", "purchase link should navigate the same tab");
+  await cdp.command("Fetch.disable");
+  console.log("flight attendant gift browser checks: 360/390/430/1280px, five cards, CTA/gallery/combo fit, FAQ interaction, eight purchase events and intercepted same-tab store navigation PASS");
+}
+
 const flightProvider = await startMockFlightProvider();
 const server = await startServer({ NODE_ENV: "test", GIMPO_BOARD_TEST_API_URL: flightProvider.url, KAC_FLIGHT_API_KEY: "browser-test-key" });
 const debugPort = await reservePort();
@@ -501,6 +601,8 @@ try {
       assert.ok(dimensions.bodyWidth <= dimensions.viewport, `${pathname}: body horizontal overflow at ${width}px`);
     }
   }
+
+  await verifyFlightAttendantGift(cdp, server.baseUrl);
 
   const occasionPaths = ["/wedding-favor/", "/first-birthday-favor/", "/corporate-gift/"];
   const occasionScreenshotDir = path.join(ROOT, "output/playwright/occasion-landings");
@@ -626,19 +728,66 @@ try {
   const boardClock = await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "(() => { const NativeDate = Date; function FixedDate(...args) { return args.length ? new NativeDate(...args) : new NativeDate('2026-09-28T06:30:00+09:00'); } FixedDate.now = () => new NativeDate('2026-09-28T06:30:00+09:00').getTime(); FixedDate.parse = NativeDate.parse; FixedDate.UTC = NativeDate.UTC; FixedDate.prototype = NativeDate.prototype; window.Date = FixedDate; })();" });
   await navigate(cdp, `${server.baseUrl}/gimpo-board/?flight=RS901`);
   await waitFor(cdp, "() => document.getElementById('flight-detail')?.open", "board flight query should open the matching detail");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('departures-tab').getAttribute('aria-selected')"), "true", "departure queries must still select DEPARTURES after the arrival-first lookup");
   assert.equal(await evaluate(cdp, "() => document.getElementById('detail-pickup-link').getAttribute('href')"), "/gimpo/pickup/", "board detail should link to reservation pickup guidance");
   assert.equal(await evaluate(cdp, "() => [...document.querySelectorAll('#detail-fields dt')].some((item) => item.textContent === '게이트')"), true, "mobile flight detail should retain gate information when provided");
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/?flight=TW922`);
+  await waitFor(cdp, "() => document.getElementById('flight-detail')?.open", "arrival query should open its detail without changing direction");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('arrivals-tab').getAttribute('aria-selected')"), "true");
+  for (const width of [360, 390, 430, 1280]) {
+    await setViewport(cdp, width, width === 1280 ? 900 : 844);
+    const eventStart = cdp.events.length;
+    await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
+    await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2", "default arrival board should show both domestic and international flights");
+    const defaults = await evaluate(cdp, "() => ({ arrival: document.getElementById('arrivals-tab').getAttribute('aria-selected'), departure: document.getElementById('departures-tab').getAttribute('aria-selected'), type: document.querySelector('.board-shell').dataset.type, labelledby: document.querySelector('.board-panel').getAttribute('aria-labelledby'), route: document.getElementById('route-heading').textContent, marquee: document.getElementById('board-marquee-title').textContent, korean: document.getElementById('board-marquee-ko').textContent, intro: document.querySelector('.board-arrival-intro').textContent.trim() })");
+    assert.deepEqual(defaults, { arrival: "true", departure: "false", type: "arrival", labelledby: "arrivals-tab", route: "ORIGIN", marquee: "ARRIVAL", korean: "도착", intro: "김포공항에 도착하는 항공편의 편명, 출발지, 예정시간·변경시간과 운항상태를 확인하세요." });
+    assert.equal(await evaluate(cdp, "() => document.getElementById('today-arrivals-date').dateTime"), new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" }), "today date must agree with current server KST date");
+    assert.equal(await evaluate(cdp, "() => document.querySelector('link[rel=canonical]').href"), "https://nothingmatters.co.kr/gimpo-board/");
+    await verifyBoardAnswers(cdp, width);
+    assert.equal(cdp.events.slice(eventStart).some(event => event.method === "Runtime.exceptionThrown" || (event.method === "Runtime.consoleAPICalled" && event.params.type === "error")), false, `arrival board should have no JS errors at ${width}px`);
+    await waitFor(cdp, "() => !document.querySelector('#flight-rows .is-entering')", "arrival entrance should settle");
+    fs.writeFileSync(`/private/tmp/nothingmatters-gimpo-arrivals-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  }
+  await cdp.command("Emulation.setScriptExecutionDisabled", { value: true });
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
+  const withoutJs = await evaluate(cdp, "() => ({ rows: [...document.querySelectorAll('[data-server-flight]')].map(row => row.textContent), staticText: document.querySelector('.board-static-context').textContent, loaderHidden: document.getElementById('board-loader').hidden, fields: [...document.querySelectorAll('[data-server-flight]:first-child td')].map(cell => cell.dataset.field), date: document.getElementById('today-arrivals-date').dateTime, semantics: [...document.querySelectorAll('[data-server-flight]:first-child td[aria-label]')].map(cell => cell.getAttribute('aria-label')) })");
+  assert.equal(withoutJs.rows.length, 2, "cached real arrival rows should remain readable without JS");
+  assert.ok(withoutJs.rows.some(row => row.includes('TW922')) && withoutJs.rows.some(row => row.includes('MM763')));
+  assert.deepEqual(withoutJs.fields, ["flight", "route", "time", "gate", "status"]);
+  assert.ok(withoutJs.loaderHidden && /편명.*출발지.*예정시간.*변경시간.*운항상태/.test(withoutJs.staticText));
+  assert.equal(withoutJs.date, new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" }));
+  assert.ok(withoutJs.semantics.some(text => /편명/.test(text)) && withoutJs.semantics.some(text => /출발지.*김포공항 도착/.test(text)) && withoutJs.semantics.some(text => /예정 도착시간.*변경 도착시간/.test(text)) && withoutJs.semantics.some(text => /운항상태/.test(text)));
+  await cdp.command("Emulation.setScriptExecutionDisabled", { value: false });
+  await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2", "arrival search tests should start from loaded data");
+  await evaluate(cdp, "() => { document.getElementById('departures-tab').click(); return true; }");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "departure rows should load before arrival search shortcut");
+  await evaluate(cdp, "() => { document.getElementById('board-arrival-search').click(); return true; }");
+  await waitFor(cdp, "() => document.getElementById('flight-search-sheet').open && document.getElementById('arrivals-tab').getAttribute('aria-selected') === 'true' && document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2", "arrival search shortcut should open search and select ARRIVALS");
+  for (const query of ['TW922', '부산']) {
+    await evaluate(cdp, `() => { const input = document.getElementById('flight-search'); input.value = ${JSON.stringify(query)}; input.dispatchEvent(new Event('input', { bubbles: true })); document.getElementById('board-search-done').click(); return true; }`);
+    await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 1", "flight number and origin search should each find the real arrival");
+    assert.equal(await evaluate(cdp, "() => document.querySelector('#flight-rows .flight-number').getAttribute('aria-label')"), "TW922 항공편 상세 보기");
+    await waitFor(cdp, "() => !document.getElementById('flight-search-sheet').open && document.activeElement.id === 'board-arrival-search'", "arrival search should restore its own trigger focus after the dialog close event");
+    assert.equal(await evaluate(cdp, "() => document.activeElement.id"), "board-arrival-search", "arrival search should restore its own trigger focus");
+    await evaluate(cdp, "() => { document.getElementById('board-arrival-search').click(); return true; }");
+  }
+  await evaluate(cdp, "() => { document.getElementById('board-search-close').click(); return true; }");
+  console.log("Gimpo phase 2 browser regression: KST date, SSR flight semantics, flight/origin search shortcut and focus, single canonical PASS");
+  console.log("Gimpo arrivals regression: default state and layout at 360/390/430/1280px, arrival/departure query fallback, cached server rows without JS PASS");
   await setViewport(cdp, 390);
   await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
-  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "Gimpo departures should load from the mocked provider");
-  assert.deepEqual(await evaluate(cdp, "() => { const flights = [...document.querySelectorAll('#flight-rows [data-field=flight] .flap-bank')].map((bank) => bank.dataset.value); return { slots: document.querySelectorAll('#board-loader .flap-slot').length, text: document.querySelector('.board-loader-text').textContent.trim(), flightCount: flights.length, allReady: flights.every(Boolean), hasRs901: flights.includes('RS901') }; }"), { slots: 0, text: "GIMPO · FLIGHT INFO", flightCount: 4, allReady: true, hasRs901: true }, "loader should be static and initial flight values should be ready immediately");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2", "Gimpo arrivals should load from the mocked provider");
+  assert.deepEqual(await evaluate(cdp, "() => { const flights = [...document.querySelectorAll('#flight-rows [data-field=flight] .flap-bank')].map((bank) => bank.dataset.value); return { slots: document.querySelectorAll('#board-loader .flap-slot').length, text: document.querySelector('.board-loader-text').textContent.trim(), flightCount: flights.length, allReady: flights.every(Boolean), hasTw922: flights.includes('TW922') }; }"), { slots: 0, text: "GIMPO · ARRIVAL INFO", flightCount: 2, allReady: true, hasTw922: true }, "loader should be static and initial arrival values should be ready immediately");
   await waitFor(cdp, "() => document.getElementById('board-loader').hidden", "first-load airport loader should finish");
   await waitFor(cdp, "() => performance.getEntriesByName('gimpo-board-initial-entrance').length === 1", "first board load should start bank-level entrance");
   const mobileEntrance = await evaluate(cdp, "() => performance.getEntriesByName('gimpo-board-initial-entrance')[0].detail");
-  assert.deepEqual(mobileEntrance, { rows: 4, banks: 16, rowStaggerMs: 22, bankDurationMs: 140, durationMs: 206 }, "mobile entrance should stagger four banks per row, not individual slots");
+  assert.deepEqual(mobileEntrance, { rows: 2, banks: 8, rowStaggerMs: 22, bankDurationMs: 140, durationMs: 162 }, "mobile entrance should stagger four banks per arrival row, not individual slots");
   await waitFor(cdp, "() => performance.getEntriesByName('gimpo-board-initial-settled').length === 1", "first bank entrance should settle promptly");
   const mobileMotion = await evaluate(cdp, "() => ({ duration: performance.getEntriesByName('gimpo-board-initial-settled')[0].startTime - performance.getEntriesByName('gimpo-board-initial-entrance')[0].startTime, ...window.__boardMotion, flipping: document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length, entering: document.querySelectorAll('#flight-rows tr.is-entering').length })");
   assert.ok(mobileMotion.duration <= 500 && mobileMotion.banks > 0 && mobileMotion.slotFlips === 0 && mobileMotion.flipping === 0 && mobileMotion.entering === 0, `mobile bank entrance must finish within 500ms without slot flips: ${JSON.stringify(mobileMotion)}`);
+  await evaluate(cdp, "() => { document.getElementById('departures-tab').click(); return true; }");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "DEPARTURES should retain all existing flight interactions");
   const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.board-collection-links a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
   assert.equal(boardMobile.title, "김포공항 도착정보·도착시간 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
@@ -807,20 +956,31 @@ try {
   assert.ok(stickyHeading.position === "sticky" && Math.abs(stickyHeading.top) <= 2, `flight column headings should remain pinned during scroll: ${JSON.stringify(stickyHeading)}`);
   await cdp.command("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
   await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
-  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "reduced-motion board should load");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2", "reduced-motion board should load");
   assert.deepEqual(await evaluate(cdp, "() => ({ entrance: performance.getEntriesByName('gimpo-board-initial-entrance').length, banks: window.__boardMotion.banks, slotFlips: window.__boardMotion.slotFlips, flipping: document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length, route: document.querySelector('#flight-rows [data-field=route] .flap-bank').dataset.value })"), { entrance: 0, banks: 0, slotFlips: 0, flipping: 0, route: "TOKYO/HND" }, "reduced motion should render final board values without entrance animation");
   await cdp.command("Emulation.setEmulatedMedia", { features: [] });
   const blocker = await cdp.command("Page.addScriptToEvaluateOnNewDocument", { source: "const boardOriginalFetch = window.fetch.bind(window); window.fetch = (...args) => String(args[0]).includes('/api/gimpo-board/') ? Promise.reject(new Error('simulated failure')) : boardOriginalFetch(...args);" });
   await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
-  await waitFor(cdp, "() => Boolean(document.querySelector('#board-notice button'))", "no-cache failure should show a retry button");
-  assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · OFFLINE", "initial API failure must show OFFLINE");
+  await waitFor(cdp, "() => Boolean(document.querySelector('#board-notice button'))", "failed initial AJAX refresh should offer retry");
+  assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · STALE", "failed initial AJAX refresh must retain server-cached arrivals as STALE");
+  assert.equal(await evaluate(cdp, "() => document.querySelectorAll('[data-server-flight]').length"), 2, "a failed AJAX refresh must not erase the real server-rendered arrivals");
+  const offlineBoardServer = await startServer({ KAC_FLIGHT_API_KEY: "" });
+  try {
+    await navigate(cdp, `${offlineBoardServer.baseUrl}/gimpo-board/`);
+    await waitFor(cdp, "() => Boolean(document.querySelector('#board-notice button'))", "no-cache failure should show a retry button");
+    assert.equal(await evaluate(cdp, "() => document.getElementById('board-badge').textContent.trim()"), "GMP · OFFLINE", "API failure without any cached rows must show OFFLINE");
+  } finally {
+    await stop(offlineBoardServer.child);
+  }
   await cdp.command("Page.removeScriptToEvaluateOnNewDocument", { identifier: blocker.identifier });
   await setViewport(cdp, 1280, 900);
   await navigate(cdp, `${server.baseUrl}/gimpo-board/`);
-  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "desktop Gimpo board should load");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 2", "desktop Gimpo board should load");
   await waitFor(cdp, "() => performance.getEntriesByName('gimpo-board-initial-settled').length === 1", "desktop entrance should settle before visual review");
   const desktopMotion = await evaluate(cdp, "() => ({ detail: performance.getEntriesByName('gimpo-board-initial-entrance')[0]?.detail, duration: performance.getEntriesByName('gimpo-board-initial-settled')[0].startTime - performance.getEntriesByName('gimpo-board-initial-entrance')[0].startTime, ...window.__boardMotion, flipping: document.querySelectorAll('#flight-rows .flap-slot.is-flipping').length })");
-  assert.ok(desktopMotion.detail?.rows === 4 && desktopMotion.detail?.banks === 20 && desktopMotion.detail?.rowStaggerMs === 18 && desktopMotion.detail?.durationMs <= 500 && desktopMotion.slotFlips === 0 && desktopMotion.flipping === 0, `desktop must schedule a sub-500ms bank entrance without slot flips: ${JSON.stringify(desktopMotion)}`);
+  assert.ok(desktopMotion.detail?.rows === 2 && desktopMotion.detail?.banks === 10 && desktopMotion.detail?.rowStaggerMs === 18 && desktopMotion.detail?.durationMs <= 500 && desktopMotion.slotFlips === 0 && desktopMotion.flipping === 0, `desktop must schedule a sub-500ms bank entrance without slot flips: ${JSON.stringify(desktopMotion)}`);
+  await evaluate(cdp, "() => { document.getElementById('departures-tab').click(); return true; }");
+  await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "desktop departure tab should retain its full board");
   const boardDesktop = await evaluate(cdp, "() => ({ columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), grid: getComputedStyle(document.querySelector('#flight-rows tr[data-flight-id]')).display, slots: document.querySelectorAll('#flight-rows .flap-slot').length, documentWidth: document.documentElement.scrollWidth, viewport: innerWidth })");
   assert.deepEqual(boardDesktop.columns, ["FLIGHT", "DESTINATION", "TIME", "GATE", "STATUS"]);
   assert.deepEqual(await evaluate(cdp, "() => Object.fromEntries(['flight','route','time','gate','status'].map((field) => [field, document.querySelector(`#flight-rows tr[data-flight-id] [data-field=${field}] .flap-bank`)?.children.length]))"), { flight: 7, route: 16, time: 5, gate: 2, status: 10 }, "desktop bank widths and gate must remain unchanged");

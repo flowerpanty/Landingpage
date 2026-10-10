@@ -1,0 +1,370 @@
+/* Holiday editorial layer. Product photo slots keep their shape when real images arrive. */
+.christmas-page {
+  --xmas-bg: #f8f4ec;
+  --xmas-paper: #fffdf8;
+  --xmas-text: #171411;
+  --xmas-red: #a83232;
+  --xmas-green: #465947;
+  --xmas-line: rgba(23, 20, 17, .16);
+  --xmas-gold: #edc879;
+  --xmas-feedback: 160ms;
+}
+
+body.christmas-page,
+.christmas-page .showroom-page { background: var(--xmas-red); color: var(--xmas-text); }
+.christmas-page { -webkit-font-smoothing: antialiased; font-weight: 500; }
+.christmas-page p { text-wrap: pretty; }
+.christmas-page h1,
+.christmas-page h2,
+.christmas-page h3 { text-wrap: balance; }
+.christmas-page .showroom-header {
+  background: var(--xmas-red);
+  color: var(--xmas-paper);
+  backdrop-filter: none;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 253, 248, .24);
+}
+
+.christmas-page .showroom-nav--quick a:last-child {
+  min-height: 44px;
+  background: var(--xmas-paper);
+  color: var(--xmas-red);
+  border-color: var(--xmas-paper);
+}
+
+.christmas-page .christmas-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0 0 38px;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+
+.christmas-page .christmas-breadcrumb a,
+.christmas-page .christmas-text-link,
+.christmas-page .christmas-table-wrap a { text-decoration: underline; text-underline-offset: 4px; }
+.christmas-page .christmas-hero { position: relative; padding: 26px 0 64px; background: var(--xmas-red); color: var(--xmas-paper); }
+.christmas-page .christmas-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .9fr);
+  align-items: center;
+  gap: 64px;
+}
+
+.christmas-page .christmas-hero-main,
+.christmas-page .christmas-hero-copy { position: relative; min-width: 0; }
+.christmas-page .showroom-logo { color: var(--xmas-paper); }
+.christmas-page .showroom-nav a { display: inline-flex; align-items: center; min-height: 44px; }
+.christmas-page .showroom-nav a::after { background: var(--xmas-paper); }
+.christmas-page :focus-visible { outline: 3px solid var(--xmas-green); outline-offset: 4px; }
+.christmas-page .showroom-header a:focus-visible,
+.christmas-page .showroom-footer a:focus-visible,
+.christmas-page .nm-skip-link:focus-visible,
+.christmas-page .christmas-quick-picks a:focus-visible,
+.christmas-page .christmas-final a:focus-visible { outline-color: var(--xmas-paper); }
+.christmas-page .christmas-hero-copy {
+  padding: 38px 32px 32px;
+  border-radius: 28px 32px 26px 34px;
+  background: var(--xmas-paper);
+  color: var(--xmas-text);
+}
+.christmas-page .christmas-hero-copy .christmas-letter-label {
+  margin: 0 0 24px;
+  color: var(--xmas-red);
+  font-family: "Pretendard", sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.christmas-page .christmas-hero-copy > .christmas-doodle {
+  position: absolute;
+  top: -28px;
+  right: 18px;
+  width: 80px;
+  color: var(--xmas-gold);
+}
+.christmas-page .christmas-hero .christmas-actions { flex-direction: column; }
+.christmas-page .christmas-hero .christmas-button { width: 100%; }
+.christmas-page .christmas-hero .christmas-button:last-child {
+  background: transparent;
+  color: var(--xmas-green) !important;
+}
+.christmas-page .christmas-hero-main > .christmas-kicker {
+  width: fit-content;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 253, 248, .45);
+  border-radius: 999px;
+}
+.christmas-page .christmas-holiday-art { position: absolute; height: auto; pointer-events: none; }
+.christmas-page .christmas-holiday-art--hat { top: 48px; left: -16px; width: 92px; transform: rotate(-14deg); }
+.christmas-page .christmas-holiday-art--tree { right: -10px; bottom: 18px; width: 108px; transform: rotate(5deg); }
+.christmas-page .christmas-holiday-art--smile { right: 12px; top: 48px; width: 64px; transform: rotate(10deg); }
+.christmas-page .christmas-hero-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; margin-top: 42px; }
+.christmas-page .christmas-quick-picks { display: flex; flex-wrap: wrap; gap: 10px; }
+.christmas-page .christmas-quick-picks a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 253, 248, .6);
+  border-radius: 999px;
+  font-size: 13px;
+  transition: background-color var(--xmas-feedback) ease-out;
+}
+.christmas-page .christmas-quick-picks a:hover { background: rgba(255, 253, 248, .1); }
+.christmas-page .christmas-hero-footer .christmas-handnote { margin: 0; }
+.christmas-page .christmas-paper-edge { position: absolute; right: 0; bottom: -1px; left: 0; width: 100%; height: 22px; color: var(--xmas-paper); }
+.christmas-page .christmas-kicker {
+  margin: 0 0 18px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .07em;
+}
+
+.christmas-page .christmas-display {
+  margin: 36px 0 26px;
+  color: var(--xmas-paper);
+  font-family: "SeoulNotice", "Arial Black", sans-serif;
+  font-size: clamp(84px, 11vw, 170px);
+  font-weight: 700;
+  letter-spacing: -.055em;
+  line-height: .95;
+}
+
+.christmas-page .christmas-display span { display: block; width: fit-content; max-width: 100%; }
+.christmas-page .christmas-display span:nth-child(2) { margin-left: .22em; transform: rotate(-2deg); }
+.christmas-page .christmas-display span:last-child { margin-top: .06em; font-size: .72em; letter-spacing: -.07em; }
+.christmas-page .christmas-hero h1 {
+  max-width: 430px;
+  margin: 0 0 22px;
+  font-size: clamp(26px, 2.5vw, 36px);
+  line-height: 1.3;
+  letter-spacing: -.045em;
+}
+
+.christmas-page .christmas-hero-copy > p:not(.christmas-note) { max-width: 430px; margin: 0 0 24px; line-height: 1.8; }
+.christmas-page .christmas-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.christmas-page .showroom-button.christmas-button {
+  min-height: 48px;
+  padding: 14px 20px;
+  border: 1px solid var(--xmas-green);
+  border-radius: 999px;
+  background: var(--xmas-green);
+  color: var(--xmas-paper) !important;
+  box-shadow: none;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+  transition: transform var(--xmas-feedback) ease-out, background-color var(--xmas-feedback) ease-out;
+}
+
+.christmas-page .christmas-hero .christmas-button:first-child {
+  background: var(--xmas-red);
+  border-color: var(--xmas-red);
+  color: var(--xmas-paper) !important;
+}
+
+.christmas-page .showroom-button.christmas-button:hover,
+.christmas-page .showroom-button.christmas-button:focus-visible { transform: translateY(-2px); box-shadow: none; }
+.christmas-page .christmas-note { margin: 24px 0 0; color: #655d55; font-size: 13px; line-height: 1.7; }
+.christmas-page .christmas-handnote {
+  width: fit-content;
+  margin: 26px 0 0 auto;
+  color: var(--xmas-paper);
+  font-size: 24px;
+  transform: rotate(-3deg);
+}
+
+.christmas-page .christmas-doodle { display: block; width: 70px; height: auto; color: var(--xmas-red); pointer-events: none; }
+.christmas-page .christmas-hero-main > .christmas-doodle { position: absolute; width: 66px; top: 32px; right: 4%; transform: rotate(14deg); }
+.christmas-page .christmas-hero-copy > .christmas-doodle { transform: rotate(-8deg); }
+.christmas-page .christmas-section { padding-block: 76px; scroll-margin-top: 78px; background: var(--xmas-paper); }
+.christmas-page .christmas-section h2 {
+  max-width: 960px;
+  margin: 0 0 26px;
+  font-size: clamp(29px, 3.25vw, 44px);
+  line-height: 1.3;
+  letter-spacing: -.045em;
+}
+
+.christmas-page .christmas-answer { max-width: 860px; margin: 0 0 34px; line-height: 1.8; }
+.christmas-page .christmas-narrow { max-width: 1000px; }
+.christmas-page .christmas-summary { border-bottom: 1px solid var(--xmas-line); }
+.christmas-page .christmas-summary .christmas-answer { margin-bottom: 0; }
+.christmas-page .christmas-product-list { margin-top: 60px; }
+.christmas-page .christmas-product {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: clamp(42px, 7vw, 110px);
+  padding: 38px 20px 78px;
+  scroll-margin-top: 78px;
+}
+
+.christmas-page .christmas-product + .christmas-product { padding-top: 78px; border-top: 1px solid var(--xmas-line); }
+.christmas-page .christmas-product:nth-child(2) .christmas-product-media { order: 2; transform: rotate(1.5deg); }
+.christmas-page .christmas-product:nth-child(2) .christmas-product-copy { order: 1; }
+.christmas-page .christmas-product-media { width: 100%; max-width: 520px; margin: 0; transform: rotate(-1.5deg); }
+.christmas-page .christmas-image-slot,
+.christmas-page .christmas-product-media > img {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  border: 1px dashed rgba(70, 89, 71, .45);
+  border-radius: 36px 44px 30px 40px;
+  background: var(--xmas-bg);
+  object-fit: cover;
+}
+
+.christmas-page .christmas-image-slot > span {
+  color: #74685d;
+  font-family: "Pretendard", sans-serif;
+  font-size: 11px;
+  letter-spacing: .12em;
+  line-height: 2;
+  text-align: center;
+}
+
+.christmas-page .christmas-image-slot > .christmas-doodle { position: absolute; width: 58px; top: 24px; right: 24px; }
+.christmas-page .christmas-product:nth-child(2) .christmas-image-slot { background: #eff0e8; }
+.christmas-page .christmas-product:nth-child(2) .christmas-doodle { color: var(--xmas-green); }
+.christmas-page .christmas-product:nth-child(3) .christmas-image-slot { background: #f3e7de; }
+.christmas-page .christmas-product-media figcaption { margin-top: 12px; font-family: "Pretendard", sans-serif; font-size: 10px; letter-spacing: .04em; }
+.christmas-page .christmas-product-copy h3 { margin: 0 0 24px; font-size: clamp(30px, 3.2vw, 46px); line-height: 1.25; letter-spacing: -.05em; }
+.christmas-page .christmas-product-copy > p:not(.christmas-kicker) { line-height: 1.8; }
+.christmas-page .christmas-product-line { color: var(--xmas-green); font-size: 20px; }
+.christmas-page .christmas-text-link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 14px; font-size: 14px; }
+.christmas-page .christmas-product-copy > .christmas-text-link {
+  min-height: 48px;
+  padding: 10px 18px;
+  border: 1px solid var(--xmas-green);
+  border-radius: 999px;
+  color: var(--xmas-green);
+  text-decoration: none;
+}
+.christmas-page .showroom-button.christmas-button:active { transform: scale(.98); }
+.christmas-page .christmas-occasions { background: var(--xmas-bg); }
+.christmas-page .christmas-occasion-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; margin-top: 48px; }
+.christmas-page .christmas-occasion-grid article { border-top: 1px solid var(--xmas-line); padding-top: 20px; }
+.christmas-page .christmas-occasion-grid article > span { color: var(--xmas-red); font-size: 13px; }
+.christmas-page .christmas-occasion-grid h3 { margin: 18px 0 12px; font-size: 23px; }
+.christmas-page .christmas-occasion-grid p { margin: 0; }
+.christmas-page .christmas-editorial-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 70px; }
+.christmas-page .christmas-editorial-grid .christmas-doodle { width: 120px; margin-top: 34px; }
+.christmas-page .christmas-editorial-copy > p { margin: 0 0 24px; line-height: 1.8; }
+.christmas-page .christmas-related { display: flex; flex-direction: column; align-items: flex-start; }
+.christmas-page .christmas-kids { background: #eff0e8; }
+.christmas-page .christmas-kids-answers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-top: 48px; }
+.christmas-page .christmas-kids-answers article { padding-top: 20px; border-top: 1px solid var(--xmas-line); }
+.christmas-page .christmas-kids-answers h3 { margin: 0 0 18px; font-size: 22px; line-height: 1.4; }
+.christmas-page .christmas-kids-answers p { margin: 0; line-height: 1.8; }
+.christmas-page .christmas-table-wrap { width: 100%; }
+.christmas-page table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; }
+.christmas-page caption { padding-bottom: 16px; color: #655d55; font-size: 12px; text-align: left; }
+.christmas-page th,
+.christmas-page td { padding: 20px 16px; border-bottom: 1px solid var(--xmas-line); vertical-align: top; overflow-wrap: anywhere; }
+.christmas-page thead th { border-top: 1px solid var(--xmas-line); color: var(--xmas-green); }
+.christmas-page tbody th { font-weight: 700; }
+.christmas-page td a { display: inline-flex; align-items: center; min-height: 44px; }
+.christmas-page .christmas-order { background: var(--xmas-bg); }
+.christmas-page .christmas-order-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin: 42px 0; }
+.christmas-page .christmas-order-fields > div { padding-top: 20px; border-top: 1px solid var(--xmas-line); }
+.christmas-page .christmas-order-fields dt { margin-bottom: 14px; color: var(--xmas-green); font-size: 20px; }
+.christmas-page .christmas-order-fields dd { margin: 0; }
+.christmas-page .christmas-workshop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; padding-top: 28px; border-top: 1px solid var(--xmas-line); }
+.christmas-page .christmas-workshop > div { max-width: 760px; }
+.christmas-page .christmas-workshop address { margin: 0 0 12px; font-size: 23px; font-style: normal; }
+.christmas-page .christmas-workshop p { margin: 0; }
+.christmas-page .christmas-workshop .christmas-kicker { margin-bottom: 18px; }
+.christmas-page .christmas-timeline { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px; margin: 48px 0 0; padding: 0; list-style: none; }
+.christmas-page .christmas-timeline li { position: relative; padding-top: 22px; border-top: 1px solid var(--xmas-line); }
+.christmas-page .christmas-timeline li:not(:last-child)::after { content: "→"; position: absolute; top: 18px; right: -22px; color: var(--xmas-red); }
+.christmas-page .christmas-timeline span { color: var(--xmas-green); font-family: "Pretendard", sans-serif; font-size: 18px; font-weight: 900; }
+.christmas-page .christmas-timeline p { margin: 16px 0 0; }
+.christmas-page .christmas-faq-section { border-top: 1px solid var(--xmas-line); }
+.christmas-page .christmas-faq details { border-bottom: 1px solid var(--xmas-line); }
+.christmas-page .christmas-faq details:first-child { border-top: 1px solid var(--xmas-line); }
+.christmas-page .christmas-faq summary { min-height: 64px; padding: 20px 0; cursor: pointer; font-weight: 700; }
+.christmas-page .christmas-faq details[open] summary { color: var(--xmas-green); }
+.christmas-page .christmas-faq details p { margin: 0; padding: 0 0 24px; line-height: 1.8; }
+.christmas-page .christmas-final { background: var(--xmas-red); color: var(--xmas-paper); }
+.christmas-page .christmas-final .showroom-wrap { position: relative; }
+.christmas-page .christmas-final .christmas-display { margin: 0 0 48px; color: var(--xmas-paper); font-size: clamp(90px, 12vw, 180px); }
+.christmas-page .christmas-final > div > .christmas-doodle { position: absolute; top: 24px; right: 12%; width: 100px; color: var(--xmas-paper); }
+.christmas-page .christmas-final h2 { color: inherit; font-size: 28px; }
+.christmas-page .christmas-final .christmas-button { border-color: var(--xmas-paper); background: var(--xmas-paper); color: var(--xmas-red) !important; }
+.christmas-page .christmas-signature { margin: 40px 0 0; font-size: 14px; }
+.christmas-page .showroom-footer { background: var(--xmas-green); color: var(--xmas-paper); }
+.christmas-page .showroom-footer p { color: var(--xmas-paper); }
+
+@media (max-width: 1050px) and (min-width: 761px) {
+  .christmas-page .christmas-hero-grid,
+  .christmas-page .christmas-editorial-grid { gap: 40px; }
+  .christmas-page .christmas-occasion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .christmas-page .christmas-hero { padding: 20px 0 48px; }
+  .christmas-page .christmas-breadcrumb { margin-bottom: 28px; font-size: 10px; }
+  .christmas-page .christmas-hero-grid,
+  .christmas-page .christmas-editorial-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .christmas-page .christmas-display { margin: 24px 0 0; font-size: clamp(78px, 24vw, 104px); }
+  .christmas-page .christmas-hero-main > .christmas-doodle { width: 42px; right: 0; top: 36px; }
+  .christmas-page .christmas-hero-copy > .christmas-doodle { display: none; }
+  .christmas-page .christmas-hero-copy { padding: 28px 22px 24px; }
+  .christmas-page .christmas-hero h1 { font-size: 25px; }
+  .christmas-page .christmas-hero-main { padding-top: 4px; }
+  .christmas-page .christmas-holiday-art--hat { top: 58px; left: -5px; width: 60px; }
+  .christmas-page .christmas-holiday-art--tree { top: 142px; right: 0; bottom: auto; width: 60px; }
+  .christmas-page .christmas-holiday-art--smile { top: 44px; right: 0; width: 40px; }
+  .christmas-page .christmas-hero-footer { margin-top: 26px; gap: 22px; }
+  .christmas-page .christmas-quick-picks { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .christmas-page .christmas-quick-picks a { padding: 8px 6px; gap: 4px; font-size: 11px; }
+  .christmas-page .christmas-hero-footer .christmas-handnote { margin-left: auto; }
+  .christmas-page .christmas-hero h1 { max-width: 100%; font-size: 26px; }
+  .christmas-page .christmas-actions { flex-direction: column; }
+  .christmas-page .christmas-button { width: 100%; }
+  .christmas-page .christmas-handnote { margin: 0; font-size: 20px; }
+  .christmas-page .christmas-section { padding-block: 52px; scroll-margin-top: 66px; }
+  .christmas-page .christmas-section h2 { font-size: 29px; }
+  .christmas-page .christmas-answer { margin-bottom: 28px; }
+  .christmas-page .christmas-product-list { margin-top: 38px; }
+  .christmas-page .christmas-product { grid-template-columns: minmax(0, 1fr); gap: 34px; padding: 14px 0 44px; scroll-margin-top: 66px; }
+  .christmas-page .christmas-product + .christmas-product { padding-top: 44px; }
+  .christmas-page .christmas-product-media { width: calc(100% - 16px); margin-inline: auto; }
+  .christmas-page .christmas-product:nth-child(2) .christmas-product-media,
+  .christmas-page .christmas-product:nth-child(2) .christmas-product-copy { order: initial; }
+  .christmas-page .christmas-product-copy h3 { margin-bottom: 18px; font-size: 32px; }
+  .christmas-page .christmas-product-line { font-size: 19px; }
+  .christmas-page .christmas-occasion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 18px; margin-top: 34px; }
+  .christmas-page .christmas-occasion-grid h3 { font-size: 21px; }
+  .christmas-page .christmas-occasion-grid .christmas-text-link { font-size: 12px; }
+  .christmas-page .christmas-editorial-grid .christmas-doodle { width: 90px; margin-top: 24px; }
+  .christmas-page .christmas-kids-answers { grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 34px; }
+  .christmas-page th,
+  .christmas-page td { padding: 16px 8px; font-size: 13px; }
+  .christmas-page .christmas-order-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 18px; }
+  .christmas-page .christmas-workshop address { font-size: 21px; }
+  .christmas-page .christmas-timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; margin-top: 34px; }
+  .christmas-page .christmas-timeline span { font-size: 15px; }
+  .christmas-page .christmas-timeline li:nth-child(2)::after { display: none; }
+  .christmas-page .christmas-timeline li:not(:last-child)::after { right: -18px; }
+  .christmas-page .christmas-final .christmas-display { margin-bottom: 36px; font-size: clamp(80px, 24vw, 106px); }
+  .christmas-page .christmas-final > div > .christmas-doodle { width: 42px; top: 12px; right: 0; }
+  .christmas-page .christmas-final h2 { font-size: 25px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .christmas-page .christmas-button,
+  .christmas-page .christmas-quick-picks a { transition: none; }
+  .christmas-page .christmas-button:hover,
+  .christmas-page .christmas-button:active { transform: none; }
+}

@@ -49,6 +49,11 @@ const dashboardEventMetadata = {
     type: "order",
     description: "외부 주문 페이지로 이동"
   },
+  store_shop_click: {
+    label: "온라인 스토어 구매 이동",
+    type: "order",
+    description: "nothingmatters.kr 온라인 스토어 구매 이동"
+  },
   consult_click: {
     label: "상담 클릭",
     type: "consult",

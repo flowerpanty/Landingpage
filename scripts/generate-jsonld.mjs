@@ -282,11 +282,12 @@ function getPageData(html, loc) {
     relatedProductPrimaryUrl: registryPage?.relatedProductPrimaryUrl || "",
     about: registryPage?.about || null,
     occasionLanding: registryPage?.occasionLanding || null,
+    giftLanding: registryPage?.giftLanding || null,
   };
 }
 
 function getPageType(page) {
-  if (page.occasionLanding) return "CollectionPage";
+  if (page.occasionLanding || page.giftLanding) return "CollectionPage";
   if (["primary-product", "search-landing"].includes(page.urlRole)) return "ProductPage";
   if (page.path === "/" || page.path === "/works/" || page.path === "/gimpo/" || page.path === "/order") return "CollectionPage";
   if (page.path === "/contact/") return "ContactPage";
@@ -380,7 +381,8 @@ function buildFaq(html, page) {
 }
 
 function buildItemList(page) {
-  const items = page.occasionLanding?.items?.map((item) => [item.name, item.url]) || ITEM_LISTS[page.path];
+  const collection = page.occasionLanding || page.giftLanding;
+  const items = collection?.items?.map((item) => [item.name, item.url]) || ITEM_LISTS[page.path];
   if (!items?.length) return null;
 
   return {
@@ -584,7 +586,13 @@ function buildSchema(html, loc) {
   const product = buildProduct(page);
   const service = buildService(page);
   const webPage = buildWebPage(page, breadcrumb, itemList, product, service);
-  const graph = [organization, localBusiness, website, webPage];
+  const flightInformation = page.path === "/gimpo-board/";
+  const publisher = flightInformation ? {
+    "@type": "Organization", "@id": ORGANIZATION_ID,
+    name: organization.name, alternateName: organization.alternateName,
+    url: organization.url, logo: organization.logo
+  } : organization;
+  const graph = [publisher, ...(!flightInformation ? [localBusiness] : []), website, webPage];
 
   if (breadcrumb) graph.push(breadcrumb);
   if (itemList) graph.push(itemList);
@@ -688,7 +696,7 @@ for (const loc of locs) {
       }
 
       const types = getGraphTypes(staticSchema);
-      for (const type of ["Organization", "Bakery", "WebSite", getPageType(getPageData(html, loc))]) {
+      for (const type of ["Organization", ...(new URL(loc).pathname === "/gimpo-board/" ? [] : ["Bakery"]), "WebSite", getPageType(getPageData(html, loc))]) {
         if (!types.has(type)) failures.push(`${relativePath}: missing ${type}`);
       }
 
@@ -718,7 +726,7 @@ for (const loc of locs) {
       }
       if (!getPageData(html, loc).h1) failures.push(`${relativePath}: missing h1`);
 
-      for (const type of ["Organization", "Bakery"]) {
+      for (const type of new URL(loc).pathname === "/gimpo-board/" ? [] : ["Organization", "Bakery"]) {
         const entity = staticSchema["@graph"].find((entry) => entry["@type"] === type);
         if (!entity?.sameAs?.includes("https://instagram.com/nothingmatters_c")) {
           failures.push(`${relativePath}: ${type} missing official Instagram sameAs`);

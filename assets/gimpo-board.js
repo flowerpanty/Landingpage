@@ -19,6 +19,8 @@
   const searchClose = document.getElementById("board-search-close");
   const searchDone = document.getElementById("board-search-done");
   const loader = document.getElementById("board-loader");
+  const todayDate = document.getElementById("today-arrivals-date");
+  const todayStatus = document.getElementById("today-arrivals-status");
   const flap = window.NmSplitFlap;
   const flights = window.NmGimpoFlights;
   const BANK_WIDTHS = { flight: 7, route: 16, time: 5, gate: 2, status: 10 };
@@ -31,7 +33,7 @@
   const dialog = document.getElementById("flight-detail");
   const detailFields = document.getElementById("detail-fields");
   const detailClose = document.getElementById("detail-close");
-  let type = "departure";
+  let type = "arrival";
   let rows = [];
   const rowElements = new Map();
   let currentMeta = null;
@@ -40,6 +42,7 @@
   let hasLoadedRows = false;
   let hasPlayedInitialEntrance = false;
   let initialFlight = flights.flightQuery();
+  let queriedOtherDirection = false;
   let searchTerm = "";
   let searchTimer;
   let extraPages = 0;
@@ -316,6 +319,12 @@
     updated.textContent = `UPDATED ${time}`;
     updated.dateTime = meta.updatedAt;
     const stale = meta.stale || meta.live !== true;
+    const observed = new Date(meta.updatedAt);
+    if (!Number.isNaN(observed.getTime())) {
+      todayDate.dateTime = observed.toLocaleDateString("en-CA", { timeZone: "Asia/Seoul" });
+      todayDate.textContent = observed.toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric" });
+    }
+    todayStatus.textContent = stale ? "마지막으로 확인된 정보 · 최신 자료 확인 중" : `한국공항공사 제공 자료 · 마지막 확인 ${time}`;
     setBadge(stale ? "STALE" : "LIVE");
     liveState.textContent = stale ? "LIVE DATA TEMPORARILY UNAVAILABLE" : "LIVE · 한국공항공사 항공편 정보";
     setNotice(stale ? "마지막으로 확인된 항공편 정보를 표시하고 있습니다." : "");
@@ -342,8 +351,9 @@
           initialFlight = "";
           const selected = rowElements.get(matching.id);
           if (selected) openDetail(matching, selected.querySelector("button"));
-        } else if (type === "departure") {
-          selectTab(tabs.find((tab) => tab.dataset.type === "arrival"));
+        } else if (!queriedOtherDirection) {
+          queriedOtherDirection = true;
+          selectTab(tabs.find((tab) => tab.dataset.type !== type));
         } else {
           initialFlight = "";
         }
@@ -355,10 +365,12 @@
     } catch {
       if (seq !== requestNumber) return;
       loader.hidden = true;
-      setBadge(rows.length ? "STALE" : "OFFLINE");
+      const hasCachedRows = rows.length > 0 || Boolean(rowsElement.querySelector("[data-server-flight]"));
+      setBadge(hasCachedRows ? "STALE" : "OFFLINE");
       liveState.textContent = "LIVE DATA TEMPORARILY UNAVAILABLE";
-      setNotice(rows.length ? "마지막으로 확인된 항공편 정보를 표시하고 있습니다." : "항공편 정보를 불러올 수 없습니다.", !rows.length);
-      if (!rows.length) render();
+      todayStatus.textContent = hasCachedRows ? "마지막으로 확인된 정보 · 최신 자료 확인 중" : "오늘 도착정보를 확인할 수 없습니다. 항공사·공항 안내를 확인하세요.";
+      setNotice(hasCachedRows ? "마지막으로 확인된 항공편 정보를 표시하고 있습니다." : "항공편 정보를 불러올 수 없습니다.", !rows.length);
+      if (!hasCachedRows) render();
     } finally {
       if (seq === requestNumber) refreshButton.disabled = false;
     }
@@ -419,10 +431,17 @@
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => { searchTerm = searchInput.value; extraPages = 0; render(); }, 180);
   });
-  searchOpen.addEventListener("click", () => {
+  let searchTrigger = searchOpen;
+  function openSearch(trigger) {
+    searchTrigger = trigger;
     searchSheet.showModal();
     if (mobileQuery.matches) searchClose.focus({ preventScroll: true });
     else searchInput.focus();
+  }
+  searchOpen.addEventListener("click", () => openSearch(searchOpen));
+  document.getElementById("board-arrival-search").addEventListener("click", event => {
+    selectTab(document.getElementById("arrivals-tab"));
+    openSearch(event.currentTarget);
   });
   searchClose.addEventListener("click", () => searchSheet.close());
   searchDone.addEventListener("click", () => {
@@ -432,7 +451,7 @@
     render();
     searchSheet.close();
   });
-  searchSheet.addEventListener("close", () => searchOpen.focus());
+  searchSheet.addEventListener("close", () => searchTrigger.focus());
   document.querySelectorAll('input[name="board-line"]').forEach((input) => input.addEventListener("change", () => {
     clearTimeout(searchTimer); searchTerm = searchInput.value; extraPages = 0; render();
   }));
@@ -447,5 +466,6 @@
   detailClose.addEventListener("click", () => dialog.close());
   dialog.addEventListener("close", () => lastTrigger?.focus());
   window.setInterval(() => { if (!document.hidden) load(); }, 60_000);
+  loader.hidden = Boolean(rowsElement.querySelector("[data-server-flight]"));
   load();
 })();
