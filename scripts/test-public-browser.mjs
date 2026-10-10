@@ -150,7 +150,7 @@ async function waitForJson(port) {
 
 async function evaluate(cdp, callbackSource) {
   const response = await cdp.command("Runtime.evaluate", {
-    expression: `JSON.stringify((${callbackSource})())`,
+    expression: `Promise.resolve((${callbackSource})()).then(JSON.stringify)`,
     awaitPromise: true,
     returnByValue: true
   });
@@ -158,6 +158,7 @@ async function evaluate(cdp, callbackSource) {
 }
 
 async function navigate(cdp, url) {
+  await cdp.command("Page.bringToFront");
   await cdp.command("Page.navigate", { url });
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const state = await evaluate(cdp, "() => ({ href: location.href, ready: document.readyState })");
@@ -382,6 +383,7 @@ async function verifyBoardAnswers(cdp, width) {
   const state = await evaluate(cdp, `() => {
     const board = document.querySelector('.board-shell').getBoundingClientRect();
     const today = document.getElementById('today-arrivals').getBoundingClientRect();
+    const gifts = document.querySelector('.board-arrival-gifts').getBoundingClientRect();
     const answer = document.querySelector('.board-arrival-answer').getBoundingClientRect();
     const collection = document.querySelector('.board-collection').getBoundingClientRect();
     const info = document.querySelector('.board-info').getBoundingClientRect();
@@ -390,7 +392,8 @@ async function verifyBoardAnswers(cdp, width) {
     return {
       width: innerWidth, documentWidth: document.documentElement.scrollWidth,
       sections: [...document.querySelector('main').children].map((node) => node.className),
-      todayBelowBoard: today.top >= board.bottom - 1,
+      giftsBelowBoard: gifts.top >= board.bottom - 1,
+      todayBelowGifts: today.top >= gifts.bottom - 1,
       answerBelowToday: answer.top >= today.bottom - 1,
       todayFits: today.left >= 0 && today.right <= innerWidth + 1,
       searchCopyFits: document.getElementById('board-flight-search-title').scrollWidth <= document.getElementById('board-flight-search-title').clientWidth + 1,
@@ -399,7 +402,7 @@ async function verifyBoardAnswers(cdp, width) {
       collectionBelowInfo: collection.top >= info.bottom - 1,
       footerBelowCollection: footer.top >= collection.bottom - 1,
       collectionFits: collection.left >= 0 && collection.right <= innerWidth + 1,
-      collectionLinks: [...document.querySelectorAll('.board-collection-links a')].map((link) => new URL(link.href).pathname),
+      collectionLinks: [...document.querySelectorAll('.board-collection .board-collection-links a')].map((link) => new URL(link.href).pathname),
       answers: [...document.querySelectorAll('.board-info-answers h3')].map((node) => node.textContent.trim()),
       faqCount: document.querySelectorAll('.board-info-questions details').length,
       faqClipped: text.filter((node) => node.scrollWidth > node.clientWidth + 1 || node.getBoundingClientRect().right > innerWidth + 1).map((node) => node.textContent.trim()),
@@ -407,8 +410,8 @@ async function verifyBoardAnswers(cdp, width) {
     };
   }`);
   assert.equal(state.width, width);
-  assert.deepEqual(state.sections, ["board-shell", "board-today", "board-arrival-answer", "board-info", "board-collection", "board-footer"], "today arrivals, answers and FAQ should precede the dessert collection");
-  assert.ok(state.documentWidth <= width && state.todayBelowBoard && state.answerBelowToday && state.todayFits && state.searchCopyFits && state.searchHeight >= 44 && state.infoBelowAnswer && state.collectionBelowInfo && state.footerBelowCollection && state.collectionFits, `board, today arrivals, answer, information, collection, and footer must remain ordered without overflow at ${width}px: ${JSON.stringify(state)}`);
+  assert.deepEqual(state.sections, ["board-shell", "board-arrival-gifts", "board-today", "board-arrival-answer", "board-info", "board-collection", "board-footer"], "today arrivals, answers and FAQ should precede the dessert collection");
+  assert.ok(state.documentWidth <= width && state.giftsBelowBoard && state.todayBelowGifts && state.answerBelowToday && state.todayFits && state.searchCopyFits && state.searchHeight >= 44 && state.infoBelowAnswer && state.collectionBelowInfo && state.footerBelowCollection && state.collectionFits, `board, today arrivals, answer, information, collection, and footer must remain ordered without overflow at ${width}px: ${JSON.stringify(state)}`);
   assert.deepEqual(state.collectionLinks, ["/gimpo/", "/gimpo/pickup/"], "collection should link to the dessert hub and pickup guidance");
   assert.deepEqual(state.answers, ["실시간 도착정보", "도착시간 확인", "운항상태 확인"]);
   assert.equal(state.faqCount, 8);
@@ -426,7 +429,7 @@ async function verifyBoardAnswers(cdp, width) {
       const range = document.createRange(); range.selectNodeContents(span);
       return [...range.getClientRects()].every((rect) => rect.left >= 0 && rect.right <= innerWidth + 1 && rect.bottom <= header.bottom + 1);
     });
-    return { count: document.querySelectorAll('h1').length, text: heading.textContent.trim(), visible: style.display !== 'none' && style.visibility === 'visible' && style.clip === 'auto' && bounds.width > 100 && bounds.height > 10 && bounds.top >= 0 && bounds.bottom <= header.bottom && bounds.bottom < innerHeight, textFits, headerHeight: header.height, answerAfterBoard: document.querySelector('.board-shell').nextElementSibling.id === 'today-arrivals' && document.getElementById('today-arrivals').nextElementSibling === answer, answerBelowPanel: answerBounds.top >= panel.bottom - 1, answerFits: answerBounds.left >= 0 && answerBounds.right <= innerWidth + 1, answerLength: answer.querySelector('p').textContent.length, link: answer.querySelector('a').getAttribute('href') };
+    return { count: document.querySelectorAll('h1').length, text: heading.textContent.trim(), visible: style.display !== 'none' && style.visibility === 'visible' && style.clip === 'auto' && bounds.width > 100 && bounds.height > 10 && bounds.top >= 0 && bounds.bottom <= header.bottom && bounds.bottom < innerHeight, textFits, headerHeight: header.height, answerAfterBoard: document.querySelector('.board-shell').nextElementSibling.className === 'board-arrival-gifts' && document.querySelector('.board-arrival-gifts').nextElementSibling.id === 'today-arrivals' && document.getElementById('today-arrivals').nextElementSibling === answer, answerBelowPanel: answerBounds.top >= panel.bottom - 1, answerFits: answerBounds.left >= 0 && answerBounds.right <= innerWidth + 1, answerLength: answer.querySelector('p').textContent.length, link: answer.querySelector('a').getAttribute('href') };
   }`);
   assert.equal(arrival.count, 1);
   assert.equal(arrival.text, "김포공항 도착정보·도착시간 실시간 항공편");
@@ -438,9 +441,11 @@ async function verifyBoardAnswers(cdp, width) {
     fs.writeFileSync(`/private/tmp/nothingmatters-gimpo-board-answer-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
     await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
   }
-  await evaluate(cdp, "() => { document.querySelector('.board-collection').scrollIntoView({ block: 'start', behavior: 'instant' }); return true; }");
-  await waitFor(cdp, "() => [...document.querySelectorAll('.board-collection-card img')].every((image) => image.complete && image.naturalWidth > 0)", "collection should reuse four working product photos");
-  const products = await evaluate(cdp, `() => [...document.querySelectorAll('.board-collection-card')].map((card) => {
+  await evaluate(cdp, "() => { document.querySelector('.board-arrival-gifts').scrollIntoView({ block: 'start', behavior: 'instant' }); return true; }");
+  await waitFor(cdp, "() => [...document.querySelectorAll('.board-gift-card img')].every((image) => image.complete && image.naturalWidth > 0)", "gift bridge should use three working original photos");
+  await cdp.command("Page.bringToFront");
+  await evaluate(cdp, "async () => { await Promise.all([...document.querySelectorAll('.board-gift-card img')].map(image => image.decode())); await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); return true; }");
+  const products = await evaluate(cdp, `() => [...document.querySelectorAll('.board-gift-card')].map((card) => {
     const rect = card.getBoundingClientRect();
     const image = card.querySelector('img');
     const texts = [...card.querySelectorAll('h3, p, span')];
@@ -450,21 +455,41 @@ async function verifyBoardAnswers(cdp, width) {
       top: rect.top, left: rect.left, right: rect.right, width: rect.width, height: rect.height,
       textFits: texts.every((node) => node.scrollWidth <= node.clientWidth + 1 && node.getBoundingClientRect().right <= rect.right),
       fontSize: parseFloat(getComputedStyle(card.querySelector('h3')).fontSize),
-      imageFits: getComputedStyle(image).objectFit === 'contain'
+      imageFits: getComputedStyle(image).objectFit === 'contain' && image.getBoundingClientRect().width > 100 && image.getBoundingClientRect().height > 100
     };
   })`);
   assert.deepEqual(products.map(({ name, href, src, alt }) => [name, href, src, alt]), [
     ["COOKIE FLIGHT", "/products/cookie-flight/", "../images/cookie-flight-box-open.jpg", "박스에 담긴 COOKIE FLIGHT 비행기 쿠키 4종"],
-    ["TERMINAL SAND COOKIE", "/products/terminal-sand-cookie/", "../images/terminal-hero-optimized.webp", "터미널을 모티브로 만든 샌드쿠키"],
-    ["AIRPLANE BUTTER COOKIE", "/products/airplane-cookie/", "../images/airplane-cookie-handheld.png", "손에 들고 있는 비행기 모양 버터쿠키"],
-    ["COOKIE CREW", "/cookie-crew/", "../images/cookie-crew-bear-poster.jpg", "곰돌이 쿠키와 패키지가 담긴 COOKIE CREW 포스터"]
+    ["TERMINAL", "/products/terminal-sand-cookie/", "../images/terminal-hero-optimized.webp", "터미널을 모티브로 만든 샌드쿠키"],
+    ["COOKIE CREW", "/cookie-crew/", "../images/cookie-crew/cookie-crew-gift-set.jpg", "COOKIE CREW 쿠키 패키지"]
   ]);
-  const columns = width <= 760 ? 2 : 4;
+  const columns = width <= 760 ? 1 : 3;
   assert.ok(products.slice(0, columns).every((card) => Math.abs(card.top - products[0].top) < 1), `collection should show ${columns} columns at ${width}px`);
-  if (columns === 2) assert.ok(products[2].top >= products[0].top + products[0].height, "mobile collection should use two compact rows");
-  assert.ok(products.every((card) => card.left >= 0 && card.right <= width + 1 && card.width >= 140 && card.height <= 400 && card.textFits && card.fontSize >= 13 && card.imageFits), `collection cards should be readable, compact, and unclipped at ${width}px: ${JSON.stringify(products)}`);
+  if (columns === 1) assert.ok(products[1].top >= products[0].top + products[0].height && products[2].top >= products[1].top + products[1].height, "mobile gifts should form one readable column");
+  assert.ok(products.every((card) => card.left >= 0 && card.right <= width + 1 && card.width >= 140 && card.height <= 540 && card.textFits && card.fontSize >= 13 && card.imageFits), `collection cards should be readable, compact, and unclipped at ${width}px: ${JSON.stringify(products)}`);
   for (const card of products) assert.equal(await request(server.baseUrl, card.href), 200, `collection product target should be available: ${card.href}`);
-  fs.writeFileSync(`/private/tmp/nm-gimpo-board-collection-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  fs.writeFileSync(`/private/tmp/nm-gimpo-board-gifts-${width}.png`, (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+  const compact = await evaluate(cdp, "() => ({ images: document.querySelectorAll('.board-collection img').length, cards: document.querySelectorAll('.board-collection article').length, height: document.querySelector('.board-collection').getBoundingClientRect().height, ctas: [...document.querySelectorAll('.board-arrival-gifts .board-collection-links a, .board-collection .board-collection-links a')].map(link => { const rect = link.getBoundingClientRect(); return { path: new URL(link.href).pathname, height: rect.height, fits: rect.left >= 0 && rect.right <= innerWidth + 1 && link.scrollWidth <= link.clientWidth + 1 }; }) })");
+  assert.equal(compact.images, 0);
+  assert.equal(compact.cards, 0);
+  assert.ok(compact.height < 340 && compact.ctas.length === 4 && compact.ctas.every(link => link.height >= 44 && link.fits), `compact lower CTA and both bridge destinations should fit at ${width}px: ${JSON.stringify(compact)}`);
+  await evaluate(cdp, "() => { const link = document.querySelector('.board-gift-card'); link.focus({ preventScroll: true }); return true; }");
+  await press(cdp, "Tab", 9);
+  assert.equal(await evaluate(cdp, "() => document.activeElement.dataset.analyticsLabel"), "gimpo-board-terminal", "gift cards should remain in keyboard order");
+  assert.ok(await evaluate(cdp, "() => document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 3"), "gift keyboard focus must be visible");
+  await waitFor(cdp, "() => typeof window.gtag === 'function'", "gift discovery should initialize the existing GA4 contract");
+  const clickEvents = await evaluate(cdp, "() => { const original = window.gtag; const events = []; window.gtag = (...args) => events.push(args); const links = [...document.querySelectorAll('.board-arrival-gifts a[data-analytics-event], .board-collection a[data-analytics-event]')]; for (const link of links) { link.addEventListener('click', event => event.preventDefault(), { once: true }); (link.querySelector('img') || link).click(); } window.gtag = original; return events; }");
+  assert.equal(clickEvents.length, 7, "each gift/hub/pickup click must emit exactly one existing event");
+  assert.deepEqual(clickEvents.map(([type, name, data]) => [type, name, data.event_label]), [
+    ["event", "product_click", "gimpo-board-cookie-flight"],
+    ["event", "product_click", "gimpo-board-terminal"],
+    ["event", "product_click", "gimpo-board-cookie-crew"],
+    ["event", "product_click", "gimpo-board-gift-hub"],
+    ["event", "guide_click", "gimpo-board-pickup"],
+    ["event", "product_click", "gimpo-board-gift-hub"],
+    ["event", "guide_click", "gimpo-board-pickup"]
+  ]);
+  assert.ok(clickEvents.every(([, , data]) => data.event_category === "conversion_signal" && data.transport_type === "beacon" && data.page_path === "/gimpo-board/" && data.link_url.startsWith(server.baseUrl) && data.link_text.length <= 80));
   await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
 }
 
@@ -788,7 +813,7 @@ try {
   assert.ok(mobileMotion.duration <= 500 && mobileMotion.banks > 0 && mobileMotion.slotFlips === 0 && mobileMotion.flipping === 0 && mobileMotion.entering === 0, `mobile bank entrance must finish within 500ms without slot flips: ${JSON.stringify(mobileMotion)}`);
   await evaluate(cdp, "() => { document.getElementById('departures-tab').click(); return true; }");
   await waitFor(cdp, "() => document.querySelectorAll('#flight-rows tr[data-flight-id]').length === 4", "DEPARTURES should retain all existing flight interactions");
-  const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.board-collection-links a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
+  const boardMobile = await evaluate(cdp, "() => { const row = [...document.querySelectorAll('#flight-rows tr[data-flight-id]')].find((item) => item.querySelector('.flight-number')?.getAttribute('aria-label').includes('RS901')); const route = row.querySelector('[data-field=route]'); const slot = route.querySelector('.flap-slot'); const sweet = document.querySelector('.board-marquee-copy p'); return { title: document.querySelector('h1')?.textContent.trim(), rows: document.querySelectorAll('#flight-rows tr[data-flight-id]').length, columns: [...document.querySelectorAll('.flight-table th')].filter((th) => getComputedStyle(th).display !== 'none').map((th) => th.textContent.trim()), links: [...document.querySelectorAll('.board-collection .board-collection-links a')].map((a) => new URL(a.href).pathname), route: route.querySelector('.flap-bank').dataset.value, routeKorean: route.querySelector('.route-korean').textContent, halves: [...slot.children].map((part) => part.className), grid: getComputedStyle(row).display, sound: document.getElementById('board-sound').getAttribute('aria-pressed'), headerHeight: document.querySelector('.board-header').getBoundingClientRect().height, boardTop: document.querySelector('.board-shell').getBoundingClientRect().top, sweetFlow: getComputedStyle(sweet).position === 'static', sweetOffset: sweet.getBoundingClientRect().top - document.querySelector('.board-marquee-title-line').getBoundingClientRect().bottom, planeFilter: getComputedStyle(document.querySelector('.board-plane-departure')).filter, searchInControls: Boolean(document.querySelector('.board-controls #flight-search')), documentWidth: document.documentElement.scrollWidth, viewport: innerWidth }; }");
   assert.equal(boardMobile.title, "김포공항 도착정보·도착시간 실시간 항공편");
   assert.equal(boardMobile.rows, 4);
   await verifyBoardAnswers(cdp, 390);

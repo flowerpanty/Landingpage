@@ -581,17 +581,31 @@ for (const [pathname, h1] of kimpoGuides) {
 for (const href of ["/gimpo/pickup/", "/gimpo/"]) {
   assert.ok(boardHtml.includes(`href="${href}"`), `flight board should link to ${href}`);
 }
-const boardSectionOrder = ["board-shell", "board-today", "board-arrival-answer", "board-info", "board-collection", "board-footer"].map((name) => boardHtml.indexOf(`class="${name}"`));
+const boardSectionOrder = ["board-shell", "board-arrival-gifts", "board-today", "board-arrival-answer", "board-info", "board-collection", "board-footer"].map((name) => boardHtml.indexOf(`class="${name}"`));
 assert.ok(boardSectionOrder.every((position, index) => position >= 0 && (index === 0 || position > boardSectionOrder[index - 1])), "flight board, answer, collection, information, and footer must follow DOM order");
 assert.doesNotMatch(boardHtml, /BEFORE YOU BOARD|class="brand-section"|쿠키도 챙겨가세요/);
 const boardCollection = boardHtml.match(/<section class="board-collection"[\s\S]*?<\/section>/)?.[0] || "";
-assert.match(boardCollection, /GIMPO DESSERT COLLECTION/);
-assert.match(boardCollection, /항공편 확인 후,<br>김포공항 근처 쿠키도 살펴보세요/);
-assert.match(boardCollection, /김포공항 내부 매장이 아니라 서울 강서구 공항동·송정역 인근/);
-const productCardIdentity = (html) => [...html.matchAll(/<article><a[^>]*href="([^"]+)"[^>]*>[\s\S]*?<img src="([^"]+)" alt="([^"]+)"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>[\s\S]*?<\/article>/g)].map((match) => [match[4], match[1], match[2], match[3]]);
-const hubDessert = gimpoHtml.match(/<section class="hub-group hub-dessert"[\s\S]*?<\/section>/)?.[0] || "";
-assert.equal(productCardIdentity(boardCollection).length, 4, "board collection must show exactly four products");
-assert.deepEqual(productCardIdentity(boardCollection), productCardIdentity(hubDessert), "board collection must reuse the hub's actual products, images, and alt text in order");
+assert.match(boardCollection, /BEFORE YOU GO/);
+assert.match(boardCollection, /김포공항 근처에서<br>선물을 찾고 있다면/);
+assert.doesNotMatch(boardCollection, /<img|<article|board-collection-products/, "lower CTA must not duplicate the product grid");
+assert.match(boardCollection, /href="\/gimpo\/"/);
+assert.match(boardCollection, /href="\/gimpo\/pickup\/"/);
+const boardGifts = boardHtml.match(/<section class="board-arrival-gifts"[\s\S]*?<\/section>/)?.[0] || "";
+assert.match(boardGifts, /ARRIVAL GIFT PICK/);
+assert.match(boardGifts, /마중 가는 길,<br>빈손은 조금 아쉬우니까/);
+assert.match(boardGifts, /김포공항 내부 매장이 아니라 공항동·송정역 인근 예약 픽업 작업실/);
+const productCardIdentity = html => [...html.matchAll(/<article><a[^>]*href="([^"]+)"[^>]*>[\s\S]*?<img src="([^"]+)" alt="([^"]+)"[^>]*>[\s\S]*?<h3>([^<]+)<\/h3>[\s\S]*?<\/article>/g)].map(match => [match[4],match[1],match[2],match[3]]);
+assert.deepEqual(productCardIdentity(boardGifts), [
+  ["COOKIE FLIGHT", "/products/cookie-flight/", "../images/cookie-flight-box-open.jpg", "박스에 담긴 COOKIE FLIGHT 비행기 쿠키 4종"],
+  ["TERMINAL", "/products/terminal-sand-cookie/", "../images/terminal-hero-optimized.webp", "터미널을 모티브로 만든 샌드쿠키"],
+  ["COOKIE CREW", "/cookie-crew/", "../images/cookie-crew/cookie-crew-gift-set.jpg", "COOKIE CREW 쿠키 패키지"]
+], "exactly three actual featured gifts must follow the board");
+assert.doesNotMatch(boardGifts, /AIRPLANE BUTTER COOKIE|\d[,.]?[\d,]*원|무료배송|택배/, "bridge must not invent additional goods/prices/shipping");
+assert.equal((boardGifts.match(/loading="lazy"/g) || []).length,3,"gift photos must not compete with the board's first render");
+for (const label of ["cookie-flight","terminal","cookie-crew","gift-hub","pickup"]) assert.ok(boardGifts.includes(`data-analytics-label="gimpo-board-${label}"`));
+assert.equal((boardGifts.match(/data-analytics-event="product_click"/g)||[]).length,4);
+assert.equal((boardGifts.match(/data-analytics-event="guide_click"/g)||[]).length,1);
+assert.match(boardHtml, /defer src="..\/assets\/gimpo-board-analytics\.js/);
 assert.match(boardHtml, /class="board-info"[\s\S]*?김포공항 도착정보와 운항상태 확인[\s\S]*?한국공항공사 제공 자료/);
 for (const term of ["김포공항 도착정보", "김포공항 도착시간", "김포공항 출발정보", "출발시간"]) {
   assert.ok(boardHtml.includes(term), `flight board should answer ${term}`);
