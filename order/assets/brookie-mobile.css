@@ -7,13 +7,27 @@
 .order-confirm-quote-active #floatingNext { grid-column: 1 / -1; width: 100%; min-height: 56px; white-space: normal; line-height: 1.5; padding: 10px 14px; }
 .order-confirm-quote-active #floatingNext::after { content: none; }
 @media (max-width: 600px) {
+  html, body { overflow-x: clip; overflow-y: visible; }
   body { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
-  .builderHero { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 16px; padding: 14px 12px 24px; }
+  html { scroll-padding-top: calc(var(--brookie-mobile-sticky-top, 0px) + var(--brookie-mobile-preview-height, 0px) + 12px); scroll-padding-bottom: calc(var(--brookie-mobile-footer-height, 0px) + 12px); }
+  .builderHero.stepPage.active { display: block !important; overflow: visible; padding: 14px 12px 24px; }
   .builderHero .intro, .builderProgress, .mobileBuilderStage, .mobileStageAction { display: none !important; }
-  .builderHero .previewWrap { grid-row: 1; }
-  .builderHero .panel { grid-row: 2; gap: 16px; }
-  .builderHero .preview { width: min(100%, 300px) !important; aspect-ratio: 1; }
-  .mobilePreviewSummary { display: block; margin: 10px 0 0; text-align: center; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+  .builderHero .previewWrap {
+    position: sticky;
+    top: var(--brookie-mobile-sticky-top, 0px);
+    z-index: 30;
+    padding: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fffdf7;
+    box-shadow: 0 4px 12px rgba(18,15,14,.08);
+  }
+  .builderHero .previewWrap::before { content: none; }
+  .builderHero .panel { gap: 16px; }
+  .builderHero .preview { width: min(52vw, 210px) !important; aspect-ratio: 1; border-radius: 14px; }
+  .mobilePreviewSummary { display: block; margin: 6px 0 0; text-align: center; font-size: 12px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .builderHero [data-builder-panel], .builderHero input, .builderHero button { scroll-margin-top: calc(var(--brookie-mobile-sticky-top, 0px) + var(--brookie-mobile-preview-height, 0px) + 12px); }
   .panel .miniCard { padding: 14px; border-radius: 16px; }
   [data-builder-panel] .stepHead { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .stepTitle { font-size: 16px; }

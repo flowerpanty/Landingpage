@@ -2521,7 +2521,7 @@
 
   </style>
   <link rel="stylesheet" href="/order/assets/order-confirmation.css?v=ca649d9344b6" />
-  <link rel="stylesheet" href="/order/assets/brookie-mobile.css?v=f7f47bc5c4e6" />
+  <link rel="stylesheet" href="/order/assets/brookie-mobile.css?v=7a3653365e85" />
 </head>
 <body>
   <a class="skipLink" href="#top">본문으로 건너뛰기</a>
@@ -2731,7 +2731,7 @@
           <div class="comboList" id="comboList" aria-live="polite"></div>
           <div class="mobileComboActions" id="mobileComboActions" hidden>
             <button class="btn" id="comboAnother" type="button">+ 다른 조합 추가</button>
-            <button class="btn yellow" id="comboNext" type="button">추가 옵션 확인하기 →</button>
+            <button class="btn yellow" id="comboNext" type="button">다음으로 넘어가기 →</button>
           </div>
         </section>
       </aside>
@@ -3213,7 +3213,7 @@
       $("noText").setAttribute("aria-pressed", String(!state.heartTextEnabled));
       $("withText").setAttribute("aria-pressed", String(state.heartTextEnabled));
       $("selectedName").textContent = `현재 선택 · ${nameOf(chars, state.character)} · ${comboHeartLabel(currentCombo())} · ${nameOf(papers, state.paper)}`;
-      $("mobilePreviewSummary").textContent = $("selectedName").textContent;
+      $("mobilePreviewSummary").textContent = `${nameOf(chars, state.character)} · ${state.heartTextEnabled ? (state.heartText || '문구 추가') : '기본 하트'} · ${state.paper === 'custom' ? '커스텀 종이' : nameOf(papers, state.paper)}`;
       renderBuilderProgress();
       renderComboPanel();
       requestAnimationFrame(() => {
@@ -3856,13 +3856,14 @@ ${custom ? `${custom}\n` : ""}
     }
 
     function floatingNextLabel() {
+      const mobile = window.matchMedia('(max-width: 600px)').matches;
       if (activeStep === 1) {
         if (!state.items.length) return window.matchMedia('(max-width: 600px)').matches ? "조합 담기" : "먼저 이 조합을 담아주세요";
         if (!hasMinimumOrderQty()) return `${minimumQtyRemaining()}개 더 담아주세요`;
-        return "추가 옵션 확인하기 →";
+        return mobile ? "다음으로 넘어가기 →" : "추가 옵션 확인하기 →";
       }
-      if (activeStep === 2) return "고객 정보 입력하기 →";
-      if (activeStep === 3) return "견적 내용 확인하기 →";
+      if (activeStep === 2) return mobile ? "다음으로 넘어가기 →" : "고객 정보 입력하기 →";
+      if (activeStep === 3) return mobile ? "다음으로 넘어가기 →" : "견적 내용 확인하기 →";
       return window.NMOrderConfirmation.ctaLabel(false);
     }
 
@@ -4194,6 +4195,43 @@ ${custom ? `${custom}\n` : ""}
       track: (event, params) => window.NMOrderConfirmation.safeTrack(event, { product: 'brookie', ...params }),
     });
 
+    function setupMobileStickyPreview() {
+      const mobile = window.matchMedia('(max-width: 600px)');
+      const header = document.querySelector('.siteHeader');
+      const preview = document.querySelector('.builderHero .previewWrap');
+      const footer = $('floatingSummary');
+      let observer;
+      const measure = () => {
+        if (!mobile.matches) return;
+        document.documentElement.style.setProperty('--brookie-mobile-sticky-top', `${header.getBoundingClientRect().height}px`);
+        const height = preview.getBoundingClientRect().height;
+        document.documentElement.style.setProperty('--brookie-mobile-preview-height', `${height}px`);
+        document.documentElement.style.setProperty('--brookie-mobile-footer-height', `${footer.getBoundingClientRect().height}px`);
+      };
+      const sync = () => {
+        if (mobile.matches) {
+          observer ||= new ResizeObserver(measure);
+          observer.observe(header);
+          observer.observe(preview);
+          observer.observe(footer);
+          measure();
+        } else {
+          observer?.disconnect();
+        }
+        updateFloatingSummary();
+      };
+      mobile.addEventListener('change', sync);
+      document.addEventListener('focusin', (event) => {
+        const target = event.target;
+        if (!mobile.matches || activeStep !== 1 || !(target instanceof HTMLElement) ||
+            !target.closest('.builderHero') || !target.matches('input, button:focus-visible')) return;
+        requestAnimationFrame(() => {
+          if (target.isConnected) target.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+        });
+      });
+      sync();
+    }
+
     function init() {
       const minDate = tomorrow();
       state.date = minDate;
@@ -4383,6 +4421,7 @@ ${custom ? `${custom}\n` : ""}
       renderAddons();
       draw();
       updateFloatingSummary();
+      setupMobileStickyPreview();
     }
 
     /* ── Dark Mode ── */

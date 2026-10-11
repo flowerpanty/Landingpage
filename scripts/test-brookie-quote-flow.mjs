@@ -103,4 +103,21 @@ assert.equal(vm.runInContext('state.items.length', sandbox), 2);
 vm.runInContext('state.items[0].qty=5;state.items[1].qty=6;', sandbox);
 assert.equal(vm.runInContext('validateQuote()', sandbox), false);
 assert.equal(vm.runInContext('activeStep', sandbox), 1);
+// Mobile CTA labels change only after minimum quantity; desktop labels stay intact.
+vm.runInContext('state.items=[];activeStep=1;', sandbox);
+assert.equal(vm.runInContext('floatingNextLabel()', sandbox), '조합 담기');
+vm.runInContext('state.items=[{character:"bear",paper:"navy",qty:8}];', sandbox);
+assert.equal(vm.runInContext('floatingNextLabel()', sandbox), '4개 더 담아주세요');
+vm.runInContext('state.items[0].qty=12;', sandbox);
+for (const step of [1, 2, 3]) {
+  vm.runInContext(`activeStep=${step}`, sandbox);
+  assert.equal(vm.runInContext('floatingNextLabel()', sandbox), '다음으로 넘어가기 →');
+}
+vm.runInContext('activeStep=4', sandbox);
+assert.equal(vm.runInContext('floatingNextLabel()', sandbox), '견적서 받고 카카오톡에서 주문 확정하기 →');
+sandbox.window.matchMedia = () => ({ matches: false });
+for (const [step, label] of [[1, '추가 옵션 확인하기 →'], [2, '고객 정보 입력하기 →'], [3, '견적 내용 확인하기 →']]) {
+  vm.runInContext(`activeStep=${step}`, sandbox);
+  assert.equal(vm.runInContext('floatingNextLabel()', sandbox), label);
+}
 console.log('Brookie actual page: all panels, minimum 12, unchanged multi-combo pricing, optional/invalid email, save → email → PNG → Kakao, failure/retry, duplicate/concurrent protection: PASS');
