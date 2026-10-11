@@ -1986,7 +1986,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (requestUrl.pathname === "/api/landing-orders") {
+  if (requestUrl.pathname === "/api/landing-orders" || /^\/api\/orders\/[A-Za-z0-9_-]+\/email-quote$/.test(requestUrl.pathname)) {
     await handleOrderApi(req, res);
     return;
   }

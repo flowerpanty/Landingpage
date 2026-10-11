@@ -4,7 +4,7 @@
   "importedAt": "2026-10-06",
   "sourceFiles": {
     "order.html": "db1d4156acc4cf545ae454117ac4f54eaa01fe60fef34c52d7d84e3108208dda",
-    "brookie.html": "584b7a09fd94180d0e08c02b8dac004285c607a1520a4ca1326366c0cd910103",
+    "brookie.html": "7ac942359f1fc6dca69bd9a281604b6ad07097dc364736d9d9f4ebe4651cf190",
     "cookies.html": "d76eae6bde7a39079fa2f7ee208beece2a9cd59710e06799edfea319a1c82e13",
     "lucky.html": "67dacffc5a043ba24e8d05cd1775c6ba77edf36fbbb0fde145274020de703609",
     "cookie-flight.html": "530f50b6a58b6463f0c79e5c0a268647e03b9a56667281aeabc5c3999099550c",
@@ -15,8 +15,25 @@
     "order-core.js": "d981c0333e61e273b3c94a61a37b17fd0dbcf2b713df82ef8469a33b9a0ac355",
     "order-confirmation.css": "ca649d9344b65e5ce42512b6d44570465f0b88233cd067d0890135ea004a11ec",
     "order-confirmation.js": "6ccdf914c658746313134aa0a9eeb61ac3ade7415ff7c0c9b967ea002a7eb73f",
-    "landing-quote.js": "7322caff8e5af6169778ae5e78a9db7800c643cfe8803a04df267699c6cf9252",
+    "landing-quote.js": "7395b88324d685b8d6480e2d3d87df0f96381da5ce312d20a44a006941b5a881",
     "new-product-order.css": "6e19cbe3f1953dc6153482f0d749b39c7fc275e60c08d4d834a9c9d765bf97a2",
-    "new-product-order.js": "4cf3e5a1f158a70cc55bad1f69274fff189ecf70d50993549fce7b654e56456d"
+    "new-product-order.js": "4cf3e5a1f158a70cc55bad1f69274fff189ecf70d50993549fce7b654e56456d",
+    "brookie-mobile.css": "f7f47bc5c4e62bedf0d80b36458e3dce9eaca8326b36a5a1b55b458a3e501e0f",
+    "brookie-quote.js": "ed7c0840b72954c60eede9e14fbcd7b87ea34cd7718aafd512cfd2b5994a648e"
+  },
+  "brookieImport": {
+    "repository": "flowerpanty/ThingMattersReserve",
+    "commit": "e47cfb72394de4ff56c466a589748150f321b665",
+    "sourceFiles": {
+      "order.css": "995f827dee1f1f630fbe23f15c3e291c66bd9a4641d088e9cef4cd9887585e7e",
+      "order-confirmation.css": "ca649d9344b65e5ce42512b6d44570465f0b88233cd067d0890135ea004a11ec",
+      "order-confirmation.js": "6ccdf914c658746313134aa0a9eeb61ac3ade7415ff7c0c9b967ea002a7eb73f",
+      "order-core.js": "d981c0333e61e273b3c94a61a37b17fd0dbcf2b713df82ef8469a33b9a0ac355",
+      "landing-quote.js": "7395b88324d685b8d6480e2d3d87df0f96381da5ce312d20a44a006941b5a881",
+      "brookie-mobile.css": "f7f47bc5c4e62bedf0d80b36458e3dce9eaca8326b36a5a1b55b458a3e501e0f",
+      "brookie-quote.js": "ed7c0840b72954c60eede9e14fbcd7b87ea34cd7718aafd512cfd2b5994a648e",
+      "brookie.html": "7ac942359f1fc6dca69bd9a281604b6ad07097dc364736d9d9f4ebe4651cf190"
+    },
+    "deployedHtmlSha256": "a21e308c56ec031898d771997670e9e84e0b0d5da9daa4a759d437590c6dc3f1"
   }
 }

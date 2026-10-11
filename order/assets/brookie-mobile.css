@@ -1,0 +1,58 @@
+/* Builder changes are restricted to mobile; desktop uses the original styles. */
+.mobileComboSummary, .mobileComboActions, .mobilePreviewSummary, .qtyMinus { display: none; }
+.brookie-email-status { margin: 12px 0; padding: 14px; border-radius: 12px; background: #edf8f0; color: #264c36; overflow-wrap: anywhere; }
+.brookie-email-status.is-error { background: #fff7df; color: #713e13; }
+.brookie-email-status[hidden] { display: none; }
+#brookieEmailRetry[hidden] { display: none !important; }
+.order-confirm-quote-active #floatingNext { grid-column: 1 / -1; width: 100%; min-height: 56px; white-space: normal; line-height: 1.5; padding: 10px 14px; }
+.order-confirm-quote-active #floatingNext::after { content: none; }
+@media (max-width: 600px) {
+  body { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+  .builderHero { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 16px; padding: 14px 12px 24px; }
+  .builderHero .intro, .builderProgress, .mobileBuilderStage, .mobileStageAction { display: none !important; }
+  .builderHero .previewWrap { grid-row: 1; }
+  .builderHero .panel { grid-row: 2; gap: 16px; }
+  .builderHero .preview { width: min(100%, 300px) !important; aspect-ratio: 1; }
+  .mobilePreviewSummary { display: block; margin: 10px 0 0; text-align: center; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+  .panel .miniCard { padding: 14px; border-radius: 16px; }
+  [data-builder-panel] .stepHead { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .stepTitle { font-size: 16px; }
+  .stepHint { max-width: 100%; font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
+  .stepBadge { width: 24px; height: 24px; font-size: 12px; }
+  .row.characters, #papers { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; padding: 4px 2px 10px; }
+  .charPill { flex: 0 0 82px; min-height: 106px; padding: 6px; border-radius: 14px; scroll-snap-align: start; }
+  .charPill img { width: 100%; height: 62px; object-fit: contain; }
+  .charPill span { display: block; font-size: 12px; }
+  .charPill .premium { font-size: 10px; }
+  .charPill[aria-pressed="true"], .paperPill[aria-pressed="true"] { border: 3px solid var(--blue); box-shadow: 0 0 0 2px rgba(36,84,214,.12); }
+  .paperPill { flex: 0 0 auto; min-height: 48px; padding: 8px 12px; gap: 7px; font-size: 13px; scroll-snap-align: start; }
+  .paperPill.custom .pillText { font-size: 12px; }
+  .paperPill .pillSwatch { width: 18px; height: 18px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .seg .pill { flex: 1 1 auto; min-height: 48px; font-size: 13px; padding: 10px; }
+  .helper, .customNote, .cartHint, .metaHint { font-size: 12px; line-height: 1.6; }
+  .customInputs { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  #heartText, .customInputs input { height: 48px; font-size: 16px; }
+  .qtyMinus { display: inline-flex; align-items: center; justify-content: center; }
+  .comboQuantity .countBox { display: flex; gap: 10px; }
+  .comboQuantity .plus { flex: 0 0 48px; height: 48px; }
+  .comboQuantity #qty { height: 48px; }
+  .mobileComboSummary { display: block; margin: 16px 0 12px; padding: 14px; border: 1px solid #b9c9ed; border-radius: 12px; background: #f4f7ff; }
+  .mobileComboSummary h3 { margin: 0 0 12px; font-size: 15px; }
+  .mobileComboSummary dl { display: grid; grid-template-columns: 62px minmax(0,1fr); gap: 8px; margin: 0; font-size: 13px; }
+  .mobileComboSummary dt { color: var(--muted); }
+  .mobileComboSummary dd { margin: 0; text-align: right; font-weight: 700; overflow-wrap: anywhere; }
+  .comboAddButton, .mobileComboActions .btn { min-height: 48px; white-space: normal; font-size: 14px; }
+  .mobileComboActions:not([hidden]) { display: grid; gap: 10px; margin-top: 14px; }
+  .comboItem { gap: 8px; }
+  .comboItem > div { min-width: 0; overflow-wrap: anywhere; }
+  .comboRemove { min-width: 44px; min-height: 44px; }
+  .floatingInner { grid-template-columns: minmax(0,1fr) auto !important; }
+  .floatingCart { grid-column: 1; min-width: 0; }
+  .floatingCart strong { font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
+  #floatingCartDetail { display: block; font-size: 11px; white-space: normal; }
+  .floatingBack { grid-column: 2; grid-row: 1; min-width: 44px; }
+  #floatingNext { grid-column: 1 / -1; min-height: 48px; width: 100%; font-size: 14px; white-space: normal; }
+  #floatingNext::after { content: none; }
+  .quoteDetailLine { flex-wrap: wrap; }
+}

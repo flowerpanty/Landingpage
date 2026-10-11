@@ -185,7 +185,7 @@
     return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('견적서 이미지 생성에 실패했어요. 다시 시도해 주세요.')), 'image/png'));
   }
 
-  async function provideImage(blob, filename, data) {
+  async function provideImage(blob, filename, data, options = {}) {
     const file = new File([blob], filename, { type: 'image/png' });
     try {
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
@@ -193,7 +193,7 @@
           await navigator.share({ title: data.documentTitle, text: data.documentTitle, files: [file] });
           return 'share';
         } catch (error) {
-          if (error.name === 'AbortError') return 'share_cancelled';
+          if (error.name === 'AbortError' && !options.downloadOnCancel) return 'share_cancelled';
           // Sharing can become unavailable after the asynchronous order save.
         }
       }
@@ -240,6 +240,7 @@
           if (!directConsult && !record.image) record.image = await options.createImage(record.data);
           if (!record.filename) record.filename = `nothingmatters-${options.fileSlug}-${record.data.pricingPending ? 'consult' : 'quote'}-${Date.now()}.png`;
           options.onSaved?.(record);
+          await options.beforeProvide?.(record);
           if (!directConsult) {
             const method = await options.provideImage(record.image, record.filename, record.data);
             safeTrack(method === 'download' ? 'quote_download' : 'quote_share', { order_id: record.result.orderId, cancelled: method === 'share_cancelled' });

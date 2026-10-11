@@ -21,7 +21,11 @@ const upstream = http.createServer(async (req, res) => {
   const payload = JSON.parse(body);
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Set-Cookie", "nm.sid=upstream-admin-session; HttpOnly");
-  if (payload.source === "error") {
+  if (/^\/api\/orders\/[^/]+\/email-quote$/.test(req.url)) {
+    const status = payload.email === 'failure@example.com' ? 503 : 200;
+    res.writeHead(status);
+    res.end(JSON.stringify(status === 200 ? { success: true, maskedEmail: 'te***@example.com' } : { message: '주문 요청은 저장됐지만 이메일 견적을 보내지 못했어요.' }));
+  } else if (payload.source === "error") {
     res.writeHead(400);
     res.end(JSON.stringify({ success: false, message: "주문할 상품을 선택해주세요." }));
   } else if (payload.source === "disconnect") {
@@ -73,6 +77,13 @@ try {
     const response = await fetch(`${base}${pathname}`, { redirect: "manual" });
     assert.equal(response.status, 200, pathname);
     const page = await response.text();
+    if (product.slug === 'brookie') {
+      assert.match(page, /brookie-mobile\.css\?v=[a-f0-9]{12}/);
+      assert.match(page, /brookie-quote\.js\?v=[a-f0-9]{12}/);
+      assert.match(page, /id="customerEmail"/);
+      assert.match(page, /이메일을 입력하면 견적서도 메일로 보내드려요/);
+      assert.doesNotMatch(page, /문구 선택 완료|포장 선택 완료|renderMobileBuilderStage/);
+    }
     assert.ok(page.includes(`href="https://nothingmatters.co.kr${product.detailUrl}"`), `${pathname} canonical should point to its existing product detail`);
     for (const match of page.matchAll(/(?:src|href)=["'](\/order\/assets\/[^"']+)["']/g)) {
       if (match[1].includes("${")) continue;
@@ -107,6 +118,31 @@ try {
   assert.equal(calls[0].headers.cookie, undefined);
   assert.equal(calls[0].headers.authorization, undefined);
 
+  const emailPath = '/api/orders/saved-order-id/email-quote';
+  const capability = 'a'.repeat(64);
+  response = await fetch(base + emailPath, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://nothingmatters.co.kr', Authorization: `Bearer ${capability}`, Cookie: 'nm.sid=private' }, body: JSON.stringify({ email: 'test@example.com' }) });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).success, true);
+  assert.equal(response.headers.get('set-cookie'), null);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.equal(calls.at(-1).path, emailPath);
+  assert.equal(calls.at(-1).headers.authorization, `Bearer ${capability}`);
+  assert.equal(calls.at(-1).headers.cookie, undefined);
+  const beforeRejectedEmail = calls.length;
+  for (const [headers, status] of [
+    [{ Authorization: 'Bearer bad' }, 403],
+    [{ Authorization: `Bearer ${capability}`, Origin: 'https://unrelated.example' }, 403],
+    [{ Authorization: `Bearer ${capability}`, 'Sec-Fetch-Site': 'cross-site' }, 403],
+  ]) {
+    const rejected = await fetch(base + emailPath, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: '{}' });
+    assert.equal(rejected.status, status);
+  }
+  assert.equal(calls.length, beforeRejectedEmail);
+  response = await fetch(base + emailPath, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${capability}` }, body: JSON.stringify({ email: 'failure@example.com' }) });
+  assert.equal(response.status, 503);
+  assert.equal(calls.length, beforeRejectedEmail + 1, 'email provider failure must not retry or create an order');
+  assert.equal((await fetch(base + '/api/orders/saved-order-id/quote-excel')).status, 404);
+  assert.equal((await fetch(base + '/api/orders/saved-order-id')).status, 404);
   response = await post({ source: "error" });
   assert.equal(response.status, 400);
   assert.equal((await response.json()).message, "주문할 상품을 선택해주세요.");

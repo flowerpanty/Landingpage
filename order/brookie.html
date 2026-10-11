@@ -104,7 +104,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/order/assets/order.css" />
+  <link rel="stylesheet" href="/order/assets/order.css?v=995f827dee1f" />
   <style>
     :root {
       --ink: #30343b;
@@ -2520,6 +2520,8 @@
     }
 
   </style>
+  <link rel="stylesheet" href="/order/assets/order-confirmation.css?v=ca649d9344b6" />
+  <link rel="stylesheet" href="/order/assets/brookie-mobile.css?v=f7f47bc5c4e6" />
 </head>
 <body>
   <a class="skipLink" href="#top">본문으로 건너뛰기</a>
@@ -2565,6 +2567,12 @@
               <span>핸드폰번호 *</span>
               <input id="customerPhone" type="tel" placeholder="010-1234-5678" autocomplete="tel" />
               <small class="fieldError" id="customerPhoneError" hidden></small>
+            </label>
+            <label>
+              <span>이메일 (선택)</span>
+              <input id="customerEmail" type="email" autocomplete="email" placeholder="example@email.com" maxlength="254" />
+              <small class="fieldError" id="customerEmailError" hidden></small>
+              <small>이메일을 입력하면 견적서도 메일로 보내드려요.</small>
             </label>
           </div>
         </article>
@@ -2643,6 +2651,7 @@
           <div id="customText" class="customTextLayer"></div>
           <div id="fail" class="previewFail">미리보기 준비 중</div>
         </div>
+        <p class="mobilePreviewSummary" id="mobilePreviewSummary"></p>
       </section>
 
       <aside class="panel" aria-label="브루키 옵션">
@@ -2652,7 +2661,6 @@
           <li data-builder-stage="paper">포장</li>
           <li data-builder-stage="quantity">수량</li>
         </ol>
-        <div class="mobileBuilderStage" id="mobileBuilderStage" aria-live="polite"></div>
         <section class="miniCard" data-builder-panel="character">
           <div class="stepHead">
             <div class="stepTitle"><span class="stepBadge">1</span>어떤 캐릭터로 만들까요?</div>
@@ -2677,7 +2685,6 @@
           </div>
           <p class="helper" id="heartGuide"></p>
           <input id="heartText" value="" placeholder="영문은 4글자 한글은 2글자" />
-          <button class="mobileStageAction" id="heartComplete" type="button" hidden>문구 선택 완료 →</button>
         </section>
 
         <section class="miniCard" data-builder-panel="paper">
@@ -2696,7 +2703,6 @@
             <input id="paper1" value="" maxlength="28" placeholder="첫번째줄 글을 넣어주세요" aria-label="커스텀 종이 1줄" />
             <input id="paper2" value="" maxlength="28" placeholder="두번째줄 글을 넣어주세요" aria-label="커스텀 종이 2줄" />
           </div>
-          <button class="mobileStageAction" id="paperComplete" type="button" hidden>포장 선택 완료 →</button>
         </section>
 
         <section class="miniCard comboOrderCard" data-builder-panel="quantity">
@@ -2712,15 +2718,21 @@
             <label>
               <span>이 조합 필요 개수</span>
               <span class="countBox">
+                <button class="plus qtyMinus" id="qtyMinus" type="button" aria-label="수량 줄이기">−</button>
                 <input id="qty" type="number" min="1" value="1" inputmode="numeric" aria-label="이 조합 필요 개수" />
                 <button class="plus" id="qtyPlus" type="button" aria-label="수량 추가">+</button>
               </span>
             </label>
           </div>
+          <div class="mobileComboSummary" id="mobileComboSummary" aria-live="polite"></div>
           <button class="comboAddButton" id="comboAdd" type="button">이 조합 장바구니에 담기</button>
           <p class="cartHint">브루키는 총 12개부터 주문 가능해요. 여러 조합을 담아 합산할 수 있어요.</p>
           <div class="orderQuickSummary" id="comboOrderStatus" aria-live="polite"></div>
           <div class="comboList" id="comboList" aria-live="polite"></div>
+          <div class="mobileComboActions" id="mobileComboActions" hidden>
+            <button class="btn" id="comboAnother" type="button">+ 다른 조합 추가</button>
+            <button class="btn yellow" id="comboNext" type="button">추가 옵션 확인하기 →</button>
+          </div>
         </section>
       </aside>
     </section>
@@ -2754,20 +2766,28 @@
           <div class="quoteDetails" id="quoteDetails"></div>
         </article>
 
+        <div id="brookieWarning"></div>
         <article class="quoteActionCard">
           <span class="quoteActionBadge">마지막 단계</span>
           <h3>📋 견적서 요청</h3>
-          <p>선택 내용 확인 → 견적서 받기 → 카카오 상담 순서로 주문을 이어갑니다.</p>
-          <button class="quoteActionButton" id="quoteBtn" type="button">📄 견적서 받기</button>
+          <p>주문 요청 저장 후 견적서를 받고 카카오톡 상담으로 이어갑니다.</p>
+          <p class="order-confirm-note">카카오톡 상담 완료 후 주문이 최종 확정됩니다.</p>
+          <p id="brookieQuoteError" class="order-confirm-error" role="alert" hidden></p>
+          <div id="brookieEmailStatus" class="brookie-email-status" role="status" aria-live="polite" hidden>
+            <p id="brookieEmailMessage"></p>
+            <button class="btn" id="brookieEmailRetry" type="button" hidden>이메일 다시 보내기</button>
+          </div>
+          <button class="quoteActionButton order-confirm-cta" id="quoteBtn" type="button">견적서 받고 카카오톡에서 주문 확정하기 →</button>
         </article>
 
         <article class="quoteSecondaryCard">
           <p>기타 문의 및 정보</p>
           <div class="quoteSecondaryActions">
-            <a class="btn yellow" id="quoteKakaoLink" href="https://pf.kakao.com/_QdCaK/chat">💬 카카오톡 상담하기</a>
+            <button class="btn yellow" id="quoteKakaoLink" type="button">💬 카카오톡 상담하기</button>
             <a class="btn" href="https://nothingmatters.co.kr" target="_blank" rel="noopener noreferrer">🏠 nothingmatters</a>
           </div>
         </article>
+        <div id="brookieConfirmationMount"></div>
       </div>
     </section>
 
@@ -2816,7 +2836,10 @@
     </div>
   </div>
 
-  <script src="/order/assets/order-core.js"></script>
+  <script src="/order/assets/order-core.js?v=d981c0333e61"></script>
+  <script src="/order/assets/order-confirmation.js?v=6ccdf914c658"></script>
+  <script src="/order/assets/landing-quote.js?v=7395b88324d6"></script>
+  <script src="/order/assets/brookie-quote.js?v=ed7c0840b729"></script>
   <script>
     const chars = [
       ["bear", "곰돌이"],
@@ -2973,6 +2996,7 @@
       date: "",
       customerName: "",
       customerPhone: "",
+      customerEmail: "",
       deliveryMethod: "매장 픽업",
       pickupTime: "",
       deliveryAddress: "",
@@ -3017,11 +3041,12 @@
       }));
     }
 
-    async function submitLandingOrder() {
-      return window.NMOrderCore.postLandingOrder({
+    function landingOrderPayload() {
+      return {
         source: "brookie",
         customerName: state.customerName,
         customerPhone: state.customerPhone,
+        customerEmail: state.customerEmail.trim(),
         deliveryDate: state.date,
         deliveryMethod: landingDeliveryMethod(),
         pickupTime: state.pickupTime,
@@ -3030,7 +3055,7 @@
         topper: state.topper,
         topperKind: state.topperKind,
         sticker: state.sticker
-      });
+      };
     }
 
     function clampHeartText(value, character = state.character) {
@@ -3104,6 +3129,7 @@
         state.date = typeof saved.date === "string" && saved.date >= minDate ? saved.date : minDate;
         state.customerName = typeof saved.customerName === "string" ? saved.customerName : "";
         state.customerPhone = typeof saved.customerPhone === "string" ? saved.customerPhone : "";
+        state.customerEmail = typeof saved.customerEmail === "string" ? saved.customerEmail : "";
         state.deliveryMethod = saved.deliveryMethod === "퀵 배송" ? "퀵 배송" : "매장 픽업";
         state.pickupTime = typeof saved.pickupTime === "string" ? saved.pickupTime : "";
         state.deliveryAddress = typeof saved.deliveryAddress === "string" ? saved.deliveryAddress : "";
@@ -3129,6 +3155,8 @@
     }
 
     function renderOptionButtons() {
+      const characterScroll = $("characters").scrollLeft;
+      const paperScroll = $("papers").scrollLeft;
       $("characters").innerHTML = "";
       chars.forEach(([id, label]) => {
         const button = makePill({
@@ -3158,6 +3186,8 @@
         });
         $("papers").append(button);
       });
+      $("characters").scrollLeft = characterScroll;
+      $("papers").scrollLeft = paperScroll;
     }
 
     function draw() {
@@ -3169,8 +3199,6 @@
       $("customInputs").style.display = state.paper === "custom" ? "grid" : "none";
       $("customNote").style.display = state.paper === "custom" ? "block" : "none";
       $("heartText").style.display = state.heartTextEnabled ? "block" : "none";
-      $("heartComplete").hidden = !state.heartTextEnabled;
-      $("paperComplete").hidden = state.paper !== "custom";
       $("heartGuide").textContent = state.character === "miss_bear"
         ? "미스곰 한글은 불가능해요. 영문/숫자만 입력해 주세요."
         : "";
@@ -3185,6 +3213,7 @@
       $("noText").setAttribute("aria-pressed", String(!state.heartTextEnabled));
       $("withText").setAttribute("aria-pressed", String(state.heartTextEnabled));
       $("selectedName").textContent = `현재 선택 · ${nameOf(chars, state.character)} · ${comboHeartLabel(currentCombo())} · ${nameOf(papers, state.paper)}`;
+      $("mobilePreviewSummary").textContent = $("selectedName").textContent;
       renderBuilderProgress();
       renderComboPanel();
       requestAnimationFrame(() => {
@@ -3344,6 +3373,12 @@
     }
 
     function renderComboPanel() {
+      const combo = currentCombo();
+      $("mobileComboSummary").innerHTML = `<h3>선택한 조합</h3><dl>${[
+        ["캐릭터", nameOf(chars, combo.character)], ["하트", combo.heartTextEnabled ? combo.heartText || "문구 입력 필요" : "기본 하트"],
+        ["포장", comboPaperLabel(combo)], ["수량", `${combo.qty}개`], ["단가", won(comboUnitPrice(combo))], ["합계", won(combo.qty * comboUnitPrice(combo))]
+      ].map(([label, value]) => `<dt>${label}</dt><dd>${escapeHtml(String(value))}</dd>`).join('')}</dl>`;
+      $("mobileComboActions").hidden = !state.items.length;
       $("currentComboLabel").textContent = `${comboTitle(currentCombo())} · ${comboHeartLabel(currentCombo())}`;
       $("comboStepHint").textContent = state.items.length
         ? `총 ${totalQty()}/${MIN_BROOKIE_QTY}개`
@@ -3402,48 +3437,9 @@
         item.classList.toggle("is-complete", isComplete);
         item.setAttribute("aria-current", isCurrent ? "step" : "false");
       });
-      renderMobileBuilderStage(stages, activeIndex);
       document.querySelectorAll("[data-builder-panel]").forEach((panel) => {
-        const isActive = panel.dataset.builderPanel === activeBuilderStage;
-        panel.classList.toggle("is-mobile-stage", isActive);
-        if (window.matchMedia("(max-width: 600px)").matches) {
-          panel.hidden = !isActive;
-          panel.setAttribute("aria-hidden", String(!isActive));
-        } else {
-          panel.hidden = false;
-          panel.setAttribute("aria-hidden", "false");
-        }
-      });
-    }
-
-    function renderMobileBuilderStage(stages, activeIndex) {
-      const labels = {
-        character: { name: "캐릭터", prompt: "어떤 캐릭터로 만들까요?" },
-        heart: { name: "문구", prompt: "문구를 선택해 주세요" },
-        paper: { name: "포장", prompt: "포장 종이를 골라주세요" },
-        quantity: { name: "수량", prompt: "수량을 정해 주세요" }
-      };
-      const summary = {
-        character: nameOf(chars, state.character),
-        heart: comboHeartLabel(currentCombo()),
-        paper: comboPaperLabel(currentCombo())
-      };
-      const completed = stages.slice(0, activeIndex).map((stage) => `
-        <button class="builderStageSummary" type="button" data-builder-edit="${stage}">
-          <span>✓ ${labels[stage].name} · ${escapeHtml(summary[stage])}</span>
-          <small>수정</small>
-        </button>
-      `).join("");
-      const current = labels[activeBuilderStage];
-      $("mobileBuilderStage").innerHTML = `
-        ${completed}
-        <div class="mobileBuilderCurrent">
-          <span>브루키 만들기 · ${activeIndex + 1}/4</span>
-          <strong>${current.prompt}</strong>
-        </div>
-      `;
-      document.querySelectorAll("[data-builder-edit]").forEach((button) => {
-        button.addEventListener("click", () => setBuilderStage(button.dataset.builderEdit));
+        panel.hidden = false;
+        panel.setAttribute("aria-hidden", "false");
       });
     }
 
@@ -3454,6 +3450,11 @@
 
     function addCurrentCombo() {
       const combo = currentCombo();
+      if (combo.heartTextEnabled && !combo.heartText.trim()) {
+        showToast('하트 문구를 입력하거나 기본 하트를 선택해주세요.');
+        $("heartText").focus();
+        return;
+      }
       combo.id = `combo-${state.comboSeq++}`;
       state.items.push(combo);
       window.NMOrderCore?.track("cart_add_combo", {
@@ -3464,7 +3465,11 @@
         total_qty: totalQty()
       });
       showToast(`${comboTitle(combo)} ${combo.qty}개를 담았어요.`);
-      resetCurrentCombo();
+      if (window.matchMedia("(max-width: 600px)").matches) {
+        showToast("조합이 추가됐어요.");
+        renderComboPanel();
+        updateSummary();
+      } else resetCurrentCombo();
     }
 
     function resetCurrentCombo() {
@@ -3534,6 +3539,7 @@
       $("quoteDetails").innerHTML = [
         ["고객명", state.customerName || "미입력"],
         ["연락처", state.customerPhone || "핸드폰 미입력"],
+        ...(state.customerEmail.trim() ? [["이메일", state.customerEmail.trim()]] : []),
         ["수령 정보", `${state.deliveryMethod} · ${state.date || "미입력"} · ${state.pickupTime || "시간 미선택"}`],
         ...(state.deliveryMethod === "퀵 배송" ? [["배송 주소", state.deliveryAddress || "미입력"]] : []),
         ["브루키 조합", comboLines.join(" / ")],
@@ -3544,6 +3550,14 @@
           <b>${escapeHtml(String(value))}</b>
         </div>
       `).join("");
+      const record = brookieQuoteFlow.getSaved(landingOrderPayload());
+      if (record?.data) {
+        window.NMOrderConfirmation.showSaved($("brookieConfirmationStatus"));
+        if (record.emailSent) showEmailStatus('sent', record.maskedEmail);
+      } else {
+        $("brookieConfirmationStatus").hidden = true;
+        $("brookieEmailStatus").hidden = true;
+      }
     }
 
 function buildQuoteText() {
@@ -3584,7 +3598,7 @@ ${custom ? `${custom}\n` : ""}
         `추가 옵션: ${[state.topper ? "토퍼" : "", state.sticker ? "스티커" : ""].filter(Boolean).join(", ") || "없음"}`
       ].filter(Boolean);
       const itemRowHeight = 104;
-      const height = 740 + rows.length * itemRowHeight + detailLines.length * 58;
+      const height = 836 + rows.length * itemRowHeight + detailLines.length * 58;
       canvas.width = width * scale;
       canvas.height = height * scale;
       const ctx = canvas.getContext("2d");
@@ -3698,99 +3712,47 @@ ${custom ? `${custom}\n` : ""}
       text("입금 계좌: 83050104204736 국민은행 (낫띵메터스)", width / 2, y + 74, 25, 900, "#111", "center");
       rect(20, y + 110, width - 40, 72, "#fff", 2);
       text("주문 문의: 카카오톡 @nothingmatters 또는 010-2866-7976", width / 2, y + 146, 24, 600, "#111", "center");
+      rect(20, y + 182, width - 40, 84, "#fff7df", 2);
+      wrapText(window.NMOrderConfirmation.quoteNotice, width / 2, y + 224, width - 80, 30, 2, 23, 700, "#ad3418");
       return canvas;
     }
 
-    async function receiveQuote() {
+    function validateQuote() {
       if (!state.items.length || !hasMinimumOrderQty()) {
         setActiveStep(1, { skipValidation: true });
         showToast(minimumOrderMessage());
-        return;
+        return false;
       }
-      if (
-        activeStep !== 3 &&
-        (!state.customerName.trim() ||
-          !window.NMOrderCore?.validateKoreanPhone?.(state.customerPhone) ||
-          !state.date ||
-          !state.pickupTime ||
-          (state.deliveryMethod === "퀵 배송" && !state.deliveryAddress.trim()))
-      ) {
+      if (!validateStep(3)) {
         setActiveStep(3, { skipValidation: true });
-        requestAnimationFrame(() => validateStep(3));
-        return;
+        return false;
       }
-      if (!validateStep(3)) return;
-      window.NMOrderCore?.track("quote_download", {
-        product: "brookie",
-        total_qty: totalQty(),
-        total_price: totalPrice()
-      });
-      const text = buildQuoteText();
-      let copied = false;
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(text);
-          copied = true;
-        }
-      } catch (error) {
-        copied = false;
-      }
-      if (!copied) copied = fallbackCopy(text);
-
-      const canvas = drawQuoteImage();
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png", 0.95));
-      const fileName = `nothingmatters-brookie-quote-${Date.now()}.png`;
-      if (!blob) {
-        showToast("견적서 이미지를 만들지 못했어요.");
-        return;
-      }
-      try {
-        await submitLandingOrder();
-        window.NMOrderCore?.track("submit_success", {
-          product: "brookie",
-          total_qty: totalQty(),
-          total_price: totalPrice()
-        });
-      } catch (error) {
-        window.NMOrderCore?.track("submit_error", {
-          product: "brookie",
-          message: error.message || "submit failed"
-        });
-        showToast(error.message || "주문 저장에 실패했어요.");
-        return;
-      }
-      if (blob && typeof File !== "undefined") {
-        const file = new File([blob], fileName, { type: "image/png" });
-        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-          try {
-            await navigator.share({
-              title: "nothingmatters 견적서",
-              text: "브루키 견적서 이미지입니다.",
-              files: [file]
-            });
-            showToast("견적서 이미지가 준비됐어요.");
-            goKakaoSoon();
-            return;
-          } catch (error) {
-            // 공유를 취소하면 일반 다운로드로 이어갑니다.
-          }
-        }
-      }
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      URL.revokeObjectURL(link.href);
-      link.remove();
-      showToast("견적서가 준비됐어요. 카카오톡 상담으로 이어가 주세요.");
-      goKakaoSoon();
+      return true;
     }
 
-    function goKakaoSoon() {
-      window.setTimeout(() => {
-        window.location.href = KAKAO_URL;
-      }, 900);
+    async function receiveQuote(directConsult = false) {
+      if (state.submitting || !validateQuote()) return;
+      state.submitting = true;
+      const controls = Array.from(document.querySelectorAll('button, input, select, textarea')).map(node => [node, node.disabled]);
+      controls.forEach(([node]) => { node.disabled = true; });
+      const label = $('quoteBtn').textContent;
+      $('quoteBtn').textContent = '처리 중...';
+      $('brookieQuoteError').hidden = true;
+      try {
+        await brookieQuoteFlow.receive(landingOrderPayload(), {
+          documentTitle: 'nothingmatters 견적서', totalPrice: totalPrice(), pricingPending: false,
+          customerEmail: state.customerEmail.trim(),
+        }, directConsult);
+      } catch (error) {
+        $('brookieQuoteError').textContent = error.message || '주문 저장에 실패했어요. 다시 시도해 주세요.';
+        $('brookieQuoteError').hidden = false;
+        $('brookieQuoteError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        $('brookieConfirmationStatus').querySelector('[data-confirm-moving]').hidden = true;
+      } finally {
+        state.submitting = false;
+        controls.forEach(([node, disabled]) => { node.disabled = disabled; });
+        $('quoteBtn').textContent = label;
+      }
     }
 
     function escapeHtml(value) {
@@ -3842,6 +3804,7 @@ ${custom ? `${custom}\n` : ""}
     }
 
     function updateFloatingSummary() {
+      document.body.classList.toggle('order-confirm-quote-active', activeStep === 4);
       const labels = {
         1: "조합",
         2: "추가 옵션",
@@ -3856,6 +3819,10 @@ ${custom ? `${custom}\n` : ""}
       $("floatingCartDetail").textContent = floatingNextHint();
       $("floatingPrice").textContent = "";
       $("floatingNext").textContent = floatingNextLabel();
+      if (activeStep === 1 && window.matchMedia('(max-width: 600px)').matches) {
+        $("floatingCartTitle").textContent = state.items.length ? `브루키 · 장바구니 ${totalQty()}개 · ${won(totalPrice())}` : `현재 조합 ${state.qty}개`;
+        $("floatingCartDetail").textContent = state.items.length ? minimumOrderMessage() : '장바구니에 먼저 담아주세요';
+      }
       $("floatingPrev").style.visibility = activeStep === 1 ? "hidden" : "visible";
       $("floatingPrev").textContent = "← 뒤로";
       $("floatingProgress").style.width = `${Math.round((activeStep / 4) * 100)}%`;
@@ -3890,18 +3857,18 @@ ${custom ? `${custom}\n` : ""}
 
     function floatingNextLabel() {
       if (activeStep === 1) {
-        if (!state.items.length) return "먼저 이 조합을 담아주세요";
+        if (!state.items.length) return window.matchMedia('(max-width: 600px)').matches ? "조합 담기" : "먼저 이 조합을 담아주세요";
         if (!hasMinimumOrderQty()) return `${minimumQtyRemaining()}개 더 담아주세요`;
         return "추가 옵션 확인하기 →";
       }
       if (activeStep === 2) return "고객 정보 입력하기 →";
       if (activeStep === 3) return "견적 내용 확인하기 →";
-      return "견적서 받기 →";
+      return window.NMOrderConfirmation.ctaLabel(false);
     }
 
     function updateMobileStep() {
       const mobileTitles = {
-        1: "캐릭터 선택",
+        1: "조합 만들기",
         2: "추가 옵션",
         3: "주문 정보",
         4: "견적 확인"
@@ -3924,6 +3891,7 @@ ${custom ? `${custom}\n` : ""}
     }
 
     function setActiveStep(step, options = {}) {
+      if (state.submitting) return;
       const nextStep = Math.max(1, Math.min(4, step));
       if (!options.skipValidation && nextStep > activeStep && !validateStep(activeStep)) return;
       activeStep = nextStep;
@@ -3966,6 +3934,7 @@ ${custom ? `${custom}\n` : ""}
       if (window.NMOrderCore?.validateKoreanPhone?.(state.customerPhone)) {
         window.NMOrderCore?.clearFieldError("customerPhone");
       }
+      if (!state.customerEmail.trim() || $("customerEmail").checkValidity()) window.NMOrderCore?.clearFieldError("customerEmail");
       if (state.date) window.NMOrderCore?.clearFieldError("needDate");
       if (state.pickupTime) window.NMOrderCore?.clearFieldError("pickupTime");
       if (state.deliveryMethod !== "퀵 배송" || state.deliveryAddress.trim()) {
@@ -3985,7 +3954,7 @@ ${custom ? `${custom}\n` : ""}
         }
       }
       if (step !== 3) return true;
-      ["customerName", "customerPhone", "needDate", "pickupTime", "deliveryAddress"].forEach((id) => {
+      ["customerName", "customerPhone", "customerEmail", "needDate", "pickupTime", "deliveryAddress"].forEach((id) => {
         window.NMOrderCore?.clearFieldError(id);
       });
       if (!state.customerName.trim()) {
@@ -3996,6 +3965,11 @@ ${custom ? `${custom}\n` : ""}
       if (!window.NMOrderCore?.validateKoreanPhone?.(state.customerPhone)) {
         window.NMOrderCore?.setFieldError("customerPhone", "010 형식으로 입력해주세요.");
         window.NMOrderCore?.focusField("customerPhone");
+        return false;
+      }
+      if (state.customerEmail.trim() && (!$("customerEmail").checkValidity() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.customerEmail.trim()))) {
+        window.NMOrderCore?.setFieldError("customerEmail", "올바른 이메일 주소를 입력해주세요.");
+        window.NMOrderCore?.focusField("customerEmail");
         return false;
       }
       if (!state.date) {
@@ -4155,6 +4129,71 @@ ${custom ? `${custom}\n` : ""}
       }, 2000);
     }
 
+    function showEmailStatus(status, maskedEmail = '', detail = '') {
+      const container = $('brookieEmailStatus');
+      container.hidden = false;
+      container.classList.toggle('is-error', status === 'failed');
+      $('brookieEmailMessage').textContent = status === 'sent'
+        ? `✅ 견적서를 이메일로 보냈어요. ${maskedEmail} · 이제 카카오톡에서 최종 주문 내용을 확인해 주세요.`
+        : status === 'sending' ? '저장된 주문의 견적서를 이메일로 보내는 중입니다.'
+        : `주문 요청은 저장됐지만 이메일 견적을 보내지 못했어요. ${detail || '화면에서 견적서를 저장한 뒤 카카오톡 상담을 계속할 수 있습니다.'}`;
+      $('brookieEmailRetry').hidden = status !== 'failed';
+    }
+
+    $('brookieWarning').innerHTML = window.NMOrderConfirmation.warningMarkup();
+    $('brookieConfirmationMount').innerHTML = window.NMOrderConfirmation.statusMarkup('brookieConfirmationStatus');
+    const brookieQuoteFlow = window.NMBrookieQuote.create({
+      fileSlug: 'brookie',
+      createImage: async () => {
+        if (document.fonts?.ready) await document.fonts.ready;
+        const canvas = drawQuoteImage();
+        return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('견적서 이미지를 만들지 못했어요.')), 'image/png'));
+      },
+      postOrder: payload => window.NMOrderCore.postLandingOrder(payload),
+      fromSaved: (result, draft) => {
+        const total = (result.orderItems || []).reduce((sum, item) => sum + item.quantity * item.price, 0);
+        if (result.totalPrice !== draft.totalPrice || total !== result.totalPrice) throw new Error('저장된 견적 금액을 확인할 수 없습니다. 선택 내용을 다시 확인해주세요.');
+        return draft;
+      },
+      onSaved: record => {
+        state.orderId = record.result.orderId;
+        state.submitted = true;
+        window.NMOrderConfirmation.showSaved($('brookieConfirmationStatus'));
+      },
+      postEmail: async (id, email, token) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+          const response = await fetch(`/api/orders/${encodeURIComponent(id)}/email-quote`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` },
+            body: JSON.stringify({ email }), signal: controller.signal,
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success) {
+            const error = new Error('이메일 견적 전송 실패');
+            // Only a known safe configuration message may reach the customer UI.
+            if (response.status === 503 && result.message === '현재 이메일 견적 서비스를 사용할 수 없습니다. 화면에서 견적서를 저장한 뒤 카카오톡 상담을 이용해주세요.') {
+              error.userMessage = result.message;
+            }
+            throw error;
+          }
+          return result;
+        } finally { clearTimeout(timeout); }
+      },
+      onEmail: showEmailStatus,
+      provideImage: async (blob, filename, data) => {
+        // Preserve the existing text copy for pasting into the Kakao chat.
+        try {
+          const text = buildQuoteText();
+          if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+          else fallbackCopy(text);
+        } catch (_) { /* Clipboard availability does not block the PNG. */ }
+        return window.NMQuote.provideImage(blob, filename, data, { downloadOnCancel: true });
+      },
+      navigateToKakao: () => window.NMOrderConfirmation.navigate($('brookieConfirmationStatus')),
+      track: (event, params) => window.NMOrderConfirmation.safeTrack(event, { product: 'brookie', ...params }),
+    });
+
     function init() {
       const minDate = tomorrow();
       state.date = minDate;
@@ -4165,6 +4204,7 @@ ${custom ? `${custom}\n` : ""}
       $("needDate").value = state.date;
       $("customerName").value = state.customerName;
       $("customerPhone").value = state.customerPhone;
+      $("customerEmail").value = state.customerEmail;
       $("pickupTime").value = state.pickupTime;
       $("deliveryAddress").value = state.deliveryAddress;
       $("heartText").value = state.heartText;
@@ -4222,13 +4262,21 @@ ${custom ? `${custom}\n` : ""}
       });
       $("qtyPlus").addEventListener("click", () => {
         activeBuilderStage = "quantity";
-        state.qty += 1;
+        state.qty = Math.min(999, state.qty + 1);
         $("qty").value = state.qty;
         renderComboPanel();
         updateSummary();
       });
-      $("heartComplete").addEventListener("click", () => setBuilderStage("paper"));
-      $("paperComplete").addEventListener("click", () => setBuilderStage("quantity"));
+      $("qtyMinus").addEventListener('click', () => {
+        state.qty = Math.max(1, state.qty - 1);
+        $("qty").value = state.qty;
+        renderComboPanel();
+        updateSummary();
+      });
+      $("comboAnother").addEventListener('click', () => {
+        $("preview").scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      $("comboNext").addEventListener('click', () => setActiveStep(2));
       window.addEventListener("resize", () => renderBuilderProgress());
       $("needDate").addEventListener("change", (event) => {
         state.date = event.target.value < minDate || window.NMOrderCore?.isUnavailableDeliveryDate?.(event.target.value) ? minDate : event.target.value;
@@ -4245,6 +4293,11 @@ ${custom ? `${custom}\n` : ""}
       });
       $("customerPhone").addEventListener("input", (event) => {
         state.customerPhone = event.target.value;
+        validateCustomerFieldsSoft();
+        updateSummary();
+      });
+      $("customerEmail").addEventListener('input', event => {
+        state.customerEmail = event.target.value;
         validateCustomerFieldsSoft();
         updateSummary();
       });
@@ -4266,7 +4319,19 @@ ${custom ? `${custom}\n` : ""}
         validateCustomerFieldsSoft();
         updateSummary();
       });
-      $("quoteBtn").addEventListener("click", receiveQuote);
+      $("quoteBtn").addEventListener("click", () => receiveQuote());
+      $("quoteKakaoLink").addEventListener("click", () => receiveQuote(true));
+      $('brookieConfirmationStatus').querySelector('[data-confirm-kakao]').addEventListener('click', () => receiveQuote(true));
+      $('brookieEmailRetry').addEventListener('click', async () => {
+        if (state.submitting) return;
+        state.submitting = true;
+        const controls = Array.from(document.querySelectorAll('button, input, select, textarea')).map(node => [node, node.disabled]);
+        controls.forEach(([node]) => { node.disabled = true; });
+        try { await brookieQuoteFlow.retryEmail(landingOrderPayload()); } finally {
+          state.submitting = false;
+          controls.forEach(([node, disabled]) => { node.disabled = disabled; });
+        }
+      });
       $("comboAdd").addEventListener("click", addCurrentCombo);
       $("floatingNext").addEventListener("click", goFloatingNext);
       $("floatingPrev").addEventListener("click", goFloatingPrev);
@@ -4286,6 +4351,7 @@ ${custom ? `${custom}\n` : ""}
         step_label: $("floatingStepLabel")?.textContent || "조합"
       });
       document.addEventListener("click", (event) => {
+        if (state.submitting) { event.preventDefault(); return; }
         const removeButton = event.target.closest("[data-remove-combo]");
         if (removeButton) {
           removeCombo(removeButton.dataset.removeCombo);
