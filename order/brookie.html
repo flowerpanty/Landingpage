@@ -2521,7 +2521,7 @@
 
   </style>
   <link rel="stylesheet" href="/order/assets/order-confirmation.css?v=ca649d9344b6" />
-  <link rel="stylesheet" href="/order/assets/brookie-mobile.css?v=7a3653365e85" />
+  <link rel="stylesheet" href="/order/assets/brookie-mobile.css?v=77775daf528d" />
 </head>
 <body>
   <a class="skipLink" href="#top">본문으로 건너뛰기</a>
@@ -4226,7 +4226,7 @@ ${custom ? `${custom}\n` : ""}
         if (!mobile.matches || activeStep !== 1 || !(target instanceof HTMLElement) ||
             !target.closest('.builderHero') || !target.matches('input, button:focus-visible')) return;
         requestAnimationFrame(() => {
-          if (target.isConnected) target.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+          if (target.isConnected && document.activeElement === target) target.scrollIntoView({ block: 'nearest', behavior: 'instant' });
         });
       });
       sync();

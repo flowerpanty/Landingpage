@@ -27,7 +27,7 @@
   .builderHero .panel { gap: 16px; }
   .builderHero .preview { width: min(52vw, 210px) !important; aspect-ratio: 1; border-radius: 14px; }
   .mobilePreviewSummary { display: block; margin: 6px 0 0; text-align: center; font-size: 12px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .builderHero [data-builder-panel], .builderHero input, .builderHero button { scroll-margin-top: calc(var(--brookie-mobile-sticky-top, 0px) + var(--brookie-mobile-preview-height, 0px) + 12px); }
+  .builderHero [data-builder-panel], .builderHero input, .builderHero button { scroll-margin-top: 12px; scroll-margin-bottom: 12px; }
   .panel .miniCard { padding: 14px; border-radius: 16px; }
   [data-builder-panel] .stepHead { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .stepTitle { font-size: 16px; }
