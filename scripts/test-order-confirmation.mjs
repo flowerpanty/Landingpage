@@ -11,7 +11,8 @@ for (const slug of ['lucky', 'cookies']) {
     if (!nodes.has(id)) nodes.set(id, {
       id, hidden: true, disabled: false, textContent: '견적서 받고 카카오톡에서 주문 확정하기 →',
       style: {}, classList: { add() {}, remove() {}, toggle() {} },
-      querySelector: (selector) => node(selector), scrollIntoView() {}, removeAttribute() {}, setAttribute() {},
+      insertAdjacentHTML() {}, handlers: {}, addEventListener(event, fn) { this.handlers[event] = fn; }, checkValidity: () => true,
+      querySelector: (selector) => node(selector), scrollIntoView() {}, focus() {}, removeAttribute() {}, setAttribute() {},
     });
     return nodes.get(id);
   };
@@ -19,6 +20,7 @@ for (const slug of ['lucky', 'cookies']) {
   const events = [];
   let posts = 0;
   let fail = false;
+  let emailFail = true, emailCalls = 0;
   const ctx = { fillRect() {}, strokeRect() {}, fillText: text => painted.push(text) };
   const sandbox = {
     window: {}, navigator: {}, Blob, File, console, URL,
@@ -34,7 +36,8 @@ for (const slug of ['lucky', 'cookies']) {
     },
   };
   vm.createContext(sandbox);
-  for (const file of ['order-core.js', 'order-confirmation.js', 'landing-quote.js']) vm.runInContext(fs.readFileSync(`order/assets/${file}`, 'utf8'), sandbox);
+  for (const file of ['order-core.js', 'order-confirmation.js', 'landing-quote.js', 'order-email-quote.js']) vm.runInContext(fs.readFileSync(`order/assets/${file}`, 'utf8'), sandbox);
+  sandbox.window.NMEmailQuote.postEmail = async (id, email) => { emailCalls++; assert.equal(id, vm.runInContext('state.orderId', sandbox)); assert.equal(email, 'customer@example.com'); if(emailFail) throw new Error('Mock mail failure'); return {success:true,maskedEmail:'cu***@example.com'}; };
   sandbox.window.gtag = () => { throw new Error('Analytics failure'); };
   sandbox.window.NMOrderCore.postLandingOrder = async payload => {
     posts++;
@@ -95,5 +98,20 @@ for (const slug of ['lucky', 'cookies']) {
   assert.equal(node('orderConfirmationStatus').hidden, true);
   await vm.runInContext('receiveQuote(true)', sandbox);
   assert.equal(posts, successfulPosts + 1);
+  vm.runInContext('state.customerEmail="invalid"', sandbox);
+  assert.equal(vm.runInContext(`validateStep(${slug === 'lucky' ? 2 : 4})`, sandbox), false);
+  vm.runInContext('state.customerEmail="customer@example.com"', sandbox);
+  assert.equal(vm.runInContext('landingOrderPayload().customerEmail', sandbox), 'customer@example.com');
+  const beforeEmailPosts = posts;
+  await vm.runInContext('receiveQuote()', sandbox);
+  assert.equal(posts, beforeEmailPosts + 1); assert.equal(emailCalls, 1);
+  assert.match(node('[data-email-message]').textContent, /주문 요청은 저장됐지만/);
+  assert.equal(node('[data-email-retry]').hidden, false);
+  emailFail = false;
+  await node('[data-email-retry]').handlers.click();
+  assert.equal(posts, beforeEmailPosts + 1); assert.equal(emailCalls, 2);
+  assert.match(node('[data-email-message]').textContent, /이메일로 보냈어요/);
+  await vm.runInContext('receiveQuote()', sandbox); assert.equal(emailCalls, 2);
+  assert(painted.some(text => text.includes('customer@example.com')));
   console.log(`${slug}: existing prices/PNG, warning, save before provide/Kakao, failed direct/quote retry, duplicate/concurrent protection PASS`);
 }

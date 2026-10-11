@@ -40,7 +40,11 @@
   function createLegacyFlow(options) {
     const container = document.getElementById('orderConfirmationStatus');
     const errorNode = document.getElementById('orderConfirmationError');
-    const flow = window.NMQuote.createFlow({
+    const email = window.NMEmailQuote;
+    container.insertAdjacentHTML('beforebegin', email.markup());
+    const flow = email.create({
+      postEmail: email.postEmail,
+      onEmail: email.status('orderEmailStatus'),
       fileSlug: options.fileSlug,
       createImage: () => options.createImage(),
       postOrder: (payload) => window.NMOrderCore.postLandingOrder(payload),
@@ -57,6 +61,7 @@
         showSaved(container);
       },
     });
+    email.bindRetry('orderEmailStatus', flow, options.getPayload);
     document.addEventListener('click', (event) => {
       if (options.state.submitting && event.target.closest('a')) event.preventDefault();
     }, true);
@@ -70,7 +75,7 @@
       async receive(directConsult = false) {
         if (options.state.submitting || !options.validate()) return;
         const payload = options.getPayload();
-        const draft = { documentTitle: 'nothingmatters 견적서', totalPrice: options.getTotal(), pricingPending: false };
+        const draft = { documentTitle: 'nothingmatters 견적서', totalPrice: options.getTotal(), pricingPending: false, customerEmail: payload.customerEmail || '' };
         options.state.submitting = true;
         const controls = Array.from(document.querySelectorAll('button, input, select, textarea')).map((node) => [node, node.disabled]);
         controls.forEach(([node]) => { node.disabled = true; });

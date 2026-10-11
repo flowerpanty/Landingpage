@@ -32,3 +32,22 @@
   .order-confirm-quote-active #nextButton { min-height: 56px !important; padding: 10px 14px !important; font-size: 14px; }
   .order-confirm-quote-active .floatingMeta { display: none; }
 }
+
+/* Optional email guidance is always visible, distinct from field errors. */
+label .order-email-guide {
+  display: block !important;
+  margin-top: 7px;
+  color: #d92d20 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  font-weight: 700 !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.order-email-status { padding: 16px; margin: 16px 0; border: 1px solid #eadfd5; border-radius: 12px; background: #fff7df; }
+.order-email-status[hidden] { display: none; }
+.order-email-status p { overflow-wrap: anywhere; line-height: 1.6; }
+.order-email-status.is-error { color: #ad3418; }
+.order-email-status button { min-height: 44px; padding: 10px 16px; font: inherit; font-weight: 700; border-radius: 10px; border: 1px solid #d8c9b7; background: #fff; cursor: pointer; }
+
+.fieldGrid > .emailField { grid-column: 1 / -1; }

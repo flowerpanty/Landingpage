@@ -42,42 +42,6 @@
   transform: translateY(-1px);
 }
 
-.presetPills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 16px;
-}
-
-.presetPills button {
-  border: 1px solid var(--line, #eadfd5);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--ink, #171313);
-  padding: 10px 14px;
-  font-weight: 850;
-  box-shadow: var(--soft-shadow, 0 10px 24px rgba(40, 27, 18, 0.07));
-}
-
-.presetPills button:hover {
-  border-color: var(--orange, #ff7a00);
-  background: rgba(255, 122, 0, 0.1);
-}
-
-.presetPills button:focus-visible {
-  border-color: var(--orange, #ff7a00);
-  background: rgba(255, 122, 0, 0.1);
-  outline: 3px solid var(--orange, #ff7a00);
-  outline-offset: 3px;
-}
-
-.presetGuide {
-  margin: -2px 0 10px;
-  color: var(--muted, #6b5a51);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.45;
-}
 
 /* Small, shared guidance surfaces for the order steps. */
 .orderFlow {
@@ -227,8 +191,7 @@
 
 .mobileBuilderStage,
 .mobilePackageHint,
-.compactChoiceSummary,
-.mobileFlavorDisclosure {
+.compactChoiceSummary {
   display: none;
 }
 
@@ -382,7 +345,7 @@
   display: block;
 }
 
-:where(.pill, .packageCard, .choiceBtn, .methodOption, .floatingNext, .floatingBack, .comboAddButton, .qtyBtn, .presetPills button, .btn):focus-visible {
+:where(.pill, .packageCard, .choiceBtn, .methodOption, .floatingNext, .floatingBack, .comboAddButton, .qtyBtn, .btn):focus-visible {
   outline: 3px solid var(--orange, #ff7a00);
   outline-offset: 3px;
 }
@@ -602,23 +565,6 @@
     margin-top: 0 !important;
   }
 
-  .mobileFlavorDisclosure {
-    display: block;
-    width: 100%;
-    min-height: 44px;
-    margin: 0 0 12px;
-    border: 1px solid var(--line, #eadfd5);
-    border-radius: 12px;
-    background: #fff;
-    color: var(--ink, #171313);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 900;
-  }
-
-  body.is-flavor-step:not(.flavor-grid-open) .flavorGrid {
-    display: none !important;
-  }
 
   .orderHubLink {
     top: 12px;
@@ -791,4 +737,18 @@
   .mobileStepTrack > span {
     transition: none;
   }
+}
+
+@media (max-width: 600px) {
+  [data-step-page="2"] .flavorGrid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; overflow: visible; padding: 0; }
+  [data-step-page="2"] .flavorCard { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; padding: 12px; gap: 10px; }
+  [data-step-page="2"] .flavorThumb { width: 100%; height: 120px; }
+  [data-step-page="2"] .flavorCard h3 { font-size: 16px; overflow-wrap: anywhere; }
+  [data-step-page="2"] .qtyControl { width: 100%; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 2px; }
+  [data-step-page="2"] .qtyControl button { min-width: 44px; min-height: 44px; }
+  [data-step-page="2"] .qtyControl input { min-width: 0; width: 100%; }
+}
+@media (max-width: 340px) {
+  [data-step-page="2"] .flavorGrid { grid-template-columns: minmax(0, 1fr); }
+  [data-step-page="2"] .flavorThumb { height: 160px; }
 }

@@ -11,7 +11,7 @@ const sourceRoot = path.resolve(process.argv[argument + 1]);
 const publicRoot = path.join(sourceRoot, 'client/public');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sha = data => crypto.createHash('sha256').update(data).digest('hex');
-const files = ['order.css', 'order-confirmation.css', 'order-confirmation.js', 'order-core.js', 'landing-quote.js', 'brookie-mobile.css', 'brookie-quote.js'];
+const files = ['order.css', 'order-confirmation.css', 'order-confirmation.js', 'order-core.js', 'landing-quote.js', 'brookie-mobile.css', 'brookie-quote.js', 'order-email-quote.js'];
 const hashes = {};
 for (const file of files) {
   const data = fs.readFileSync(path.join(publicRoot, file));
@@ -21,7 +21,8 @@ for (const file of files) {
 let html = fs.readFileSync(path.join(publicRoot, 'brookie.html'), 'utf8');
 hashes['brookie.html'] = sha(html);
 for (const file of files) {
-  html = html.replaceAll(`"${file}"`, `"/order/assets/${file}?v=${hashes[file].slice(0, 12)}"`);
+  html = html.replaceAll(`"${file}"`, `"/order/assets/${file}?v=${hashes[file].slice(0, 12)}"`)
+    .replaceAll(`"/${file}"`, `"/order/assets/${file}?v=${hashes[file].slice(0, 12)}"`);
 }
 html = html.replaceAll('public/', '/order/assets/public/');
 fs.writeFileSync(path.join(root, 'order/brookie.html'), html);

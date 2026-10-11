@@ -81,9 +81,12 @@ try {
       assert.match(page, /brookie-mobile\.css\?v=[a-f0-9]{12}/);
       assert.match(page, /brookie-quote\.js\?v=[a-f0-9]{12}/);
       assert.match(page, /id="customerEmail"/);
-      assert.match(page, /이메일을 입력하면 견적서도 메일로 보내드려요/);
+      assert.match(page, /견적서를 이메일로도 받아보세요/);
       assert.doesNotMatch(page, /문구 선택 완료|포장 선택 완료|renderMobileBuilderStage/);
     }
+    assert.match(page, /order-email-quote\.js\?v=[a-f0-9]{12}/);
+    if (['cookies', 'lucky'].includes(product.slug)) assert.match(page, /id="customerEmail"/);
+    if (product.slug === 'cookies') assert.doesNotMatch(page, /applyFlavorPreset|toggleFlavorDetails|flavor-grid-open|presetPills/);
     assert.ok(page.includes(`href="https://nothingmatters.co.kr${product.detailUrl}"`), `${pathname} canonical should point to its existing product detail`);
     for (const match of page.matchAll(/(?:src|href)=["'](\/order\/assets\/[^"']+)["']/g)) {
       if (match[1].includes("${")) continue;

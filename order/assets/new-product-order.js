@@ -141,7 +141,7 @@
           <div class="nm-order-fields">
             <label><span>고객명 <b>*</b></span><input id="nm-customerName" type="text" autocomplete="name" placeholder="성함" /><small class="fieldError" id="nm-customerNameError" hidden></small></label>
             <label><span>핸드폰 <b>*</b></span><input id="nm-customerPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000" /><small class="fieldError" id="nm-customerPhoneError" hidden></small></label>
-            <label class="nm-order-full"><span>이메일 (선택)</span><input id="nm-customerEmail" type="email" autocomplete="email" placeholder="example@email.com" /><small class="fieldError" id="nm-customerEmailError" hidden></small></label>
+            <label class="nm-order-full"><span>이메일 (선택)</span><input id="nm-customerEmail" type="email" maxlength="254" autocomplete="email" placeholder="example@email.com" /><small class="order-email-guide">✉ ${product.pricingPending ? '상담 요청서를 이메일로도 받아보세요! 이메일을 입력하면 요청서를 보내드려요.' : '견적서를 이메일로도 받아보세요! 이메일을 입력하면 견적서를 바로 보내드려요.'}</small><small class="fieldError" id="nm-customerEmailError" hidden></small></label>
           </div>
         </div>
         <div class="nm-order-card">
@@ -164,6 +164,7 @@
       <section class="nm-order-page" data-order-step="3" aria-labelledby="nm-step-three-title" hidden>
         <div class="nm-order-page-head"><p>STEP 03 · 견적서</p><h1 id="nm-step-three-title">${product.pricingPending ? '상담 요청서를 확인해 주세요' : '견적서를 확인해 주세요'}</h1></div>
         <div class="nm-order-card nm-order-quote-card"><h2>${product.pricingPending ? '상담 요청서 미리보기' : '견적서 미리보기'}</h2><div id="nm-order-quote-preview"></div></div>
+        ${window.NMEmailQuote.markup()}
         ${confirmation.warningMarkup(product.pricingPending)}
         <p class="nm-order-hint">${product.pricingPending ? '상담 요청서를 받으면 주문을 저장하고 이미지 공유 또는 다운로드 후 카카오톡 상담으로 이어집니다.' : '견적서를 받으면 주문을 저장하고 이미지 공유 또는 다운로드 후 카카오톡 상담으로 이어집니다.'}</p>
         <p id="nm-order-quote-status" class="nm-order-quote-status" role="status" aria-live="polite" hidden></p>
@@ -340,7 +341,9 @@
     track('quote_preview', { qty: selectedQuantity(), pricing_pending: data.pricingPending, total_price: data.totalPrice });
   }
 
-  const quoteFlow = quote.createFlow({
+  const quoteFlow = window.NMEmailQuote.create({
+    postEmail: window.NMEmailQuote.postEmail,
+    onEmail: window.NMEmailQuote.status('orderEmailStatus', product.pricingPending),
     fileSlug: product.quoteFileSlug,
     createImage: (data) => quote.createImage(data),
     postOrder: (payload) => core.postLandingOrder(payload),
@@ -358,6 +361,8 @@
       byId('nm-floating-detail').textContent = `${quantityText()} · ${record.data.pricingPending ? '가격 상담' : won(record.data.totalPrice)}`;
     },
   });
+
+  window.NMEmailQuote.bindRetry('orderEmailStatus', quoteFlow, orderPayload);
 
   let pushStep = () => {};
   function setStep(next, options = {}) {

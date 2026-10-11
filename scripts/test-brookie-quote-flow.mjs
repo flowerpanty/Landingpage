@@ -44,7 +44,7 @@ const sandbox = {
   },
 };
 vm.createContext(sandbox);
-for (const file of ['order-core.js', 'order-confirmation.js', 'landing-quote.js', 'brookie-quote.js']) vm.runInContext(fs.readFileSync(`order/assets/${file}`, 'utf8'), sandbox);
+for (const file of ['order-core.js', 'order-confirmation.js', 'landing-quote.js', 'order-email-quote.js', 'brookie-quote.js']) vm.runInContext(fs.readFileSync(`order/assets/${file}`, 'utf8'), sandbox);
 sandbox.window.NMOrderCore.postLandingOrder = async payload => {
   events.push('save');
   if (saveFail) throw new Error('저장 실패');

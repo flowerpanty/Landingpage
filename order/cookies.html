@@ -100,7 +100,7 @@
     ]
   }
   </script>
-  <link rel="stylesheet" href="/order/assets/order.css" />
+  <link rel="stylesheet" href="/order/assets/order.css?v=f585eee97751" />
   <style>
     :root {
       --ink: #171313;
@@ -580,8 +580,8 @@
       display: grid;
       grid-template-columns: 1fr;
       gap: 10px;
-      max-height: 292px;
-      overflow-y: auto;
+      max-height: none;
+      overflow: visible;
       padding: 2px 2px 10px;
       scrollbar-width: none;
     }
@@ -1148,7 +1148,7 @@
       100% { transform: scale(1); }
     }
   </style>
-  <link rel="stylesheet" href="/order/assets/order-confirmation.css">
+  <link rel="stylesheet" href="/order/assets/order-confirmation.css?v=cf9f255d554c">
 </head>
 <body>
   <header class="siteHeader">
@@ -1190,6 +1190,7 @@
           <div class="fieldGrid">
             <label><span>고객명</span><input id="customerName" type="text" placeholder="성함" autocomplete="name" /><small class="fieldError" id="customerNameError" hidden></small></label>
             <label><span>핸드폰</span><input id="customerPhone" type="tel" placeholder="010-0000-0000" autocomplete="tel" /><small class="fieldError" id="customerPhoneError" hidden></small></label>
+            <label class="emailField"><span>이메일 (선택)</span><input id="customerEmail" type="email" autocomplete="email" placeholder="example@email.com" maxlength="254" /><small class="order-email-guide">✉ 견적서를 이메일로도 받아보세요! 이메일을 입력하면 견적서를 바로 보내드려요.</small><small class="fieldError" id="customerEmailError" hidden></small></label>
           </div>
         </article>
         <article class="card">
@@ -1241,17 +1242,8 @@
       <div class="pageHead">
         <p class="eyebrow">Step 02</p>
         <h2 id="flavorTitle">맛 수량 선택</h2>
-        <p class="lead" id="flavorGuide">원하는 맛을 누르거나 + 버튼으로 수량을 담아주세요.</p>
-        <p class="orderActionHint">맛 고르기가 어렵다면 추천 조합을 골라보세요.</p>
+        <p class="lead" id="flavorGuide">원하는 맛을 골라 수량을 담아주세요.</p>
       </div>
-      <p class="presetGuide">추천 조합을 누르면 패키지 수량에 맞춰 자동으로 담겨요.</p>
-      <div class="presetPills" aria-label="빠른 추천 조합">
-        <button type="button" onclick="applyFlavorPreset('popular')">인기 조합</button>
-        <button type="button" onclick="applyFlavorPreset('choco')">초코 좋아요</button>
-        <button type="button" onclick="applyFlavorPreset('bulk')">단체 답례</button>
-        <button type="button" onclick="applyFlavorPreset('kids')">아이들 간식</button>
-      </div>
-      <button class="mobileFlavorDisclosure" id="toggleFlavorDetails" type="button" aria-expanded="false">직접 맛 고르기</button>
       <div class="flavorGrid" id="flavorGrid"></div>
       <div class="currentBox">
         <div>
@@ -1259,7 +1251,7 @@
           <span id="currentBuildText">패키지와 맛을 선택해 주세요.</span>
         </div>
         <div class="currentBuildSummary" id="currentBuildSummary" aria-live="polite"></div>
-        <button class="btn blue full" id="continueFromFlavor" type="button">이 구성으로 다음 →</button>
+        <button class="btn blue full" id="continueFromFlavor" type="button">다음으로 넘어가기 →</button>
         <button class="btn ghost full" id="addBundleButton" type="button">+ 다른 구성 추가</button>
       </div>
       <div class="cartBox" id="flavorCartBox"></div>
@@ -1385,9 +1377,10 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite">선택 내용이 복사됐어요.</div>
 
-  <script src="/order/assets/order-core.js"></script>
-  <script src="/order/assets/order-confirmation.js"></script>
-  <script src="/order/assets/landing-quote.js"></script>
+  <script src="/order/assets/order-core.js?v=d981c0333e61"></script>
+  <script src="/order/assets/order-confirmation.js?v=22ff27c72ffd"></script>
+  <script src="/order/assets/landing-quote.js?v=7395b88324d6"></script>
+  <script src="/order/assets/order-email-quote.js?v=158b8d5e3211"></script>
   <script>
     const kakaoUrl = "https://pf.kakao.com/_QdCaK/chat";
     const cookieUnitPrice = 4500;
@@ -1404,12 +1397,6 @@
       { id: "matcha-macadamia", name: "말차마카다미아", character: "개구리", image: "/order/assets/public/cookie-assets/flavors/flavor-07.webp", short: "말차 마카다미아" }
     ];
 
-    const flavorPresets = {
-      popular: ["walnut-choco", "double-choco", "butterscotch", "matcha-macadamia"],
-      choco: ["double-choco", "walnut-choco", "oreo-choco", "black-peanut"],
-      bulk: ["walnut-choco", "butterscotch", "lotus-caramel", "matcha-macadamia"],
-      kids: ["oreo-choco", "lotus-caramel", "butterscotch", "double-choco"]
-    };
 
     const packages = [
       { id: "one-box", name: "1구박스", fee: 600, unit: 1, image: "/order/assets/public/cookie-assets/gallery/one-box-01.webp", desc: "깔끔한 단일 선물용", badge: "쿠키 1개당 +600원", examples: ["one-box-01", "one-box-12"] },
@@ -1431,6 +1418,7 @@
       step: 1,
       customerName: "",
       customerPhone: "",
+      customerEmail: "",
       date: "",
       time: "12:00~13:00",
       method: "매장 픽업",
@@ -1523,6 +1511,7 @@
         state.step = clampStep(saved.step, 1, 5, 1);
         state.customerName = typeof saved.customerName === "string" ? saved.customerName : "";
         state.customerPhone = typeof saved.customerPhone === "string" ? saved.customerPhone : "";
+        state.customerEmail = typeof saved.customerEmail === "string" ? saved.customerEmail : "";
         state.date = typeof saved.date === "string" && saved.date >= minDate ? saved.date : minDate;
         state.time = typeof saved.time === "string" ? saved.time : state.time;
         state.method = saved.method === "퀵 배송" ? "퀵 배송" : "매장 픽업";
@@ -1544,6 +1533,7 @@
         source: "cookie7",
         customerName: state.customerName,
         customerPhone: state.customerPhone,
+        customerEmail: state.customerEmail.trim(),
         deliveryDate: state.date,
         deliveryMethod: state.method,
         pickupTime: state.time,
@@ -1658,7 +1648,7 @@
     }
 
     function renderFlavors() {
-      $("flavorGuide").textContent = `${selectedPackage().name} 선택 중 · ${packageProgressText()}`;
+      $("flavorGuide").textContent = "원하는 맛을 골라 수량을 담아주세요.";
       $("flavorGrid").innerHTML = flavors.map((f) => {
         const qty = Number(state.flavorQty[f.id] || 0);
         return `
@@ -1691,30 +1681,9 @@
       `;
     }
 
-    function applyFlavorPreset(presetId) {
-      const preset = flavorPresets[presetId] || flavorPresets.popular;
-      const unit = selectedPackage().unit || 1;
-      const nextQty = {};
-      for (let index = 0; index < unit; index += 1) {
-        const flavorId = preset[index % preset.length];
-        nextQty[flavorId] = Number(nextQty[flavorId] || 0) + 1;
-      }
-      state.flavorQty = nextQty;
-      savePageState();
-      renderFlavors();
-      renderFloating();
-      showToast(`${packageProgressText()} 추천 조합을 담았어요.`);
-      window.NMOrderCore?.track("option_select", {
-        page: "cookies",
-        option_type: "flavor_preset",
-        option_value: presetId,
-        package_id: state.packageId
-      });
-    }
-
     function renderFlavorCart() {
       if (!state.items.length) {
-        $("flavorCartBox").innerHTML = `<h3>담은 구성</h3><p class="cartEmpty">맛을 선택한 뒤 <b>이 구성으로 다음</b>을 눌러주세요. 다른 패키지도 함께 주문하려면 <b>다른 구성 추가</b>를 이용하세요.</p>`;
+        $("flavorCartBox").innerHTML = `<h3>담은 구성</h3><p class="cartEmpty">맛을 선택한 뒤 <b>다음으로 넘어가기</b>을 눌러주세요. 다른 패키지도 함께 주문하려면 <b>다른 구성 추가</b>를 이용하세요.</p>`;
         return;
       }
       $("flavorCartBox").innerHTML = `
@@ -1755,6 +1724,7 @@
         ${rows}
         <div class="quoteLine"><span>고객명</span><b>${state.customerName || "미입력"}</b></div>
         <div class="quoteLine"><span>연락처</span><b>${state.customerPhone || "미입력"}</b></div>
+        ${state.customerEmail.trim() ? `<div class="quoteLine"><span>이메일</span><b>${state.customerEmail.trim().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}</b></div>` : ""}
         <div class="quoteLine"><span>수령</span><b>${state.method} · ${state.date || "미입력"} · ${state.time}</b></div>
         <div class="quoteLine"><span>스티커 제작</span><b>${state.sticker ? won(stickerPrice) : "선택 안 함"}</b></div>
       `;
@@ -1786,9 +1756,9 @@
       $("prevButton").textContent = "← 뒤로";
       const nextLabels = {
         1: "맛 선택하기 →",
-        2: "이 구성으로 다음 →",
-        3: "주문 정보 입력하기 →",
-        4: "견적 내용 확인하기 →",
+        2: "다음으로 넘어가기 →",
+        3: "다음으로 넘어가기 →",
+        4: "다음으로 넘어가기 →",
         5: window.NMOrderConfirmation.ctaLabel(false)
       };
       $("nextButton").textContent = nextLabels[state.step];
@@ -1932,13 +1902,14 @@
         return false;
       }
       if (step === 4) {
-        ["customerName", "customerPhone", "dateInput", "addressInput"].forEach((id) => {
+        ["customerName", "customerPhone", "customerEmail", "dateInput", "addressInput"].forEach((id) => {
           window.NMOrderCore?.clearFieldError(id);
         });
         if (!state.customerName.trim()) return focusWarn("customerName", "이름을 입력해주세요.");
         if (!window.NMOrderCore?.validateKoreanPhone?.(state.customerPhone)) {
           return focusWarn("customerPhone", "010 형식으로 입력해주세요.");
         }
+        if (state.customerEmail.trim() && (!$("customerEmail").checkValidity() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.customerEmail.trim()))) return focusWarn("customerEmail", "올바른 이메일 주소를 입력해주세요.");
         if (!state.date) return focusWarn("dateInput", "수령희망일을 선택해주세요.");
         if (state.method === "퀵 배송" && !state.address.trim()) {
           return focusWarn("addressInput", "퀵 배송은 주소가 필요해요.");
@@ -1991,6 +1962,7 @@
       return `[수제꾸덕쿠키 주문 상담]
 고객명: ${state.customerName || "미입력"}
 연락처: ${state.customerPhone || "미입력"}
+${state.customerEmail.trim() ? `이메일: ${state.customerEmail.trim()}` : ""}
 수령 방법: ${state.method}
 희망 수령일: ${state.date || "미입력"}
 시간: ${state.time}
@@ -2093,7 +2065,8 @@ ${lines}
       rect(20, 20, 1040, 88, "#5548e8");
       text("nothingmatters 견적서", 540, 65, 36, 700, "#fff", "center");
       rect(20, 108, 1040, 70);
-      text(`고객명: ${state.customerName || "미입력"} | 핸드폰: ${state.customerPhone || "미입력"}`, 32, 143, 24);
+      text(`고객명: ${state.customerName || "미입력"} | 핸드폰: ${state.customerPhone || "미입력"}`, 32, state.customerEmail.trim() ? 130 : 143, 24);
+      if (state.customerEmail.trim()) text(`이메일: ${state.customerEmail.trim()}`, 32, 158, 20);
       rect(20, 178, 1040, 70);
       text(`수령 방법: ${state.method} | 수령 희망일: ${state.date || "미입력"} | 시간: ${state.time}`, 32, 213, 24);
 
@@ -2157,6 +2130,7 @@ ${lines}
     function syncInputs() {
       state.customerName = $("customerName").value;
       state.customerPhone = $("customerPhone").value;
+      state.customerEmail = $("customerEmail").value;
       const selectedDate = $("dateInput").value;
       const minDate = tomorrowString();
       state.date = selectedDate < minDate || window.NMOrderCore?.isUnavailableDeliveryDate?.(selectedDate) ? minDate : selectedDate;
@@ -2164,6 +2138,7 @@ ${lines}
       state.time = $("timeInput").value;
       state.address = $("addressInput").value;
       state.request = $("requestInput").value;
+      if (!state.customerEmail.trim() || $("customerEmail").checkValidity()) window.NMOrderCore?.clearFieldError("customerEmail");
       if (state.customerName.trim()) window.NMOrderCore?.clearFieldError("customerName");
       if (window.NMOrderCore?.validateKoreanPhone?.(state.customerPhone)) {
         window.NMOrderCore?.clearFieldError("customerPhone");
@@ -2185,6 +2160,7 @@ ${lines}
       else sessionStorage.removeItem(STORAGE_KEY);
       $("customerName").value = state.customerName;
       $("customerPhone").value = state.customerPhone;
+      $("customerEmail").value = state.customerEmail;
       $("dateInput").value = state.date;
       $("timeInput").value = state.time;
       $("addressInput").value = state.address;
@@ -2193,7 +2169,7 @@ ${lines}
         button.setAttribute("aria-pressed", String(button.dataset.method === state.method));
       });
       $("addressWrap").style.display = state.method === "퀵 배송" ? "block" : "none";
-      ["customerName", "customerPhone", "dateInput", "timeInput", "addressInput", "requestInput"].forEach((id) => {
+      ["customerName", "customerPhone", "customerEmail", "dateInput", "timeInput", "addressInput", "requestInput"].forEach((id) => {
         $(id).addEventListener("input", syncInputs);
         $(id).addEventListener("change", () => {
           syncInputs();
@@ -2219,11 +2195,6 @@ ${lines}
       $("nextButton").addEventListener("click", nextStep);
       $("addBundleButton").addEventListener("click", addCurrentItem);
       $("continueFromFlavor").addEventListener("click", continueFromFlavor);
-      $("toggleFlavorDetails").addEventListener("click", () => {
-        const isOpen = document.body.classList.toggle("flavor-grid-open");
-        $("toggleFlavorDetails").setAttribute("aria-expanded", String(isOpen));
-        $("toggleFlavorDetails").textContent = isOpen ? "맛 선택 접기" : "직접 맛 고르기";
-      });
       $("ribbonButton").addEventListener("click", () => { state.ribbon = !state.ribbon; render(); });
       $("stickerButton").addEventListener("click", () => { state.sticker = !state.sticker; render(); });
       $("copyButton").addEventListener("click", copyOrder);

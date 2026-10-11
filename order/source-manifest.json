@@ -4,22 +4,23 @@
   "importedAt": "2026-10-06",
   "sourceFiles": {
     "order.html": "db1d4156acc4cf545ae454117ac4f54eaa01fe60fef34c52d7d84e3108208dda",
-    "brookie.html": "2bcfa22cd996fcba9def652ce53641391b3cb2cdd531753302670db749f406e7",
-    "cookies.html": "d76eae6bde7a39079fa2f7ee208beece2a9cd59710e06799edfea319a1c82e13",
-    "lucky.html": "67dacffc5a043ba24e8d05cd1775c6ba77edf36fbbb0fde145274020de703609",
-    "cookie-flight.html": "530f50b6a58b6463f0c79e5c0a268647e03b9a56667281aeabc5c3999099550c",
-    "airplane-butter-cookie.html": "97467f3b9c6b8026b846e501e83d0595f8cdf56d243e1acf3310d918f0c44a04",
-    "cookie-crew.html": "a5d8ee20b55e5c50a0767282ebb9538782a331f8d52c9d334e089be33cb5f1c2",
-    "terminal-cookie.html": "414e0537b8996ca219eea021d667fdcc488d3c641d076905dd9eaf5a1ff6e335",
-    "order.css": "995f827dee1f1f630fbe23f15c3e291c66bd9a4641d088e9cef4cd9887585e7e",
+    "brookie.html": "d8724affd86ebaf74450936434eb5920cc336610ceae3bb4dd12a274a531df50",
+    "cookies.html": "423449d1e246dde92e4634afcdc26a0a04fa117cfb36a439b105bcbadb83b757",
+    "lucky.html": "5b7420f852ae1c2d94a8188c053baa6d275fc93e6cc0c9afbb3a0bab276c4ca6",
+    "cookie-flight.html": "c82ede53a11fc99bc1baa335e9fcee29682c9c20c5b6a610d32d50f5a07cb708",
+    "airplane-butter-cookie.html": "63069fd0408a49af08ee4d8586aeb522641cdb1e02a17ce020b81106e284b9fe",
+    "cookie-crew.html": "5f195472ff7350bb23165d765af376a09d6fbf2c614684d550fb4ddd43ee67e9",
+    "terminal-cookie.html": "1b5e25b59fc7923d8f3f2db3955722d71b6c8431c1e3f9b9e631ed6b1a04c643",
+    "order.css": "f585eee97751a8d7006c60de546857da69bed743cdd0174bb09e9405797e9ef5",
     "order-core.js": "d981c0333e61e273b3c94a61a37b17fd0dbcf2b713df82ef8469a33b9a0ac355",
-    "order-confirmation.css": "ca649d9344b65e5ce42512b6d44570465f0b88233cd067d0890135ea004a11ec",
-    "order-confirmation.js": "6ccdf914c658746313134aa0a9eeb61ac3ade7415ff7c0c9b967ea002a7eb73f",
+    "order-confirmation.css": "cf9f255d554c4d47f41fcb204a4785bdb22387be0aa42d270a8a7e6e37941d8c",
+    "order-confirmation.js": "22ff27c72ffd737ac24a5bb10e1bdf324664d863c17a3355881ff4ed1559c691",
     "landing-quote.js": "7395b88324d685b8d6480e2d3d87df0f96381da5ce312d20a44a006941b5a881",
     "new-product-order.css": "6e19cbe3f1953dc6153482f0d749b39c7fc275e60c08d4d834a9c9d765bf97a2",
-    "new-product-order.js": "4cf3e5a1f158a70cc55bad1f69274fff189ecf70d50993549fce7b654e56456d",
+    "new-product-order.js": "6ba01d8ab9cc77ab636eb277e6def3defa5af1ddf6f8c0d6b674263072d88866",
     "brookie-mobile.css": "77775daf528dc9c4a15b0008468f5f07c536bac5d7c1d0677b93142ea45589d6",
-    "brookie-quote.js": "ed7c0840b72954c60eede9e14fbcd7b87ea34cd7718aafd512cfd2b5994a648e"
+    "brookie-quote.js": "3f7467a2db4d7c42a6e68ec60279d90b78afe8eb56d62d26c452f4ae3b1aeb2e",
+    "order-email-quote.js": "158b8d5e3211de6b06dbb20c7edfbb51b77d65e69a907fed9dfe86639b2a4e34"
   },
   "brookieImport": {
     "repository": "flowerpanty/ThingMattersReserve",
@@ -35,5 +36,47 @@
       "brookie.html": "2bcfa22cd996fcba9def652ce53641391b3cb2cdd531753302670db749f406e7"
     },
     "deployedHtmlSha256": "bcc02a8654958e885e4a05a10d4c4eff0be466c2d7fb846df1f71b4791709f29"
+  },
+  "orderImport": {
+    "repository": "flowerpanty/ThingMattersReserve",
+    "commit": "cb32e887e04936b05ef54c0278e1bee10d9c25e7",
+    "sourceFiles": {
+      "order.css": "f585eee97751a8d7006c60de546857da69bed743cdd0174bb09e9405797e9ef5",
+      "order-confirmation.css": "cf9f255d554c4d47f41fcb204a4785bdb22387be0aa42d270a8a7e6e37941d8c",
+      "order-confirmation.js": "22ff27c72ffd737ac24a5bb10e1bdf324664d863c17a3355881ff4ed1559c691",
+      "order-core.js": "d981c0333e61e273b3c94a61a37b17fd0dbcf2b713df82ef8469a33b9a0ac355",
+      "landing-quote.js": "7395b88324d685b8d6480e2d3d87df0f96381da5ce312d20a44a006941b5a881",
+      "order-email-quote.js": "158b8d5e3211de6b06dbb20c7edfbb51b77d65e69a907fed9dfe86639b2a4e34",
+      "brookie-mobile.css": "77775daf528dc9c4a15b0008468f5f07c536bac5d7c1d0677b93142ea45589d6",
+      "brookie-quote.js": "3f7467a2db4d7c42a6e68ec60279d90b78afe8eb56d62d26c452f4ae3b1aeb2e",
+      "new-product-order.css": "6e19cbe3f1953dc6153482f0d749b39c7fc275e60c08d4d834a9c9d765bf97a2",
+      "new-product-order.js": "6ba01d8ab9cc77ab636eb277e6def3defa5af1ddf6f8c0d6b674263072d88866",
+      "brookie.html": "d8724affd86ebaf74450936434eb5920cc336610ceae3bb4dd12a274a531df50",
+      "cookies.html": "423449d1e246dde92e4634afcdc26a0a04fa117cfb36a439b105bcbadb83b757",
+      "lucky.html": "5b7420f852ae1c2d94a8188c053baa6d275fc93e6cc0c9afbb3a0bab276c4ca6",
+      "cookie-flight.html": "c82ede53a11fc99bc1baa335e9fcee29682c9c20c5b6a610d32d50f5a07cb708",
+      "airplane-butter-cookie.html": "63069fd0408a49af08ee4d8586aeb522641cdb1e02a17ce020b81106e284b9fe",
+      "cookie-crew.html": "5f195472ff7350bb23165d765af376a09d6fbf2c614684d550fb4ddd43ee67e9",
+      "terminal-cookie.html": "1b5e25b59fc7923d8f3f2db3955722d71b6c8431c1e3f9b9e631ed6b1a04c643"
+    },
+    "deployedFiles": {
+      "order.css": "f585eee97751a8d7006c60de546857da69bed743cdd0174bb09e9405797e9ef5",
+      "order-confirmation.css": "cf9f255d554c4d47f41fcb204a4785bdb22387be0aa42d270a8a7e6e37941d8c",
+      "order-confirmation.js": "22ff27c72ffd737ac24a5bb10e1bdf324664d863c17a3355881ff4ed1559c691",
+      "order-core.js": "d981c0333e61e273b3c94a61a37b17fd0dbcf2b713df82ef8469a33b9a0ac355",
+      "landing-quote.js": "7395b88324d685b8d6480e2d3d87df0f96381da5ce312d20a44a006941b5a881",
+      "order-email-quote.js": "158b8d5e3211de6b06dbb20c7edfbb51b77d65e69a907fed9dfe86639b2a4e34",
+      "brookie-mobile.css": "77775daf528dc9c4a15b0008468f5f07c536bac5d7c1d0677b93142ea45589d6",
+      "brookie-quote.js": "3f7467a2db4d7c42a6e68ec60279d90b78afe8eb56d62d26c452f4ae3b1aeb2e",
+      "new-product-order.css": "6e19cbe3f1953dc6153482f0d749b39c7fc275e60c08d4d834a9c9d765bf97a2",
+      "new-product-order.js": "2070ec6df0a83ae75c4e1830cf81502fffb8c3e72034841d39429f55e7508154",
+      "brookie.html": "0518ff0ba8bff6c02b2fc17163632ee0a049905585ea49f92318389b54180e33",
+      "cookies.html": "5c51da9dcb81481175115e590f593d59108d7dfad5babdbf646ca9036b0688e4",
+      "lucky.html": "18341f746fc6103320fdf9237d546654c9971d7f5cc93ed234061815b9a0efb5",
+      "cookie-flight.html": "9ecddd5f180f6653320ed776c7d1add5636493bd23c3a9823b7a66fd7964c45f",
+      "airplane-butter-cookie.html": "2f465d937118569c20d858f740f11ed99a928e0dc2f15273fe80b2ab92312a76",
+      "cookie-crew.html": "5d82e431da506c92ec618c19a8c4f9cd129342de50ad20db5c5818654191a34d",
+      "terminal-cookie.html": "d3f9eaa079046175f22e7f0176a43bf61bf0f010d5a5e15059ba2bc961fb480f"
+    }
   }
 }

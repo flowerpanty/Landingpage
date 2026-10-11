@@ -100,7 +100,7 @@
     ]
   }
   </script>
-  <link rel="stylesheet" href="/order/assets/order.css" />
+  <link rel="stylesheet" href="/order/assets/order.css?v=f585eee97751" />
   <style>
     :root {
       --ink: #171313;
@@ -1194,7 +1194,7 @@
       100% { transform: scale(1); }
     }
   </style>
-  <link rel="stylesheet" href="/order/assets/order-confirmation.css">
+  <link rel="stylesheet" href="/order/assets/order-confirmation.css?v=cf9f255d554c">
 </head>
 <body>
   <header class="siteHeader">
@@ -1232,6 +1232,7 @@
           <div class="fieldGrid">
             <label><span>고객명</span><input id="customerName" type="text" placeholder="성함" autocomplete="name" /><small class="fieldError" id="customerNameError" hidden></small></label>
             <label><span>핸드폰</span><input id="customerPhone" type="tel" placeholder="010-0000-0000" autocomplete="tel" /><small class="fieldError" id="customerPhoneError" hidden></small></label>
+            <label class="emailField"><span>이메일 (선택)</span><input id="customerEmail" type="email" autocomplete="email" placeholder="example@email.com" maxlength="254" /><small class="order-email-guide">✉ 견적서를 이메일로도 받아보세요! 이메일을 입력하면 견적서를 바로 보내드려요.</small><small class="fieldError" id="customerEmailError" hidden></small></label>
           </div>
         </article>
         <article class="card">
@@ -1439,9 +1440,10 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite">선택 내용이 복사됐어요.</div>
 
-  <script src="/order/assets/order-core.js"></script>
-  <script src="/order/assets/order-confirmation.js"></script>
-  <script src="/order/assets/landing-quote.js"></script>
+  <script src="/order/assets/order-core.js?v=d981c0333e61"></script>
+  <script src="/order/assets/order-confirmation.js?v=22ff27c72ffd"></script>
+  <script src="/order/assets/landing-quote.js?v=7395b88324d6"></script>
+  <script src="/order/assets/order-email-quote.js?v=158b8d5e3211"></script>
   <script>
     const kakaoUrl = "https://pf.kakao.com/_QdCaK/chat";
     const setPrice = 15000;
@@ -1457,6 +1459,7 @@
       step: 1,
       customerName: "",
       customerPhone: "",
+      customerEmail: "",
       date: "",
       time: "12:00~13:00",
       method: "매장 픽업",
@@ -1498,6 +1501,7 @@
         source: "lucky",
         customerName: state.customerName,
         customerPhone: state.customerPhone,
+        customerEmail: state.customerEmail.trim(),
         deliveryDate: state.date,
         deliveryMethod: state.method,
         pickupTime: state.time,
@@ -1524,6 +1528,7 @@
         state.step = clampStep(saved.step, 1, 3, 1);
         state.customerName = typeof saved.customerName === "string" ? saved.customerName : "";
         state.customerPhone = typeof saved.customerPhone === "string" ? saved.customerPhone : "";
+        state.customerEmail = typeof saved.customerEmail === "string" ? saved.customerEmail : "";
         state.date = typeof saved.date === "string" && saved.date >= minDate ? saved.date : minDate;
         state.time = typeof saved.time === "string" ? saved.time : state.time;
         state.method = saved.method === "퀵 배송" ? "퀵 배송" : "매장 픽업";
@@ -1560,6 +1565,7 @@
         <div class="quoteLine"><span>단가</span><b>${won(setPrice)}</b></div>
         <div class="quoteLine"><span>고객명</span><b>${state.customerName || "미입력"}</b></div>
         <div class="quoteLine"><span>연락처</span><b>${state.customerPhone || "미입력"}</b></div>
+        ${state.customerEmail.trim() ? `<div class="quoteLine"><span>이메일</span><b>${state.customerEmail.trim().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}</b></div>` : ""}
         <div class="quoteLine"><span>수령</span><b>${state.method} · ${state.date || "미입력"} · ${state.time}</b></div>
       `;
       $("quoteTotal").textContent = won(totalPrice());
@@ -1646,14 +1652,15 @@
 
     function validateStep(step) {
       if (step !== 2) return true;
-      ["customerName", "customerPhone", "dateInput", "addressInput"].forEach((id) => {
+      ["customerName", "customerPhone", "customerEmail", "dateInput", "addressInput"].forEach((id) => {
         window.NMOrderCore?.clearFieldError(id);
       });
       if (!state.customerName.trim()) return focusWarn("customerName", "이름을 입력해주세요.");
       if (!window.NMOrderCore?.validateKoreanPhone?.(state.customerPhone)) {
         return focusWarn("customerPhone", "010 형식으로 입력해주세요.");
       }
-      if (!state.date) return focusWarn("dateInput", "수령희망일을 선택해주세요.");
+      if (state.customerEmail.trim() && (!$("customerEmail").checkValidity() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.customerEmail.trim()))) return focusWarn("customerEmail", "올바른 이메일 주소를 입력해주세요.");
+        if (!state.date) return focusWarn("dateInput", "수령희망일을 선택해주세요.");
       if (state.method === "퀵 배송" && !state.address.trim()) {
         return focusWarn("addressInput", "퀵 배송은 주소가 필요해요.");
       }
@@ -1702,6 +1709,7 @@
     function syncInputs() {
       state.customerName = $("customerName").value;
       state.customerPhone = $("customerPhone").value;
+      state.customerEmail = $("customerEmail").value;
       const selectedDate = $("dateInput").value;
       const minDate = tomorrowString();
       state.date = selectedDate < minDate || window.NMOrderCore?.isUnavailableDeliveryDate?.(selectedDate) ? minDate : selectedDate;
@@ -1709,6 +1717,7 @@
       state.time = $("timeInput").value;
       state.address = $("addressInput").value;
       state.request = $("requestInput").value;
+      if (!state.customerEmail.trim() || $("customerEmail").checkValidity()) window.NMOrderCore?.clearFieldError("customerEmail");
       if (state.customerName.trim()) window.NMOrderCore?.clearFieldError("customerName");
       if (window.NMOrderCore?.validateKoreanPhone?.(state.customerPhone)) {
         window.NMOrderCore?.clearFieldError("customerPhone");
@@ -1726,6 +1735,7 @@
       return `[행운쿠키 주문 상담]
 고객명: ${state.customerName || "미입력"}
 연락처: ${state.customerPhone || "미입력"}
+${state.customerEmail.trim() ? `이메일: ${state.customerEmail.trim()}` : ""}
 수령 방법: ${state.method}
 희망 수령일: ${state.date || "미입력"}
 시간: ${state.time}
@@ -1806,7 +1816,8 @@
       rect(20, 20, 1040, 88, "#5548e8");
       text("nothingmatters 견적서", 540, 65, 36, 700, "#fff", "center");
       rect(20, 108, 1040, 70);
-      text(`고객명: ${state.customerName || "미입력"} | 핸드폰: ${state.customerPhone || "미입력"}`, 32, 143, 24);
+      text(`고객명: ${state.customerName || "미입력"} | 핸드폰: ${state.customerPhone || "미입력"}`, 32, state.customerEmail.trim() ? 130 : 143, 24);
+      if (state.customerEmail.trim()) text(`이메일: ${state.customerEmail.trim()}`, 32, 158, 20);
       rect(20, 178, 1040, 70);
       text(`수령 방법: ${state.method} | 수령 희망일: ${state.date || "미입력"} | 시간: ${state.time}`, 32, 213, 24);
 
@@ -1877,6 +1888,7 @@
       else sessionStorage.removeItem(STORAGE_KEY);
       $("customerName").value = state.customerName;
       $("customerPhone").value = state.customerPhone;
+      $("customerEmail").value = state.customerEmail;
       $("dateInput").value = state.date;
       $("timeInput").value = state.time;
       $("addressInput").value = state.address;
@@ -1886,7 +1898,7 @@
         button.setAttribute("aria-pressed", String(button.dataset.method === state.method));
       });
       $("addressWrap").style.display = state.method === "퀵 배송" ? "block" : "none";
-      ["customerName", "customerPhone", "dateInput", "timeInput", "addressInput", "requestInput"].forEach((id) => {
+      ["customerName", "customerPhone", "customerEmail", "dateInput", "timeInput", "addressInput", "requestInput"].forEach((id) => {
         $(id).addEventListener("input", syncInputs);
         $(id).addEventListener("change", () => {
           syncInputs();
