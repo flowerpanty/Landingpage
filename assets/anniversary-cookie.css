@@ -376,3 +376,15 @@ body.ac-page figcaption, .ac-custom-zoom, .ac-custom-intro-right, .ac-custom-swi
 @media (prefers-reduced-motion: reduce) {
   .ac-mobile-sticky { transition: none; }
 }
+
+/* Two booking choices, using the same destinations on desktop and mobile. */
+body.ac-page .ac-button-naver { background: #fff; border: 1px solid #4169e1; color: #4169e1 !important; }
+@media (max-width: 740px) {
+  .ac-hero-actions { gap: 10px; }
+  .ac-hero-actions .ac-button-primary, .ac-hero-actions .ac-button-naver { width: auto; min-width: 0; flex: 1; padding-inline: 12px; min-height: 50px; font-size: 14px; }
+  .ac-mobile-sticky { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .ac-mobile-sticky > span { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .ac-sticky-actions { display: flex; gap: 10px; }
+  .ac-sticky-actions a { flex: 1; min-width: 0; padding-inline: 12px; }
+  .ac-mobile-sticky .ac-button-naver { background: #fff !important; color: #4169e1 !important; border: 1px solid #4169e1; }
+}

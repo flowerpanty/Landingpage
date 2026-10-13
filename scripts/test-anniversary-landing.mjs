@@ -39,7 +39,11 @@ for (let number = 1; number <= 3; number += 1) {
 }
 const consultation = [...html.matchAll(/<a\b[^>]*data-event="order_anniversary_click"[^>]*>/g)];
 assert.ok(consultation.length >= 5);
-assert.ok(consultation.every(([tag]) => tag.includes('href="/order/anniversary-cookie"')));
+assert.ok(consultation.every(([tag]) => tag.includes('href="https://nothingmatters.co.kr/order/anniversary-cookie"')));
+const naverUrl = "https://map.naver.com/p/entry/place/1547319276?lng=126.8115357&lat=37.557402&placePath=%2Fbooking%3Fentry%3Dplt%26from%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202610130938%26locale%3Dko%26svcName%3Dmap_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh";
+const reservations = [...html.matchAll(/<a\b[^>]*data-event="pickup_reservation_click"[^>]*>/g)];
+assert.equal(reservations.length, 3);
+assert.ok(reservations.every(([tag]) => tag.includes(`href="${naverUrl.replaceAll("&", "&amp;")}"`)));
 assert.match(html, /href="\/order\/brookie"/);
 assert.match(html, /12개 이상 단체 주문/);
 assert.doesNotMatch(html, /<form\b|\/api\/landing-orders|결제 완료|예약 완료/);

@@ -589,6 +589,7 @@ async function verifyFlightAttendantGift(cdp, baseUrl) {
 }
 
 async function verifyAnniversaryLanding(cdp, baseUrl) {
+  const naverUrl = "https://map.naver.com/p/entry/place/1547319276?lng=126.8115357&lat=37.557402&placePath=%2Fbooking%3Fentry%3Dplt%26from%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202610130938%26locale%3Dko%26svcName%3Dmap_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh";
   const eventStart = cdp.events.length;
   const screenshots = path.join(ROOT, "output/playwright/anniversary-cookie");
   fs.mkdirSync(screenshots, { recursive: true });
@@ -617,7 +618,9 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
         galleryFits: [...document.querySelectorAll('.ac-gallery-grid img')].every(image => image.naturalWidth > 0 && getComputedStyle(image).objectFit === 'contain' && Math.abs(image.getBoundingClientRect().width / image.getBoundingClientRect().height - image.naturalWidth / image.naturalHeight) < .01),
         imageFits: images.map(image => ({ loaded: image.naturalWidth > 0, fit: getComputedStyle(image).objectFit, width: image.naturalWidth, height: image.naturalHeight })),
         stickyVisible: getComputedStyle(sticky).display !== 'none' && getComputedStyle(sticky).visibility !== 'hidden', stickyFits: button.left >= 0 && button.right <= innerWidth && button.height >= 44,
-        ctaUrls: [...document.querySelectorAll('a[data-event="order_anniversary_click"]')].map(link => link.href)
+        ctaUrls: [...document.querySelectorAll('a[data-event="order_anniversary_click"]')].map(link => link.href),
+        naverUrls: [...document.querySelectorAll('a[data-event="pickup_reservation_click"]')].map(link => link.href),
+        stickyButtonsFit: [...sticky.querySelectorAll('a')].every(link => { const rect = link.getBoundingClientRect(); return rect.left >= 0 && rect.right <= innerWidth && rect.height >= 44 && link.scrollWidth <= link.clientWidth + 1; })
       };
     }`);
     assert.ok(state.documentWidth <= width, `anniversary horizontal overflow at ${width}px`);
@@ -628,7 +631,8 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
     assert.ok(state.imageFits.every(image => image.loaded && image.fit === "contain" && image.width === 1122 && image.height === 1402), "all original custom guides must load without cropping");
     assert.equal(state.galleryCount, 6);
     assert.equal(state.galleryFits, true, "all six photos retain their original aspect ratios");
-    assert.ok(state.ctaUrls.length >= 5 && state.ctaUrls.every(url => url === `${baseUrl}/order/anniversary-cookie`));
+    assert.ok(state.ctaUrls.length >= 5 && state.ctaUrls.every(url => url === "https://nothingmatters.co.kr/order/anniversary-cookie"));
+    assert.deepEqual(state.naverUrls, [naverUrl, naverUrl, naverUrl]);
     assert.equal(state.gridDisplay, "grid");
     assert.equal(state.gridOverflow, false);
     assert.ok(state.customCards.every(card => card.left >= 0 && card.right <= width), "custom photos must stay inside the viewport");
@@ -645,6 +649,7 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
       await wait(250);
       await waitFor(cdp, "() => document.querySelector('.ac-mobile-sticky').classList.contains('is-visible') && !document.querySelector('.ac-mobile-sticky').inert", "sticky reservation appears after scrolling past the main reservation button");
       assert.equal(state.stickyFits, true);
+      assert.equal(state.stickyButtonsFit, true, "both online order and Naver booking buttons must fit on mobile");
     } else {
       assert.equal(columns, 3);
       assert.ok(state.customCards.every(card => Math.abs(card.top - state.customCards[0].top) < 1), "desktop keeps all three photos in one row");
@@ -666,8 +671,8 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
       fs.writeFileSync(path.join(screenshots, `${width}-gallery.png`), gallery.data, "base64");
     }
   }
-  await evaluate(cdp, "() => { window.__anniversaryEvents = []; window.gtag = (...args) => window.__anniversaryEvents.push(args); const link = document.querySelector('.ac-hero-actions a[data-event]'); link.addEventListener('click', event => event.preventDefault(), { once: true }); link.click(); return true; }");
-  assert.deepEqual(await evaluate(cdp, "() => window.__anniversaryEvents.map(event => [event[1], event[2].page_context])"), [["order_anniversary_click", "anniversary_cookie"]]);
+  await evaluate(cdp, "() => { window.__anniversaryEvents = []; window.gtag = (...args) => window.__anniversaryEvents.push(args); for (const link of document.querySelectorAll('.ac-hero-actions a[data-event]')) { link.addEventListener('click', event => event.preventDefault(), { once: true }); link.click(); } return true; }");
+  assert.deepEqual(await evaluate(cdp, "() => window.__anniversaryEvents.map(event => [event[1], event[2].page_context])"), [["order_anniversary_click", "anniversary_cookie"], ["pickup_reservation_click", "anniversary_cookie"]]);
   for (const route of ["/order", "/order/brookie", "/brookie/"]) assert.equal(await request(baseUrl, route), 200);
   assert.equal(cdp.events.slice(eventStart).some(event => event.method === "Runtime.exceptionThrown"), false, "anniversary page has no JavaScript runtime errors");
   for (const width of [390, 1280]) {
