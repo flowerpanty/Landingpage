@@ -702,7 +702,17 @@ for (const loc of locs) {
   }
 
   for (const product of graph.filter((item) => item["@type"] === "Product")) {
-    assert.equal(product.offers?.availability, undefined, `${pathname}: Product offers must not claim InStoreOnly or another unverified availability`);
+    assert.equal(product.brand?.["@type"], "Brand", `${pathname}: Product brand must use the Google-supported Brand type`);
+    assert.equal(product.brand?.name, businessFacts.brandName, `${pathname}: Product brand must identify nothingmatters`);
+    if (pathname === "/products/cookie-flight/") {
+      assert.deepEqual(product.category, {
+        "@type": "CategoryCode",
+        inCodeSet: "https://www.google.com/basepages/producttype/taxonomy-with-ids.en-US.txt",
+        codeValue: "2229",
+      }, `${pathname}: Product category must use the official Google Cookies category`);
+    }
+    const expectedAvailability = pathname === "/products/cookie-flight/" ? "https://schema.org/InStock" : undefined;
+    assert.equal(product.offers?.availability, expectedAvailability, `${pathname}: Product offers must match the verified availability for this product`);
     if (product.offers) {
       assert.ok(product.offers.priceCurrency, `${pathname}: Product offer missing currency`);
       assert.ok(product.offers.price != null || product.offers.lowPrice != null, `${pathname}: Product offer missing price`);

@@ -93,7 +93,9 @@
       "indexing": "index",
       "sitemap": true,
       "category": "비행기 쿠키 4종 선물세트",
+      "googleProductCategory": "2229",
       "price": 16000,
+      "availability": "https://schema.org/InStock",
       "orderUrl": "/order/cookie-flight",
       "primaryUrl": "/products/cookie-flight/",
       "urlRole": "primary-product",
@@ -320,7 +322,7 @@
         "minOrder": "1세트부터 예약 상담",
         "category": "기념일 쿠키 선물",
         "cardStatus": "new",
-        "description": "브루키 2개에 원하는 문구와 토퍼를 더하는 생일·결혼·100일 기념일 선물.",
+        "description": "1세트부터 예약하는 기념일 브루키 2구 선물. 생일·프로포즈·커플 100일·1주년·결혼기념일·결혼 축하·첫돌 축하·승진축하·시보해제에 문구와 토퍼를 더하는 20,000원 세트.",
         "thumbnail": "/images/anniversary/photo-2.jpg",
         "imageWidth": 768,
         "imageHeight": 1024,
@@ -334,6 +336,11 @@
             "@type": "PropertyValue",
             "name": "커스텀 안내",
             "value": "하트 문구·말풍선 이름 등 선택 디자인별 가능 부분. 글자 수와 실제 적용 조합은 예약 상담 시 확인"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "추천 기념일",
+            "value": "생일, 프로포즈, 커플 100일·1주년, 결혼·결혼기념일, 첫돌 축하, 승진축하, 시보해제"
           }
         ],
         "homeCard": {

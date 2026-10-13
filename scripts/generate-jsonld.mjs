@@ -44,8 +44,10 @@ const PRODUCT_META = {
         name: `nothingmatters ${product.name}`,
         price: product.price,
         lowPrice: product.lowPrice,
+        availability: product.availability,
         minOrder: product.minOrder,
         category: product.category,
+        googleProductCategory: product.googleProductCategory,
         additionalProperties: product.additionalProperties,
       },
     ])
@@ -409,9 +411,17 @@ function buildProduct(page) {
     image: [page.ogImage],
     url: page.pageUrl,
     brand: {
-      "@id": ORGANIZATION_ID,
+      "@type": "Brand",
+      "@id": `${SITE_URL}/#brand`,
+      name: BUSINESS_FACTS.brandName,
     },
-    category: meta.category,
+    category: meta.googleProductCategory
+      ? {
+          "@type": "CategoryCode",
+          inCodeSet: "https://www.google.com/basepages/producttype/taxonomy-with-ids.en-US.txt",
+          codeValue: meta.googleProductCategory,
+        }
+      : meta.category,
     mainEntityOfPage: {
       "@id": `${page.pageUrl}#webpage`,
     },
@@ -434,6 +444,7 @@ function buildProduct(page) {
       url: page.pageUrl,
       price: meta.price,
       priceCurrency: "KRW",
+      ...(meta.availability ? { availability: meta.availability } : {}),
       seller: { "@id": ORGANIZATION_ID },
     };
   } else if (meta.lowPrice != null) {
@@ -752,6 +763,9 @@ for (const loc of locs) {
             failures.push(`${relativePath}: missing Product offer price or lowPrice`);
           } else if (!hasPrice && product.offers) {
             failures.push(`${relativePath}: Product offers present without known price`);
+          }
+          if (expectedMeta.availability && product.offers?.availability !== expectedMeta.availability) {
+            failures.push(`${relativePath}: Product offers availability does not match product metadata`);
           }
         }
       }

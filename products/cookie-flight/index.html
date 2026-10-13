@@ -668,9 +668,15 @@
         ],
         "url": "https://nothingmatters.co.kr/products/cookie-flight/",
         "brand": {
-          "@id": "https://nothingmatters.co.kr/#organization"
+          "@type": "Brand",
+          "@id": "https://nothingmatters.co.kr/#brand",
+          "name": "nothingmatters"
         },
-        "category": "비행기 쿠키 4종 선물세트",
+        "category": {
+          "@type": "CategoryCode",
+          "inCodeSet": "https://www.google.com/basepages/producttype/taxonomy-with-ids.en-US.txt",
+          "codeValue": "2229"
+        },
         "mainEntityOfPage": {
           "@id": "https://nothingmatters.co.kr/products/cookie-flight/#webpage"
         },
@@ -679,6 +685,7 @@
           "url": "https://nothingmatters.co.kr/products/cookie-flight/",
           "price": 16000,
           "priceCurrency": "KRW",
+          "availability": "https://schema.org/InStock",
           "seller": {
             "@id": "https://nothingmatters.co.kr/#organization"
           }
@@ -735,6 +742,14 @@
             "acceptedAnswer": {
               "@type": "Answer",
               "text": "김포공항·송정역 인근 NOTHINGMATTERS에서 예약 픽업합니다."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "차량 퀵도 가능한가요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "차량 퀵은 일정과 수량에 따라 가능 여부를 상담합니다. 비용은 수령 지역과 시간에 따라 달라지며 주문 확정 전에 안내해드립니다. 일반 택배는 진행하지 않습니다."
             }
           },
           {
@@ -967,6 +982,7 @@
 <details><summary>어떤 맛이 들어 있나요?</summary><p>클래식버터, 더블초코, 제주말차, 오렌지 4가지입니다.</p></details>
 <details><summary>가격은 얼마인가요?</summary><p>4개입 1박스에 16,000원입니다.</p></details>
 <details><summary>어디서 픽업하나요?</summary><p>김포공항·송정역 인근 NOTHINGMATTERS에서 예약 픽업합니다.</p></details>
+<details><summary>차량 퀵도 가능한가요?</summary><p>차량 퀵은 일정과 수량에 따라 가능 여부를 상담합니다. 비용은 수령 지역과 시간에 따라 달라지며 주문 확정 전에 안내해드립니다. 일반 택배는 진행하지 않습니다.</p></details>
 <details><summary>쿠키는 개별 포장되어 있나요?</summary><p>네. 각 쿠키를 개별 포장한 뒤 전용 박스에 담습니다.</p></details>
 <details><summary>단체 주문도 가능한가요?</summary><p>가능합니다. 수량과 일정은 카카오톡으로 문의해주세요.</p></details>
 </div>

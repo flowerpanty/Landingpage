@@ -98,6 +98,8 @@ This file is a guide to public website information. Crawler access is defined by
 
 ## Products and product guides
 
+- [기념일 브루키 2구 선물](https://nothingmatters.co.kr/anniversary-cookie/): 기념일 브루키 2구 세트. 20,000원. 브루키 2개와 문구 커스텀·상자 하단 메시지·토퍼 포함. 1세트부터 예약 상담. 생일·프로포즈·커플 100일·1주년·결혼기념일·결혼 축하·첫돌 축하·승진축하·시보해제 등 작은 축하용. 공항동 예약 픽업. 여러 명에게 나누는 결혼식·돌잔치 답례품은 /wedding-favor/ 및 /first-birthday-favor/, 12개 이상 단체 브루키는 /brookie/에서 확인.
+
 - [브라우니쿠키 답례품](https://nothingmatters.co.kr/products/brownie-cookie/): 결혼식과 회사 답례에 어울리는 브라우니쿠키입니다. 최소 12개부터 문구와 포장을 상담합니다.
 - [문구 커스텀 브라우니쿠키](https://nothingmatters.co.kr/products/custom-brownie-cookie/): 퇴사, 승진, 육아휴직 답례에 짧은 문구와 스티커를 더하는 커스텀 브라우니쿠키입니다.
 - [수제 꾸덕쿠키 선물세트](https://nothingmatters.co.kr/products/handmade-cookie/): 7가지 맛과 1구·2구·4구 포장을 고르는 수제 꾸덕쿠키입니다. 답례품과 간식 선물로 주문할 수 있어요.

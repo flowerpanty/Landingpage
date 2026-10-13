@@ -607,6 +607,13 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
       return {
         viewport: innerWidth, documentWidth: document.documentElement.scrollWidth,
         font: style.fontFamily, titleWeight: style.fontWeight,
+        h1Text: heading.textContent.trim(), h1Count: document.querySelectorAll('h1').length,
+        faqCount: document.querySelectorAll('.ac-faq-list details').length,
+        occasionCount: document.querySelectorAll('#moments .ac-moment-card').length,
+        factsCount: document.querySelectorAll('.ac-facts-grid dt').length,
+        answerFirst: Boolean(document.querySelector('#answer-first h2')),
+        answerAfterPrice: document.querySelector('#answer-first').getBoundingClientRect().top >= document.querySelector('.ac-hero-price').getBoundingClientRect().bottom,
+
         bodyWeight: getComputedStyle(document.querySelector('.ac-hero-description')).fontWeight,
         loadedFonts: [document.fonts.check('500 16px SeoulNotice'), document.fonts.check('900 16px SeoulNotice')],
         gridDisplay: getComputedStyle(grid).display, gridOverflow: grid.scrollWidth > grid.clientWidth,
@@ -626,6 +633,14 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
     assert.ok(state.documentWidth <= width, `anniversary horizontal overflow at ${width}px`);
     assert.ok(state.font.includes("SeoulNotice"));
     assert.equal(state.titleWeight, "900");
+    assert.equal(state.h1Text, "기념일 브루키 2구 선물");
+    assert.equal(state.h1Count, 1);
+    assert.equal(state.faqCount, 9);
+    assert.equal(state.occasionCount, 6);
+    assert.equal(state.factsCount, 6);
+    assert.equal(state.answerFirst, true);
+    assert.equal(state.answerAfterPrice, true);
+
     assert.equal(state.bodyWeight, "500");
     assert.deepEqual(state.loadedFonts, [true, true], "Seoul Notice medium and heavy fonts must load");
     assert.ok(state.imageFits.every(image => image.loaded && image.fit === "contain" && image.width === 1122 && image.height === 1402), "all original custom guides must load without cropping");
