@@ -69,7 +69,7 @@ try {
   assert.match(html, /canonical" href="https:\/\/nothingmatters\.co\.kr\/order"/);
   assert.match(html, /name="robots" content="index,follow/);
   assert.doesNotMatch(html, /<iframe|http-equiv="refresh"|thingmattersreserve/i);
-  assert.equal((html.match(/class="product-card /g) || []).length, 7);
+  assert.equal((html.match(/class="product-card /g) || []).length, registry.orderProducts.length);
 
   for (const product of registry.orderProducts) {
     const pathname = `/order/${product.slug}`;

@@ -33,7 +33,9 @@
     "/lucky": "/out/fortune/",
     "/lucky.html": "/out/fortune/",
     "/blog": "https://blog.nothingmatters.co.kr/",
-    "/blog/": "https://blog.nothingmatters.co.kr/"
+    "/blog/": "https://blog.nothingmatters.co.kr/",
+    "/order/anniversary-cookie/": "/order/anniversary-cookie",
+    "/order/anniversary-cookie.html": "/order/anniversary-cookie"
   },
   "orderProducts": [
     {
@@ -50,6 +52,11 @@
       "slug": "lucky",
       "name": "럭키쿠키 세트",
       "detailUrl": "/products/lucky-cookie/"
+    },
+    {
+      "slug": "anniversary-cookie",
+      "name": "축하쿠키",
+      "detailUrl": "/anniversary-cookie/"
     },
     {
       "slug": "cookie-flight",
@@ -298,6 +305,48 @@
     { "path": "/guides/lucky-cheering-cookie/", "status": "active", "indexing": "index", "sitemap": true, "lastmod": "2026-08-28" },
     { "path": "/out/scone/", "status": "archive", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-12" },
     { "path": "/dashboard/", "status": "admin", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
-    { "path": "/gallery-admin/", "status": "admin", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" }
+    { "path": "/gallery-admin/", "status": "admin", "indexing": "noindex", "sitemap": false, "lastmod": "2026-09-11" },
+    {
+      "path": "/anniversary-cookie/",
+      "status": "active",
+      "indexing": "index",
+      "sitemap": true,
+      "lastmod": "2026-10-13",
+      "breadcrumbName": "기념일 브루키 2구 세트",
+      "urlRole": "primary-product",
+      "product": {
+        "name": "기념일 브루키 2구 세트",
+        "price": 19000,
+        "minOrder": "1세트부터 예약 상담",
+        "category": "기념일 쿠키 선물",
+        "cardStatus": "new",
+        "description": "브루키 2개에 원하는 문구와 토퍼를 더하는 생일·결혼·100일 기념일 선물.",
+        "thumbnail": "/images/anniversary/photo-2.jpg",
+        "imageWidth": 768,
+        "imageHeight": 1024,
+        "additionalProperties": [
+          {
+            "@type": "PropertyValue",
+            "name": "기본 구성",
+            "value": "브루키 2개 + 기본 문구 커스텀 + 상자 하단 문구 변경 + 토퍼"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "커스텀 안내",
+            "value": "하트 문구·말풍선 이름 등 선택 디자인별 가능 부분. 글자 수와 실제 적용 조합은 예약 상담 시 확인"
+          }
+        ],
+        "homeCard": {
+          "englishName": "ANNIVERSARY BROOKIE",
+          "imageAlt": "토끼·호랑이 브루키 2구 세트 실제 제작 사진",
+          "tags": [
+            "2구 선물세트",
+            "문구 + 토퍼 포함"
+          ],
+          "orderInfo": "2구 세트 19,000원 · 1세트부터 예약 상담",
+          "showPriceOnMobile": true
+        }
+      }
+    }
   ]
 }

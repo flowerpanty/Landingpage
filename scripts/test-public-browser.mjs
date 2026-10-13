@@ -18,6 +18,7 @@ const CRITICAL_PATHS = [
   "/products/cookie-flight/",
   "/products/airplane-cookie/",
   "/brookie/",
+  "/anniversary-cookie/",
   "/products/handmade-cookie/",
   "/products/lucky-cookie/",
   "/magok-cookie/",
@@ -587,6 +588,103 @@ async function verifyFlightAttendantGift(cdp, baseUrl) {
   console.log("flight attendant gift browser checks: 360/390/430/1280px, five cards, CTA/gallery/combo fit, FAQ interaction, eight purchase events and intercepted same-tab store navigation PASS");
 }
 
+async function verifyAnniversaryLanding(cdp, baseUrl) {
+  const eventStart = cdp.events.length;
+  const screenshots = path.join(ROOT, "output/playwright/anniversary-cookie");
+  fs.mkdirSync(screenshots, { recursive: true });
+  for (const [width, height] of [[320, 667], [375, 667], [390, 844], [430, 932], [768, 1024], [1024, 768], [1280, 900], [1440, 900]]) {
+    await setViewport(cdp, width, height);
+    await navigate(cdp, `${baseUrl}/anniversary-cookie/`);
+    await evaluate(cdp, "async () => { await document.fonts.ready; await Promise.all([...document.images].map(image => { image.loading = 'eager'; return image.decode(); })); return true; }");
+    const state = await evaluate(cdp, `() => {
+      const grid = document.querySelector('.ac-custom-photo-grid');
+      const heading = document.querySelector('h1');
+      const style = getComputedStyle(heading);
+      const images = [...grid.querySelectorAll('img')];
+      const sticky = document.querySelector('.ac-mobile-sticky');
+      const button = sticky.querySelector('a').getBoundingClientRect();
+      return {
+        viewport: innerWidth, documentWidth: document.documentElement.scrollWidth,
+        font: style.fontFamily, titleWeight: style.fontWeight,
+        bodyWeight: getComputedStyle(document.querySelector('.ac-hero-description')).fontWeight,
+        loadedFonts: [document.fonts.check('500 16px SeoulNotice'), document.fonts.check('900 16px SeoulNotice')],
+        gridDisplay: getComputedStyle(grid).display, gridOverflow: grid.scrollWidth > grid.clientWidth,
+        customCards: [...grid.children].map(card => { const rect = card.getBoundingClientRect(); return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width }; }),
+        captionsHidden: [...document.querySelectorAll('figcaption')].every(caption => getComputedStyle(caption).display === 'none'),
+        heroPhoto: document.querySelector('.ac-hero-photo img').getBoundingClientRect().toJSON(),
+        heroPrice: document.querySelector('.ac-hero-price').getBoundingClientRect().toJSON(),
+        galleryCount: document.querySelectorAll('.ac-gallery-grid img').length,
+        galleryFits: [...document.querySelectorAll('.ac-gallery-grid img')].every(image => image.naturalWidth > 0 && getComputedStyle(image).objectFit === 'contain' && Math.abs(image.getBoundingClientRect().width / image.getBoundingClientRect().height - image.naturalWidth / image.naturalHeight) < .01),
+        imageFits: images.map(image => ({ loaded: image.naturalWidth > 0, fit: getComputedStyle(image).objectFit, width: image.naturalWidth, height: image.naturalHeight })),
+        stickyVisible: getComputedStyle(sticky).display !== 'none' && getComputedStyle(sticky).visibility !== 'hidden', stickyFits: button.left >= 0 && button.right <= innerWidth && button.height >= 44,
+        ctaUrls: [...document.querySelectorAll('a[data-event="order_anniversary_click"]')].map(link => link.href)
+      };
+    }`);
+    assert.ok(state.documentWidth <= width, `anniversary horizontal overflow at ${width}px`);
+    assert.ok(state.font.includes("SeoulNotice"));
+    assert.equal(state.titleWeight, "900");
+    assert.equal(state.bodyWeight, "500");
+    assert.deepEqual(state.loadedFonts, [true, true], "Seoul Notice medium and heavy fonts must load");
+    assert.ok(state.imageFits.every(image => image.loaded && image.fit === "contain" && image.width === 1122 && image.height === 1402), "all original custom guides must load without cropping");
+    assert.equal(state.galleryCount, 6);
+    assert.equal(state.galleryFits, true, "all six photos retain their original aspect ratios");
+    assert.ok(state.ctaUrls.length >= 5 && state.ctaUrls.every(url => url === `${baseUrl}/order/anniversary-cookie`));
+    assert.equal(state.gridDisplay, "grid");
+    assert.equal(state.gridOverflow, false);
+    assert.ok(state.customCards.every(card => card.left >= 0 && card.right <= width), "custom photos must stay inside the viewport");
+    assert.equal(state.captionsHidden, true, "photos must appear without visible captions");
+    const columns = await evaluate(cdp, "() => getComputedStyle(document.querySelector('.ac-custom-photo-grid')).gridTemplateColumns.split(' ').length");
+    if (width <= 740) {
+      assert.equal(columns, 2);
+      const [first, second, third] = state.customCards;
+      assert.ok(Math.abs(first.top - second.top) < 1 && third.top >= first.bottom && third.width > first.width * 1.9, "mobile custom photos show two in the first row and a larger third photo in the second row");
+      assert.equal(state.stickyVisible, false, "avoid duplicate sticky reservation buttons on the first screen");
+      assert.ok(state.heroPhoto.top >= 58 && state.heroPhoto.bottom < state.heroPrice.top, "the full product photo should appear before the price");
+      assert.ok(state.heroPrice.bottom <= height, `photo and full price must be visible on the first ${width}x${height} screen`);
+      await evaluate(cdp, "() => { document.querySelector('#customization').scrollIntoView({ behavior: 'instant' }); return true; }");
+      await wait(250);
+      await waitFor(cdp, "() => document.querySelector('.ac-mobile-sticky').classList.contains('is-visible') && !document.querySelector('.ac-mobile-sticky').inert", "sticky reservation appears after scrolling past the main reservation button");
+      assert.equal(state.stickyFits, true);
+    } else {
+      assert.equal(columns, 3);
+      assert.ok(state.customCards.every(card => Math.abs(card.top - state.customCards[0].top) < 1), "desktop keeps all three photos in one row");
+    }
+    const faq = await evaluate(cdp, "() => { const details = document.querySelector('.ac-faq-list details'); details.querySelector('summary').click(); return details.open; }");
+    assert.equal(faq, true);
+    if (width === 390 || width === 1280) {
+      await evaluate(cdp, "() => { scrollTo({ top: 0, behavior: 'instant' }); return true; }");
+      await wait(250);
+      const hero = await cdp.command("Page.captureScreenshot", { format: "png" });
+      fs.writeFileSync(path.join(screenshots, `${width}-hero.png`), hero.data, "base64");
+      await evaluate(cdp, "() => { document.querySelector('#customization').scrollIntoView({ behavior: 'instant' }); return true; }");
+      await wait(250);
+      const custom = await cdp.command("Page.captureScreenshot", { format: "png" });
+      fs.writeFileSync(path.join(screenshots, `${width}-customization.png`), custom.data, "base64");
+      await evaluate(cdp, "() => { document.querySelector('#gallery').scrollIntoView({ behavior: 'instant' }); return true; }");
+      await wait(250);
+      const gallery = await cdp.command("Page.captureScreenshot", { format: "png" });
+      fs.writeFileSync(path.join(screenshots, `${width}-gallery.png`), gallery.data, "base64");
+    }
+  }
+  await evaluate(cdp, "() => { window.__anniversaryEvents = []; window.gtag = (...args) => window.__anniversaryEvents.push(args); const link = document.querySelector('.ac-hero-actions a[data-event]'); link.addEventListener('click', event => event.preventDefault(), { once: true }); link.click(); return true; }");
+  assert.deepEqual(await evaluate(cdp, "() => window.__anniversaryEvents.map(event => [event[1], event[2].page_context])"), [["order_anniversary_click", "anniversary_cookie"]]);
+  for (const route of ["/order", "/order/brookie", "/brookie/"]) assert.equal(await request(baseUrl, route), 200);
+  assert.equal(cdp.events.slice(eventStart).some(event => event.method === "Runtime.exceptionThrown"), false, "anniversary page has no JavaScript runtime errors");
+  for (const width of [390, 1280]) {
+    await setViewport(cdp, width, 900);
+    await navigate(cdp, `${baseUrl}/`);
+    const cards = await evaluate(cdp, "() => [...document.querySelectorAll('.showroom-product-card')].map(card => ({ name: card.querySelector('h3').textContent.trim(), href: new URL(card.href).pathname, price: card.querySelector('.showroom-product-order-info').textContent.trim(), right: card.getBoundingClientRect().right }))");
+    assert.deepEqual(cards.slice(0, 7).map(card => card.name), ["COOKIE FLIGHT", "비행기 버터쿠키", "브루키", "수제꾸덕쿠키", "행운쿠키", "쿠키크루", "TERMINAL 카라멜 샌드쿠키"], "all original homepage products retain their order");
+    assert.equal(cards.length, 8);
+    assert.equal(cards.at(-1).href, "/anniversary-cookie/");
+    assert.ok(cards.at(-1).price.includes("19,000원"));
+    assert.ok(cards.every(card => card.right <= width), "homepage cards fit on mobile and desktop");
+    await evaluate(cdp, "() => { document.querySelector('.showroom-product-card[href=\"anniversary-cookie/\"]').click(); return true; }");
+    await waitFor(cdp, "() => location.pathname === '/anniversary-cookie/'", "homepage anniversary card opens the new page");
+  }
+  console.log("anniversary browser checks: 320/375/390/430/768/1024/1280/1440px, mobile 2+1 photos, hidden captions, desktop three-column photos, sticky CTA, FAQ, analytics and existing order routes PASS");
+}
+
 const flightProvider = await startMockFlightProvider();
 const server = await startServer({ NODE_ENV: "test", GIMPO_BOARD_TEST_API_URL: flightProvider.url, KAC_FLIGHT_API_KEY: "browser-test-key" });
 const debugPort = await reservePort();
@@ -609,6 +707,10 @@ try {
   await cdp.ready;
   await cdp.command("Page.enable");
   await cdp.command("Runtime.enable");
+
+  await verifyAnniversaryLanding(cdp, server.baseUrl);
+
+  if (!process.argv.includes("--anniversary-only")) {
 
   const sitemap = fs.readFileSync(path.join(ROOT, "sitemap.xml"), "utf8");
   const indexablePaths = [...sitemap.matchAll(/<loc>https:\/\/nothingmatters\.co\.kr([^<]+)<\/loc>/g)].map((match) => match[1]);
@@ -1527,9 +1629,9 @@ try {
   assert.equal(mobileProductCards.columns, 2, "OUR COOKIES should retain a two-column mobile grid");
   assert.equal(mobileProductCards.newArrivalSection, false, "NEW ARRIVAL should not render as a standalone section");
   assert.equal(mobileProductCards.newBadge, "NEW", "Cookie Crew should retain its NEW badge in OUR COOKIES");
-  assert.deepEqual(mobileProductCards.cards.map((card) => [card.name, card.href, card.event]), [["COOKIE FLIGHT", "products/cookie-flight/", "product_click"], ["비행기 버터쿠키", "products/airplane-cookie/", "product_click"], ["브루키", "brookie/", "product_click"], ["수제꾸덕쿠키", "out/", "product_click"], ["행운쿠키", "out/fortune/", "product_click"], ["쿠키크루", "cookie-crew/", "product_click"], ["TERMINAL 카라멜 샌드쿠키", "products/terminal-sand-cookie/", "product_click"]], "OUR COOKIES should lead with both airplane cookie products");
+  assert.deepEqual(mobileProductCards.cards.map((card) => [card.name, card.href, card.event]), [["COOKIE FLIGHT", "products/cookie-flight/", "product_click"], ["비행기 버터쿠키", "products/airplane-cookie/", "product_click"], ["브루키", "brookie/", "product_click"], ["수제꾸덕쿠키", "out/", "product_click"], ["행운쿠키", "out/fortune/", "product_click"], ["쿠키크루", "cookie-crew/", "product_click"], ["TERMINAL 카라멜 샌드쿠키", "products/terminal-sand-cookie/", "product_click"], ["기념일 브루키 2구 세트", "anniversary-cookie/", "product_click"]], "OUR COOKIES should retain the existing lineup and add the anniversary set");
   assert.ok(mobileProductCards.cards.every((card) => card.right <= 390 && card.englishHidden && card.descriptionHidden && card.tags === 2 && card.ctaHeight >= 44 && card.ctaText === "제품 보기 →"), `OUR COOKIES mobile cards should keep readable tags and tappable CTAs: ${JSON.stringify(mobileProductCards.cards)}`);
-  assert.deepEqual(mobileProductCards.cards.map(card => card.orderInfo), ['16,000원', '2,500원', '기본형 1구 7,800원 · 최소 12개', '4,500원부터 · 대부분 최소 수량 없음', '4가지맛 1세트 15,000원 · 최소 1세트', '가격·수량 상담', '예약·수량 상담']);
+  assert.deepEqual(mobileProductCards.cards.map(card => card.orderInfo), ['16,000원', '2,500원', '기본형 1구 7,800원 · 최소 12개', '4,500원부터 · 대부분 최소 수량 없음', '4가지맛 1세트 15,000원 · 최소 1세트', '가격·수량 상담', '예약·수량 상담', '2구 세트 19,000원 · 1세트부터 예약 상담']);
   await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.showroom-product-card--featured img').forEach((image) => { image.loading = 'eager'; })" });
   await waitFor(cdp, "() => [...document.querySelectorAll('.showroom-product-card--featured img')].every((image) => image.complete && image.naturalWidth > 0)", "new product card images should load");
   for (const [label, expectedPath] of [["COOKIE FLIGHT", "/products/cookie-flight/"], ["비행기 버터쿠키", "/products/airplane-cookie/"], ["TERMINAL 카라멜 샌드쿠키", "/products/terminal-sand-cookie/"]]) {
@@ -1628,6 +1730,7 @@ try {
   await wait(400);
   const cookieScreenshot = await cdp.command("Page.captureScreenshot", { format: "png" });
   fs.writeFileSync("/private/tmp/nothingmatters-cookie-crew-mobile.png", cookieScreenshot.data, "base64");
+  }
 } finally {
   cdp?.close();
   chrome.kill("SIGTERM");
@@ -1636,4 +1739,4 @@ try {
   fs.rmSync(BROWSER_GALLERY_DATA_DIR, { recursive: true, force: true });
 }
 
-console.log("public browser checks: passed");
+console.log(process.argv.includes("--anniversary-only") ? "anniversary and homepage browser checks: passed" : "public browser checks: passed");

@@ -32,7 +32,7 @@ const robotsResponse = await get(`${site}/robots.txt`);
 assert.equal(robotsResponse.status, 200);
 assert.doesNotMatch(await robotsResponse.text(), /Disallow:\s*\/order/i);
 assert.equal((await get(`${site}/api/landing-orders`)).status, 405, "The public order API adapter must be deployed (GET is intentionally rejected)");
-console.log("Main /order, seven forms, images, canonical, sitemap, robots and API adapter: deployed. No order submitted.");
+console.log("Main /order, eight forms, images, canonical, sitemap, robots and API adapter: deployed. No order submitted.");
 
 const old = await get(`${oldSite}/order`);
 if (process.argv.includes("--require-redirect")) {

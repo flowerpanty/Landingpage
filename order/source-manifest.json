@@ -78,5 +78,15 @@
       "cookie-crew.html": "5d82e431da506c92ec618c19a8c4f9cd129342de50ad20db5c5818654191a34d",
       "terminal-cookie.html": "d3f9eaa079046175f22e7f0176a43bf61bf0f010d5a5e15059ba2bc961fb480f"
     }
+  },
+  "anniversaryImport": {
+    "updatedAt": "2026-10-13",
+    "files": {
+      "new-product-order.js": "0579382daf8d2b4cfaa6835ffad70e2bddf67486bcbb181c30a5a7cd684bdd0f",
+      "anniversary-order.css": "061dee71b97c6b9c54ce3dbb04c071ea27aa9b150853566dee9a7a9373ddb169",
+      "anniversary-cookie.html": "1d8790aaab0e7dbfe4a391c77b93e9030e9299d30404b90c3fd1c320f27c0b4e"
+    },
+    "repository": "flowerpanty/ThingMattersReserve",
+    "commit": "50494c9b44e6cbaa3f79e0de1cbfdacabaa8c3ed"
   }
 }

@@ -1,0 +1,26 @@
+.nm-order-flow[data-source='anniversary'] { --nm-order-accent: #a63f65; --nm-order-pale: #fff0f5; --nm-order-border: #eddae2; }
+.nm-anniversary-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.nm-anniversary-options button { min-width: 0; padding: 0; overflow: hidden; border: 2px solid var(--nm-order-border); border-radius: 16px; background: #fff; color: var(--nm-order-ink); text-align: left; }
+.nm-anniversary-options button[aria-pressed='true'] { border-color: var(--nm-order-accent); background: var(--nm-order-pale); box-shadow: 0 0 0 2px var(--nm-order-pale); }
+.nm-anniversary-options img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: contain; }
+.nm-anniversary-options button > span { display: grid; grid-template-columns: 1fr auto; gap: 5px; padding: 14px; }
+.nm-anniversary-options strong { font-size: 21px; }
+.nm-anniversary-options small { grid-row: 2; font-size: 13px; line-height: 1.6; }
+.nm-anniversary-options b { grid-column: 2; grid-row: 1 / 3; align-self: center; display: grid; width: 26px; height: 26px; place-items: center; border: 1px solid var(--nm-order-border); border-radius: 50%; color: transparent; }
+.nm-anniversary-options [aria-pressed='true'] b { background: var(--nm-order-accent); color: #fff; }
+#nm-customization-fields textarea, .nm-anniversary-quantity-input input { display: block; width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid #b8c7d4; border-radius: 10px; background: #fff; color: var(--nm-order-ink); font: inherit; font-size: 16px; font-weight: 500; }
+#nm-customization-fields textarea { resize: vertical; }
+#nm-heart-help { display: block; margin-top: 8px; color: var(--nm-order-muted); font-size: 12px; font-weight: 500; line-height: 1.7; }
+.nm-anniversary-quantity-input { display: grid; grid-template-columns: 1fr 110px; align-items: center; gap: 12px; margin-top: 14px; font-size: 14px; font-weight: 700; }
+[data-source='anniversary'] .nm-order-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+[data-source='anniversary'] .nm-order-selected-lines span { max-width: 100%; border-radius: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-source='anniversary'] .nm-quote-details { white-space: pre-wrap; }
+@media (max-width: 430px) {
+  .nm-anniversary-options { gap: 9px; }
+  .nm-anniversary-designs { padding: 14px; }
+  .nm-anniversary-options button > span { padding: 10px; }
+  .nm-anniversary-options small { font-size: 11px; }
+  .nm-anniversary-options b { width: 22px; height: 22px; }
+  [data-source='anniversary'] .nm-order-facts > div { padding: 12px 8px; }
+  [data-source='anniversary'] .nm-order-facts strong { font-size: 12px; }
+}

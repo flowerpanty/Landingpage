@@ -6,6 +6,20 @@
   if (!root || !core || !quote || !confirmation) return;
 
   const products = {
+    anniversary: {
+      name: '축하쿠키', unit: '세트', unitPrice: 19000, customization: true,
+      image: '/order/assets/public/anniversary-assets/type-a.webp', imageAlt: '축하쿠키 A형 말풍선 이름과 하단 문구 예시',
+      tagline: '축하할 마음을, 우리만의 문구로 담아요.',
+      description: 'A형 또는 B형을 고르고 문구를 적은 뒤 세트 수량을 선택해 주세요.',
+      facts: [['SET', '브루키 2개'], ['INCLUDED', '문구 커스텀 + 토퍼'], ['PRICE', '1세트 19,000원']],
+      note: '1세트에 브루키 2개, 문구 커스텀과 토퍼가 포함돼요.',
+      quoteFileSlug: 'anniversary-cookie',
+      quoteOptions: { unitLabel: '세트', packageName: '브루키 2개 + 문구 커스텀 + 토퍼' },
+      designs: [
+        ['A', '말풍선 이름 + 하단 문구', '/order/assets/public/anniversary-assets/type-a.webp'],
+        ['B', '하트 안 문구 + 하단 문구', '/order/assets/public/anniversary-assets/type-b.webp'],
+      ],
+    },
     cookieFlight: {
       name: '쿠키 플라이트', unit: 'BOX', unitPrice: 16000,
       image: '/order/assets/public/cookie-flight-assets/cookie-flight-hero.webp',
@@ -63,6 +77,10 @@
   const state = {
     step: 1,
     quantity: 1,
+    designType: '',
+    speechBubbleName: '',
+    heartMessage: '',
+    bottomMessage: '',
     crewQuantities: { captain: 0, blue: 0, orange: 0, green: 0 },
     submitting: false,
     submitted: false,
@@ -72,7 +90,7 @@
   const byId = (id) => document.getElementById(id);
   const won = (value) => `${value.toLocaleString('ko-KR')}원`;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const stepNames = ['상품 선택', '주문 정보', '견적서'];
+  const stepNames = [product.customization ? '타입 · 문구 · 수량' : '상품 선택', '주문 정보', '견적서'];
   const submitLabel = confirmation.ctaLabel(product.pricingPending);
   const track = (event, params) => { try { core.track(event, { product: source, ...params }); } catch (_) { /* Analytics is optional. */ } };
   const counter = (key, label, count) => `
@@ -95,6 +113,23 @@
   const facts = product.facts
     ? `<div class="nm-order-facts">${product.facts.map(([tag, value]) => `<div><small>${tag}</small><strong>${value}</strong></div>`).join('')}</div>`
     : '';
+  const customization = product.customization ? `
+    <article class="nm-order-card nm-anniversary-designs">
+      <h2>01. 원하는 타입을 선택해 주세요</h2>
+      <p class="nm-order-hint">첫 번째 사진은 A형, 두 번째 사진은 B형입니다.</p>
+      <div class="nm-anniversary-options" role="group" aria-label="축하쿠키 타입">
+        ${product.designs.map(([type, label, image]) => `<button type="button" data-design="${type}" aria-pressed="false"><img src="${image}" alt="${type}형 · ${label}" width="1122" height="1402" decoding="async"><span><strong>${type}형</strong><small>${label}</small><b aria-hidden="true">✓</b></span></button>`).join('')}
+      </div>
+      <p id="nm-design-error" class="nm-order-alert" role="alert" hidden></p>
+    </article>
+    <article class="nm-order-card" id="nm-customization-fields" hidden>
+      <h2>02. 넣을 문구를 적어주세요</h2>
+      <div class="nm-order-fields">
+        <label class="nm-order-full" id="nm-speech-row" hidden><span>말풍선에 넣을 이름 <b>*</b></span><input id="nm-speechBubbleName" type="text" maxlength="80" placeholder="예: 태근 ♥ 유진" aria-describedby="nm-speechBubbleNameError"><small class="fieldError" id="nm-speechBubbleNameError" hidden></small></label>
+        <label class="nm-order-full" id="nm-heart-row" hidden><span>하트 안 문구 <b>*</b></span><input id="nm-heartMessage" type="text" maxlength="13" placeholder="예: 소연 / 상우 또는 LOVE" aria-describedby="nm-heart-help nm-heartMessageError"><small id="nm-heart-help">하트 하나당 한글 최대 2글자 또는 영문 최대 4글자. 두 하트에 다르게 넣으려면 소연 / 상우처럼 /로 구분해 주세요.</small><small class="fieldError" id="nm-heartMessageError" hidden></small></label>
+        <label class="nm-order-full"><span>하단 문구 <b>*</b></span><textarea id="nm-bottomMessage" rows="3" maxlength="200" placeholder="예: SWEET WEDDING DAY" aria-describedby="nm-bottomMessageError"></textarea><small class="fieldError" id="nm-bottomMessageError" hidden></small></label>
+      </div>
+    </article>` : '';
 
   root.innerHTML = `
     <header class="nm-order-header">
@@ -112,13 +147,15 @@
     </header>
     <main class="nm-order-main">
       <section class="nm-order-page" data-order-step="1" aria-labelledby="nm-step-one-title">
-        <div class="nm-order-hero"><img src="${product.image}" alt="${product.imageAlt}" fetchpriority="high" decoding="async"></div>
+        ${product.customization ? '' : `<div class="nm-order-hero"><img src="${product.image}" alt="${product.imageAlt}" fetchpriority="high" decoding="async"></div>`}
         <div class="nm-order-page-head"><p>STEP 01 · 상품 선택</p><h1 id="nm-step-one-title">${product.name}</h1><p>${product.tagline}</p><p>${product.description}</p></div>
         ${facts}
-        <article class="nm-order-card">
-          <h2>${product.crew ? '쿠키크루 종류별 수량' : product.unit === '' ? '주문 수량' : '몇 개 준비할까요?'}</h2>
+        ${customization}
+        <article class="nm-order-card" id="nm-quantity-card" ${product.customization ? 'hidden' : ''}>
+          <h2>${product.customization ? '03. 몇 세트 준비할까요?' : product.crew ? '쿠키크루 종류별 수량' : product.unit === '' ? '주문 수량' : '몇 개 준비할까요?'}</h2>
           ${product.crew ? '<p id="nm-order-minimum" class="nm-order-minimum" role="status" aria-live="polite"></p>' : ''}
           ${controls}
+          ${product.customization ? '<label class="nm-anniversary-quantity-input"><span>세트 수량 직접 입력</span><input id="nm-anniversary-quantity" type="number" min="1" max="10000" step="1" inputmode="numeric" value="1"></label>' : ''}
           <p class="nm-order-hint">${product.note}</p>
           <p id="nm-order-selection-error" class="nm-order-alert" role="alert" hidden></p>
         </article>
@@ -127,7 +164,7 @@
           <div id="nm-order-selected-lines" class="nm-order-selected-lines" aria-live="polite"></div>
           <dl class="nm-order-price-list">
             <dt>선택 수량</dt><dd id="nm-order-selected-quantity"></dd>
-            ${product.pricingPending ? '' : `<dt>${product.unit === 'BOX' ? '1 BOX 가격' : product.unit === '' ? '단가' : '1개 가격'}</dt><dd>${won(product.unitPrice)}</dd>`}
+            ${product.pricingPending ? '' : `<dt>${product.unit === 'BOX' ? '1 BOX 가격' : product.unit === '세트' ? '1세트 가격' : product.unit === '' ? '단가' : '1개 가격'}</dt><dd>${won(product.unitPrice)}</dd>`}
             <dt>${product.pricingPending ? '가격' : '예상 총액'}</dt><dd class="nm-order-highlight" id="nm-order-selection-total"></dd>
           </dl>
           <button class="nm-order-primary" type="button" data-next>주문 정보 입력하기 →</button>
@@ -198,6 +235,7 @@
     return product.crew ? Object.values(state.crewQuantities).reduce((sum, quantity) => sum + quantity, 0) : state.quantity;
   }
   function selectedLines() {
+    if (product.customization) return customizationDetails(customizationValues());
     return product.crew
       ? product.crew.filter(([key]) => state.crewQuantities[key] > 0).map(([key, name]) => `${name} ${state.crewQuantities[key]}개`)
       : [];
@@ -207,7 +245,49 @@
   }
   function quantityText() {
     if (product.unit === '') return `수량 ${selectedQuantity()}`;
-    return product.unit === 'BOX' ? `${selectedQuantity()} BOX` : `${selectedQuantity()}개`;
+    return product.unit === 'BOX' ? `${selectedQuantity()} BOX` : `${selectedQuantity()}${product.unit}`;
+  }
+  function customizationValues() {
+    return {
+      designType: state.designType,
+      ...(state.designType === 'A' ? { speechBubbleName: state.speechBubbleName.normalize('NFC').trim() } : { heartMessage: state.heartMessage.normalize('NFC').trim() }),
+      bottomMessage: state.bottomMessage.normalize('NFC').trim(),
+    };
+  }
+  function customizationDetails(options) {
+    return [
+      options.designType && `디자인: ${options.designType}형`,
+      options.speechBubbleName && `말풍선 이름: ${options.speechBubbleName}`,
+      options.heartMessage && `하트 안 문구: ${options.heartMessage}`,
+      options.bottomMessage && `하단 문구: ${options.bottomMessage}`,
+    ].filter(Boolean);
+  }
+  function customizationError() {
+    const options = customizationValues();
+    if (!options.designType) return ['nm-design-error', 'A형 또는 B형을 선택해 주세요.'];
+    if (options.designType === 'A' && (!options.speechBubbleName || options.speechBubbleName.length > 80)) return ['nm-speechBubbleName', '말풍선에 넣을 이름을 80글자 이내로 입력해 주세요.'];
+    if (options.designType === 'B') {
+      const hearts = options.heartMessage.split('/').map(value => value.trim());
+      if (hearts.length > 2 || hearts.some(value => !/^(?:[가-힣]{1,2}|[A-Za-z]{1,4})$/.test(value))) return ['nm-heartMessage', '하트 하나당 한글 2글자 또는 영문 4글자 이내로 입력해 주세요.'];
+    }
+    if (!options.bottomMessage || options.bottomMessage.length > 200) return ['nm-bottomMessage', '하단 문구를 200글자 이내로 입력해 주세요.'];
+    return null;
+  }
+  function renderCustomization() {
+    if (!product.customization) return;
+    root.querySelectorAll('[data-design]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.design === state.designType)));
+    byId('nm-customization-fields').hidden = !state.designType;
+    byId('nm-speech-row').hidden = state.designType !== 'A';
+    byId('nm-heart-row').hidden = state.designType !== 'B';
+    byId('nm-speechBubbleName').disabled = state.designType !== 'A';
+    byId('nm-heartMessage').disabled = state.designType !== 'B';
+    byId('nm-quantity-card').hidden = !!customizationError();
+    showMessage('nm-design-error', '');
+    if (state.designType) {
+      const image = root.querySelector('.nm-order-mini-summary img');
+      image.src = product.designs.find(([type]) => type === state.designType)[2];
+    }
+    renderSelection();
   }
   function showMessage(id, message) {
     const node = byId(id);
@@ -241,6 +321,23 @@
     showMessage('nm-order-selection-error', '');
   }
   function validateSelection() {
+    if (product.customization) {
+      const error = customizationError();
+      if (error) {
+        if (state.step !== 1) setStep(1, { skipValidation: true });
+        if (error[0] === 'nm-design-error') {
+          showMessage(error[0], error[1]);
+          root.querySelector('[data-design="A"]').focus();
+        } else { core.setFieldError(error[0], error[1]); core.focusField(error[0]); }
+        return false;
+      }
+      if (!Number.isSafeInteger(state.quantity) || state.quantity < 1 || state.quantity > 10000) {
+        if (state.step !== 1) setStep(1, { skipValidation: true });
+        showMessage('nm-order-selection-error', '수량은 1~10,000세트 사이의 정수로 입력해 주세요.');
+        byId('nm-anniversary-quantity').focus();
+        return false;
+      }
+    }
     if (!product.crew || selectedQuantity() >= product.minimumQuantity) return true;
     showMessage('nm-order-selection-error', `쿠키크루는 종류 합계 최소 12개부터 주문할 수 있어요. ${product.minimumQuantity - selectedQuantity()}개 더 선택해 주세요.`);
     if (state.step !== 1) setStep(1, { skipValidation: true });
@@ -276,10 +373,45 @@
       request: byId('nm-request').value.trim(),
     };
   }
+  function saveAnniversaryState() {
+    if (!product.customization) return;
+    try {
+      sessionStorage.setItem('nm-anniversary-state-v1', JSON.stringify({
+        step: state.step, quantity: state.quantity, designType: state.designType,
+        speechBubbleName: state.speechBubbleName, heartMessage: state.heartMessage,
+        bottomMessage: state.bottomMessage, customer: customerValues(),
+      }));
+    } catch (_) { /* Storage may be unavailable in a private browser. */ }
+  }
+  function restoreAnniversaryState() {
+    if (!product.customization) return;
+    try {
+      const navigation = performance.getEntriesByType('navigation')[0]?.type;
+      if (navigation !== 'reload' && navigation !== 'back_forward') return;
+      const saved = JSON.parse(sessionStorage.getItem('nm-anniversary-state-v1') || 'null');
+      if (!saved || typeof saved !== 'object') return;
+      state.designType = ['A', 'B'].includes(saved.designType) ? saved.designType : '';
+      ['speechBubbleName', 'heartMessage', 'bottomMessage'].forEach(key => {
+        state[key] = typeof saved[key] === 'string' ? saved[key] : '';
+        byId(`nm-${key}`).value = state[key];
+      });
+      state.quantity = Number.isSafeInteger(saved.quantity) && saved.quantity >= 1 && saved.quantity <= 10000 ? saved.quantity : 1;
+      byId('nm-anniversary-quantity').value = state.quantity;
+      Object.keys(customerValues()).forEach(key => {
+        if (typeof saved.customer?.[key] === 'string') byId(`nm-${key}`).value = saved.customer[key];
+      });
+      if (dateInput.value < dateInput.min || core.isUnavailableDeliveryDate(dateInput.value)) dateInput.value = '';
+      const method = byId('nm-deliveryMethod').value === 'quick' ? 'quick' : 'pickup';
+      byId('nm-deliveryMethod').value = method;
+      byId('nm-address-row').hidden = method !== 'quick';
+      root.querySelectorAll('[data-method]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.method === method)));
+    } catch (_) { /* Ignore invalid stored state. */ }
+  }
   function orderPayload() {
     return {
       source,
       ...customerValues(),
+      ...(product.customization ? customizationValues() : {}),
       ...(product.crew ? { crewQuantities: { ...state.crewQuantities }, pricingPending: true } : { quantity: state.quantity }),
     };
   }
@@ -290,6 +422,7 @@
         options.packageName ? `${item.name} · ${options.packageName}` : '',
         Array.isArray(options.flavors) ? `${item.name} · 맛 구성: ${options.flavors.join(' / ')}` : '',
         options.individuallyWrapped ? `${item.name} · 개별 포장` : '',
+        ...(product.customization ? customizationDetails(options) : []),
       ].filter(Boolean);
     });
     return {
@@ -309,7 +442,7 @@
   function draftQuoteData() {
     const items = product.crew
       ? product.crew.filter(([key]) => state.crewQuantities[key] > 0).map(([key, name]) => ({ name, quantity: state.crewQuantities[key], price: 0, options: { unitLabel: '개' } }))
-      : [{ name: product.quoteName || product.name, quantity: state.quantity, price: product.unitPrice, options: product.quoteOptions }];
+      : [{ name: product.customization ? `축하쿠키 2구 세트 · ${state.designType}형` : product.quoteName || product.name, quantity: state.quantity, price: product.unitPrice, options: { ...product.quoteOptions, ...(product.customization ? customizationValues() : {}) } }];
     return quoteDataFromItems(items, customerValues(), !!product.pricingPending, product.pricingPending ? 0 : selectedQuantity() * product.unitPrice);
   }
   function fromSaved(result, draft) {
@@ -368,12 +501,17 @@
   function setStep(next, options = {}) {
     if (state.submitting) return;
     const previous = state.step;
-    const target = Math.max(1, Math.min(3, options.fromHistory ? next : Math.min(next, previous + 1)));
+    let target = Math.max(1, Math.min(3, options.fromHistory ? next : Math.min(next, previous + 1)));
+    if (product.customization && options.fromHistory) {
+      if (customizationError() || !Number.isSafeInteger(state.quantity) || state.quantity < 1 || state.quantity > 10000) target = 1;
+      else if (target === 3 && !validateDetails()) target = 2;
+    }
     if (!options.skipValidation && target > state.step) {
       if (state.step === 1 && !validateSelection()) return;
       if (state.step === 2 && !validateDetails()) return;
     }
     state.step = target;
+    saveAnniversaryState();
     document.body.classList.toggle('order-confirm-quote-active', target === 3);
     byId('nm-floating-next').classList.toggle('order-confirm-cta', target === 3);
     if (target === 3) renderQuotation();
@@ -413,6 +551,7 @@
     } finally {
       state.submitting = false;
       controls.forEach((control) => { control.disabled = false; });
+      renderCustomization();
       byId('nm-order-submit').textContent = submitLabel;
       byId('nm-floating-next').textContent = state.step === 3 ? submitLabel : '다음 →';
     }
@@ -430,12 +569,21 @@
   }
   root.addEventListener('click', (event) => {
     if (state.submitting) { event.preventDefault(); return; }
+    const design = event.target.closest('[data-design]');
+    if (design) {
+      state.designType = design.dataset.design;
+      ['nm-speechBubbleName', 'nm-heartMessage', 'nm-bottomMessage'].forEach(core.clearFieldError);
+      renderCustomization();
+      track('option_select', { option_group: 'design', design_type: state.designType });
+      return;
+    }
     const qtyButton = event.target.closest('[data-delta]');
     if (qtyButton) {
       const delta = Number(qtyButton.dataset.delta);
       const crewType = qtyButton.dataset.crew;
       if (crewType) state.crewQuantities[crewType] = Math.min(10000, Math.max(0, state.crewQuantities[crewType] + delta));
       else state.quantity = Math.min(10000, Math.max(1, state.quantity + delta));
+      if (product.customization) byId('nm-anniversary-quantity').value = state.quantity;
       renderSelection();
       track('option_select', { qty: selectedQuantity() });
       return;
@@ -459,6 +607,28 @@
   byId('nm-order-kakao').addEventListener('click', () => receiveQuote(true));
   byId('nm-order-copy').addEventListener('click', copyOrder);
   byId('nm-order-confirmation-status').querySelector('[data-confirm-kakao]').addEventListener('click', () => receiveQuote(true));
+  if (product.customization) {
+    restoreAnniversaryState();
+    ['speechBubbleName', 'heartMessage', 'bottomMessage'].forEach(key => {
+      byId(`nm-${key}`).addEventListener('input', event => {
+        state[key] = event.target.value;
+        core.clearFieldError(`nm-${key}`);
+        renderCustomization();
+      });
+      byId(`nm-${key}`).addEventListener('blur', () => {
+        const error = customizationError();
+        if (error?.[0] === `nm-${key}`) core.setFieldError(error[0], error[1]);
+      });
+    });
+    byId('nm-anniversary-quantity').addEventListener('input', event => {
+      state.quantity = Number(event.target.value);
+      renderSelection();
+    });
+    renderCustomization();
+    root.addEventListener('input', saveAnniversaryState);
+    root.addEventListener('change', saveAnniversaryState);
+    root.addEventListener('click', saveAnniversaryState);
+  }
   renderSelection();
   pushStep = core.setupStepHistory({ getStep: () => state.step, setStep });
   if (state.step === 1) setStep(1, { fromHistory: true, skipValidation: true, scroll: false });

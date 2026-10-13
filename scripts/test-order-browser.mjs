@@ -127,7 +127,7 @@ const mock = http.createServer(async (req, res) => {
     res.writeHead(400);
     res.end(JSON.stringify({ success: false, message: '모의 저장 오류' }));
   } else {
-    const prices = { cookieFlight: 16000, airplaneButter: 2500, terminalCookie: 24000, lucky: 15000 };
+    const prices = { anniversary: 19000, cookieFlight: 16000, airplaneButter: 2500, terminalCookie: 24000, lucky: 15000 };
     res.end(JSON.stringify({ success: true, orderId: `mock-${requests.length}`, totalPrice: (prices[payload.source] || 0) * (payload.quantity || 0), pricingPending: payload.source === 'cookieCrew' }));
   }
 });
@@ -178,7 +178,7 @@ try {
   }
   assert.deepEqual(cdp.events.filter(event => event.method === 'Runtime.exceptionThrown').map(event => event.params.exceptionDetails.text), [], 'order UI must have no uncaught runtime errors');
   assert.deepEqual(cdp.events.filter(event => event.method === 'Runtime.consoleAPICalled' && event.params.type === 'error'), [], 'order UI must have no console errors');
-  console.log('Order browser: 8 pages at 320/390/1280px, main-origin navigation, all rendered images and no runtime errors PASS');
+  console.log('Order browser: 9 pages at 320/390/1280px, main-origin navigation, all rendered images and no runtime errors PASS');
 
   // Use the real browser scripts and the real main API adapter, backed by a
   // loopback mock. Sharing and Kakao navigation are local test adapters only.
@@ -227,6 +227,44 @@ try {
     assert.equal(requests.length, count + 2, 'reusing a saved quote must not create a second order');
     assert.equal(await evaluate(cdp, `() => location.pathname`), `/order/${slug}`);
   }
+  for (const designType of ['A', 'B']) {
+    await navigate(cdp, `${base}/order/anniversary-cookie`);
+    await evaluate(cdp, `() => { window.__kakaoVisits=0; window.NMQuote.navigateToKakao=()=>{window.__kakaoVisits++}; window.NMQuote.provideImage=async()=> 'download'; document.querySelector('#nm-floating-next').click(); return true; }`);
+    assert.equal(await evaluate(cdp, `() => document.getElementById('nm-design-error').hidden`), false);
+    await evaluate(cdp, `() => { document.querySelector('[data-design="${designType}"]').click(); return true; }`);
+    assert.equal(await evaluate(cdp, `() => document.getElementById('nm-quantity-card').hidden`), true, 'quantity waits for custom text');
+    const field = designType === 'A' ? 'nm-speechBubbleName' : 'nm-heartMessage';
+    await evaluate(cdp, `() => { const fill=(id,value)=>{const node=document.getElementById(id); node.value=value; node.dispatchEvent(new Event('input',{bubbles:true}));}; fill('${field}', '${designType === 'A' ? '태근 ♥ 유진' : '세글자'}'); fill('nm-bottomMessage','행복한 기념일'); return true; }`);
+    if (designType === 'B') {
+      await evaluate(cdp, `() => { document.querySelector('#nm-floating-next').click(); return true; }`);
+      assert.equal(await evaluate(cdp, `() => document.getElementById('nm-heartMessage').getAttribute('aria-invalid')`), 'true');
+      await evaluate(cdp, `() => {const node=document.getElementById('nm-heartMessage'); node.value='소연 / 상우'; node.dispatchEvent(new Event('input',{bubbles:true})); return true;}`);
+    }
+    assert.equal(await evaluate(cdp, `() => document.getElementById('nm-quantity-card').hidden`), false);
+    await evaluate(cdp, `() => { const node=document.getElementById('nm-anniversary-quantity'); node.value='2'; node.dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('#nm-floating-next').click(); return true; }`);
+    await evaluate(cdp, `() => { const fill=(id,value)=>{const node=document.getElementById(id); node.value=value; node.dispatchEvent(new Event('input',{bubbles:true}));}; fill('nm-customerName','축하쿠키 검증'); fill('nm-customerPhone','010-0000-0000'); fill('nm-deliveryDate',document.getElementById('nm-deliveryDate').min); fill('nm-pickupTime',document.getElementById('nm-pickupTime').options[1].value); document.querySelector('#nm-floating-next').click(); return true; }`);
+    const preview = await evaluate(cdp, `() => document.getElementById('nm-order-quote-preview').textContent`);
+    assert(preview.includes(`${designType}형`) && preview.includes('행복한 기념일') && preview.includes('38,000원'));
+    assert(preview.includes(designType === 'A' ? '태근 ♥ 유진' : '소연 / 상우'));
+    await cdp.command('Page.reload', { ignoreCache: true });
+    await waitFor(cdp, `() => document.readyState==='complete' && document.getElementById('nm-order-quote-preview')?.textContent.includes('${designType}형')`, 'anniversary reload restores options and quote step');
+    assert.equal(await evaluate(cdp, `() => document.getElementById('${field}').value`), designType === 'A' ? '태근 ♥ 유진' : '소연 / 상우');
+    assert.equal(await evaluate(cdp, `() => document.getElementById('nm-anniversary-quantity').value`), '2');
+    await evaluate(cdp, `() => {window.__kakaoVisits=0; window.NMQuote.navigateToKakao=()=>{window.__kakaoVisits++}; window.NMQuote.provideImage=async()=> 'download'; return true;}`);
+    const count=requests.length;
+    await evaluate(cdp, `() => {document.getElementById('nm-order-submit').click(); return true;}`);
+    await waitFor(cdp, `() => window.__kakaoVisits===1`, 'anniversary saved and local Kakao navigation');
+    assert.equal(requests.length,count+1);
+    assert.equal(requests.at(-1).source,'anniversary');
+    assert.equal(requests.at(-1).designType,designType);
+    assert.equal(requests.at(-1).bottomMessage,'행복한 기념일');
+    assert.equal(requests.at(-1)[designType === 'A' ? 'heartMessage' : 'speechBubbleName'],undefined);
+    await evaluate(cdp, `() => {document.getElementById('nm-order-submit').click(); return true;}`);
+    await waitFor(cdp, `() => window.__kakaoVisits===2`, 'anniversary saved quote reused');
+    assert.equal(requests.length,count+1);
+    fs.writeFileSync(`/private/tmp/nm-anniversary-${designType}-quote.png`,(await cdp.command('Page.captureScreenshot',{format:'png',captureBeyondViewport:true})).data,'base64');
+  }
+  console.log('Anniversary browser: A/B fields, heart length, text before quantity, correct quote options/price, save and duplicate prevention PASS');
   console.log('Order browser: original quantity/price, crew minimum, required fields, dates/time, quote rendering, mock save/error/retry and duplicate prevention PASS');
   assert.deepEqual(cdp.events.filter(event => event.method === 'Runtime.exceptionThrown'), [], 'order interaction must have no uncaught runtime errors');
 } finally {
