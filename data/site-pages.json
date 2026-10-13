@@ -316,7 +316,7 @@
       "urlRole": "primary-product",
       "product": {
         "name": "기념일 브루키 2구 세트",
-        "price": 19000,
+        "price": 20000,
         "minOrder": "1세트부터 예약 상담",
         "category": "기념일 쿠키 선물",
         "cardStatus": "new",
@@ -343,7 +343,7 @@
             "2구 선물세트",
             "문구 + 토퍼 포함"
           ],
-          "orderInfo": "2구 세트 19,000원 · 1세트부터 예약 상담",
+          "orderInfo": "2구 세트 20,000원 · 1세트부터 예약 상담",
           "showPriceOnMobile": true
         }
       }

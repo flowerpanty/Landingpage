@@ -677,7 +677,7 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
     assert.deepEqual(cards.slice(0, 7).map(card => card.name), ["COOKIE FLIGHT", "비행기 버터쿠키", "브루키", "수제꾸덕쿠키", "행운쿠키", "쿠키크루", "TERMINAL 카라멜 샌드쿠키"], "all original homepage products retain their order");
     assert.equal(cards.length, 8);
     assert.equal(cards.at(-1).href, "/anniversary-cookie/");
-    assert.ok(cards.at(-1).price.includes("19,000원"));
+    assert.ok(cards.at(-1).price.includes("20,000원"));
     assert.ok(cards.every(card => card.right <= width), "homepage cards fit on mobile and desktop");
     await evaluate(cdp, "() => { document.querySelector('.showroom-product-card[href=\"anniversary-cookie/\"]').click(); return true; }");
     await waitFor(cdp, "() => location.pathname === '/anniversary-cookie/'", "homepage anniversary card opens the new page");
@@ -1631,7 +1631,7 @@ try {
   assert.equal(mobileProductCards.newBadge, "NEW", "Cookie Crew should retain its NEW badge in OUR COOKIES");
   assert.deepEqual(mobileProductCards.cards.map((card) => [card.name, card.href, card.event]), [["COOKIE FLIGHT", "products/cookie-flight/", "product_click"], ["비행기 버터쿠키", "products/airplane-cookie/", "product_click"], ["브루키", "brookie/", "product_click"], ["수제꾸덕쿠키", "out/", "product_click"], ["행운쿠키", "out/fortune/", "product_click"], ["쿠키크루", "cookie-crew/", "product_click"], ["TERMINAL 카라멜 샌드쿠키", "products/terminal-sand-cookie/", "product_click"], ["기념일 브루키 2구 세트", "anniversary-cookie/", "product_click"]], "OUR COOKIES should retain the existing lineup and add the anniversary set");
   assert.ok(mobileProductCards.cards.every((card) => card.right <= 390 && card.englishHidden && card.descriptionHidden && card.tags === 2 && card.ctaHeight >= 44 && card.ctaText === "제품 보기 →"), `OUR COOKIES mobile cards should keep readable tags and tappable CTAs: ${JSON.stringify(mobileProductCards.cards)}`);
-  assert.deepEqual(mobileProductCards.cards.map(card => card.orderInfo), ['16,000원', '2,500원', '기본형 1구 7,800원 · 최소 12개', '4,500원부터 · 대부분 최소 수량 없음', '4가지맛 1세트 15,000원 · 최소 1세트', '가격·수량 상담', '예약·수량 상담', '2구 세트 19,000원 · 1세트부터 예약 상담']);
+  assert.deepEqual(mobileProductCards.cards.map(card => card.orderInfo), ['16,000원', '2,500원', '기본형 1구 7,800원 · 최소 12개', '4,500원부터 · 대부분 최소 수량 없음', '4가지맛 1세트 15,000원 · 최소 1세트', '가격·수량 상담', '예약·수량 상담', '2구 세트 20,000원 · 1세트부터 예약 상담']);
   await cdp.command("Runtime.evaluate", { expression: "document.querySelectorAll('.showroom-product-card--featured img').forEach((image) => { image.loading = 'eager'; })" });
   await waitFor(cdp, "() => [...document.querySelectorAll('.showroom-product-card--featured img')].every((image) => image.complete && image.naturalWidth > 0)", "new product card images should load");
   for (const [label, expectedPath] of [["COOKIE FLIGHT", "/products/cookie-flight/"], ["비행기 버터쿠키", "/products/airplane-cookie/"], ["TERMINAL 카라멜 샌드쿠키", "/products/terminal-sand-cookie/"]]) {

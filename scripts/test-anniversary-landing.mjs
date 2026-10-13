@@ -22,7 +22,7 @@ const sections = [...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map((match
 assert.equal(sections[sections.indexOf("set") + 1], "customization");
 
 const product = graph.find((node) => node["@type"] === "Product");
-assert.equal(product.offers.price, 19000);
+assert.equal(product.offers.price, 20000);
 assert.equal(product.offers.priceCurrency, "KRW");
 assert.equal(product.offers.url, url);
 assert.match(product.additionalProperty.find((property) => property.name === "기본 구성").value, /브루키 2개.*문구 커스텀.*토퍼/);
@@ -55,4 +55,4 @@ assert.ok(product.image.includes("https://nothingmatters.co.kr/images/anniversar
 assert.match(html, /fetchpriority="high"[^>]*src="\/images\/anniversary\/photo-2.jpg"/);
 assert.doesNotMatch(html, /2구 세트 최종 포장 사진은 아닙니다|구성 설명용 일러스트/);
 assert.ok(registry.orderProducts.some((item) => item.slug === 'anniversary-cookie' && item.detailUrl === '/anniversary-cookie/'), 'dedicated anniversary order is listed');
-console.log("anniversary landing: fixed KRW 19,000 offer, all three custom guides, exact FAQ schema, homepage link and separate consultation/bulk order paths PASS");
+console.log("anniversary landing: fixed KRW 20,000 offer, all three custom guides, exact FAQ schema, homepage link and separate consultation/bulk order paths PASS");

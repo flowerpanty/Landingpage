@@ -7,11 +7,11 @@
 
   const products = {
     anniversary: {
-      name: '축하쿠키', unit: '세트', unitPrice: 19000, customization: true,
+      name: '축하쿠키', unit: '세트', unitPrice: 20000, customization: true,
       image: '/order/assets/public/anniversary-assets/type-a.webp', imageAlt: '축하쿠키 A형 말풍선 이름과 하단 문구 예시',
       tagline: '축하할 마음을, 우리만의 문구로 담아요.',
       description: 'A형 또는 B형을 고르고 문구를 적은 뒤 세트 수량을 선택해 주세요.',
-      facts: [['SET', '브루키 2개'], ['INCLUDED', '문구 커스텀 + 토퍼'], ['PRICE', '1세트 19,000원']],
+      facts: [['SET', '브루키 2개'], ['INCLUDED', '문구 커스텀 + 토퍼'], ['PRICE', '1세트 20,000원']],
       note: '1세트에 브루키 2개, 문구 커스텀과 토퍼가 포함돼요.',
       quoteFileSlug: 'anniversary-cookie',
       quoteOptions: { unitLabel: '세트', packageName: '브루키 2개 + 문구 커스텀 + 토퍼' },

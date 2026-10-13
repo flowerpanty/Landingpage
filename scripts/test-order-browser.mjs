@@ -127,7 +127,7 @@ const mock = http.createServer(async (req, res) => {
     res.writeHead(400);
     res.end(JSON.stringify({ success: false, message: '모의 저장 오류' }));
   } else {
-    const prices = { anniversary: 19000, cookieFlight: 16000, airplaneButter: 2500, terminalCookie: 24000, lucky: 15000 };
+    const prices = { anniversary: 20000, cookieFlight: 16000, airplaneButter: 2500, terminalCookie: 24000, lucky: 15000 };
     res.end(JSON.stringify({ success: true, orderId: `mock-${requests.length}`, totalPrice: (prices[payload.source] || 0) * (payload.quantity || 0), pricingPending: payload.source === 'cookieCrew' }));
   }
 });
@@ -244,7 +244,7 @@ try {
     await evaluate(cdp, `() => { const node=document.getElementById('nm-anniversary-quantity'); node.value='2'; node.dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('#nm-floating-next').click(); return true; }`);
     await evaluate(cdp, `() => { const fill=(id,value)=>{const node=document.getElementById(id); node.value=value; node.dispatchEvent(new Event('input',{bubbles:true}));}; fill('nm-customerName','축하쿠키 검증'); fill('nm-customerPhone','010-0000-0000'); fill('nm-deliveryDate',document.getElementById('nm-deliveryDate').min); fill('nm-pickupTime',document.getElementById('nm-pickupTime').options[1].value); document.querySelector('#nm-floating-next').click(); return true; }`);
     const preview = await evaluate(cdp, `() => document.getElementById('nm-order-quote-preview').textContent`);
-    assert(preview.includes(`${designType}형`) && preview.includes('행복한 기념일') && preview.includes('38,000원'));
+    assert(preview.includes(`${designType}형`) && preview.includes('행복한 기념일') && preview.includes('40,000원'));
     assert(preview.includes(designType === 'A' ? '태근 ♥ 유진' : '소연 / 상우'));
     await cdp.command('Page.reload', { ignoreCache: true });
     await waitFor(cdp, `() => document.readyState==='complete' && document.getElementById('nm-order-quote-preview')?.textContent.includes('${designType}형')`, 'anniversary reload restores options and quote step');
