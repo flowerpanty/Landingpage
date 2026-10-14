@@ -93,7 +93,7 @@ This file is a guide to public website information. Crawler access is defined by
 - [퇴사·승진 답례품 쿠키](https://nothingmatters.co.kr/farewell-favor/): 퇴사·승진·육아휴직·시보해제·송별 답례품의 구성과 견적을 보는 상업 페이지. 문구 커스텀 브라우니쿠키와 기본 브라우니쿠키를 우선 비교하며 행운쿠키는 가벼운 응원·감사의 보조 옵션. 브루키 기본형 1구 7,800원, 최소 12개. 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담. 선택법·준비 안내는 /guides/farewell-favor-cookie/.
 
 - [낫띵메터스 | 강서구 수제쿠키·답례품 · 김포공항 픽업](https://nothingmatters.co.kr/): 서울 강서구 공항동에서 수제쿠키와 답례품을 예약 제작하는 낫띵메터스입니다. 김포공항·송정역 인근 예약 픽업과 마곡 기업행사·단체 주문을 상담합니다.
-- [단체·행사 답례품 쿠키 주문](https://nothingmatters.co.kr/bulk/): 결혼식, 기업행사, 학교·기관 간식에 맞는 단체 쿠키와 포장, 문구, 수량을 상담합니다.
+- [쿠키답례품 대표 허브](https://nothingmatters.co.kr/bulk/): 결혼식·돌잔치·기업행사·퇴사·승진 등 여러 사람에게 나누는 쿠키답례품을 비교하는 대표 허브. 브루키 기본형 1구 7,800원·최소 12개, 커스텀 브라우니·수제꾸덕쿠키·TERMINAL 등 용도별 상품과 예약 픽업·차량 퀵 상담 안내.
 - [소량 쿠키 선물 고르기](https://nothingmatters.co.kr/small-gift/): 감사, 생일, 응원 선물에 어울리는 수제쿠키와 행운쿠키, 곰돌이 스콘을 한눈에 비교하세요.
 - [쿠키 주문 상담 준비](https://nothingmatters.co.kr/contact/): 낫띵메터스 쿠키 주문 상담 준비 페이지입니다. 수량, 날짜, 용도, 포장 방향과 문의 방식을 정리해 답례품·행사 쿠키 상담을 빠르게 시작하세요.
 - [실제 제작 사례](https://nothingmatters.co.kr/works/): 낫띵메터스 공항동 작업실에서 실제로 만든 쿠키와 답례품 제작 사례를 사진으로 확인하세요.

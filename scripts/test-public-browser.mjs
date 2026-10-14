@@ -766,6 +766,79 @@ async function verifyOccasionConversion(cdp, baseUrl) {
   console.log("occasion conversion browser smoke: corporate/wedding/farewell at 390/1280, local anchors, exact quote/Kakao URLs and events, visible floating/sticky controls, safe tap targets, clear content/footer, real images and no runtime errors PASS");
 }
 
+async function verifyBulkHub(cdp, baseUrl) {
+  const screenshots = path.join(ROOT, "output/playwright/bulk-hub");
+  fs.mkdirSync(screenshots, { recursive: true });
+  for (const width of [390, 1280]) {
+    const eventStart = cdp.events.length;
+    await setViewport(cdp, width, width === 390 ? 844 : 900);
+    await navigate(cdp, `${baseUrl}/bulk/`);
+    await evaluate(cdp, "async () => { await document.fonts.ready; await Promise.all([...document.images].map(image => { image.loading = 'eager'; return image.decode(); })); return true; }");
+    const state = await evaluate(cdp, `() => {
+      const desktop = document.querySelector('.bulk-floating-nav');
+      const mobile = document.querySelector('.bulk-mobile-sticky');
+      const active = innerWidth >= 1200 ? desktop : mobile;
+      const rect = el => el.getBoundingClientRect();
+      const fit = el => rect(el).left >= 0 && rect(el).right <= innerWidth && el.scrollWidth <= el.clientWidth + 1;
+      const cards = [...document.querySelectorAll('.bulk-product-card')];
+      const cases = document.querySelector('.bulk-case-grid');
+      return {
+        width: innerWidth, docWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth,
+        desktopVisible: getComputedStyle(desktop).display !== 'none', mobileVisible: getComputedStyle(mobile).display !== 'none',
+        actions: [...active.querySelectorAll('a[data-analytics-event]')].map(link => ({href: link.getAttribute('href'), event: link.dataset.analyticsEvent, label: link.dataset.analyticsLabel, height: rect(link).height, fits: fit(link)})),
+        headerTargets: [...document.querySelectorAll('.nm-topbar nav a')].map(link => link.getAttribute('href')),
+        headerReadable: [...document.querySelectorAll('.nm-topbar nav a')].every(link => fit(link) && rect(link).height >= 44),
+        products: cards.length, productFit: cards.every(fit), customVisible: rect(cards[1]).height > 0 && getComputedStyle(cards[1]).display !== 'none',
+        caseCount: cases.children.length, caseDisplay: getComputedStyle(cases).display, caseColumns: getComputedStyle(cases).gridTemplateColumns.split(' ').length,
+        caseFit: cases.scrollWidth <= cases.clientWidth && [...cases.children].every(fit),
+        railClear: innerWidth < 1200 || [...document.querySelectorAll('main .nm-wrap, .nm-home-hero-inner')].every(el => rect(el).right <= rect(desktop).left),
+        imagesLoaded: [...document.images].every(image => image.naturalWidth > 0),
+        oldFloats: document.querySelectorAll('.nm-float-cta, [data-kakao-float]').length,
+        faqCount: document.querySelectorAll('.bulk-faq details').length
+      };
+    }`);
+    assert.ok(state.docWidth <= width && state.bodyWidth <= width, `bulk: no horizontal overflow at ${width}`);
+    assert.equal(state.desktopVisible, width === 1280);
+    assert.equal(state.mobileVisible, width === 390);
+    assert.deepEqual(state.actions.map(action => [action.href, action.event, action.label]), [["/order", "order_start", "bulk-floating-quote"], ["https://pf.kakao.com/_QdCaK/chat", "consult_click", "bulk-floating-kakao"]]);
+    assert.ok(state.actions.every(action => action.height >= 44 && action.fits));
+    assert.deepEqual(state.headerTargets, ["#favor-types", "#favor-products", "#actual-cases", "#price-guide", "#order-flow", "#faq"]);
+    assert.equal(state.headerReadable, true, `bulk: header labels fit with 44px targets at ${width}`);
+    assert.equal(state.products, 4);
+    assert.equal(state.productFit, true);
+    assert.equal(state.customVisible, true);
+    assert.equal(state.caseCount, 6);
+    assert.equal(state.caseDisplay, "grid");
+    assert.equal(state.caseColumns, width === 390 ? 2 : 3);
+    assert.equal(state.caseFit, true);
+    assert.equal(state.railClear, true);
+    assert.equal(state.imagesLoaded, true);
+    assert.equal(state.oldFloats, 0);
+    assert.equal(state.faqCount, 7);
+    const analytics = await evaluate(cdp, `() => {
+      const calls = []; window.gtag = (...args) => calls.push(args);
+      const active = document.querySelector(innerWidth >= 1200 ? '.bulk-floating-nav' : '.bulk-mobile-sticky');
+      for (const link of active.querySelectorAll('a[data-analytics-event]')) { link.addEventListener('click', event => event.preventDefault(), {once:true}); link.click(); }
+      const details = document.querySelector('.bulk-faq details'); details.querySelector('summary').click();
+      return { calls: calls.filter(call => ['order_start', 'consult_click'].includes(call[1])).map(call => [call[1], call[2].event_label]), faqOpen: details.open };
+    }`);
+    assert.deepEqual(analytics.calls, [["order_start", "bulk-floating-quote"], ["consult_click", "bulk-floating-kakao"]]);
+    assert.equal(analytics.faqOpen, true);
+    for (const [name, selector] of [["hero", "#mainpage-home"], ["products", "#favor-products"], ["cases", "#actual-cases"]]) {
+      await evaluate(cdp, `() => { document.querySelector('${selector}').scrollIntoView({behavior:'instant', block:'start'}); return true; }`);
+      await wait(100);
+      fs.writeFileSync(path.join(screenshots, `${width}-${name}.png`), (await cdp.command("Page.captureScreenshot", {format:"png"})).data, "base64");
+    }
+    await evaluate(cdp, "() => { scrollTo({top: document.documentElement.scrollHeight, behavior:'instant'}); return true; }");
+    await wait(100);
+    const footer = await evaluate(cdp, "() => ({last: document.querySelector('.nm-footer-links a:last-child').getBoundingClientRect().bottom, bar: document.querySelector('.bulk-mobile-sticky').getBoundingClientRect().top, height: innerHeight})");
+    assert.ok(footer.last <= (width === 390 ? footer.bar : footer.height), "bulk: footer must remain accessible above the sticky bar");
+    fs.writeFileSync(path.join(screenshots, `${width}-footer.png`), (await cdp.command("Page.captureScreenshot", {format:"png"})).data, "base64");
+    assert.equal(cdp.events.slice(eventStart).some(event => event.method === "Runtime.exceptionThrown" || (event.method === "Runtime.consoleAPICalled" && event.params.type === "error")), false, "bulk: no runtime errors");
+  }
+  console.log("bulk-only browser smoke: 390/1280, local nav, four readable products/custom/TERMINAL, six case images in grid, exact quote/Kakao URLs and events, visible rail/sticky, clear content/footer, FAQ and no runtime errors PASS");
+}
+
 const flightProvider = await startMockFlightProvider();
 const server = await startServer({ NODE_ENV: "test", GIMPO_BOARD_TEST_API_URL: flightProvider.url, KAC_FLIGHT_API_KEY: "browser-test-key" });
 const debugPort = await reservePort();
@@ -789,11 +862,13 @@ try {
   await cdp.command("Page.enable");
   await cdp.command("Runtime.enable");
 
+  const bulkOnly = process.argv.includes("--bulk-only");
   const occasionOnly = process.argv.includes("--occasion-conversion-only");
-  if (occasionOnly) await verifyOccasionConversion(cdp, server.baseUrl);
+  if (bulkOnly) await verifyBulkHub(cdp, server.baseUrl);
+  else if (occasionOnly) await verifyOccasionConversion(cdp, server.baseUrl);
   else await verifyAnniversaryLanding(cdp, server.baseUrl);
 
-  if (!occasionOnly && !process.argv.includes("--anniversary-only")) {
+  if (!bulkOnly && !occasionOnly && !process.argv.includes("--anniversary-only")) {
 
   const sitemap = fs.readFileSync(path.join(ROOT, "sitemap.xml"), "utf8");
   const indexablePaths = [...sitemap.matchAll(/<loc>https:\/\/nothingmatters\.co\.kr([^<]+)<\/loc>/g)].map((match) => match[1]);
@@ -1822,4 +1897,4 @@ try {
   fs.rmSync(BROWSER_GALLERY_DATA_DIR, { recursive: true, force: true });
 }
 
-console.log(process.argv.includes("--occasion-conversion-only") ? "occasion conversion browser smoke: passed" : process.argv.includes("--anniversary-only") ? "anniversary and homepage browser checks: passed" : "public browser checks: passed");
+console.log(process.argv.includes("--bulk-only") ? "bulk-only browser smoke: passed" : process.argv.includes("--occasion-conversion-only") ? "occasion conversion browser smoke: passed" : process.argv.includes("--anniversary-only") ? "anniversary and homepage browser checks: passed" : "public browser checks: passed");

@@ -78,11 +78,10 @@ const ITEM_LISTS = {
     ["마곡 쿠키·답례품", "/magok-cookie/"],
   ],
   "/bulk/": [
-    ["결혼식 답례품 쿠키", "/wedding-favor/"],
-    ["기업 답례품·회사 행사 간식", "/corporate-gift/"],
-    ["브라우니쿠키", "/products/brownie-cookie/"],
+    ["브루키 / 브라우니쿠키", "/products/brownie-cookie/"],
+    ["문구 커스텀 브라우니쿠키", "/products/custom-brownie-cookie/"],
     ["수제꾸덕쿠키", "/products/handmade-cookie/"],
-    ["행운쿠키", "/products/lucky-cookie/"],
+    ["TERMINAL 카라멜 샌드쿠키", "/products/terminal-sand-cookie/"],
   ],
   "/small-gift/": [
     ["수제꾸덕쿠키", "/products/handmade-cookie/"],
@@ -307,7 +306,7 @@ function buildBreadcrumb(page) {
   if (page.path.startsWith("/guides/") && page.path !== "/guides/") {
     items.push({ name: "가이드 허브", item: `${SITE_URL}/guides/` });
   } else if (page.occasionLanding) {
-    items.push({ name: "단체·행사 쿠키", item: `${SITE_URL}/bulk/` });
+    items.push({ name: WORK_REGISTRY_BY_HREF.get("/bulk/")?.breadcrumbName || "쿠키답례품", item: `${SITE_URL}/bulk/` });
   } else if (page.path === "/gimpo/pickup/") {
     items.push({ name: "김포공항 선물·디저트·기념품", item: `${SITE_URL}/gimpo/` });
   } else if (page.path.startsWith("/products/")) {
