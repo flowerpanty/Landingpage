@@ -202,3 +202,47 @@
   .occasion-page .occasion-match,
   .occasion-page .occasion-receipt article { padding: 24px; }
 }
+
+/* Conversion controls are scoped to these occasion pages and two existing guides. */
+.occasion-page[data-occasion-conversion] .showroom-nav--quick { min-width: 0; gap: 12px; font-size: 12px; }
+.occasion-page[data-occasion-conversion] .showroom-nav--quick a { min-height: 44px; display: inline-flex; align-items: center; flex: none; white-space: nowrap; }
+.occasion-page[data-occasion-conversion] .showroom-nav--quick .showroom-button { padding: 8px 10px; font-size: 12px; }
+.occasion-case-cta { padding: 28px; margin-bottom: 32px; border: 1px solid #cdd7ed; border-radius: 20px; background: #eef2ff; }
+.occasion-case-cta h2 { font-size: clamp(26px, 3vw, 38px); line-height: 1.3; margin: 0 0 16px; }
+.occasion-case-cta p { margin: 0; max-width: 720px; }
+.occasion-compare-cta { margin-top: 24px; }
+.occasion-secondary-option { margin-top: 24px; padding: 20px 24px; border-top: 1px solid var(--showroom-line); font-size: 14px; }
+.occasion-page .occasion-secondary-option h3 { font-size: 17px; }
+.occasion-secondary-option p { margin-bottom: 12px; }
+.occasion-floating-nav { display: none; position: fixed; top: 50%; right: max(12px, calc((100vw - 1560px) / 2 + 12px)); transform: translateY(-50%); z-index: 80; width: 148px; padding: 12px; border: 1px solid #cdd7ed; border-radius: 18px; background: #fffdf7; box-shadow: 0 8px 24px #11111112; }
+.occasion-floating-nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; font-size: 12px; padding: 8px; border-radius: 9px; }
+.occasion-floating-nav .showroom-button { margin-top: 8px; white-space: normal; line-height: 1.4; }
+.occasion-mobile-sticky { position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid #cdd7ed; background: #fffdf7; }
+.occasion-mobile-sticky a { min-width: 0; min-height: 48px; font-size: 14px; padding: 12px 8px; }
+.occasion-page[data-occasion-conversion] .showroom-page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+[data-guide-conversion] .nm-float-cta { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 10px; width: min(520px, calc(100% - 24px)); padding: 10px; border: 1px solid #cdd7ed; border-radius: 18px; background: #fffdf7; bottom: 12px; }
+[data-guide-conversion] .nm-float-cta .nm-btn { min-width: 0; min-height: 48px; white-space: normal; text-overflow: clip; padding: 12px 8px; font-size: 13px; line-height: 1.5; }
+[data-guide-conversion] .nm-float-cta .nm-btn--secondary { background: #fff; }
+[data-guide-conversion] .nm-site { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
+[data-guide-conversion="farewell"] .nm-picks-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-guide-conversion="farewell"] .guide-secondary-option { grid-column: 1 / -1; padding: 18px; background: #f7f7f5; border: 1px solid #ddd; }
+[data-guide-conversion="farewell"] .guide-secondary-option h3 { font-size: 20px; }
+[data-guide-conversion="farewell"] .guide-secondary-option .nm-list { display: none; }
+.guide-cta-strip { margin-top: 28px; padding: 24px; border-radius: 18px; background: #eef2ff; }
+.guide-cta-strip p { margin: 0 0 16px; }
+@media (min-width: 1200px) {
+  .occasion-page[data-occasion-conversion] .showroom-page { padding-right: 176px; padding-bottom: 0; }
+  .occasion-floating-nav { display: block; }
+  .occasion-mobile-sticky { display: none; }
+}
+@media (max-width: 760px) {
+  .occasion-page[data-occasion-conversion] .showroom-header-inner { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .occasion-page[data-occasion-conversion] .showroom-nav--quick { justify-content: flex-start; width: 100%; overflow-x: auto; gap: 14px; }
+  .occasion-page[data-occasion-conversion] .showroom-nav--quick a:nth-child(2) { display: inline-flex; }
+  .occasion-page[data-occasion-conversion] .occasion-section { scroll-margin-top: 112px; }
+  .occasion-case-cta { padding: 24px 20px; }
+  [data-guide-conversion] .nm-float-cta { left: 12px; right: 12px; width: auto; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+  [data-guide-conversion="farewell"] .nm-picks-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.occasion-page[data-occasion-conversion] .showroom-nav--quick a:last-child { background: transparent; border: 0; border-radius: 0; padding: 8px 0; }

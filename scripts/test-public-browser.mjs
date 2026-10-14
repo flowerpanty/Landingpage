@@ -705,6 +705,67 @@ async function verifyAnniversaryLanding(cdp, baseUrl) {
   console.log("anniversary browser checks: 320/375/390/430/768/1024/1280/1440px, mobile 2+1 photos, hidden captions, desktop three-column photos, sticky CTA, FAQ, analytics and existing order routes PASS");
 }
 
+async function verifyOccasionConversion(cdp, baseUrl) {
+  const screenshots = path.join(ROOT, "output/playwright/occasion-conversion");
+  fs.mkdirSync(screenshots, { recursive: true });
+  for (const slug of ["corporate-gift", "wedding-favor", "farewell-favor"]) {
+    for (const width of [390, 1280]) {
+      const eventStart = cdp.events.length;
+      await setViewport(cdp, width, width === 390 ? 844 : 900);
+      await navigate(cdp, `${baseUrl}/${slug}/`);
+      await evaluate(cdp, "async () => { await document.fonts.ready; await Promise.all([...document.images].map(image => { image.loading = 'eager'; return image.decode(); })); return true; }");
+      const state = await evaluate(cdp, `() => {
+        const desktop = document.querySelector('.occasion-floating-nav');
+        const mobile = document.querySelector('.occasion-mobile-sticky');
+        const visible = el => getComputedStyle(el).display !== 'none';
+        const active = innerWidth >= 1200 ? desktop : mobile;
+        const rect = el => el.getBoundingClientRect();
+        const anchors = [...active.querySelectorAll('a')];
+        return {
+          width: innerWidth, docWidth: document.documentElement.scrollWidth, bodyWidth: document.body.scrollWidth,
+          desktopVisible: visible(desktop), mobileVisible: visible(mobile),
+          actions: anchors.filter(link => !link.getAttribute('href').startsWith('#')).map(link => ({ href: link.getAttribute('href'), label: link.dataset.analyticsLabel, event: link.dataset.analyticsEvent, height: rect(link).height, fits: rect(link).left >= 0 && rect(link).right <= innerWidth && link.scrollWidth <= link.clientWidth + 1 })),
+          headerTargets: [...document.querySelectorAll('.showroom-header nav a')].map(link => link.getAttribute('href')),
+          railClear: innerWidth < 1200 || [...document.querySelectorAll('main .showroom-wrap, main > .showroom-wrap')].every(el => rect(el).right <= rect(desktop).left),
+          loaded: [...document.images].every(image => image.naturalWidth > 0)
+        };
+      }`);
+      assert.ok(state.docWidth <= width && state.bodyWidth <= width, `${slug}: no horizontal overflow at ${width}`);
+      assert.equal(state.desktopVisible, width === 1280);
+      assert.equal(state.mobileVisible, width === 390);
+      assert.deepEqual(state.actions.map(link => [link.href, link.event, link.label]), [
+        ["/order/brookie", "order_start", `${slug}-floating-quote`],
+        ["https://pf.kakao.com/_QdCaK/chat", "consult_click", `${slug}-floating-kakao`]
+      ]);
+      assert.ok(state.actions.every(link => link.height >= 44 && link.fits), `${slug}: all floating actions must fit and meet tap size`);
+      assert.deepEqual(state.headerTargets, ["#real-cases", "#choose", "#price", "#how-to-order", "#faq"]);
+      assert.equal(state.railClear, true, `${slug}: desktop floating navigation must not cover content`);
+      assert.equal(state.loaded, true, `${slug}: real-case images must load`);
+      const analytics = await evaluate(cdp, `() => {
+        const calls = []; window.gtag = (...args) => calls.push(args);
+        const active = document.querySelector(innerWidth >= 1200 ? '.occasion-floating-nav' : '.occasion-mobile-sticky');
+        for (const link of active.querySelectorAll('a[data-analytics-event]')) { link.addEventListener('click', event => event.preventDefault(), { once: true }); link.click(); }
+        return calls.filter(call => ['order_start', 'consult_click'].includes(call[1])).map(call => [call[1], call[2].event_label]);
+      }`);
+      assert.deepEqual(analytics, [["order_start", `${slug}-floating-quote`], ["consult_click", `${slug}-floating-kakao`]]);
+      await evaluate(cdp, "() => { scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'}); return true; }");
+      await wait(100);
+      const footer = await evaluate(cdp, `() => {
+        const bar = document.querySelector('.occasion-mobile-sticky');
+        const last = document.querySelector('.showroom-footer-links a:last-child');
+        return { lastBottom: last.getBoundingClientRect().bottom, barTop: bar.getBoundingClientRect().top, height: innerHeight };
+      }`);
+      assert.ok(footer.lastBottom <= (width === 390 ? footer.barTop : footer.height), `${slug}: footer links must be reachable above the sticky controls`);
+      fs.writeFileSync(path.join(screenshots, `${slug}-${width}-footer.png`), (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+      await evaluate(cdp, "() => { document.querySelector('#real-cases').scrollIntoView({behavior:'instant', block:'start'}); return true; }");
+      await wait(100);
+      fs.writeFileSync(path.join(screenshots, `${slug}-${width}-cases.png`), (await cdp.command("Page.captureScreenshot", { format: "png" })).data, "base64");
+      assert.equal(cdp.events.slice(eventStart).some(event => event.method === "Runtime.exceptionThrown" || (event.method === "Runtime.consoleAPICalled" && event.params.type === "error")), false, `${slug}: no runtime errors`);
+    }
+  }
+  console.log("occasion conversion browser smoke: corporate/wedding/farewell at 390/1280, local anchors, exact quote/Kakao URLs and events, visible floating/sticky controls, safe tap targets, clear content/footer, real images and no runtime errors PASS");
+}
+
 const flightProvider = await startMockFlightProvider();
 const server = await startServer({ NODE_ENV: "test", GIMPO_BOARD_TEST_API_URL: flightProvider.url, KAC_FLIGHT_API_KEY: "browser-test-key" });
 const debugPort = await reservePort();
@@ -728,9 +789,11 @@ try {
   await cdp.command("Page.enable");
   await cdp.command("Runtime.enable");
 
-  await verifyAnniversaryLanding(cdp, server.baseUrl);
+  const occasionOnly = process.argv.includes("--occasion-conversion-only");
+  if (occasionOnly) await verifyOccasionConversion(cdp, server.baseUrl);
+  else await verifyAnniversaryLanding(cdp, server.baseUrl);
 
-  if (!process.argv.includes("--anniversary-only")) {
+  if (!occasionOnly && !process.argv.includes("--anniversary-only")) {
 
   const sitemap = fs.readFileSync(path.join(ROOT, "sitemap.xml"), "utf8");
   const indexablePaths = [...sitemap.matchAll(/<loc>https:\/\/nothingmatters\.co\.kr([^<]+)<\/loc>/g)].map((match) => match[1]);
@@ -1759,4 +1822,4 @@ try {
   fs.rmSync(BROWSER_GALLERY_DATA_DIR, { recursive: true, force: true });
 }
 
-console.log(process.argv.includes("--anniversary-only") ? "anniversary and homepage browser checks: passed" : "public browser checks: passed");
+console.log(process.argv.includes("--occasion-conversion-only") ? "occasion conversion browser smoke: passed" : process.argv.includes("--anniversary-only") ? "anniversary and homepage browser checks: passed" : "public browser checks: passed");
