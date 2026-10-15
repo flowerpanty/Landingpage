@@ -21,6 +21,7 @@
     "browser:test": "node scripts/test-public-browser.mjs && node scripts/benchmark-gimpo-board.mjs --verify",
     "anniversary:browser:test": "node scripts/test-public-browser.mjs --anniversary-only",
     "journal:test": "node scripts/test-wordpress-journal.mjs",
+    "kakao-quick:test": "node scripts/test-kakao-quick-callback.mjs",
     "order:test": "node scripts/test-order-migration.mjs && node scripts/test-order-confirmation.mjs && node scripts/test-brookie-quote-flow.mjs && node scripts/test-landing-quote-flow.mjs",
     "prestart": "npm run site:build",
     "start": "node server.js",

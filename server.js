@@ -9,6 +9,7 @@ const { createWordpressJournalService } = require("./lib/wordpress-journal.js");
 const { createGimpoBoardService } = require("./lib/gimpo-board.js");
 const { renderGimpoBoardPage } = require("./lib/gimpo-board-html.js");
 const { createOrderApiHandler } = require("./lib/order-api.js");
+const { createKakaoQuickCallbackHandler } = require("./lib/kakao-quick-callback.js");
 
 const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -229,6 +230,7 @@ const gimpoBoard = createGimpoBoardService({
 });
 const LEGACY_PRODUCT_REDIRECTS = SITE_PAGE_DATA.redirects || {};
 const handleOrderApi = createOrderApiHandler();
+const handleKakaoQuickCallback = createKakaoQuickCallbackHandler();
 
 let googleTokenCache = {
   accessToken: "",
@@ -1978,6 +1980,12 @@ const server = http.createServer(async (req, res) => {
       "Cache-Control": "public, max-age=86400",
     });
     res.end();
+    return;
+  }
+
+  if (requestUrl.pathname === "/callbacks" || requestUrl.pathname.startsWith("/callbacks/") ||
+      /^\/callbacks(?:\/|\?|$)/.test(req.url || "")) {
+    await handleKakaoQuickCallback(req, res);
     return;
   }
 
