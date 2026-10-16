@@ -184,9 +184,35 @@ try {
   assert.equal((await fetch(unconfigured + "/api/kakao-quick/config")).status, 200);
   assert.equal((await fetch(unconfigured + "/dashboard/quick/admin/")).status, 401);
   assert.equal((await fetch(unconfigured + "/api/kakao-quick/orders", {method:"POST"})).status, 401); checks += 4;
-  const missingPickup = await startServer({ KAKAO_QUICK_PICKUP_LATITUDE: "", KAKAO_QUICK_PICKUP_PHONE: "" });
-  const missingConfig = await fetch(missingPickup + "/api/kakao-quick/config", {headers:{Authorization:authorization}});
-  assert.equal((await missingConfig.json()).ready, false); checks++;
+  // Only the three Kakao API settings are needed for public lookup; omit every pickup setting.
+  const pickupKeys = ["ADDRESS", "DETAIL", "LATITUDE", "LONGITUDE", "NAME", "PHONE"].map(key => `KAKAO_QUICK_PICKUP_${key}`);
+  const fallbackEnv = Object.fromEntries(pickupKeys.map(key => [key, undefined]));
+  const fallbackBase = await startServer({ ...fallbackEnv, KAKAO_QUICK_PICKUP_DETAIL: " " });
+  const mainBase = base;
+  base = fallbackBase;
+  const fallbackPage = await fetch(base + "/dashboard/quick/");
+  assert.equal(fallbackPage.status, 200);
+  assert.ok((await fallbackPage.text()).includes('id="pickupAddress">서울특별시 강서구 송정로 25 1층'));
+  const fallbackConfig = (await api("config", undefined, 200, {Authorization:""})).data;
+  assert.equal(fallbackConfig.ready, true);
+  assert.deepEqual(fallbackConfig.pickup, {name:"NOTHINGMATTERS",address:"서울특별시 강서구 송정로 25",detail:"1층"});
+  const beforeFallback = upstreamCalls.length;
+  await api("price", publicInput, 200, {Authorization:""});
+  await api("estimate", publicInput, 200, {Authorization:""});
+  for(const call of upstreamCalls.slice(beforeFallback)) {
+    const location = call.url.endsWith("/price") ? call.body.pickup.location : call.body.pickup;
+    assert.deepEqual(location, {basicAddress:"서울특별시 강서구 송정로 25",detailAddress:"1층",latitude:37.557402,longitude:126.8115357});
+  }
+  await api("orders",baseInput,401,{Authorization:""});
+  assert.equal((await api("config")).data.ready,true,"phone is only required when actually creating an order");
+  const withoutPhone = await quote({...baseInput,partnerOrderId:"NO-PICKUP-PHONE"});
+  const beforePhoneCheck = upstreamCalls.length;
+  await api("orders",withoutPhone,503);
+  assert.equal(upstreamCalls.length,beforePhoneCheck,"admin create without pickup phone must not reach Kakao");
+  base = mainBase;
+  const missingKeyBase = await startServer({...fallbackEnv,KAKAO_QUICK_API_KEY:""});
+  assert.equal((await (await fetch(missingKeyBase+"/api/kakao-quick/config")).json()).ready,false);
+  checks += 3;
 
   const debugPort = await port(); profile = fs.mkdtempSync(path.join(os.tmpdir(), "nm-quick-admin-"));
   browser = spawn(CHROME, ["--headless=new", "--disable-gpu", "--no-first-run", "--remote-allow-origins=*", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
@@ -246,10 +272,11 @@ try {
   await cdp.command("Network.setExtraHTTPHeaders", { headers: {} });
   for (const width of [390,1280]) {
     await cdp.command("Emulation.setDeviceMetricsOverride", {width,height:900,deviceScaleFactor:1,mobile:width===390});
-    await cdp.command("Page.navigate", {url:`${base}/dashboard/quick/`});
+    await cdp.command("Page.navigate", {url:`${fallbackBase}/dashboard/quick/`});
     await cdp.until("document.readyState==='complete' && !document.querySelector('#formFields').disabled", "public quote form ready without login");
-    const state = await cdp.evaluate("return {doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,phone:document.querySelector('#pickupPhone').textContent,create:document.querySelector('#createButton').hidden,privateFields:[...document.querySelectorAll('[data-admin-only] input,[data-admin-only] select,[data-admin-only] textarea')].every(el=>el.disabled),login:document.querySelector('#publicAccess a').getAttribute('href')};");
+    const state = await cdp.evaluate("return {doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,name:document.querySelector('#pickupName').textContent,address:document.querySelector('#pickupAddress').textContent,phone:document.querySelector('#pickupPhone').textContent,create:document.querySelector('#createButton').hidden,privateFields:[...document.querySelectorAll('[data-admin-only] input,[data-admin-only] select,[data-admin-only] textarea')].every(el=>el.disabled),login:document.querySelector('#publicAccess a').getAttribute('href')};");
     assert.ok(state.doc<=width&&state.body<=width); assert.equal(state.phone,""); assert.equal(state.create,true); assert.equal(state.privateFields,true); assert.equal(state.login,"/dashboard/quick/admin/");
+    assert.equal(state.name,"NOTHINGMATTERS"); assert.equal(state.address,"서울특별시 강서구 송정로 25 1층");
     await cdp.evaluate(`const values=${JSON.stringify(publicInput)};for(const [key,value] of Object.entries(values)){const el=document.getElementById(key);if(el){el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));}}document.querySelector('#coordinates').open=true;document.querySelector('#quoteButton').click();return true;`);
     await cdp.until("document.querySelector('#estimatedPrice').textContent==='18,500원' && document.querySelector('#estimatedTime').textContent==='약 30분'", "anonymous quote displayed");
     await cdp.evaluate("document.querySelector('#submitConfirm').click();document.querySelector('.quick-summary').scrollIntoView({behavior:'instant',block:'start'});return true;");
@@ -264,7 +291,7 @@ try {
   await wait(50);
   const logs = output.join(""); privateCheck(logs);
   for (const privateValue of [baseInput.basicAddress, baseInput.recipientPhone, baseInput.recipientName, "01012345678", "MOCK_FIXED_PICKUP_ADDRESS"]) assert.ok(!logs.includes(privateValue), "request/customer data must not be logged");
-  console.log(`kakao quick admin/public: ${checks} checks, anonymous quote/price/time, rate limiting, private create/status and admin aliases, fixed pickup, quote/duplicate guards, privacy, callback, 390/1280 public and admin browser flows PASS`);
+  console.log(`kakao quick admin/public: ${checks} checks, default store/coordinates without pickup ENV or phone, credentials-only public readiness, anonymous price/time, private create/status and required admin phone, privacy/rate limits/callback, 390/1280 public and admin browser flows PASS`);
 } finally {
   if (cdp) cdp.ws.close();
   for (const proc of processes.reverse()) {

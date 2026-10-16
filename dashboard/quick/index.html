@@ -21,7 +21,7 @@
     <div class="quick-layout">
       <section class="quick-card" aria-labelledby="formTitle">
         <h2 id="formTitle">퀵 배송 정보 입력</h2>
-        <div class="quick-pickup" aria-label="고정 출발지"><span>출발지 · 서버 설정</span><strong id="pickupName">NOTHINGMATTERS</strong><p id="pickupAddress">출발지 정보를 불러오는 중입니다.</p><p id="pickupPhone"></p></div>
+        <div class="quick-pickup" aria-label="고정 출발지"><span>출발지 · 서버 설정</span><strong id="pickupName">NOTHINGMATTERS</strong><p id="pickupAddress">서울특별시 강서구 송정로 25 1층</p><p id="pickupPhone"></p></div>
         <form id="quickForm" novalidate>
           <fieldset id="formFields" disabled>
             <legend class="sr-only">퀵 주문 입력</legend>
@@ -69,7 +69,7 @@
       </section>
       <aside class="quick-summary quick-card" aria-labelledby="summaryTitle">
         <p class="dashboard-kicker">DELIVERY PREVIEW</p><h2 id="summaryTitle">예상 배송 정보</h2><p class="quick-service">카카오 T 퀵</p>
-        <dl class="quick-result"><div><dt>예상 배송비</dt><dd id="estimatedPrice">조회 전</dd></div><div id="priceRangeRow" hidden><dt>예상 요금 범위</dt><dd id="priceRange"></dd></div><div><dt>예상 배송시간</dt><dd id="estimatedTime">조회 전</dd></div><div><dt>차량 / 서비스</dt><dd id="estimatedService">선택 후 조회</dd></div><div><dt>출발지</dt><dd id="summaryPickup">서버 설정 확인 중</dd></div><div><dt>도착지</dt><dd id="summaryDropoff">배송지 입력 후 조회</dd></div></dl>
+        <dl class="quick-result"><div><dt>예상 배송비</dt><dd id="estimatedPrice">조회 전</dd></div><div id="priceRangeRow" hidden><dt>예상 요금 범위</dt><dd id="priceRange"></dd></div><div><dt>예상 배송시간</dt><dd id="estimatedTime">조회 전</dd></div><div><dt>차량 / 서비스</dt><dd id="estimatedService">선택 후 조회</dd></div><div><dt>출발지</dt><dd id="summaryPickup">NOTHINGMATTERS · 서울특별시 강서구 송정로 25 1층</dd></div><div><dt>도착지</dt><dd id="summaryDropoff">배송지 입력 후 조회</dd></div></dl>
         <p class="quick-help">조회 시점의 예상 요금과 시간입니다. 실제 접수 결과를 함께 확인해 주세요.</p>
         <label class="quick-confirm" id="confirmationField" hidden><input type="checkbox" id="quoteConfirmed" disabled><span>입력한 배송지와 예상 요금을 확인했습니다.</span></label>
         <button class="quick-button quick-button--orange" id="createButton" type="button" disabled hidden>카카오 T 퀵 주문 접수</button>
