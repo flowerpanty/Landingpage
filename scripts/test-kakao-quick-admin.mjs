@@ -14,6 +14,13 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const fakeKey = "MOCK_ONLY_QUICK_SECRET";
 const localKey = "MOCK_ONLY_LOCAL_SECRET";
 const localCalls = [];
+const localFailures = [
+  { query: "LOCAL_AUTH_FAILED", status: 401, kakaoCode: -401, code: "AUTH_FAILED", apiStatus: 502, message: "카카오 주소검색 REST API 키를 확인해 주세요." },
+  { query: "LOCAL_CODE_AUTH_FAILED", status: 400, kakaoCode: -401, code: "AUTH_FAILED", apiStatus: 502, message: "카카오 주소검색 REST API 키를 확인해 주세요." },
+  { query: "LOCAL_FORBIDDEN_3", status: 403, kakaoCode: -3, code: "FORBIDDEN", apiStatus: 502, message: "카카오 주소검색 API 사용 권한 또는 허용 설정을 확인해 주세요." },
+  { query: "LOCAL_FORBIDDEN_5", status: 403, kakaoCode: -5, code: "FORBIDDEN", apiStatus: 502, message: "카카오 주소검색 API 사용 권한 또는 허용 설정을 확인해 주세요." },
+  { query: "LOCAL_RATE_LIMITED", status: 429, kakaoCode: null, code: "RATE_LIMITED", apiStatus: 429, message: "주소 검색 요청이 많습니다. 잠시 후 다시 시도해 주세요." }
+];
 const vendor = "MOCK_VENDOR";
 const authorization = `Basic ${Buffer.from("mock-admin:mock-password").toString("base64")}`;
 const upstreamCalls = [];
@@ -34,6 +41,8 @@ const provider = http.createServer(async (req, res) => {
     const query = new URL(req.url,"http://mock").searchParams.get("query");
     localCalls.push({query,headers:req.headers});
     if(req.headers.authorization!==`KakaoAK ${localKey}`) return json(res,401,{message:localKey});
+    const failure = localFailures.find(item => item.query === query);
+    if (failure) return json(res,failure.status,{code:failure.kakaoCode,message:localKey,Authorization:"PRIVATE_AUTH",address:query});
     if(query==="NOT_FOUND") return json(res,200,{documents:[]});
     if(query==="BAD_COORDINATES") return json(res,200,{documents:[{x:"",y:"91"}]});
     if(query==="LOCAL_FAILURE") return json(res,500,{message:localKey});
@@ -165,8 +174,13 @@ try {
   const beforeInvalidAddress = upstreamCalls.length;
   const notFound=await api("quote-address",{basicAddress:"NOT_FOUND"},400,{Authorization:""});
   assert.equal(notFound.data.error,"address_not_found");
+  assert.equal(notFound.data.message,"배송지 주소를 찾지 못했습니다. 도로명 주소를 확인해 주세요.");
+  for (const failure of localFailures) {
+    const result = await api("quote-address",{basicAddress:failure.query},failure.apiStatus,{Authorization:""});
+    assert.deepEqual(result.data,{error:"address_lookup_failed",message:failure.message});
+  }
   await api("quote-address",{basicAddress:"BAD_COORDINATES"},502,{Authorization:""});
-  await api("quote-address",{basicAddress:"LOCAL_FAILURE"},502,{Authorization:""});
+  assert.equal((await api("quote-address",{basicAddress:"LOCAL_FAILURE"},502,{Authorization:""})).data.message,"주소 검색을 완료하지 못했습니다. 잠시 후 다시 조회해 주세요.");
   await api("quote-address",{basicAddress:""},400,{Authorization:""});
   await api("quote-address",{basicAddress:"MOCK",productSize:"L"},400,{Authorization:""});
   await api("quote-address",{basicAddress:"MOCK",orderType:"DOBO"},400,{Authorization:""});
@@ -269,6 +283,25 @@ try {
   assert.deepEqual(await localClient.geocodeAddress("도로명 주소"),{latitude:37.5123456,longitude:127.1234567});
   assert.equal(new URL(geocodeCall.url).origin,"https://dapi.kakao.com"); assert.equal(new URL(geocodeCall.url).pathname,"/v2/local/search/address.json");
   assert.equal(geocodeCall.options.redirect,"error"); assert.ok(geocodeCall.options.signal instanceof AbortSignal);
+  const diagnosticCases = [
+    ...localFailures.map(item=>({...item,body:JSON.stringify({code:item.kakaoCode,message:localKey,Authorization:"PRIVATE_AUTH",address:"PRIVATE_SEARCH_ADDRESS"}),contentType:"application/json"})),
+    {status:401,kakaoCode:null,code:"AUTH_FAILED",body:"{broken",contentType:"application/json"},
+    {status:403,kakaoCode:null,code:"FORBIDDEN",body:localKey,contentType:"text/html"},
+    {status:500,kakaoCode:null,code:"REQUEST_FAILED",body:JSON.stringify({code:localKey}),contentType:"application/json"},
+    {status:500,kakaoCode:null,code:"REQUEST_FAILED",body:JSON.stringify({code:{secret:localKey}}),contentType:"application/json"},
+    {status:500,kakaoCode:-99,code:"REQUEST_FAILED",body:JSON.stringify({code:-99}),contentType:"application/json"},
+    {status:200,kakaoCode:null,code:"ADDRESS_NOT_FOUND",body:JSON.stringify({documents:[]}),contentType:"application/json",httpStatus:null}
+  ];
+  for (const item of diagnosticCases) {
+    const client=createKakaoLocalClient({env:{KAKAO_LOCAL_REST_API_KEY:localKey},fetchImpl:async()=>new Response(item.body,{status:item.status,headers:{"Content-Type":item.contentType}})});
+    await assert.rejects(client.geocodeAddress("PRIVATE_SEARCH_ADDRESS"),error=>{
+      assert.ok(error instanceof KakaoLocalError);
+      assert.deepEqual({...error},{name:"KakaoLocalError",code:item.code,httpStatus:item.httpStatus===null?null:item.status,kakaoCode:item.kakaoCode});
+      privateCheck(JSON.stringify(error)); assert.ok(!JSON.stringify(error).includes("PRIVATE_SEARCH_ADDRESS"));
+      return true;
+    });
+    checks++;
+  }
   for(const factory of [async()=>new Response("{broken",{headers:{"Content-Type":"application/json"}}),async()=>new Response("PRIVATE_PHONE",{headers:{"Content-Type":"text/html"}}),async()=>{throw new Error(localKey);},()=>new Promise(()=>{})]) {
     let error;try{await createKakaoLocalClient({env:{KAKAO_LOCAL_REST_API_KEY:localKey},fetchImpl:factory,timeoutMs:15}).geocodeAddress("도로명 주소");}catch(caught){error=caught;}
     assert.ok(error instanceof KakaoLocalError);privateCheck(JSON.stringify(error));checks++;
@@ -399,8 +432,14 @@ try {
   assert.equal(cdp.events.some(event => event.method === "Runtime.exceptionThrown"), false, "no browser runtime exceptions");
   await wait(50);
   const logs = output.join(""); privateCheck(logs);
+  for (const failure of localFailures) {
+    const expected = new RegExp(`kakao_local_error \\{\\s*code: '${failure.code}',\\s*httpStatus: ${failure.status},\\s*kakaoCode: ${failure.kakaoCode}\\s*\\}`);
+    assert.match(logs,expected,"only safe Local diagnostic fields are logged");
+    assert.ok(!logs.includes(failure.query),"failed search addresses must not be logged");
+  }
+  assert.ok(!logs.includes("Authorization"));
   for (const privateValue of [baseInput.basicAddress, baseInput.recipientPhone, baseInput.recipientName, "01012345678", "MOCK_FIXED_PICKUP_ADDRESS"]) assert.ok(!logs.includes(privateValue), "request/customer data must not be logged");
-  console.log(`kakao quick admin/public: ${checks} checks, Postcode mock selection/keyboard/detail focus/invalidation, anonymous address quotes/Local x/y mapping, SDK unavailable/empty/not-found/missing keys, safe JSON/errors/timeouts, no public coordinates/secret/order fields, rate limiting, admin create/status/callback preserved, 390/1280 address search and admin flows PASS`);
+  console.log(`kakao quick admin/public: ${checks} checks, Local HTTP/numeric error diagnostics and safe logs/messages, Postcode mock selection/keyboard/detail focus/invalidation, anonymous address quotes/Local x/y mapping, SDK unavailable/empty/not-found/missing keys, safe JSON/errors/timeouts, no public coordinates/secret/order fields, rate limiting, admin create/status/callback preserved, 390/1280 address search and admin flows PASS`);
 } finally {
   if (cdp) cdp.ws.close();
   for (const proc of processes.reverse()) {
