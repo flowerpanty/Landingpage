@@ -10,6 +10,7 @@ const { createGimpoBoardService } = require("./lib/gimpo-board.js");
 const { renderGimpoBoardPage } = require("./lib/gimpo-board-html.js");
 const { createOrderApiHandler } = require("./lib/order-api.js");
 const { createKakaoQuickCallbackHandler } = require("./lib/kakao-quick-callback.js");
+const { createKakaoQuickApiHandler } = require("./lib/kakao-quick-api.js");
 
 const ROOT = process.cwd();
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -231,6 +232,7 @@ const gimpoBoard = createGimpoBoardService({
 const LEGACY_PRODUCT_REDIRECTS = SITE_PAGE_DATA.redirects || {};
 const handleOrderApi = createOrderApiHandler();
 const handleKakaoQuickCallback = createKakaoQuickCallbackHandler();
+const handleKakaoQuickApi = createKakaoQuickApiHandler();
 
 let googleTokenCache = {
   accessToken: "",
@@ -1986,6 +1988,33 @@ const server = http.createServer(async (req, res) => {
   if (requestUrl.pathname === "/callbacks" || requestUrl.pathname.startsWith("/callbacks/") ||
       /^\/callbacks(?:\/|\?|$)/.test(req.url || "")) {
     await handleKakaoQuickCallback(req, res);
+    return;
+  }
+
+  // Protect decoded static aliases too; Quick must never inherit the legacy dashboard's unconfigured bypass.
+  let quickPath;
+  try { quickPath = path.posix.normalize(decodeURIComponent(requestUrl.pathname).replace(/\\/g, "/")); } catch { quickPath = requestUrl.pathname; }
+  if (/^\/dashboard\/quick(?:\/|$)/.test(quickPath) || /^\/api\/kakao-quick(?:\/|$)/.test(quickPath)) {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.setHeader("Vary", "Authorization");
+    if (!dashboardConfig.dashboardUsername || !dashboardConfig.dashboardPassword || !isDashboardAuthorized(req, dashboardConfig)) {
+      req.resume();
+      requestDashboardAuth(res);
+      return;
+    }
+    if (quickPath.startsWith("/api/")) {
+      await handleKakaoQuickApi(req, res, { pathname: quickPath });
+      return;
+    }
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      req.resume();
+      res.writeHead(405, { Allow: "GET, HEAD" }); res.end(); return;
+    }
+    const asset = quickPath.replace(/^\/dashboard\/quick\/?/, "") || "index.html";
+    if (!["index.html", "quick.css", "quick.js"].includes(asset)) { sendNotFound(req, res); return; }
+    const file = path.join(ROOT, "dashboard", "quick", asset);
+    sendBufferResponse(req, res, 200, fs.readFileSync(file), { contentType: MIME_TYPES[path.extname(file)], cacheControl: "no-store", ext: path.extname(file), allowRange: false });
     return;
   }
 

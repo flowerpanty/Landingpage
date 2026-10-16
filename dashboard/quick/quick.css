@@ -1,0 +1,70 @@
+.quick-admin { --dashboard-blue: #4169e1; }
+[hidden] { display: none !important; }
+.quick-page { padding-block: 32px 64px; max-width: 1160px; }
+.quick-header { margin-bottom: 28px; }
+.quick-back { display: inline-flex; align-items: center; min-height: 44px; color: var(--dashboard-ink); text-decoration: none; font-size: 13px; font-weight: 750; }
+.quick-title-row { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
+.quick-badge { padding: 8px 12px; border: 1px solid #a55800; border-radius: 999px; background: #fff1d5; color: #884400; font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+.quick-header h1 { margin-top: 18px; font-size: clamp(36px, 5vw, 60px); letter-spacing: -.055em; line-height: 1.2; }
+.quick-header .dashboard-lead { max-width: 780px; }
+.quick-notice { margin-top: 20px; padding: 16px 20px; border: 1px solid var(--dashboard-line); border-radius: 16px; background: #fff; font-size: 14px; line-height: 1.7; }
+.quick-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.quick-card { min-width: 0; padding: 28px; border: 1px solid var(--dashboard-line); border-radius: var(--dashboard-radius); background: #fff; }
+.quick-card h2, dialog h2 { font-size: 24px; line-height: 1.45; letter-spacing: -.04em; }
+.quick-card h3 { font-size: 18px; }
+.quick-pickup { display: grid; gap: 8px; background: #edf2ff; padding: 20px; border-radius: 16px; margin-block: 24px; font-size: 14px; line-height: 1.6; }
+.quick-pickup > span { color: #384c90; font-size: 12px; }
+.quick-pickup strong { font-size: 17px; }
+.quick-admin fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+#formFields { display: grid; gap: 20px; }
+.quick-admin label { display: flex; flex-direction: column; gap: 9px; min-width: 0; font-weight: 750; font-size: 14px; line-height: 1.5; }
+.quick-admin input, .quick-admin textarea, .quick-admin select { width: 100%; min-width: 0; min-height: 46px; padding: 12px; border: 1px solid #c5c1ba; border-radius: 10px; background: #fff; color: var(--dashboard-ink); font: inherit; font-weight: 500; font-size: 16px; }
+.quick-admin textarea { resize: vertical; }
+.quick-admin small, .quick-help { color: var(--dashboard-sub); font-size: 12px; font-weight: 500; line-height: 1.65; }
+.quick-input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.quick-divider { padding-top: 16px; border-top: 1px solid var(--dashboard-line); }
+.quick-admin .quick-type-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.quick-type-options legend { margin-bottom: 12px; font-size: 14px; font-weight: 750; }
+.quick-type-options label { display: flex; flex-direction: row; align-items: center; padding: 12px 8px; border: 1px solid #c5c1ba; border-radius: 12px; cursor: pointer; }
+.quick-type-options label:has(:checked) { border-color: #4169e1; background: #edf2ff; }
+.quick-type-options span { display: grid; gap: 3px; }
+.quick-type-options input, .quick-confirm input { width: 18px; height: 18px; min-height: 18px; flex: none; padding: 0; accent-color: #4169e1; }
+.quick-coordinates { border: 1px solid var(--dashboard-line); border-radius: 14px; padding: 4px 16px 16px; }
+.quick-coordinates summary { display: flex; align-items: center; min-height: 48px; cursor: pointer; font-size: 14px; font-weight: 750; }
+.quick-coordinates summary::after { content: '+'; margin-left: auto; }
+.quick-coordinates[open] summary::after { content: '−'; }
+.quick-coordinates > p { font-size: 13px; line-height: 1.7; color: var(--dashboard-sub); margin-bottom: 16px; }
+.quick-button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 14px 18px; border: 1px solid transparent; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 850; cursor: pointer; line-height: 1.5; }
+.quick-button--blue { color: #fff; background: #4169e1; }
+.quick-button--orange { color: #17110a; background: #ff6a00; }
+.quick-button--plain { color: var(--dashboard-ink); border-color: #c5c1ba; background: #fff; }
+.quick-button:disabled, .quick-admin fieldset:disabled { opacity: .55; }
+.quick-button:disabled { cursor: not-allowed; }
+.quick-admin :focus-visible { outline: 3px solid #4169e1; outline-offset: 3px; }
+.quick-summary { position: sticky; top: 24px; }
+.quick-summary h2 { margin-top: 12px; }
+.quick-service { font-size: 14px; margin-top: 8px; color: var(--dashboard-sub); }
+.quick-result { margin-block: 20px; }
+.quick-result > div { padding-block: 14px; border-bottom: 1px solid var(--dashboard-line); }
+.quick-result dt { font-size: 13px; color: var(--dashboard-sub); margin-bottom: 8px; }
+.quick-result dd { font-size: 16px; line-height: 1.6; font-weight: 750; overflow-wrap: anywhere; white-space: pre-line; }
+#estimatedPrice { color: #4169e1; font-size: 32px; font-weight: 900; }
+.quick-admin .quick-confirm { flex-direction: row; align-items: flex-start; gap: 10px; margin-block: 24px 16px; font-size: 13px; }
+.quick-summary .quick-button { width: 100%; }
+.quick-action-status { font-size: 14px; line-height: 1.7; margin-top: 18px; overflow-wrap: anywhere; }
+.quick-action-status[data-error="true"] { color: #a62918; }
+.quick-success { margin-top: 24px; border: 2px solid #4169e1; }
+.quick-success h2 { margin-top: 10px; }
+.quick-success-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.quick-admin dialog { width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 40px); overflow-y: auto; padding: 28px; border: 1px solid #c5c1ba; border-radius: 24px; color: var(--dashboard-ink); }
+.quick-admin dialog::backdrop { background: rgba(20, 17, 12, .5); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 760px) {
+  .quick-page { padding-top: 16px; width: calc(100% - 24px); }
+  .quick-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .quick-card { padding: 22px 18px; border-radius: 22px; }
+  .quick-summary { position: static; }
+  .quick-input-grid { grid-template-columns: minmax(0, 1fr); }
+  .quick-type-options label { padding-inline: 6px; gap: 6px; font-size: 13px; }
+  .quick-success-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+}
