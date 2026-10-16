@@ -53,6 +53,9 @@
 .quick-summary .quick-button { width: 100%; }
 #publicAccess { margin-top: 24px; }
 #publicAccess .quick-button { margin-top: 12px; text-decoration: none; }
+.quick-destination { margin-top: 18px; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.quick-price-note { margin-top: 20px; }
+.quick-public .quick-summary { scroll-margin-top: 18px; }
 .quick-action-status { font-size: 14px; line-height: 1.7; margin-top: 18px; overflow-wrap: anywhere; }
 .quick-action-status[data-error="true"] { color: #a62918; }
 .quick-success { margin-top: 24px; border: 2px solid #4169e1; }

@@ -7,10 +7,13 @@ import os from "node:os";
 import path from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const fakeKey = "MOCK_ONLY_QUICK_SECRET";
+const localKey = "MOCK_ONLY_LOCAL_SECRET";
+const localCalls = [];
 const vendor = "MOCK_VENDOR";
 const authorization = `Basic ${Buffer.from("mock-admin:mock-password").toString("base64")}`;
 const upstreamCalls = [];
@@ -27,6 +30,15 @@ function json(res, status, value) { res.writeHead(status, { "Content-Type": "app
 const provider = http.createServer(async (req, res) => {
   const chunks = []; for await (const chunk of req) chunks.push(chunk);
   let body; try { body = chunks.length ? JSON.parse(Buffer.concat(chunks)) : undefined; } catch { return json(res, 400, {}); }
+  if (req.url.startsWith("/v2/local/search/address.json?")) {
+    const query = new URL(req.url,"http://mock").searchParams.get("query");
+    localCalls.push({query,headers:req.headers});
+    if(req.headers.authorization!==`KakaoAK ${localKey}`) return json(res,401,{message:localKey});
+    if(query==="NOT_FOUND") return json(res,200,{documents:[]});
+    if(query==="BAD_COORDINATES") return json(res,200,{documents:[{x:"",y:"91"}]});
+    if(query==="LOCAL_FAILURE") return json(res,500,{message:localKey});
+    return json(res,200,{documents:[{x:"127.1234567",y:"37.5123456"}],privateKey:localKey});
+  }
   upstreamCalls.push({ method: req.method, url: req.url, body, headers: req.headers });
   if (!req.headers.authorization || req.headers.vendor !== vendor) return json(res, 401, { code: 90002 });
   if (req.url === "/v1/auth/check") return json(res, 200, {});
@@ -64,6 +76,7 @@ async function startServer(extra = {}) {
     ...process.env, NODE_ENV: "test", HOST: "127.0.0.1", PORT: String(value), WORDPRESS_JOURNAL_OFFLINE: "1", KAC_FLIGHT_API_KEY: "",
     DASHBOARD_USERNAME: "mock-admin", DASHBOARD_PASSWORD: "mock-password", KAKAO_QUICK_VENDOR_ID: vendor, KAKAO_QUICK_API_KEY: fakeKey,
     KAKAO_QUICK_BASE_URL: `http://127.0.0.1:${provider.address().port}/goa-sandbox-service`,
+    KAKAO_LOCAL_REST_API_KEY: localKey, KAKAO_LOCAL_TEST_API_URL: `http://127.0.0.1:${provider.address().port}/v2/local/search/address.json`,
     KAKAO_QUICK_PICKUP_ADDRESS: "MOCK_FIXED_PICKUP_ADDRESS", KAKAO_QUICK_PICKUP_DETAIL: "1층",
     KAKAO_QUICK_PICKUP_LATITUDE: "37.55", KAKAO_QUICK_PICKUP_LONGITUDE: "126.81", KAKAO_QUICK_PICKUP_NAME: "NOTHINGMATTERS", KAKAO_QUICK_PICKUP_PHONE: "02-123-4567", ...extra
   }});
@@ -77,7 +90,7 @@ async function startServer(extra = {}) {
   throw new Error("Quick admin test server did not start");
 }
 function privateCheck(value) {
-  for (const secret of [fakeKey, vendor, "PRIVATE_AUTH", "PRIVATE_PHONE"]) assert.ok(!value.includes(secret), "credentials must never appear in browser/API output");
+  for (const secret of [fakeKey, localKey, vendor, "PRIVATE_AUTH", "PRIVATE_PHONE"]) assert.ok(!value.includes(secret), "credentials must never appear in browser/API output");
 }
 let base;
 async function api(action, body, status = 200, headers = {}, method = body === undefined ? "GET" : "POST") {
@@ -117,7 +130,7 @@ class Cdp {
 
 try {
   base = await startServer();
-  const paths = ["/dashboard/quick/admin/", "/dash%62oard/quick/admin/", "/%64ashboard/quick/admin/index.html", "/dashboard%2Fquick%2Fadmin/", "/api/kakao-quick/admin-config", "/api/kakao-quick/orders", "/api/kakao-quick/orders/NM-TEST"];
+  const paths = ["/dashboard/quick/admin/", "/dashboard/quick/admin.html", "/dashboard/quick/admin.js", "/dash%62oard/quick/admin/", "/%64ashboard/quick/admin/index.html", "/dashboard%2Fquick%2Fadmin/", "/api/kakao-quick/admin-config", "/api/kakao-quick/orders", "/api/kakao-quick/orders/NM-TEST"];
   for (const pathname of paths) {
     const res = await fetch(base + pathname, { method: pathname.endsWith("price") || pathname.endsWith("estimate") || pathname.endsWith("orders") ? "POST" : "GET" });
     assert.equal(res.status, 401, pathname); assert.match(res.headers.get("www-authenticate"), /Basic realm="nothingmatters dashboard"/); checks++;
@@ -130,6 +143,29 @@ try {
   const publicConfig = (await api("config", undefined, 200, { Authorization: "" })).data;
   assert.equal(publicConfig.canCreate, false); assert.equal(publicConfig.pickup.phone, undefined);
   const publicInput = Object.fromEntries(["basicAddress", "detailAddress", "latitude", "longitude", "orderType", "productSize", "fleet", "pickupMode", "wishTime"].map(key => [key, baseInput[key]]));
+  const addressInput = {basicAddress:baseInput.basicAddress,detailAddress:"5층",orderType:"QUICK",productSize:"S"};
+  const beforeAddress = upstreamCalls.length;
+  const addressQuote = (await api("quote-address",{...addressInput,latitude:1,longitude:2},200,{Authorization:""})).data;
+  assert.deepEqual(Object.keys(addressQuote).sort(),["address","price","estimate"].sort());
+  assert.deepEqual(addressQuote.address,{basicAddress:addressInput.basicAddress,detailAddress:"5층"});
+  assert.equal(addressQuote.price.totalPrice,18500); assert.equal(addressQuote.estimate.estimatedTime,1800);
+  assert.ok(!/latitude|longitude|Authorization/.test(JSON.stringify(addressQuote)));
+  assert.equal(localCalls.at(-1).query,addressInput.basicAddress,"detail address must not be geocoded");
+  assert.equal(localCalls.at(-1).headers.accept,"application/json");
+  for(const call of upstreamCalls.slice(beforeAddress)) {
+    const location=call.url.endsWith("/price")?call.body.dropoff.location:call.body.dropoff;
+    assert.equal(location.latitude,37.5123456); assert.equal(location.longitude,127.1234567);
+    assert.equal(location.basicAddress,addressInput.basicAddress); assert.equal(location.detailAddress,"5층");
+  }
+  const beforeInvalidAddress = upstreamCalls.length;
+  const notFound=await api("quote-address",{basicAddress:"NOT_FOUND"},400,{Authorization:""});
+  assert.equal(notFound.data.error,"address_not_found");
+  await api("quote-address",{basicAddress:"BAD_COORDINATES"},502,{Authorization:""});
+  await api("quote-address",{basicAddress:"LOCAL_FAILURE"},502,{Authorization:""});
+  await api("quote-address",{basicAddress:""},400,{Authorization:""});
+  await api("quote-address",{basicAddress:"MOCK",productSize:"L"},400,{Authorization:""});
+  await api("quote-address",{basicAddress:"MOCK",orderType:"DOBO"},400,{Authorization:""});
+  assert.equal(upstreamCalls.length,beforeInvalidAddress,"invalid/not found Local results must not reach Quick");
   const publicPrice = await api("price", publicInput, 200, { Authorization: "" });
   assert.equal(publicPrice.data.quoteToken, undefined, "public quote must not grant an order capability");
   await api("estimate", publicInput, 200, { Authorization: "" });
@@ -140,7 +176,7 @@ try {
     const res = await fetch(base + pathname, { headers: { Authorization: authorization } });
     assert.equal(res.status, 200); assert.equal(res.headers.get("cache-control"), "no-store"); privateCheck(await res.text()); checks++;
   }
-  const config = (await api("config")).data;
+  const config = (await api("admin-config")).data;
   assert.equal(config.ready, true); assert.equal(config.sandbox, true); assert.equal(config.canCreate, true); assert.equal(config.pickup.address, "MOCK_FIXED_PICKUP_ADDRESS");
   await api("price", baseInput, 403, { "X-Quick-Admin": "" });
   await api("price", baseInput, 403, { Origin: "https://unrelated.example" });
@@ -212,7 +248,26 @@ try {
   base = mainBase;
   const missingKeyBase = await startServer({...fallbackEnv,KAKAO_QUICK_API_KEY:""});
   assert.equal((await (await fetch(missingKeyBase+"/api/kakao-quick/config")).json()).ready,false);
+  base=missingKeyBase;
+  assert.equal((await api("quote-address",addressInput,503,{Authorization:""})).data.message,"카카오 T 퀵 조회 서버 설정을 확인해 주세요.");
+  const missingLocalBase=await startServer({...fallbackEnv,KAKAO_LOCAL_REST_API_KEY:""});
+  base=missingLocalBase;
+  assert.equal((await api("config",undefined,200,{Authorization:""})).data.ready,false);
+  assert.equal((await api("admin-config")).data.ready,true,"existing admin orders do not require Local");
+  assert.equal((await api("quote-address",addressInput,503,{Authorization:""})).data.message,"주소 검색 서버 설정을 확인해 주세요.");
+  base=mainBase;
   checks += 3;
+
+  const {createKakaoLocalClient,KakaoLocalError}=createRequire(import.meta.url)("../lib/kakao-local.js");
+  let geocodeCall;
+  const localClient=createKakaoLocalClient({env:{KAKAO_LOCAL_REST_API_KEY:localKey},fetchImpl:async(url,options)=>{geocodeCall={url,options};return new Response(JSON.stringify({documents:[{x:"127.1234567",y:"37.5123456"}]}),{headers:{"Content-Type":"application/json"}});}});
+  assert.deepEqual(await localClient.geocodeAddress("도로명 주소"),{latitude:37.5123456,longitude:127.1234567});
+  assert.equal(new URL(geocodeCall.url).origin,"https://dapi.kakao.com"); assert.equal(new URL(geocodeCall.url).pathname,"/v2/local/search/address.json");
+  assert.equal(geocodeCall.options.redirect,"error"); assert.ok(geocodeCall.options.signal instanceof AbortSignal);
+  for(const factory of [async()=>new Response("{broken",{headers:{"Content-Type":"application/json"}}),async()=>new Response("PRIVATE_PHONE",{headers:{"Content-Type":"text/html"}}),async()=>{throw new Error(localKey);},()=>new Promise(()=>{})]) {
+    let error;try{await createKakaoLocalClient({env:{KAKAO_LOCAL_REST_API_KEY:localKey},fetchImpl:factory,timeoutMs:15}).geocodeAddress("도로명 주소");}catch(caught){error=caught;}
+    assert.ok(error instanceof KakaoLocalError);privateCheck(JSON.stringify(error));checks++;
+  }
 
   const debugPort = await port(); profile = fs.mkdtempSync(path.join(os.tmpdir(), "nm-quick-admin-"));
   browser = spawn(CHROME, ["--headless=new", "--disable-gpu", "--no-first-run", "--remote-allow-origins=*", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, "about:blank"], { stdio: "ignore" });
@@ -222,7 +277,7 @@ try {
   assert.ok(target, "headless Chrome must start"); cdp = new Cdp(target.webSocketDebuggerUrl);
   await cdp.command("Page.enable"); await cdp.command("Runtime.enable"); await cdp.command("Network.enable");
   await cdp.command("Network.setExtraHTTPHeaders", { headers: { Authorization: authorization } });
-  await cdp.command("Network.setBlockedURLs", { urls: ["*kakaomobility.com*", "*google-analytics.com*"] });
+  await cdp.command("Network.setBlockedURLs", { urls: ["*kakaomobility.com*", "*dapi.kakao.com*", "*google-analytics.com*"] });
   const screenshots = path.join(ROOT, "output/playwright/quick-admin"); fs.mkdirSync(screenshots, { recursive: true });
   const beforeBrowser = upstreamCalls.filter(call => call.url === rootPath && call.method === "POST").length;
   for (const width of [390, 1280]) {
@@ -274,24 +329,30 @@ try {
     await cdp.command("Emulation.setDeviceMetricsOverride", {width,height:900,deviceScaleFactor:1,mobile:width===390});
     await cdp.command("Page.navigate", {url:`${fallbackBase}/dashboard/quick/`});
     await cdp.until("document.readyState==='complete' && !document.querySelector('#formFields').disabled", "public quote form ready without login");
-    const state = await cdp.evaluate("return {doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,name:document.querySelector('#pickupName').textContent,address:document.querySelector('#pickupAddress').textContent,phone:document.querySelector('#pickupPhone').textContent,create:document.querySelector('#createButton').hidden,privateFields:[...document.querySelectorAll('[data-admin-only] input,[data-admin-only] select,[data-admin-only] textarea')].every(el=>el.disabled),login:document.querySelector('#publicAccess a').getAttribute('href')};");
-    assert.ok(state.doc<=width&&state.body<=width); assert.equal(state.phone,""); assert.equal(state.create,true); assert.equal(state.privateFields,true); assert.equal(state.login,"/dashboard/quick/admin/");
+    const state = await cdp.evaluate("return {doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,name:document.querySelector('#pickupName').textContent,address:document.querySelector('#pickupAddress').textContent,privateFields:document.querySelectorAll('#latitude,#longitude,#coordinates,#partnerOrderId,#recipientName,#recipientPhone,#productName,#unitPrice,#paymentType,#createButton,#publicAccess').length,type:document.querySelector('#orderType').value,size:document.querySelector('#productSize').value};");
+    assert.ok(state.doc<=width&&state.body<=width); assert.equal(state.privateFields,0); assert.equal(state.type,"QUICK"); assert.equal(state.size,"S");
     assert.equal(state.name,"NOTHINGMATTERS"); assert.equal(state.address,"서울특별시 강서구 송정로 25 1층");
-    await cdp.evaluate(`const values=${JSON.stringify(publicInput)};for(const [key,value] of Object.entries(values)){const el=document.getElementById(key);if(el){el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));}}document.querySelector('#coordinates').open=true;document.querySelector('#quoteButton').click();return true;`);
+    await cdp.evaluate(`const values=${JSON.stringify(addressInput)};for(const [key,value] of Object.entries(values)){const el=document.getElementById(key);if(el){el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));}}document.querySelector('#quoteButton').click();document.querySelector('#quoteButton').click();return true;`);
     await cdp.until("document.querySelector('#estimatedPrice').textContent==='18,500원' && document.querySelector('#estimatedTime').textContent==='약 30분'", "anonymous quote displayed");
-    await cdp.evaluate("document.querySelector('#submitConfirm').click();document.querySelector('.quick-summary').scrollIntoView({behavior:'instant',block:'start'});return true;");
+    assert.equal(await cdp.evaluate("return document.querySelector('#quoteBasis').textContent;"),"일반 퀵 · 소형(S) 기준");
+    await cdp.evaluate("document.querySelector('.quick-summary').scrollIntoView({behavior:'instant',block:'start'});return true;");
     fs.writeFileSync(path.join(screenshots,`${width}-public.png`),(await cdp.command("Page.captureScreenshot",{format:"png"})).data,"base64");
+    await cdp.evaluate("document.querySelector('#basicAddress').value='NOT_FOUND';document.querySelector('#basicAddress').dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('#quoteButton').click();return true;");
+    await cdp.until("document.querySelector('#actionStatus').textContent.includes('도로명 주소를 다시 확인')","address not found message");
     checks+=4;
   }
   assert.equal(upstreamCalls.filter(call=>call.url===rootPath&&call.method==='POST').length,beforeBrowser+2,"public visitors cannot create orders");
-  for(let i=0;i<30;i++) await api("price", publicInput,200,{Authorization:"","X-Forwarded-For":"192.0.2.50"});
+  for(let i=0;i<30;i++) await api("quote-address", addressInput,200,{Authorization:"","X-Forwarded-For":"192.0.2.50"});
+  const beforeLimitLocal=localCalls.length;
+  await api("quote-address",addressInput,429,{Authorization:"","X-Forwarded-For":"192.0.2.50"});
+  assert.equal(localCalls.length,beforeLimitLocal,"rate limit must precede geocoding");
   const limited=await api("price",publicInput,429,{Authorization:"","X-Forwarded-For":"192.0.2.50"});
   assert.equal(limited.res.headers.get("retry-after"),"60");
   assert.equal(cdp.events.some(event => event.method === "Runtime.exceptionThrown"), false, "no browser runtime exceptions");
   await wait(50);
   const logs = output.join(""); privateCheck(logs);
   for (const privateValue of [baseInput.basicAddress, baseInput.recipientPhone, baseInput.recipientName, "01012345678", "MOCK_FIXED_PICKUP_ADDRESS"]) assert.ok(!logs.includes(privateValue), "request/customer data must not be logged");
-  console.log(`kakao quick admin/public: ${checks} checks, default store/coordinates without pickup ENV or phone, credentials-only public readiness, anonymous price/time, private create/status and required admin phone, privacy/rate limits/callback, 390/1280 public and admin browser flows PASS`);
+  console.log(`kakao quick admin/public: ${checks} checks, Local x/y mapping, address-only quotes/not-found/missing keys, safe JSON/errors/timeouts, no public coordinates/secret/order fields, rate limiting, admin create/status/callback preserved, 390/1280 address-only public and admin flows PASS`);
 } finally {
   if (cdp) cdp.ws.close();
   for (const proc of processes.reverse()) {

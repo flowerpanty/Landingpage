@@ -4,85 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>퀵 배송 예상요금 조회 | NOTHINGMATTERS</title>
+  <title>퀵 배송비 조회 | NOTHINGMATTERS</title>
   <link rel="stylesheet" href="/assets/dashboard.css">
   <link rel="stylesheet" href="/dashboard/quick/quick.css">
   <script src="/dashboard/quick/quick.js" defer></script>
 </head>
-<body class="quick-admin" data-quick-entry="public">
+<body class="quick-admin quick-public">
   <main class="dashboard-wrap quick-page">
     <header class="quick-header">
       <a class="quick-back" href="/">← NOTHINGMATTERS</a>
       <div class="quick-title-row"><p class="dashboard-kicker">KAKAO T QUICK</p><span class="quick-badge" id="environmentBadge">SANDBOX</span></div>
-      <h1>퀵 배송 주문</h1>
-      <p class="dashboard-lead">배송지 정보를 입력하고 카카오 T 퀵 예상 요금과 시간을 확인하세요. 배송 접수는 관리자 로그인 후 진행합니다.</p>
-      <p id="setupStatus" class="quick-notice" role="status">서버 설정을 확인하고 있어요…</p>
+      <h1>퀵 배송비 조회</h1>
+      <p class="dashboard-lead">배송지 주소를 입력하면 예상 퀵비와 배송시간을 확인할 수 있어요.</p>
+      <p id="setupStatus" class="quick-notice" role="status">조회 준비 중입니다.</p>
     </header>
     <div class="quick-layout">
       <section class="quick-card" aria-labelledby="formTitle">
-        <h2 id="formTitle">퀵 배송 정보 입력</h2>
-        <div class="quick-pickup" aria-label="고정 출발지"><span>출발지 · 서버 설정</span><strong id="pickupName">NOTHINGMATTERS</strong><p id="pickupAddress">서울특별시 강서구 송정로 25 1층</p><p id="pickupPhone"></p></div>
-        <form id="quickForm" novalidate>
+        <h2 id="formTitle">어디로 보내시나요?</h2>
+        <div class="quick-pickup" aria-label="출발지"><span>출발지</span><strong id="pickupName">NOTHINGMATTERS</strong><p id="pickupAddress">서울특별시 강서구 송정로 25 1층</p></div>
+        <form id="quickForm">
           <fieldset id="formFields" disabled>
-            <legend class="sr-only">퀵 주문 입력</legend>
-            <label data-admin-only hidden>기존 주문번호 *<input id="partnerOrderId" name="partnerOrderId" required maxlength="128" placeholder="예: NM-20261016-001" autocomplete="off"><small>낫띵메터스 주문번호 또는 내부 관리번호</small></label>
-            <div class="quick-divider"><h3>배송지와 수령인</h3></div>
-            <label>배송지 주소 *<input id="basicAddress" name="basicAddress" required maxlength="200" placeholder="서울특별시 마포구 …" autocomplete="off"></label>
-            <label>상세주소<input id="detailAddress" name="detailAddress" maxlength="200" autocomplete="off"></label>
-            <div class="quick-input-grid" data-admin-only hidden>
-              <label>받는 분 *<input id="recipientName" name="recipientName" required maxlength="80" autocomplete="off"></label>
-              <label>연락처 *<input id="recipientPhone" name="recipientPhone" type="tel" required maxlength="20" placeholder="010-1234-5678" autocomplete="off"></label>
-            </div>
-            <label data-admin-only hidden>배송 요청사항<textarea id="note" name="note" maxlength="500" rows="2" placeholder="수령인에게 전달할 사항"></textarea></label>
-            <details id="coordinates" class="quick-coordinates">
-              <summary>위치 좌표 *</summary><p>주소 검색 연동 전까지 정확한 배송 위치 좌표를 입력합니다.</p>
-              <div class="quick-input-grid">
-                <label>위도 *<input id="latitude" name="latitude" required type="number" min="-90" max="90" step="any" inputmode="decimal"></label>
-                <label>경도 *<input id="longitude" name="longitude" required type="number" min="-180" max="180" step="any" inputmode="decimal"></label>
-              </div>
-            </details>
-            <fieldset class="quick-type-options"><legend>배송 종류 *</legend>
-              <label><input type="radio" name="orderType" value="QUICK" checked><span>일반 퀵<small>추천</small></span></label>
-              <label><input type="radio" name="orderType" value="QUICK_ECONOMY"><span>이코노미</span></label>
-              <label><input type="radio" name="orderType" value="QUICK_EXPRESS"><span>급송</span></label>
-            </fieldset>
+            <legend class="sr-only">배송비 조회 정보</legend>
+            <label>배송지 주소 *<input id="basicAddress" name="basicAddress" required maxlength="200" autocomplete="street-address" placeholder="예: 서울특별시 강남구 테헤란로 123"></label>
+            <label>상세주소<input id="detailAddress" name="detailAddress" maxlength="200" autocomplete="address-line2" placeholder="예: 5층 / 101호"></label>
             <div class="quick-input-grid">
-              <label>포장 크기 *<select id="productSize" name="productSize" required><option value="">직접 선택하세요</option><option value="XS">XS · 초소형</option><option value="S">S · 소형</option><option value="M">M · 중형</option><option value="L">L · 대형</option></select></label>
-              <label id="fleetField" hidden>대형 차량 *<select id="fleet" name="fleet"><option value="">차량 선택</option><option value="DAMAS">다마스</option><option value="LABO">라보</option><option value="TON">1톤</option></select></label>
+              <label>배송 종류<select id="orderType" name="orderType"><option value="QUICK" selected>일반 퀵</option><option value="QUICK_ECONOMY">이코노미</option><option value="QUICK_EXPRESS">급송</option></select></label>
+              <label>포장 크기<select id="productSize" name="productSize"><option value="XS">XS · 초소형</option><option value="S" selected>S · 소형</option><option value="M">M · 중형</option></select><small>대형 배송은 차량 지정이 필요해 별도 상담으로 안내합니다.</small></label>
             </div>
-            <div class="quick-input-grid">
-              <label>희망 픽업시간 *<select id="pickupMode" name="pickupMode"><option value="asap">가능한 빨리</option><option value="reserved">예약 픽업</option></select></label>
-              <label id="wishTimeField" hidden>예약 일시 · 한국시간<input id="wishTime" name="wishTime" type="datetime-local"><small>일반·급송은 20분, 이코노미는 60분 이후부터 최대 14일</small></label>
-            </div>
-            <div class="quick-divider" data-admin-only hidden><h3>상품과 결제</h3></div>
-            <label data-admin-only hidden>상품명 *<input id="productName" name="productName" required maxlength="120" placeholder="예: 브루키 답례품"></label>
-            <div class="quick-input-grid" data-admin-only hidden>
-              <label>수량 *<input id="quantity" name="quantity" type="number" min="1" max="99999" value="1" step="1" required></label>
-              <label>포장 개수 *<input id="trayCount" name="trayCount" type="number" min="1" max="999" value="1" step="1" required></label>
-            </div>
-            <label data-admin-only hidden>상품 판매금액 · 개당, 원 *<input id="unitPrice" name="unitPrice" type="number" min="0" max="100000000" step="1" required><small>수량을 곱한 금액을 전체 상품 판매금액으로 전달합니다.</small></label>
-            <label data-admin-only hidden>배송 유의사항<textarea id="productNote" name="productNote" maxlength="500" rows="2" placeholder="상품 취급 시 주의할 사항"></textarea></label>
-            <label data-admin-only hidden>결제 방법 *<select id="paymentType" name="paymentType" required><option value="">운영 정책에 맞게 선택하세요</option><option value="CARD">선불</option><option value="CASH_ON_PICKUP">출발지 현금</option><option value="CASH_ON_DROPOFF">도착지 현금</option></select></label>
             <button class="quick-button quick-button--blue" id="quoteButton" type="submit">배송비·예상시간 조회</button>
           </fieldset>
         </form>
       </section>
       <aside class="quick-summary quick-card" aria-labelledby="summaryTitle">
-        <p class="dashboard-kicker">DELIVERY PREVIEW</p><h2 id="summaryTitle">예상 배송 정보</h2><p class="quick-service">카카오 T 퀵</p>
-        <dl class="quick-result"><div><dt>예상 배송비</dt><dd id="estimatedPrice">조회 전</dd></div><div id="priceRangeRow" hidden><dt>예상 요금 범위</dt><dd id="priceRange"></dd></div><div><dt>예상 배송시간</dt><dd id="estimatedTime">조회 전</dd></div><div><dt>차량 / 서비스</dt><dd id="estimatedService">선택 후 조회</dd></div><div><dt>출발지</dt><dd id="summaryPickup">NOTHINGMATTERS · 서울특별시 강서구 송정로 25 1층</dd></div><div><dt>도착지</dt><dd id="summaryDropoff">배송지 입력 후 조회</dd></div></dl>
-        <p class="quick-help">조회 시점의 예상 요금과 시간입니다. 실제 접수 결과를 함께 확인해 주세요.</p>
-        <label class="quick-confirm" id="confirmationField" hidden><input type="checkbox" id="quoteConfirmed" disabled><span>입력한 배송지와 예상 요금을 확인했습니다.</span></label>
-        <button class="quick-button quick-button--orange" id="createButton" type="button" disabled hidden>카카오 T 퀵 주문 접수</button>
-        <div id="publicAccess"><p class="quick-help">배송 접수와 주문 상태 조회는 관리자만 이용할 수 있습니다.</p><a class="quick-button quick-button--plain" href="/dashboard/quick/admin/">관리자 로그인 후 접수 →</a></div>
+        <p class="dashboard-kicker">DELIVERY PREVIEW</p><h2 id="summaryTitle">예상 배송 정보</h2>
+        <dl class="quick-result"><div><dt>예상 퀵비</dt><dd id="estimatedPrice">조회 전</dd></div><div id="priceRangeRow" hidden><dt>예상 요금 범위</dt><dd id="priceRange"></dd></div><div><dt>예상 배송시간</dt><dd id="estimatedTime">조회 전</dd></div></dl>
+        <p id="quoteBasis" class="quick-help">일반 퀵 · 소형(S) 기준</p>
+        <p id="resultAddress" class="quick-destination" hidden></p>
+        <p class="quick-help quick-price-note">조회 시점 기준 예상 요금이며 실제 배차 시 달라질 수 있습니다.</p>
         <p id="actionStatus" class="quick-action-status" role="status" aria-live="polite"></p>
       </aside>
     </div>
-    <section id="successCard" class="quick-card quick-success" hidden aria-labelledby="successTitle" tabindex="-1">
-      <p class="dashboard-kicker">QUICK ORDER</p><h2 id="successTitle">카카오 T 퀵 접수 완료</h2>
-      <dl class="quick-result"><div><dt>주문번호</dt><dd id="successOrderId"></dd></div><div><dt>상태</dt><dd id="successStatus"></dd></div><div><dt>퀵 요금</dt><dd id="successPrice"></dd></div><div><dt>카카오 주문 ID</dt><dd id="successKakaoId"></dd></div></dl>
-      <div class="quick-success-actions"><button class="quick-button quick-button--blue" id="refreshButton" type="button">주문 상태 새로고침</button><button class="quick-button quick-button--plain" id="newButton" type="button">새 퀵 주문 작성</button></div>
-    </section>
-    <dialog id="confirmDialog" aria-labelledby="confirmTitle"><h2 id="confirmTitle">카카오 T 퀵을 접수할까요?</h2><dl class="quick-result"><div><dt>주문번호</dt><dd id="confirmOrderId"></dd></div><div><dt>배송지</dt><dd id="confirmAddress"></dd></div><div><dt>받는 분</dt><dd id="confirmRecipient"></dd></div><div><dt>예상요금</dt><dd id="confirmPrice"></dd></div></dl><div class="quick-success-actions"><button class="quick-button quick-button--plain" id="cancelConfirm" type="button">취소</button><button class="quick-button quick-button--orange" id="submitConfirm" type="button">퀵 주문 접수</button></div></dialog>
   </main>
 </body>
 </html>

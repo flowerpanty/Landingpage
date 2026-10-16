@@ -2001,7 +2001,7 @@ const server = http.createServer(async (req, res) => {
     const canCreate = Boolean(dashboardConfig.dashboardUsername && dashboardConfig.dashboardPassword && isDashboardAuthorized(req, dashboardConfig));
     const publicPage = ["/dashboard/quick", "/dashboard/quick/", "/dashboard/quick/index.html", "/dashboard/quick/quick.css", "/dashboard/quick/quick.js"].includes(quickPath);
     const publicApi = (req.method === "GET" && quickPath === "/api/kakao-quick/config") ||
-      (req.method === "POST" && ["/api/kakao-quick/price", "/api/kakao-quick/estimate"].includes(quickPath));
+      (req.method === "POST" && ["/api/kakao-quick/price", "/api/kakao-quick/estimate", "/api/kakao-quick/quote-address"].includes(quickPath));
     if (!publicPage && !publicApi && !canCreate) {
       req.resume();
       requestDashboardAuth(res);
@@ -2016,10 +2016,10 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(405, { Allow: "GET, HEAD" }); res.end(); return;
     }
     const adminEntry = ["/dashboard/quick/admin", "/dashboard/quick/admin/", "/dashboard/quick/admin/index.html"].includes(quickPath);
-    const asset = adminEntry ? "index.html" : quickPath.replace(/^\/dashboard\/quick\/?/, "") || "index.html";
-    if (!["index.html", "quick.css", "quick.js"].includes(asset)) { sendNotFound(req, res); return; }
+    const asset = adminEntry ? "admin.html" : quickPath.replace(/^\/dashboard\/quick\/?/, "") || "index.html";
+    if (!["index.html", "quick.css", "quick.js", "admin.html", "admin.js"].includes(asset)) { sendNotFound(req, res); return; }
     const file = path.join(ROOT, "dashboard", "quick", asset);
-    const body = asset === "index.html" && adminEntry ? fs.readFileSync(file, "utf8").replace('data-quick-entry="public"', 'data-quick-entry="admin"') : fs.readFileSync(file);
+    const body = fs.readFileSync(file);
     sendBufferResponse(req, res, 200, Buffer.from(body), { contentType: MIME_TYPES[path.extname(file)], cacheControl: "no-store", ext: path.extname(file), allowRange: false });
     return;
   }
