@@ -129,6 +129,11 @@ class Cdp {
 }
 
 try {
+  const publicHtml = fs.readFileSync(path.join(ROOT, "dashboard/quick/index.html"), "utf8");
+  const postcodeScript = 'src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"';
+  assert.ok(publicHtml.includes(postcodeScript));
+  assert.ok(publicHtml.indexOf(postcodeScript) < publicHtml.indexOf('src="/dashboard/quick/quick.js"'));
+  checks++;
   base = await startServer();
   const paths = ["/dashboard/quick/admin/", "/dashboard/quick/admin.html", "/dashboard/quick/admin.js", "/dash%62oard/quick/admin/", "/%64ashboard/quick/admin/index.html", "/dashboard%2Fquick%2Fadmin/", "/api/kakao-quick/admin-config", "/api/kakao-quick/orders", "/api/kakao-quick/orders/NM-TEST"];
   for (const pathname of paths) {
@@ -277,7 +282,7 @@ try {
   assert.ok(target, "headless Chrome must start"); cdp = new Cdp(target.webSocketDebuggerUrl);
   await cdp.command("Page.enable"); await cdp.command("Runtime.enable"); await cdp.command("Network.enable");
   await cdp.command("Network.setExtraHTTPHeaders", { headers: { Authorization: authorization } });
-  await cdp.command("Network.setBlockedURLs", { urls: ["*kakaomobility.com*", "*dapi.kakao.com*", "*google-analytics.com*"] });
+  await cdp.command("Network.setBlockedURLs", { urls: ["*kakaomobility.com*", "*dapi.kakao.com*", "*t1.kakaocdn.net*", "*google-analytics.com*"] });
   const screenshots = path.join(ROOT, "output/playwright/quick-admin"); fs.mkdirSync(screenshots, { recursive: true });
   const beforeBrowser = upstreamCalls.filter(call => call.url === rootPath && call.method === "POST").length;
   for (const width of [390, 1280]) {
@@ -332,14 +337,57 @@ try {
     const state = await cdp.evaluate("return {doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,name:document.querySelector('#pickupName').textContent,address:document.querySelector('#pickupAddress').textContent,privateFields:document.querySelectorAll('#latitude,#longitude,#coordinates,#partnerOrderId,#recipientName,#recipientPhone,#productName,#unitPrice,#paymentType,#createButton,#publicAccess').length,type:document.querySelector('#orderType').value,size:document.querySelector('#productSize').value};");
     assert.ok(state.doc<=width&&state.body<=width); assert.equal(state.privateFields,0); assert.equal(state.type,"QUICK"); assert.equal(state.size,"S");
     assert.equal(state.name,"NOTHINGMATTERS"); assert.equal(state.address,"서울특별시 강서구 송정로 25 1층");
-    await cdp.evaluate(`const values=${JSON.stringify(addressInput)};for(const [key,value] of Object.entries(values)){const el=document.getElementById(key);if(el){el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));}}document.querySelector('#quoteButton').click();document.querySelector('#quoteButton').click();return true;`);
+    const addressControl = await cdp.evaluate("const input=document.querySelector('#basicAddress');const button=document.querySelector('#addressSearchButton');return {readonly:input.readOnly,required:input.required,disabled:input.disabled,placeholder:input.placeholder,label:button.getAttribute('aria-label'),type:button.type,columns:getComputedStyle(button.parentElement).gridTemplateColumns.split(' ').length,buttonWidth:button.getBoundingClientRect().width,rowWidth:button.parentElement.getBoundingClientRect().width};");
+    assert.equal(addressControl.readonly,true); assert.equal(addressControl.required,true); assert.equal(addressControl.disabled,false);
+    assert.equal(addressControl.placeholder,"주소 찾기를 눌러주세요"); assert.equal(addressControl.label,"배송지 주소 찾기"); assert.equal(addressControl.type,"button");
+    assert.equal(addressControl.columns,width===390?1:2);
+    if(width===390) assert.equal(addressControl.buttonWidth,addressControl.rowWidth);
+    const beforeEmpty = localCalls.length;
+    await cdp.evaluate("document.querySelector('#quoteButton').click();return true;");
+    assert.deepEqual(await cdp.evaluate("return {text:document.querySelector('#actionStatus').textContent,focus:document.activeElement.id};"),{text:"주소를 선택해 주세요.",focus:"addressSearchButton"});
+    assert.equal(localCalls.length,beforeEmpty,"empty readonly address cannot request a quote");
+    await cdp.evaluate("delete window.kakao;document.querySelector('#addressSearchButton').click();return true;");
+    assert.equal(await cdp.evaluate("return document.querySelector('#actionStatus').textContent;"),"주소검색을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    await cdp.evaluate("window.postcodeData={};window.kakao={Postcode:class{constructor(options){this.options=options;}open(){this.options.oncomplete(window.postcodeData);}}};document.querySelector('#addressSearchButton').click();return true;");
+    assert.equal(await cdp.evaluate("return document.querySelector('#actionStatus').textContent;"),"주소를 선택해 주세요.");
+    const selectedAddress = "서울특별시 강남구 테헤란로 123";
+    await cdp.evaluate(`window.postcodeData={userSelectedType:'R',roadAddress:${JSON.stringify(selectedAddress)},jibunAddress:''};document.querySelector('#addressSearchButton').focus();return true;`);
+    await cdp.command("Input.dispatchKeyEvent",{type:"keyDown",key:"Enter",code:"Enter",windowsVirtualKeyCode:13,text:"\r"});
+    await cdp.command("Input.dispatchKeyEvent",{type:"keyUp",key:"Enter",code:"Enter",windowsVirtualKeyCode:13});
+    assert.deepEqual(await cdp.evaluate("return {address:document.querySelector('#basicAddress').value,focus:document.activeElement.id};"),{address:selectedAddress,focus:"detailAddress"});
+    await cdp.evaluate("document.querySelector('#detailAddress').value='5층';document.querySelector('#detailAddress').dispatchEvent(new Event('input',{bubbles:true}));scrollTo(0,0);return true;");
+    fs.writeFileSync(path.join(screenshots,`${width}-public-form.png`),(await cdp.command("Page.captureScreenshot",{format:"png"})).data,"base64");
+    const beforePublicQuote = upstreamCalls.length;
+    const beforePublicEvents = cdp.events.length;
+    await cdp.evaluate("document.querySelector('#quoteButton').click();document.querySelector('#quoteButton').click();return true;");
     await cdp.until("document.querySelector('#estimatedPrice').textContent==='18,500원' && document.querySelector('#estimatedTime').textContent==='약 30분'", "anonymous quote displayed");
     assert.equal(await cdp.evaluate("return document.querySelector('#quoteBasis').textContent;"),"일반 퀵 · 소형(S) 기준");
+    assert.equal(await cdp.evaluate("return document.querySelector('#priceRange').textContent;"),"15,000원 ~ 18,500원");
+    assert.equal(await cdp.evaluate("return document.querySelector('#resultAddress').textContent;"),`${selectedAddress} 5층`);
+    const quoteRequests = cdp.events.slice(beforePublicEvents).filter(event=>event.method==="Network.requestWillBeSent"&&event.params.request.url.endsWith("/api/kakao-quick/quote-address"));
+    assert.equal(quoteRequests.length,1,"double click sends one public quote request");
+    assert.deepEqual(JSON.parse(quoteRequests[0].params.request.postData),{basicAddress:selectedAddress,detailAddress:"5층",orderType:"QUICK",productSize:"S"});
+    assert.equal(Object.keys(quoteRequests[0].params.request.headers).some(key=>key.toLowerCase()==="authorization"),false);
+    assert.equal(localCalls.at(-1).query,selectedAddress);
+    const publicCalls = upstreamCalls.slice(beforePublicQuote);
+    assert.equal(publicCalls.length,2);
+    for(const call of publicCalls){
+      const location=call.url.endsWith("/price")?call.body.dropoff.location:call.body.dropoff;
+      assert.equal(location.basicAddress,selectedAddress); assert.equal(location.detailAddress,"5층");
+      assert.equal(location.latitude,37.5123456); assert.equal(location.longitude,127.1234567);
+    }
+    const publicMarkup = await cdp.evaluate("return document.documentElement.outerHTML;");
+    privateCheck(publicMarkup); assert.ok(!/37\.5123456|127\.1234567/.test(publicMarkup));
+    assert.equal(await cdp.evaluate(`return document.documentElement.scrollWidth<=${width}&&document.body.scrollWidth<=${width};`),true);
     await cdp.evaluate("document.querySelector('.quick-summary').scrollIntoView({behavior:'instant',block:'start'});return true;");
     fs.writeFileSync(path.join(screenshots,`${width}-public.png`),(await cdp.command("Page.captureScreenshot",{format:"png"})).data,"base64");
-    await cdp.evaluate("document.querySelector('#basicAddress').value='NOT_FOUND';document.querySelector('#basicAddress').dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('#quoteButton').click();return true;");
+    await cdp.evaluate("window.postcodeData={jibunAddress:'NOT_FOUND'};document.querySelector('#addressSearchButton').click();return true;");
+    assert.deepEqual(await cdp.evaluate("return {address:document.querySelector('#basicAddress').value,price:document.querySelector('#estimatedPrice').textContent,resultHidden:document.querySelector('#resultAddress').hidden,focus:document.activeElement.id};"),{address:"NOT_FOUND",price:"조회 전",resultHidden:true,focus:"detailAddress"});
+    await cdp.evaluate("document.querySelector('#quoteButton').click();return true;");
     await cdp.until("document.querySelector('#actionStatus').textContent.includes('도로명 주소를 다시 확인')","address not found message");
-    checks+=4;
+    await cdp.evaluate("window.postcodeData={address:'주소 대체값'};document.querySelector('#addressSearchButton').click();return true;");
+    assert.equal(await cdp.evaluate("return document.querySelector('#basicAddress').value;"),"주소 대체값");
+    checks+=22;
   }
   assert.equal(upstreamCalls.filter(call=>call.url===rootPath&&call.method==='POST').length,beforeBrowser+2,"public visitors cannot create orders");
   for(let i=0;i<30;i++) await api("quote-address", addressInput,200,{Authorization:"","X-Forwarded-For":"192.0.2.50"});
@@ -352,7 +400,7 @@ try {
   await wait(50);
   const logs = output.join(""); privateCheck(logs);
   for (const privateValue of [baseInput.basicAddress, baseInput.recipientPhone, baseInput.recipientName, "01012345678", "MOCK_FIXED_PICKUP_ADDRESS"]) assert.ok(!logs.includes(privateValue), "request/customer data must not be logged");
-  console.log(`kakao quick admin/public: ${checks} checks, Local x/y mapping, address-only quotes/not-found/missing keys, safe JSON/errors/timeouts, no public coordinates/secret/order fields, rate limiting, admin create/status/callback preserved, 390/1280 address-only public and admin flows PASS`);
+  console.log(`kakao quick admin/public: ${checks} checks, Postcode mock selection/keyboard/detail focus/invalidation, anonymous address quotes/Local x/y mapping, SDK unavailable/empty/not-found/missing keys, safe JSON/errors/timeouts, no public coordinates/secret/order fields, rate limiting, admin create/status/callback preserved, 390/1280 address search and admin flows PASS`);
 } finally {
   if (cdp) cdp.ws.close();
   for (const proc of processes.reverse()) {

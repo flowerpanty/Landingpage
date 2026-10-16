@@ -22,6 +22,9 @@
 .quick-admin textarea { resize: vertical; }
 .quick-admin small, .quick-help { color: var(--dashboard-sub); font-size: 12px; font-weight: 500; line-height: 1.65; }
 .quick-input-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.quick-address-field { display: grid; gap: 9px; min-width: 0; }
+.quick-address-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.quick-address-search .quick-button { white-space: nowrap; min-width: 96px; }
 .quick-divider { padding-top: 16px; border-top: 1px solid var(--dashboard-line); }
 .quick-admin .quick-type-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .quick-type-options legend { margin-bottom: 12px; font-size: 14px; font-weight: 750; }
@@ -70,6 +73,8 @@
   .quick-card { padding: 22px 18px; border-radius: 22px; }
   .quick-summary { position: static; }
   .quick-input-grid { grid-template-columns: minmax(0, 1fr); }
+  .quick-address-search { grid-template-columns: minmax(0, 1fr); }
+  .quick-address-search .quick-button { width: 100%; }
   .quick-type-options label { padding-inline: 6px; gap: 6px; font-size: 13px; }
   .quick-success-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
 }

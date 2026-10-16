@@ -3,6 +3,8 @@
 (() => {
   const $ = id => document.getElementById(id);
   const form = $("quickForm");
+  const basicAddress = $("basicAddress");
+  const detailAddress = $("detailAddress");
   const types = { QUICK: "일반 퀵", QUICK_ECONOMY: "이코노미", QUICK_EXPRESS: "급송" };
   const sizes = { XS: "초소형", S: "소형", M: "중형" };
   const money = value => `${value.toLocaleString("ko-KR")}원`;
@@ -24,9 +26,33 @@
   }
   form.addEventListener("input", invalidate);
   form.addEventListener("change", invalidate);
+  $("addressSearchButton").addEventListener("click", () => {
+    if (!window.kakao?.Postcode) {
+      message("주소검색을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.", true);
+      return;
+    }
+    new window.kakao.Postcode({
+      oncomplete(data) {
+        const address = data.roadAddress || data.jibunAddress || data.address || "";
+        if (!address) {
+          message("주소를 선택해 주세요.", true);
+          return;
+        }
+        basicAddress.value = address;
+        basicAddress.dispatchEvent(new Event("input", { bubbles: true }));
+        detailAddress.focus();
+      }
+    }).open();
+  });
   form.addEventListener("submit", async event => {
     event.preventDefault();
     if (!ready || busy || !form.reportValidity()) return;
+    // Readonly inputs are excluded from native required validation.
+    if (!basicAddress.value.trim()) {
+      message("주소를 선택해 주세요.", true);
+      $("addressSearchButton").focus();
+      return;
+    }
     invalidate();
     const current = version;
     const body = { basicAddress: $("basicAddress").value.trim(), detailAddress: $("detailAddress").value.trim(), orderType: $("orderType").value, productSize: $("productSize").value };
@@ -63,6 +89,6 @@
     $("pickupAddress").textContent = `${config.pickup.address} ${config.pickup.detail}`.trim();
     $("environmentBadge").textContent = config.sandbox ? "SANDBOX" : "실시간 조회";
     $("formFields").disabled = !ready;
-    $("setupStatus").textContent = ready ? "주소와 상세주소를 입력하고 예상 요금을 조회하세요." : "현재 요금 조회를 준비 중입니다. 잠시 후 다시 이용해 주세요.";
+    $("setupStatus").textContent = ready ? "주소 찾기로 배송지를 선택하고 상세주소를 입력해 주세요." : "현재 요금 조회를 준비 중입니다. 잠시 후 다시 이용해 주세요.";
   }).catch(() => { $("setupStatus").textContent = "조회 준비 상태를 확인하지 못했습니다. 잠시 후 새로고침해 주세요."; });
 })();

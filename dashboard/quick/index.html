@@ -7,6 +7,7 @@
   <title>퀵 배송비 조회 | NOTHINGMATTERS</title>
   <link rel="stylesheet" href="/assets/dashboard.css">
   <link rel="stylesheet" href="/dashboard/quick/quick.css">
+  <script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" defer></script>
   <script src="/dashboard/quick/quick.js" defer></script>
 </head>
 <body class="quick-admin quick-public">
@@ -15,7 +16,7 @@
       <a class="quick-back" href="/">← NOTHINGMATTERS</a>
       <div class="quick-title-row"><p class="dashboard-kicker">KAKAO T QUICK</p><span class="quick-badge" id="environmentBadge">SANDBOX</span></div>
       <h1>퀵 배송비 조회</h1>
-      <p class="dashboard-lead">배송지 주소를 입력하면 예상 퀵비와 배송시간을 확인할 수 있어요.</p>
+      <p class="dashboard-lead">배송지 주소를 선택하면 예상 퀵비와 배송시간을 확인할 수 있어요.</p>
       <p id="setupStatus" class="quick-notice" role="status">조회 준비 중입니다.</p>
     </header>
     <div class="quick-layout">
@@ -25,7 +26,13 @@
         <form id="quickForm">
           <fieldset id="formFields" disabled>
             <legend class="sr-only">배송비 조회 정보</legend>
-            <label>배송지 주소 *<input id="basicAddress" name="basicAddress" required maxlength="200" autocomplete="street-address" placeholder="예: 서울특별시 강남구 테헤란로 123"></label>
+            <div class="quick-address-field">
+              <label for="basicAddress">배송지 주소 *</label>
+              <div class="quick-address-search">
+                <input id="basicAddress" name="basicAddress" readonly required maxlength="200" autocomplete="street-address" placeholder="주소 찾기를 눌러주세요">
+                <button class="quick-button quick-button--plain" id="addressSearchButton" type="button" aria-label="배송지 주소 찾기">주소 찾기</button>
+              </div>
+            </div>
             <label>상세주소<input id="detailAddress" name="detailAddress" maxlength="200" autocomplete="address-line2" placeholder="예: 5층 / 101호"></label>
             <div class="quick-input-grid">
               <label>배송 종류<select id="orderType" name="orderType"><option value="QUICK" selected>일반 퀵</option><option value="QUICK_ECONOMY">이코노미</option><option value="QUICK_EXPRESS">급송</option></select></label>
