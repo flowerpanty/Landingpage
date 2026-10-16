@@ -1991,30 +1991,36 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Protect decoded static aliases too; Quick must never inherit the legacy dashboard's unconfigured bypass.
+  // Decode aliases before deciding which Quick resources are public.
   let quickPath;
   try { quickPath = path.posix.normalize(decodeURIComponent(requestUrl.pathname).replace(/\\/g, "/")); } catch { quickPath = requestUrl.pathname; }
   if (/^\/dashboard\/quick(?:\/|$)/.test(quickPath) || /^\/api\/kakao-quick(?:\/|$)/.test(quickPath)) {
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Robots-Tag", "noindex, nofollow");
     res.setHeader("Vary", "Authorization");
-    if (!dashboardConfig.dashboardUsername || !dashboardConfig.dashboardPassword || !isDashboardAuthorized(req, dashboardConfig)) {
+    const canCreate = Boolean(dashboardConfig.dashboardUsername && dashboardConfig.dashboardPassword && isDashboardAuthorized(req, dashboardConfig));
+    const publicPage = ["/dashboard/quick", "/dashboard/quick/", "/dashboard/quick/index.html", "/dashboard/quick/quick.css", "/dashboard/quick/quick.js"].includes(quickPath);
+    const publicApi = (req.method === "GET" && quickPath === "/api/kakao-quick/config") ||
+      (req.method === "POST" && ["/api/kakao-quick/price", "/api/kakao-quick/estimate"].includes(quickPath));
+    if (!publicPage && !publicApi && !canCreate) {
       req.resume();
       requestDashboardAuth(res);
       return;
     }
     if (quickPath.startsWith("/api/")) {
-      await handleKakaoQuickApi(req, res, { pathname: quickPath });
+      await handleKakaoQuickApi(req, res, { pathname: quickPath, canCreate });
       return;
     }
     if (req.method !== "GET" && req.method !== "HEAD") {
       req.resume();
       res.writeHead(405, { Allow: "GET, HEAD" }); res.end(); return;
     }
-    const asset = quickPath.replace(/^\/dashboard\/quick\/?/, "") || "index.html";
+    const adminEntry = ["/dashboard/quick/admin", "/dashboard/quick/admin/", "/dashboard/quick/admin/index.html"].includes(quickPath);
+    const asset = adminEntry ? "index.html" : quickPath.replace(/^\/dashboard\/quick\/?/, "") || "index.html";
     if (!["index.html", "quick.css", "quick.js"].includes(asset)) { sendNotFound(req, res); return; }
     const file = path.join(ROOT, "dashboard", "quick", asset);
-    sendBufferResponse(req, res, 200, fs.readFileSync(file), { contentType: MIME_TYPES[path.extname(file)], cacheControl: "no-store", ext: path.extname(file), allowRange: false });
+    const body = asset === "index.html" && adminEntry ? fs.readFileSync(file, "utf8").replace('data-quick-entry="public"', 'data-quick-entry="admin"') : fs.readFileSync(file);
+    sendBufferResponse(req, res, 200, Buffer.from(body), { contentType: MIME_TYPES[path.extname(file)], cacheControl: "no-store", ext: path.extname(file), allowRange: false });
     return;
   }
 

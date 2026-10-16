@@ -8,6 +8,7 @@
   const statuses = { RESERVED: "예약", MATCHING: "배송원 배정 중", MATCHED: "배송원 배정 완료", PICKUP_WAITING: "픽업 대기", PICKUP_STARTED: "픽업지 이동 중", PICKUP_COMPLETED: "픽업 완료", DROPOFF_WAITING: "배송 대기", DROPOFF_STARTED: "배송 중", DROPOFF_COMPLETED: "배송 완료", COMPLETED: "완료", CANCELED: "취소", MATCHING_FAILED: "배정 실패", ABORTED: "종료" };
   const money = value => Number.isFinite(value) ? `${value.toLocaleString("ko-KR")}원` : "확인 필요";
   let ready = false;
+  let canCreate = false;
   let quote = null;
   let orderId = null;
   let quoting = false;
@@ -19,7 +20,7 @@
     $("actionStatus").dataset.error = String(error);
   }
   function updateCreate() {
-    $("createButton").disabled = !quote || !$("quoteConfirmed").checked || creating || quoting || Boolean(orderId);
+    $("createButton").disabled = !canCreate || !quote || !$("quoteConfirmed").checked || creating || quoting || Boolean(orderId);
   }
   function invalidate() {
     version++;
@@ -54,7 +55,7 @@
     }
     if (!form.reportValidity()) return false;
     const value = input();
-    if (!/^0\d{8,10}$/.test(value.recipientPhone.replace(/[\s()-]/g, ""))) {
+    if (canCreate && !/^0\d{8,10}$/.test(value.recipientPhone.replace(/[\s()-]/g, ""))) {
       message("연락처를 확인해 주세요.", true); $("recipientPhone").focus(); return false;
     }
     if (value.pickupMode === "reserved") {
@@ -110,7 +111,7 @@
     try {
       const [price, estimate] = await Promise.all([api("price", value), api("estimate", value)]);
       if (currentVersion !== version) { message("입력이 변경되었습니다. 다시 조회해 주세요."); return; }
-      if (price.quoteToken !== estimate.quoteToken) throw new Error("조회 결과를 다시 확인해 주세요.");
+      if (canCreate && price.quoteToken !== estimate.quoteToken) throw new Error("조회 결과를 다시 확인해 주세요.");
       quote = { input: value, token: price.quoteToken, price: price.price, estimate: estimate.estimate };
       $("estimatedPrice").textContent = money(price.price.totalPrice);
       const hasRange = price.price.minimum !== undefined && price.price.maximum !== undefined;
@@ -119,14 +120,14 @@
       $("estimatedTime").textContent = `약 ${Math.max(1, Math.ceil(estimate.estimate.estimatedTime / 60))}분`;
       $("estimatedService").textContent = `${fleets[estimate.estimate.fleet] || estimate.estimate.fleet} / ${types[estimate.estimate.orderType] || estimate.estimate.orderType}`;
       $("summaryDropoff").textContent = `${value.basicAddress} ${value.detailAddress}`.trim();
-      $("quoteConfirmed").disabled = false;
-      message("배송지와 예상 요금을 확인한 뒤 접수해 주세요. 조회 결과는 5분간 사용할 수 있습니다.");
+      $("quoteConfirmed").disabled = !canCreate;
+      message(canCreate ? "배송지와 예상 요금을 확인한 뒤 접수해 주세요. 조회 결과는 5분간 사용할 수 있습니다." : "예상 요금과 시간을 확인했습니다. 배송 접수는 관리자 로그인 후 진행합니다.");
     } catch (error) { if (currentVersion === version) message(error.message, true); }
     finally { quoting = false; $("quoteButton").disabled = false; updateCreate(); }
   });
   $("quoteConfirmed").addEventListener("change", updateCreate);
   $("createButton").addEventListener("click", () => {
-    if (!quote || creating || !$("quoteConfirmed").checked || !valid()) return;
+    if (!canCreate || !quote || creating || !$("quoteConfirmed").checked || !valid()) return;
     $("confirmOrderId").textContent = quote.input.partnerOrderId;
     $("confirmAddress").textContent = `${quote.input.basicAddress} ${quote.input.detailAddress}`.trim();
     $("confirmRecipient").textContent = quote.input.recipientName;
@@ -136,7 +137,7 @@
   $("cancelConfirm").addEventListener("click", () => $("confirmDialog").close());
   $("confirmDialog").addEventListener("cancel", event => { if (creating) event.preventDefault(); });
   $("submitConfirm").addEventListener("click", async () => {
-    if (!quote || creating || !$("quoteConfirmed").checked) return;
+    if (!canCreate || !quote || creating || !$("quoteConfirmed").checked) return;
     creating = true;
     $("submitConfirm").disabled = true;
     $("cancelConfirm").disabled = true;
@@ -191,15 +192,25 @@
     $("summaryDropoff").textContent = "배송지 입력 후 조회";
     message(""); $("partnerOrderId").focus();
   });
-  api("config").then(config => {
+  const adminEntry = document.body.dataset.quickEntry === "admin";
+  api(adminEntry ? "admin-config" : "config").then(config => {
     ready = config.ready;
+    canCreate = config.canCreate === true;
+    for (const section of document.querySelectorAll('[data-admin-only]')) {
+      section.hidden = !canCreate;
+      for (const control of section.querySelectorAll('input,select,textarea')) control.disabled = !canCreate;
+    }
+    $("confirmationField").hidden = !canCreate;
+    $("createButton").hidden = !canCreate;
+    $("publicAccess").hidden = canCreate;
+    $("formTitle").textContent = canCreate ? "퀵 배송 정보 입력" : "배송비·시간 조회";
     $("environmentBadge").textContent = config.sandbox ? "SANDBOX" : "실서비스";
     $("pickupName").textContent = config.pickup.name;
     const address = `${config.pickup.address} ${config.pickup.detail}`.trim();
     $("pickupAddress").textContent = address;
-    $("pickupPhone").textContent = config.pickup.phone;
+    $("pickupPhone").textContent = config.pickup.phone || "";
     $("summaryPickup").textContent = `${config.pickup.name}\n${address}`;
     $("formFields").disabled = !ready;
-    $("setupStatus").textContent = ready ? (config.sandbox ? "SANDBOX · 테스트 환경입니다. 입력한 내용을 확인하고 접수해 주세요." : "실서비스 · 접수하면 실제 배송이 요청됩니다.") : "Railway Variables에서 새 카카오퀵 키와 출발지 주소·좌표·연락처를 설정해 주세요.";
+    $("setupStatus").textContent = ready ? (config.sandbox ? "SANDBOX · 테스트 환경의 예상 요금과 시간을 조회합니다." : "예상 요금과 시간을 조회합니다. 배송 접수는 관리자만 진행할 수 있습니다.") : (canCreate ? "Railway Variables에서 카카오퀵 키와 출발지 주소·좌표·연락처를 설정해 주세요." : "현재 퀵 요금 조회를 준비 중입니다. 잠시 후 다시 이용해 주세요.");
   }).catch(error => { $("setupStatus").textContent = error.message; });
 })();

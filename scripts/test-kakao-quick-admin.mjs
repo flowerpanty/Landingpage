@@ -70,7 +70,7 @@ async function startServer(extra = {}) {
   processes.push(proc); proc.stdout.on("data", chunk => output.push(String(chunk))); proc.stderr.on("data", chunk => output.push(String(chunk)));
   const base = `http://127.0.0.1:${value}`;
   for (let attempt = 0; attempt < 80; attempt++) {
-    try { if ((await fetch(`${base}/dashboard/quick/`)).status === 401) return base; } catch { /* starting */ }
+    try { if ((await fetch(`${base}/dashboard/quick/`)).status === 200) return base; } catch { /* starting */ }
     if (proc.exitCode !== null) throw new Error("Quick admin test server exited");
     await wait(50);
   }
@@ -117,18 +117,31 @@ class Cdp {
 
 try {
   base = await startServer();
-  const paths = ["/dashboard/quick/", "/dashboard/quick/quick.js", "/dashboard/quick/quick.css", "/dash%62oard/quick/", "/%64ashboard/quick/index.html", "/dashboard%2Fquick%2Fquick.js", "/api/kakao-quick/config", "/api/kakao-quick/price", "/api/kakao-quick/estimate", "/api/kakao-quick/orders", "/api/kakao-quick/orders/NM-TEST"];
+  const paths = ["/dashboard/quick/admin/", "/dash%62oard/quick/admin/", "/%64ashboard/quick/admin/index.html", "/dashboard%2Fquick%2Fadmin/", "/api/kakao-quick/admin-config", "/api/kakao-quick/orders", "/api/kakao-quick/orders/NM-TEST"];
   for (const pathname of paths) {
     const res = await fetch(base + pathname, { method: pathname.endsWith("price") || pathname.endsWith("estimate") || pathname.endsWith("orders") ? "POST" : "GET" });
     assert.equal(res.status, 401, pathname); assert.match(res.headers.get("www-authenticate"), /Basic realm="nothingmatters dashboard"/); checks++;
   }
   assert.equal(upstreamCalls.length, 0);
+  for (const pathname of ["/dashboard/quick/", "/dashboard/quick/quick.js", "/dashboard/quick/quick.css", "/dash%62oard/quick/", "/dashboard%2Fquick%2Fquick.js"]) {
+    const res = await fetch(base + pathname);
+    assert.equal(res.status, 200); assert.equal(res.headers.get("www-authenticate"), null); privateCheck(await res.text()); checks++;
+  }
+  const publicConfig = (await api("config", undefined, 200, { Authorization: "" })).data;
+  assert.equal(publicConfig.canCreate, false); assert.equal(publicConfig.pickup.phone, undefined);
+  const publicInput = Object.fromEntries(["basicAddress", "detailAddress", "latitude", "longitude", "orderType", "productSize", "fleet", "pickupMode", "wishTime"].map(key => [key, baseInput[key]]));
+  const publicPrice = await api("price", publicInput, 200, { Authorization: "" });
+  assert.equal(publicPrice.data.quoteToken, undefined, "public quote must not grant an order capability");
+  await api("estimate", publicInput, 200, { Authorization: "" });
+  await api("orders", { ...baseInput, confirmed: true, quoteToken: publicPrice.data.quoteToken }, 401, { Authorization: "" });
+  await api("orders/NM-ADMIN-001", undefined, 401, { Authorization: "" });
+  await api("orders", { ...baseInput, confirmed: true, quoteToken: publicPrice.data.quoteToken }, 409);
   for (const pathname of ["/dashboard/quick/", "/dashboard/quick/quick.js", "/dashboard/quick/quick.css"]) {
     const res = await fetch(base + pathname, { headers: { Authorization: authorization } });
     assert.equal(res.status, 200); assert.equal(res.headers.get("cache-control"), "no-store"); privateCheck(await res.text()); checks++;
   }
   const config = (await api("config")).data;
-  assert.equal(config.ready, true); assert.equal(config.sandbox, true); assert.equal(config.pickup.address, "MOCK_FIXED_PICKUP_ADDRESS");
+  assert.equal(config.ready, true); assert.equal(config.sandbox, true); assert.equal(config.canCreate, true); assert.equal(config.pickup.address, "MOCK_FIXED_PICKUP_ADDRESS");
   await api("price", baseInput, 403, { "X-Quick-Admin": "" });
   await api("price", baseInput, 403, { Origin: "https://unrelated.example" });
   await api("price", baseInput, 403, { "Sec-Fetch-Site": "cross-site" });
@@ -167,8 +180,10 @@ try {
   const callback = await fetch(base + "/callbacks/orders/NM-QUICK-TEST", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "completed", statusUpdatedAt: "2026-10-16T10:00:00+09:00" }) });
   assert.equal(callback.status, 200); assert.deepEqual(await callback.json(), { ok: true }); checks++;
   const unconfigured = await startServer({ DASHBOARD_USERNAME: "", DASHBOARD_PASSWORD: "" });
-  assert.equal((await fetch(unconfigured + "/dashboard/quick/")).status, 401);
-  assert.equal((await fetch(unconfigured + "/api/kakao-quick/config")).status, 401); checks += 2;
+  assert.equal((await fetch(unconfigured + "/dashboard/quick/")).status, 200);
+  assert.equal((await fetch(unconfigured + "/api/kakao-quick/config")).status, 200);
+  assert.equal((await fetch(unconfigured + "/dashboard/quick/admin/")).status, 401);
+  assert.equal((await fetch(unconfigured + "/api/kakao-quick/orders", {method:"POST"})).status, 401); checks += 4;
   const missingPickup = await startServer({ KAKAO_QUICK_PICKUP_LATITUDE: "", KAKAO_QUICK_PICKUP_PHONE: "" });
   const missingConfig = await fetch(missingPickup + "/api/kakao-quick/config", {headers:{Authorization:authorization}});
   assert.equal((await missingConfig.json()).ready, false); checks++;
@@ -186,7 +201,7 @@ try {
   const beforeBrowser = upstreamCalls.filter(call => call.url === rootPath && call.method === "POST").length;
   for (const width of [390, 1280]) {
     await cdp.command("Emulation.setDeviceMetricsOverride", { width, height: 900, deviceScaleFactor: 1, mobile: width === 390 });
-    await cdp.command("Page.navigate", { url: `${base}/dashboard/quick/` });
+    await cdp.command("Page.navigate", { url: `${base}/dashboard/quick/admin/` });
     await cdp.until("document.readyState === 'complete' && !document.querySelector('#formFields').disabled", "config ready");
     let layout = await cdp.evaluate("return {width:innerWidth,doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,columns:getComputedStyle(document.querySelector('.quick-layout')).gridTemplateColumns.split(' ').length,createDisabled:document.querySelector('#createButton').disabled,badge:document.querySelector('#environmentBadge').textContent};");
     assert.ok(layout.doc <= width && layout.body <= width, "no horizontal overflow"); assert.equal(layout.columns, width === 390 ? 1 : 2); assert.equal(layout.createDisabled, true); assert.equal(layout.badge, "SANDBOX");
@@ -228,11 +243,28 @@ try {
     checks += 10;
   }
   assert.equal(upstreamCalls.filter(call => call.url === rootPath && call.method === "POST").length, beforeBrowser + 2, "double click must not duplicate orders");
+  await cdp.command("Network.setExtraHTTPHeaders", { headers: {} });
+  for (const width of [390,1280]) {
+    await cdp.command("Emulation.setDeviceMetricsOverride", {width,height:900,deviceScaleFactor:1,mobile:width===390});
+    await cdp.command("Page.navigate", {url:`${base}/dashboard/quick/`});
+    await cdp.until("document.readyState==='complete' && !document.querySelector('#formFields').disabled", "public quote form ready without login");
+    const state = await cdp.evaluate("return {doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,phone:document.querySelector('#pickupPhone').textContent,create:document.querySelector('#createButton').hidden,privateFields:[...document.querySelectorAll('[data-admin-only] input,[data-admin-only] select,[data-admin-only] textarea')].every(el=>el.disabled),login:document.querySelector('#publicAccess a').getAttribute('href')};");
+    assert.ok(state.doc<=width&&state.body<=width); assert.equal(state.phone,""); assert.equal(state.create,true); assert.equal(state.privateFields,true); assert.equal(state.login,"/dashboard/quick/admin/");
+    await cdp.evaluate(`const values=${JSON.stringify(publicInput)};for(const [key,value] of Object.entries(values)){const el=document.getElementById(key);if(el){el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}));}}document.querySelector('#coordinates').open=true;document.querySelector('#quoteButton').click();return true;`);
+    await cdp.until("document.querySelector('#estimatedPrice').textContent==='18,500원' && document.querySelector('#estimatedTime').textContent==='약 30분'", "anonymous quote displayed");
+    await cdp.evaluate("document.querySelector('#submitConfirm').click();document.querySelector('.quick-summary').scrollIntoView({behavior:'instant',block:'start'});return true;");
+    fs.writeFileSync(path.join(screenshots,`${width}-public.png`),(await cdp.command("Page.captureScreenshot",{format:"png"})).data,"base64");
+    checks+=4;
+  }
+  assert.equal(upstreamCalls.filter(call=>call.url===rootPath&&call.method==='POST').length,beforeBrowser+2,"public visitors cannot create orders");
+  for(let i=0;i<30;i++) await api("price", publicInput,200,{Authorization:"","X-Forwarded-For":"192.0.2.50"});
+  const limited=await api("price",publicInput,429,{Authorization:"","X-Forwarded-For":"192.0.2.50"});
+  assert.equal(limited.res.headers.get("retry-after"),"60");
   assert.equal(cdp.events.some(event => event.method === "Runtime.exceptionThrown"), false, "no browser runtime exceptions");
   await wait(50);
   const logs = output.join(""); privateCheck(logs);
   for (const privateValue of [baseInput.basicAddress, baseInput.recipientPhone, baseInput.recipientName, "01012345678", "MOCK_FIXED_PICKUP_ADDRESS"]) assert.ok(!logs.includes(privateValue), "request/customer data must not be logged");
-  console.log(`kakao quick admin: ${checks} checks, Basic Auth/fail-closed aliases, fixed pickup, input/time/fleet validation, quote gate, duplicate guard, safe projections/logs, callback, 390/1280 layout and mock-only browser create/status PASS`);
+  console.log(`kakao quick admin/public: ${checks} checks, anonymous quote/price/time, rate limiting, private create/status and admin aliases, fixed pickup, quote/duplicate guards, privacy, callback, 390/1280 public and admin browser flows PASS`);
 } finally {
   if (cdp) cdp.ws.close();
   for (const proc of processes.reverse()) {

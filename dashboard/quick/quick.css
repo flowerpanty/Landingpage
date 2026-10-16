@@ -51,6 +51,8 @@
 #estimatedPrice { color: #4169e1; font-size: 32px; font-weight: 900; }
 .quick-admin .quick-confirm { flex-direction: row; align-items: flex-start; gap: 10px; margin-block: 24px 16px; font-size: 13px; }
 .quick-summary .quick-button { width: 100%; }
+#publicAccess { margin-top: 24px; }
+#publicAccess .quick-button { margin-top: 12px; text-decoration: none; }
 .quick-action-status { font-size: 14px; line-height: 1.7; margin-top: 18px; overflow-wrap: anywhere; }
 .quick-action-status[data-error="true"] { color: #a62918; }
 .quick-success { margin-top: 24px; border: 2px solid #4169e1; }
