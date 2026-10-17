@@ -816,7 +816,7 @@ assert.match(
 for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
-    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${pathname === "/" ? "2026-10-04" : pathname === "/works/" ? "2026-09-22" : "2026-09-18"}<\\/lastmod>`),
+    new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${registryEntries.get(normalizePathname(pathname)).lastmod}<\\/lastmod>`),
     `${pathname} sitemap lastmod should reflect its current content`
   );
 }
@@ -903,7 +903,7 @@ assert.match(magokCompanyChoice, /마곡 회사 선물,[\s\S]*어떤 경우에 �
 for (const label of ["팀·직원 감사 선물", "세미나·기업행사", "승진·퇴사·송별", "외부 방문객·가벼운 선물"]) {
   assert.match(magokCompanyChoice, new RegExp(label), `magok company choice should include ${label}`);
 }
-for (const href of ["../small-gift/", "../guides/corporate-event-cookie/", "../guides/farewell-favor-cookie/", "../index.html#cookies", "../works/"]) {
+for (const href of ["../small-gift/", "../guides/corporate-event-cookie/", "/farewell-favor/", "../index.html#cookies", "../works/"]) {
   assert.match(magokCompanyChoice, new RegExp(`href="${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `magok company choice should link to ${href}`);
 }
 for (const productHint of ["브루키는 캐릭터와 짧은 문구", "수제꾸덕쿠키는 여러 맛과 패키지", "행운쿠키는 HAPPY", "COOKIE FLIGHT는 비행기 모양", "쿠키크루는 쿠키와 캐릭터 굿즈"]) {
@@ -955,7 +955,7 @@ assert.deepEqual(
   "magok visible FAQ and FAQPage should remain synchronized"
 );
 assert.equal(magokVisibleFaq.length, 8, "magok should expose eight visible FAQ entries");
-for (const href of ["../works/", "../small-gift/", "../bulk/", "../guides/corporate-event-cookie/", "../guides/farewell-favor-cookie/"]) {
+for (const href of ["../works/", "../small-gift/", "../bulk/", "../guides/corporate-event-cookie/", "/farewell-favor/"]) {
   assert.equal(magokHtml.includes(`href="${href}"`), true, `magok should expose contextual link ${href}`);
 }
 
@@ -1056,6 +1056,29 @@ assert.deepEqual(
 );
 
 const homeHtml = readHtml(filePathForPathname("/"));
+assert.deepEqual(
+  [...homeHtml.matchAll(/<section\b([^>]*)>/g)].map((match) => match[1].match(/\bid="([^"]+)"/)?.[1] || ""),
+  ["mainpage-home", "our-cookies", "", "use-case-guide", "actual-cases", "", "journal", "local-pickup", "main-faq", "contact"],
+  "homepage should preserve all existing sections and their order"
+);
+const homeCases = homeHtml.match(/<section\b[^>]*\bid="actual-cases"[^>]*>([\s\S]*?)<\/section>/)?.[1] || "";
+assert.match(homeCases, /class="showroom-made-gallery" data-recent-gallery/, "home should preserve the dynamic gallery");
+assert.match(homeHtml, /data-open-made-overlay/, "home should preserve the archive trigger");
+assert.match(homeHtml, /data-made-overlay-grid/, "home should preserve the full photo archive overlay");
+const semanticCases = [...homeCases.matchAll(/<article>([\s\S]*?)<\/article>/g)].map((match) => ({
+  title: cleanText(match[1].match(/<h3>([\s\S]*?)<\/h3>/)?.[1] || ""),
+  href: match[1].match(/<a\b[^>]*href="([^"]+)"/)?.[1],
+}));
+assert.deepEqual(semanticCases, [
+  { title: "브랜드 행사에 맞춘 단체 쿠키", href: "/corporate-gift/" },
+  { title: "감사의 마음을 담은 답례 쿠키", href: "/guides/wedding-favor-cookie/" },
+  { title: "짧은 문구를 더한 브라우니쿠키", href: "/products/custom-brownie-cookie/" },
+], "home should expose three semantic case links in static HTML");
+assert.ok(homeCases.indexOf('class="showroom-made-gallery"') < homeCases.indexOf('class="showroom-made-cases"'), "semantic cases should follow the gallery");
+assert.match(homeCases, /href="\/works\/">실제 제작 사례 더 보기 →<\/a>/);
+const showroomHomeCss = fs.readFileSync(path.join(ROOT, "assets/showroom-home.css"), "utf8");
+assert.match(showroomHomeCss, /\.showroom-made-cases\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+assert.match(showroomHomeCss, /@media \(max-width: 760px\)\s*\{\s*\.theme-showroom \.showroom-made-cases\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\)/);
 assert.match(getAttribute(homeHtml, /<title>([\s\S]*?)<\/title>/i), /낫띵메터스.*수제쿠키.*김포공항/);
 assert.match(getMeta(homeHtml, "name", "description"), /서울 강서구 공항동/);
 assert.match(homeHtml, /서울특별시 강서구 송정로 25 1층/);
@@ -1071,13 +1094,41 @@ assert.deepEqual(homeWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "h
 const homeBakery = homeSchema["@graph"].find((item) => item["@type"] === "Bakery");
 assert.deepEqual(homeBakery?.geo, { "@type": "GeoCoordinates", latitude: 37.557402, longitude: 126.8115357 }, "Bakery geo should match business facts");
 const corporateHtml = readHtml(filePathForPathname("/guides/corporate-event-cookie/"));
+const corporateGiftHtml = readHtml(filePathForPathname("/corporate-gift/"));
+const businessChecklist = corporateGiftHtml.match(/<section\b[^>]*\bid="business-checklist"[^>]*>([\s\S]*?)<\/section>/)?.[1] || "";
+assert.match(businessChecklist, /회사 행사 주문, 이것만 정하면 빨라요/);
+assert.deepEqual([...businessChecklist.matchAll(/<dt>([\s\S]*?)<\/dt>/g)].map((match) => cleanText(match[1])), ["행사 날짜", "필요 수량", "예산", "행사 목적", "맞춤 요소", "수령 방법"], "corporate checklist should contain six practical order details");
+const corporateSectionIds = [...corporateGiftHtml.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map((match) => match[1]);
+assert.deepEqual(corporateSectionIds.slice(corporateSectionIds.indexOf("order-info"), corporateSectionIds.indexOf("real-cases") + 1), ["order-info", "business-checklist", "real-cases"], "checklist should sit directly between order info and real cases");
+assert.match(businessChecklist, /상담용 견적서/);
+assert.match(businessChecklist, /href="\/order">선택한 구성으로 견적 만들기 →<\/a>/);
+function assertContentFaqParity(html, expectedCount, label) {
+  const faqSection = html.match(/<section\b[^>]*\bid="faq"[^>]*>([\s\S]*?)<\/section>/)?.[1] || "";
+  const visible = [...faqSection.matchAll(/<details\b[^>]*>([\s\S]*?)<\/details>/g)].map((match) => ({
+    name: cleanText(match[1].match(/<summary>([\s\S]*?)<\/summary>/)?.[1] || ""),
+    text: cleanText(match[1].replace(/<summary>[\s\S]*?<\/summary>/, "")),
+  }));
+  const schema = getStaticSchema(html)["@graph"].find((item) => item["@type"] === "FAQPage");
+  assert.equal(visible.length, expectedCount, `${label}: visible FAQ count`);
+  assert.deepEqual(visible, schema?.mainEntity.map((item) => ({ name: item.name, text: item.acceptedAnswer.text })), `${label}: visible FAQ and schema should match exactly`);
+}
+assertContentFaqParity(corporateGiftHtml, 7, "corporate gift");
+for (const question of ["회사 행사 쿠키 견적서를 받을 수 있나요?", "행사명이나 로고 스티커를 넣을 수 있나요?", "세미나·회의·학교·기관 행사도 상담할 수 있나요?", "기업행사 문의할 때 무엇을 먼저 알려주면 되나요?"]) {
+  assert.ok(corporateGiftHtml.includes(`<summary>${question}</summary>`), `corporate gift should answer: ${question}`);
+}
+const guideUseCases = corporateHtml.match(/<section\b[^>]*\bid="use-cases"[^>]*>([\s\S]*?)<\/section>/)?.[1] || "";
+assert.match(guideUseCases, /어떤 회사·단체 행사에 준비할 수 있나요\?/);
+assert.deepEqual([...guideUseCases.matchAll(/<h3>([\s\S]*?)<\/h3>/g)].map((match) => cleanText(match[1])), ["회사 세미나·워크숍", "회의·간담회", "학교·대학교 행사", "기관·단체 행사"]);
+for (const intent of ["세미나 간식", "회의 간식", "학교 행사 간식", "대학교 행사 답례품", "기관 행사 답례품"]) assert.ok(guideUseCases.includes(intent), `guide should explain the use case: ${intent}`);
+assertContentFaqParity(corporateHtml, 6, "corporate event guide");
+assert.match(corporateHtml, /<summary>회의나 세미나 간식으로도 주문할 수 있나요\?<\/summary>/);
 assert.match(corporateHtml, /href="\.\.\/\.\.\/magok-cookie\/">마곡 답례품·기업행사 안내<\/a>/, "corporate guide should expose its Magok contextual link");
 const smallGiftHtml = readHtml(filePathForPathname("/small-gift/"));
 assert.match(smallGiftHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·쿠키 선물 안내 →<\/a>/, "small gift hub should link once to the Magok favor guide");
 const dessertGiftHtml = readHtml(filePathForPathname("/guides/dessert-gift-set/"));
 assert.match(dessertGiftHtml, /href="\.\.\/\.\.\/pickup\/">김포공항 디저트 선물·픽업 안내 →<\/a>/, "dessert gift guide should link to pickup");
 const bulkHtml = readHtml(filePathForPathname("/bulk/"));
-assert.match(bulkHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·기업행사 안내 →<\/a>/, "bulk should link to Magok favor guidance");
+assert.match(bulkHtml, /href="\/magok-cookie\/">마곡 답례품·기업행사 안내<\/a>/, "bulk should link to Magok favor guidance");
 const worksHtml = readHtml(filePathForPathname("/works/"));
 assert.match(worksHtml, /id="works-answer-first"/, "works should expose an answer-first evidence explanation");
 assert.match(worksHtml, /관리자가 입력하지 않은 정보는 자동으로 추정하지 않습니다\./, "works should explain that missing metadata is not inferred");
@@ -1087,6 +1138,25 @@ assert.match(worksHtml, /실제 제작 사례를 본 뒤 수령 흐름 확인/, 
 assert.match(worksHtml, /회사·행사 목적이라면 마곡 안내 확인/, "works Magok CTA should explain the next step");
 const worksSchema = getStaticSchema(worksHtml);
 const worksWebPage = worksSchema["@graph"].find((entry) => entry["@type"] === "CollectionPage");
+const worksTitle = "쿠키 제작 사례 | 기업행사·결혼식·답례품 - 낫띵메터스";
+const worksDescription = "낫띵메터스 공항동 작업실에서 실제로 만든 기업행사 쿠키, 결혼식 답례품, 문구 커스텀 쿠키와 선물 제작 사례를 사진과 함께 확인하세요.";
+assert.equal(getAttribute(worksHtml, /<title>([\s\S]*?)<\/title>/i), worksTitle);
+for (const [attribute, field, expected] of [["name", "description", worksDescription], ["property", "og:title", worksTitle], ["property", "og:description", worksDescription], ["name", "twitter:title", worksTitle], ["name", "twitter:description", worksDescription]]) {
+  assert.equal(getMeta(worksHtml, attribute, field), expected, `works ${field} should match the evidence hub intent`);
+}
+assert.equal(worksWebPage?.name, worksTitle); assert.equal(worksWebPage?.description, worksDescription);
+const worksIntentNav = worksHtml.match(/<nav\b[^>]*aria-label="용도별 제작 사례와 주문 안내"[^>]*>([\s\S]*?)<\/nav>/)?.[1] || "";
+assert.ok(worksIntentNav, "works should have intent navigation below ANSWER FIRST");
+for (const [pathname, html, destinations] of [
+  ["/", homeCases, ["/works/", "/corporate-gift/"]],
+  ["/corporate-gift/", corporateGiftHtml, ["/works/", "/guides/corporate-event-cookie/", "/order"]],
+  ["/guides/corporate-event-cookie/", corporateHtml, ["/corporate-gift/", "/works/", "/order"]],
+  ["/works/", worksIntentNav, ["/corporate-gift/", "/guides/wedding-favor-cookie/", "/bulk/", "/products/custom-brownie-cookie/"]],
+]) {
+  const links = new Set([...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((match) => normalizePathname(new URL(match[1], `${SITE_URL}${pathname}`).pathname)));
+  for (const destination of destinations) assert.ok(links.has(normalizePathname(destination)), `${pathname}: contextual link to ${destination}`);
+}
+for (const html of [homeCases, corporateGiftHtml, corporateHtml, worksHtml]) assert.doesNotMatch(html, /세금계산서|거래명세서|법인카드|재주문율 1위|만족도 200%|포토쿠키|프린팅쿠키|로고쿠키/, "content must not introduce unverified service or performance claims");
 assert.equal(worksWebPage?.dateModified, "2026-09-22", "works dateModified should match the registry");
 const visibleWorkCards = [...worksHtml.matchAll(/<article class="nm-work-card">([\s\S]*?)<\/article>/g)].map((match) => {
   const card = match[1];
@@ -1095,6 +1165,7 @@ const visibleWorkCards = [...worksHtml.matchAll(/<article class="nm-work-card">(
   return { label, href: href ? new URL(href, `${SITE_URL}/works/`).pathname : "" };
 });
 const detailOrder = ["용도", "관련 제품", "지역/행사 유형", "포장 또는 문구 여부", "수령 방식"];
+assert.equal(visibleWorkCards.length, 5, "works should preserve its five real production cards");
 for (const [index, match] of [...worksHtml.matchAll(/<article class="nm-work-card">([\s\S]*?)<\/article>/g)].entries()) {
   const labels = [...match[1].matchAll(/<dt>([^<]+)<\/dt>/g)].map((detail) => detail[1]);
   assert.deepEqual(labels, [...labels].sort((a, b) => detailOrder.indexOf(a) - detailOrder.indexOf(b)), `works card ${index + 1} metadata should use the standard order`);
