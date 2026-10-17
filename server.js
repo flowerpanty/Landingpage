@@ -176,6 +176,10 @@ const TRACKED_DASHBOARD_EVENTS = [
   }
 ];
 const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;
+const CASE_SLUG_PATTERN = /^case-\d{8}-[a-f0-9]{8}$/;
+const WORK_PURPOSES = new Set(["기업행사", "결혼식 답례", "학교·기관", "퇴사·승진", "작은 선물", "기타"]);
+const WORK_PRODUCTS = new Set(["브루키", "수제꾸덕쿠키", "행운쿠키", "COOKIE FLIGHT", "TERMINAL 카라멜 샌드쿠키", "비행기 버터쿠키", "쿠키크루", "기타"]);
+const WORK_FULFILLMENTS = new Set(["예약 픽업", "차량 퀵", "상담 후 결정"]);
 const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "site-pages.json"), "utf8"));
 const WORK_CARD_DETAIL_FIELDS = [
   ["purpose", "용도"],
@@ -958,11 +962,24 @@ function normalizeGalleryHref(value) {
 }
 
 function normalizeGalleryWorkMetadata(payload = {}) {
-  return Object.fromEntries(
-    [...WORK_CARD_DETAIL_FIELDS.map(([key]) => key), "workCardLabel", "workCardActionLabel"]
-      .map((key) => [key, String(payload[key] || "").trim().slice(0, key.startsWith("workCard") ? 120 : 120)])
-      .filter(([, value]) => value)
-  );
+  const metadata = {};
+  for (const [key, maxLength] of Object.entries({ caption: 80, purpose: 120, product: 120, context: 120, region: 80, packaging: 120, fulfillment: 120, caseNote: 300, workCardLabel: 120, workCardActionLabel: 120 })) {
+    if (payload[key] === undefined) continue;
+    if (typeof payload[key] !== "string" || payload[key].trim().length > maxLength || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(payload[key])) throw new Error("invalid_metadata");
+    if (payload[key].trim()) metadata[key] = payload[key].trim();
+  }
+  for (const [key, values] of [["purpose", WORK_PURPOSES], ["product", WORK_PRODUCTS], ["fulfillment", WORK_FULFILLMENTS]]) {
+    if (metadata[key] && !values.has(metadata[key])) throw new Error("invalid_metadata");
+  }
+  if (Object.hasOwn(payload, "quantity")) {
+    if (!Number.isInteger(payload.quantity) || payload.quantity < 1 || payload.quantity > 100000) throw new Error("invalid_quantity");
+    metadata.quantity = payload.quantity;
+  }
+  if (Object.hasOwn(payload, "caseSlug")) throw new Error("invalid_case_slug");
+  if (payload.seoPublished !== undefined && typeof payload.seoPublished !== "boolean") throw new Error("invalid_seo_published");
+  metadata.seoPublished = payload.seoPublished === true;
+  if (metadata.seoPublished && ["caption", "purpose", "product", "context", "quantity", "fulfillment"].some((key) => !metadata[key])) throw new Error("missing_case_metadata");
+  return metadata;
 }
 
 function decodeGalleryPathSegment(value) {
@@ -1003,6 +1020,9 @@ async function handleGalleryApi(req, res, requestUrl) {
     try {
       const rawBody = await readRequestBody(req, MAX_GALLERY_UPLOAD_BYTES * 1.5);
       const payload = JSON.parse(rawBody);
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("invalid_request");
+      // Validate all case data before creating an image file.
+      const metadata = normalizeGalleryWorkMetadata(payload);
       const match = String(payload.dataUrl || "").match(
         /^data:image\/(jpeg|png|webp);base64,([a-z0-9+/=]+)$/i
       );
@@ -1022,21 +1042,29 @@ async function handleGalleryApi(req, res, requestUrl) {
       const extension = match[1].toLowerCase() === "jpeg" ? "jpg" : match[1].toLowerCase();
       const filename = `${Date.now()}-${crypto.randomBytes(5).toString("hex")}.${extension}`;
       const id = crypto.randomUUID();
-      fs.writeFileSync(path.join(getGalleryStorageDir(), filename), imageBuffer);
-
       const items = readGalleryManifest();
+      const createdAt = new Date().toISOString();
+      let caseSlug;
+      if (metadata.seoPublished) {
+        const date = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10).replace(/-/g, "");
+        do { caseSlug = `case-${date}-${crypto.randomBytes(4).toString("hex")}`; } while (items.some((entry) => entry.caseSlug === caseSlug));
+      }
       const item = {
         id,
         filename,
         src: `/gallery-media/${filename}`,
         caption: String(payload.caption || "새로 만든 쿠키").trim().slice(0, 80),
         href: normalizeGalleryHref(payload.href),
-        createdAt: new Date().toISOString(),
+        createdAt,
         userUploaded: true,
-        ...normalizeGalleryWorkMetadata(payload)
+        ...metadata,
+        ...(caseSlug ? { caseSlug } : {})
       };
       items.push(item);
-      writeGalleryManifest(items);
+      const imagePath = path.join(getGalleryStorageDir(), filename);
+      fs.writeFileSync(imagePath, imageBuffer);
+      try { writeGalleryManifest(items); }
+      catch (error) { fs.unlinkSync(imagePath); throw error; }
       console.info(
         `[gallery] Saved upload filename=${filename} path=${path.join(getGalleryStorageDir(), filename)} manifestItems=${items.length}`
       );
@@ -1111,11 +1139,12 @@ function getPublicWorkCardData(item) {
       .filter(([, value]) => value)
   );
 
+  const caseHref = item.seoPublished === true && CASE_SLUG_PATTERN.test(item.caseSlug) ? `/works/${item.caseSlug}/` : "";
   return {
     label: String(item.workCardLabel || (!item.userUploaded && registryEntry?.workCardLabel) || item.caption || "낫띵메터스 제작 쿠키").trim().slice(0, 160),
     details,
-    actionLabel: String(item.workCardActionLabel || (!item.userUploaded && registryEntry?.workCardActionLabel) || "관련 페이지 보기 →").trim().slice(0, 120),
-    href: registryEntry ? getPublicWorkHref(item.href) : ""
+    actionLabel: caseHref ? "사례 자세히 보기 →" : String(item.workCardActionLabel || (!item.userUploaded && registryEntry?.workCardActionLabel) || "관련 페이지 보기 →").trim().slice(0, 120),
+    href: caseHref || (registryEntry ? getPublicWorkHref(item.href) : "")
   };
 }
 
@@ -1139,6 +1168,11 @@ function getPublicWorkItems() {
         fulfillment: item.fulfillment,
         context: item.context,
         packaging: item.packaging,
+        quantity: item.quantity,
+        region: item.region,
+        caseNote: item.caseNote,
+        seoPublished: item.seoPublished,
+        caseSlug: item.caseSlug,
         workCardLabel: item.workCardLabel,
         workCardActionLabel: item.workCardActionLabel,
         userUploaded: true,
@@ -1179,7 +1213,7 @@ function renderPublicWorkCards(items = getPublicWorkItems()) {
         ? `<a href="${escapeAttribute(card.href)}">${escapeHtml(card.actionLabel)}</a>`
         : "";
 
-      return `            <article class="nm-work-card">
+      return `            <article class="nm-work-card" data-work-purpose="${escapeAttribute(card.details.purpose || "")}" data-work-product="${escapeAttribute(card.details.product || "")}" data-work-quantity="${escapeAttribute(Number.isInteger(item.quantity) ? item.quantity : "")}">
               <img src="${escapeAttribute(item.src)}" alt="${escapeAttribute(item.alt)}" loading="lazy" decoding="async">
               <div class="nm-work-card-copy">
                 <p>${escapeHtml(card.label)}</p>
@@ -1217,7 +1251,7 @@ function renderPublicWorksSchema(html, items) {
     const itemListIndex = schema["@graph"]?.findIndex((entry) => entry["@type"] === "ItemList" && entry["@id"] === `https://${CANONICAL_HOST}/works/#itemlist`);
     if (itemListIndex == null || itemListIndex < 0) return html;
     schema["@graph"][itemListIndex] = buildPublicWorksItemList(items);
-    const replacement = `<script type="application/ld+json" data-nm-schema="static">\n${JSON.stringify(schema, null, 2)}\n  </script>`;
+    const replacement = `<script type="application/ld+json" data-nm-schema="static">\n${serializePublicJsonLd(schema)}\n  </script>`;
     return html.replace(schemaMatch[0], replacement);
   } catch (error) {
     return html;
@@ -1230,11 +1264,103 @@ function renderWorksPage() {
   const items = getPublicWorkItems();
   const cards = renderPublicWorkCards(items);
 
-  const html = template.replace(
+  let html = template.replace(
     /<!-- NM_WORKS_CARDS:START -->[\s\S]*?<!-- NM_WORKS_CARDS:END -->/,
     `<!-- NM_WORKS_CARDS:START -->\n${cards}\n            <!-- NM_WORKS_CARDS:END -->`
   );
+  html = html.replace(/(<p\b[^>]*data-works-count[^>]*>)[\s\S]*?(<\/p>)/, `$1총 ${items.length}개의 제작 사례$2`);
   return renderPublicWorksSchema(html, items);
+}
+
+function serializePublicJsonLd(value) {
+  return JSON.stringify(value, null, 2).replace(/[<>&\u2028\u2029]/g, (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`);
+}
+
+function getPublishedWorkCases() {
+  return readGalleryManifest().filter((item) => {
+    if (!item || item.seoPublished !== true || typeof item.caseSlug !== "string" || !CASE_SLUG_PATTERN.test(item.caseSlug)) return false;
+    const filename = String(item.filename || "");
+    if (!filename || filename !== path.basename(filename) || !isGalleryImageFile(filename)) return false;
+    try { return fs.lstatSync(path.join(getGalleryStorageDir(), filename)).isFile(); }
+    catch { return false; }
+  });
+}
+
+function getCaseRelatedHref(value) {
+  const entry = getRegistryEntryForPublicHref(value);
+  if (!entry || entry.status !== "active" || entry.indexing === "noindex") return "";
+  const url = new URL(String(value), `https://${CANONICAL_HOST}`);
+  if (url.username || url.password) return "";
+  return url.pathname;
+}
+
+function renderWorkCasePage(item) {
+  const origin = `https://${CANONICAL_HOST}`;
+  const caseUrl = `${origin}/works/${item.caseSlug}/`;
+  const caption = String(item.caption || "");
+  const title = `${caption} | 낫띵메터스 제작 사례`;
+  const image = `/gallery-media/${encodeURIComponent(item.filename)}`;
+  const facts = [["용도", item.purpose], ["제품", item.product], ["행사 유형", item.context],
+    ["수량", Number.isInteger(item.quantity) ? `${item.quantity.toLocaleString("ko-KR")}개` : ""],
+    ["지역", item.region], ["포장·문구", item.packaging], ["수령 방식", item.fulfillment]].filter(([, value]) => value);
+  const description = `${caption}. ${facts.map(([label, value]) => `${label}: ${value}`).join(" · ")}`;
+  const prefill = new URLSearchParams({ reference: caption });
+  for (const key of ["purpose", "product", "quantity", "fulfillment"]) {
+    if (item[key]) prefill.set(key, String(item[key]));
+  }
+  const relatedHref = getCaseRelatedHref(item.href);
+  const date = typeof item.createdAt === "string" && !Number.isNaN(Date.parse(item.createdAt)) ? item.createdAt : null;
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "WebPage", "@id": `${caseUrl}#webpage`, url: caseUrl, name: title, description,
+        inLanguage: "ko-KR", primaryImageOfPage: { "@type": "ImageObject", url: `${origin}${image}` },
+        breadcrumb: { "@id": `${caseUrl}#breadcrumb` }, ...(date ? { datePublished: date, dateModified: date } : {}) },
+      { "@type": "BreadcrumbList", "@id": `${caseUrl}#breadcrumb`, itemListElement: [
+        { "@type": "ListItem", position: 1, name: "홈", item: `${origin}/` },
+        { "@type": "ListItem", position: 2, name: "실제 제작 사례", item: `${origin}/works/` },
+        { "@type": "ListItem", position: 3, name: caption, item: caseUrl }
+      ] }
+    ]
+  };
+  return `<!DOCTYPE html>
+<html lang="ko"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeAttribute(description)}">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="${caseUrl}">
+  <meta property="og:type" content="website"><meta property="og:url" content="${caseUrl}">
+  <meta property="og:title" content="${escapeAttribute(title)}"><meta property="og:description" content="${escapeAttribute(description)}">
+  <meta property="og:image" content="${origin}${image}">
+  <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeAttribute(title)}">
+  <meta name="twitter:description" content="${escapeAttribute(description)}"><meta name="twitter:image" content="${origin}${image}">
+  <link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/seo-pages.css">
+  <script type="application/ld+json">${serializePublicJsonLd(schema)}</script>
+</head><body class="nm-seo-page"><a class="nm-case-skip" href="#main-content">본문으로 건너뛰기</a>
+  <header class="nm-topbar"><div class="nm-wrap"><a class="nm-logo" href="/">NOTHINGMATTERS</a></div></header>
+  <main id="main-content" class="nm-case-page" tabindex="-1"><div class="nm-wrap">
+    <nav class="nm-breadcrumb" aria-label="현재 위치"><a href="/">홈</a><a href="/works/">실제 제작 사례</a><span aria-current="page">${escapeHtml(caption)}</span></nav>
+    <h1>${escapeHtml(caption)}</h1>
+    <div class="nm-case-layout"><figure><img src="${image}" alt="${escapeAttribute(caption)}" fetchpriority="high" decoding="async"></figure>
+      <div><dl class="nm-case-facts">${facts.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}</dl>
+      ${item.caseNote ? `<p class="nm-case-note">${escapeHtml(item.caseNote)}</p>` : ""}
+      <div class="nm-seo-actions">${relatedHref ? `<a class="nm-seo-button nm-seo-button--paper" href="${escapeAttribute(relatedHref)}">관련 페이지 보기 →</a>` : ""}
+        <a class="nm-seo-button" href="${escapeAttribute(`/contact/?${prefill}`)}">비슷한 구성 문의하기 →</a>
+        <a class="nm-seo-button nm-seo-button--paper" href="/order">견적 만들기 →</a></div>
+      </div>
+    </div>
+  </div></main>
+  <footer class="nm-seo-footer"><div class="nm-wrap"><a href="/works/">실제 제작 사례 더 보기 →</a></div></footer>
+</body></html>`;
+}
+
+function renderWorksSitemap() {
+  const urls = getPublishedWorkCases().map((item) => {
+    const date = typeof item.createdAt === "string" && !Number.isNaN(Date.parse(item.createdAt)) ? new Date(item.createdAt).toISOString().slice(0, 10) : "";
+    return `  <url><loc>${escapeHtml(`https://${CANONICAL_HOST}/works/${item.caseSlug}/`)}</loc>${date ? `<lastmod>${escapeHtml(date)}</lastmod>` : ""}</url>`;
+  });
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`;
 }
 
 function parseBasicAuthHeader(headerValue) {
@@ -2085,7 +2211,24 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (requestUrl.pathname === "/works/") {
+  if (requestUrl.pathname === "/works-sitemap.xml") {
+    sendBufferResponse(req, res, 200, renderWorksSitemap(), {
+      contentType: "application/xml; charset=utf-8", cacheControl: "no-store", ext: ".xml", allowRange: false
+    });
+    return;
+  }
+
+  if (requestUrl.pathname.startsWith("/works/") && requestUrl.pathname !== "/works/" && requestUrl.pathname !== "/works/index.html") {
+    const slug = requestUrl.pathname.match(/^\/works\/(case-\d{8}-[a-f0-9]{8})\/$/)?.[1];
+    const item = slug && getPublishedWorkCases().find((entry) => entry.caseSlug === slug);
+    if (!item) { sendNotFound(req, res); return; }
+    sendBufferResponse(req, res, 200, renderWorkCasePage(item), {
+      contentType: MIME_TYPES[".html"], cacheControl: "no-store", ext: ".html", allowRange: false
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/works/" || requestUrl.pathname === "/works/index.html") {
     const responseBody = renderWorksPage();
     sendBufferResponse(req, res, 200, responseBody, {
       contentType: MIME_TYPES[".html"],

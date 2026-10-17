@@ -16,6 +16,7 @@
   <meta property="og:image:alt" content="nothingmatters 주문 상담 준비 페이지 대표 이미지">
   <link rel="icon" type="image/png" href="../images/heart-badge.png">
   <link id="nm-style-primary" rel="stylesheet" href="../assets/site.css">
+  <link rel="stylesheet" href="/assets/seo-pages.css">
   <script type="application/ld+json" data-nm-schema="static">
   {
     "@context": "https://schema.org",
@@ -535,18 +536,36 @@
           <div class="nm-guide-grid">
             <div class="nm-cta-card">
               <div class="nm-badge">copy</div>
-              <h3>문의 템플릿</h3>
-              <p>아래 내용을 그대로 복사해서 보내주시면 상담이 훨씬 빨라집니다.</p>
-              <pre id="inquiry-template" class="nm-template-box">행사/용도:
-희망 수령일:
-예상 수량:
-관심 제품:
-원하는 분위기 또는 포장:
-문구/스티커 필요 여부:
-픽업 또는 퀵 희망 여부:</pre>
+              <h3>문의내용 자동작성</h3>
+              <p>아는 내용만 입력한 뒤 복사해 상담창에 붙여넣어 주세요.</p>
+              <form id="contact-inquiry-form" class="nm-inquiry-form" aria-label="쿠키 주문 문의내용 작성">
+                <label>행사/용도<select name="purpose"><option value="">아직 못 정함</option><option>기업행사</option><option>결혼식 답례</option><option>학교·기관</option><option>퇴사·승진</option><option>작은 선물</option><option>기타</option></select></label>
+                <label>희망 수령일<input name="date" type="date"></label>
+                <label>예상 수량<input name="quantity" type="number" min="1" max="100000" step="1"></label>
+                <label>예산<input name="budget" type="number" min="0" step="1" placeholder="전체 예산 (원)"></label>
+                <label>관심 제품<select name="product"><option value="">아직 못 정함</option><option>브루키</option><option>수제꾸덕쿠키</option><option>행운쿠키</option><option>COOKIE FLIGHT</option><option>TERMINAL 카라멜 샌드쿠키</option><option>기타</option></select></label>
+                <label>원하는 분위기/포장<input name="packaging" maxlength="120" placeholder="예: 깔끔한 개별 포장"></label>
+                <label>문구/스티커<select name="messageOption"><option>상담 필요</option><option>필요</option><option>필요 없음</option></select></label>
+                <label>수령 방법<select name="fulfillment"><option>상담 필요</option><option>공항동 예약 픽업</option><option>차량 퀵</option></select></label>
+                <label class="nm-inquiry-wide">추가 메모<textarea name="note" maxlength="200" rows="3"></textarea></label>
+              </form>
+              <p class="nm-seo-note">입력한 내용은 이 화면에서만 사용됩니다. 복사 후 사용자가 직접 상담창에 붙여넣어 주세요.</p>
+              <pre id="inquiry-template" class="nm-template-box" aria-live="polite">안녕하세요. 낫띵메터스 쿠키 주문 문의드립니다.
+
+행사/용도: 미정
+희망 수령일: 미정
+예상 수량: 미정
+예산: 미정
+관심 제품: 미정
+원하는 분위기/포장: 미정
+문구/스티커: 상담 필요
+수령 방법: 상담 필요
+추가 메모: 미정
+
+가능한 구성과 제작 일정 확인 부탁드립니다.</pre>
               <div class="nm-copy-row">
-                <button class="nm-copy-button" type="button" data-copy-template data-copy-target="#inquiry-template">문의 템플릿 복사하기</button>
-                <a class="nm-btn nm-btn--secondary" href="../index.html">메인으로 돌아가기</a>
+                <button class="nm-copy-button" type="button" data-copy-template data-copy-target="#inquiry-template">문의내용 복사</button>
+                <a class="nm-btn nm-btn--secondary" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer">카카오톡 상담 열기</a>
               </div>
               <div class="nm-template-meta">
                 <span>제품을 못 골라도 가능</span>
@@ -676,5 +695,6 @@
 
   <script src="../assets/site.js"></script>
   <script src="../assets/seo.js"></script>
+  <script src="/assets/contact-inquiry.js" defer></script>
 </body>
 </html>

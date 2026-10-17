@@ -183,6 +183,42 @@
   gap: 16px;
 }
 
+.nm-works-filters { display: grid; gap: 16px; margin-bottom: 28px; min-width: 0; }
+.nm-works-filters fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.nm-works-filters legend { margin-bottom: 10px; font-size: 14px; font-weight: 900; }
+.nm-works-purpose-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.nm-works-purpose-options button { min-height: 44px; padding: 9px 15px; border: 1px solid var(--seo-line); border-radius: 999px; background: #fff; color: var(--seo-ink); font: inherit; font-size: 14px; cursor: pointer; }
+.nm-works-purpose-options button[aria-pressed="true"] { background: #4169e1; color: #fff; }
+.nm-works-selects, .nm-inquiry-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.nm-works-selects { max-width: 640px; }
+.nm-inquiry-form { margin-top: 20px; }
+.nm-inquiry-wide { grid-column: 1 / -1; }
+.nm-works-selects label, .nm-inquiry-form label { display: grid; gap: 8px; min-width: 0; font-size: 14px; font-weight: 900; }
+.nm-works-selects select, .nm-inquiry-form input, .nm-inquiry-form select, .nm-inquiry-form textarea { width: 100%; min-width: 0; min-height: 46px; padding: 10px 12px; border: 1px solid #9c958a; border-radius: 10px; background: #fff; color: #171512; font: inherit; font-size: 16px; font-weight: 500; }
+.nm-inquiry-form textarea { resize: vertical; }
+#inquiry-template { white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-works-count], [data-works-empty] { margin: 16px 0; font-size: 15px; }
+.nm-work-card[hidden], [data-works-empty][hidden] { display: none !important; }
+.nm-case-page { padding: 32px 0 64px; }
+.nm-case-page h1 { margin-block: 24px 32px; font-size: clamp(32px, 4vw, 56px); line-height: 1.3; overflow-wrap: anywhere; }
+.nm-case-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: start; }
+.nm-case-layout > * { min-width: 0; }
+.nm-case-layout figure { margin: 0; }
+.nm-case-layout img { display: block; width: 100%; height: auto; border-radius: 18px; }
+.nm-case-facts { margin: 0; }
+.nm-case-facts > div { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 16px; padding-block: 14px; border-bottom: 1px solid var(--seo-line); font-size: 15px; }
+.nm-case-facts dt { font-weight: 900; }
+.nm-case-facts dd { margin: 0; overflow-wrap: anywhere; }
+.nm-case-note { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 24px; line-height: 1.7; }
+.nm-case-page .nm-seo-button { min-height: 48px; height: auto; padding-block: 12px; line-height: 1.5; text-align: center; }
+.nm-case-skip { position: absolute; top: -100px; left: 12px; padding: 12px; background: #fff; color: #171512; }
+.nm-case-skip:focus { top: 12px; }
+.nm-case-page :focus-visible, .nm-works-filters :focus-visible, .nm-inquiry-form :focus-visible { outline: 3px solid #4169e1; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .nm-works-selects, .nm-inquiry-form, .nm-case-layout { grid-template-columns: minmax(0, 1fr); }
+  .nm-case-layout { gap: 24px; }
+}
+
 .nm-work-card {
   overflow: hidden;
   border: 1px solid var(--seo-line);

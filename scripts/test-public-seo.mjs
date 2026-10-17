@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runInNewContext } from "node:vm";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_URL = "https://nothingmatters.co.kr";
@@ -790,7 +791,8 @@ assert.match(airplaneHtml, /2,500/);
 assert.equal(getStaticSchema(airplaneHtml)["@graph"].find((entry) => entry["@type"] === "Product")?.offers?.price, 2500);
 assert.match(cookieFlightHomeHtml, /alt="NOTHINGMATTERS 비행기 버터쿠키"/);
 const cookieFlightWorksHtml = readHtml(filePathForPathname("/works/"));
-assert.equal(cookieFlightWorksHtml.includes("COOKIE FLIGHT"), false, "works must not claim a COOKIE FLIGHT production case without evidence");
+const staticWorksCards = cookieFlightWorksHtml.match(/<!-- NM_WORKS_CARDS:START -->([\s\S]*?)<!-- NM_WORKS_CARDS:END -->/)?.[1] || "";
+assert.equal(staticWorksCards.includes("COOKIE FLIGHT"), false, "default cards must not claim a COOKIE FLIGHT production case without evidence");
 
 assert.ok(businessFacts.sameAs?.includes(NAVER_PLACE_URL), "business facts should include the official Naver Place URL");
 
@@ -1130,6 +1132,24 @@ assert.match(dessertGiftHtml, /href="\.\.\/\.\.\/pickup\/">김포공항 디저�
 const bulkHtml = readHtml(filePathForPathname("/bulk/"));
 assert.match(bulkHtml, /href="\/magok-cookie\/">마곡 답례품·기업행사 안내<\/a>/, "bulk should link to Magok favor guidance");
 const worksHtml = readHtml(filePathForPathname("/works/"));
+assert.match(worksHtml, /<form id="works-filters"/);
+assert.deepEqual([...worksHtml.matchAll(/data-work-purpose-filter="([^"]*)"/g)].map((match) => match[1]), ["", "기업행사", "결혼식 답례", "학교·기관", "퇴사·승진", "작은 선물"]);
+assert.match(worksHtml, /src="\/assets\/works\.js"/);
+assert.match(worksHtml, /data-works-count/); assert.match(worksHtml, /data-works-empty hidden/);
+const worksJs = fs.readFileSync(path.join(ROOT, "assets/works.js"), "utf8");
+assert.doesNotMatch(worksJs, /fetch\s*\(|XMLHttpRequest|innerHTML|history\.|location\./, "works filters must only filter server-rendered cards without new URLs or fetches");
+const contactHtml = readHtml(filePathForPathname("/contact/"));
+const inquiryForm = contactHtml.match(/<form id="contact-inquiry-form"[\s\S]*?<\/form>/)?.[0] || "";
+for (const field of ["purpose", "date", "quantity", "budget", "product", "packaging", "messageOption", "fulfillment", "note"]) assert.ok(inquiryForm.includes(`name="${field}"`), `contact inquiry requires ${field}`);
+assert.match(contactHtml, /<pre id="inquiry-template"/);
+assert.match(contactHtml, /data-copy-template data-copy-target="#inquiry-template"/);
+assert.match(contactHtml, /href="https:\/\/pf\.kakao\.com\/_QdCaK\/chat" target="_blank" rel="noopener noreferrer">카카오톡 상담 열기/);
+assert.match(contactHtml, /src="\/assets\/contact-inquiry\.js"/);
+const inquiryJs = fs.readFileSync(path.join(ROOT, "assets/contact-inquiry.js"), "utf8");
+assert.doesNotMatch(inquiryJs, /innerHTML|fetch\s*\(|XMLHttpRequest|localStorage|sessionStorage/, "inquiry input must stay text-only and browser-only");
+const robotsText = fs.readFileSync(path.join(ROOT, "robots.txt"), "utf8");
+assert.match(robotsText, /^Sitemap: https:\/\/nothingmatters\.co\.kr\/sitemap\.xml$/m);
+assert.match(robotsText, /^Sitemap: https:\/\/nothingmatters\.co\.kr\/works-sitemap\.xml$/m);
 assert.match(worksHtml, /id="works-answer-first"/, "works should expose an answer-first evidence explanation");
 assert.match(worksHtml, /관리자가 입력하지 않은 정보는 자동으로 추정하지 않습니다\./, "works should explain that missing metadata is not inferred");
 assert.match(worksHtml, /href="\.\.\/magok-cookie\/">마곡 답례품·쿠키 선물 안내 →<\/a>/, "works should link to Magok favor guidance");
@@ -1201,6 +1221,65 @@ assert.doesNotMatch(worksHtml, /사진과 같은 구성을 그대로 주문할 �
 for (const href of ["../guides/corporate-event-cookie/", "../guides/wedding-favor-cookie/", "../out/fortune/", "../products/brownie-cookie/"]) {
   assert.equal(worksHtml.includes(`href="${href}"`), true, `works should preserve contextual link ${href}`);
 }
+
+// Small in-memory DOM fixtures exercise the two new scripts without launching a browser.
+const inquiryFields = {};
+for (const match of inquiryForm.matchAll(/<(?:input|textarea|select)\b[^>]*name="([^"]+)"/g)) {
+  inquiryFields[match[1]] = { value: "" };
+}
+for (const match of inquiryForm.matchAll(/<select\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/select>/g)) {
+  const options = [...match[2].matchAll(/<option(?: value="([^"]*)")?>([^<]*)<\/option>/g)].map((option) => ({ value: option[1] ?? option[2] }));
+  inquiryFields[match[1]] = { value: options[0].value, options };
+}
+for (const field of ["date", "quantity", "budget", "packaging", "note"]) inquiryFields[field] ||= { value: "" };
+const inquiryEvents = {};
+const inquiryOutput = { textContent: "" };
+Object.defineProperty(inquiryOutput, "innerHTML", { set() { throw new Error("inquiry HTML insertion is forbidden"); } });
+const reference = '</pre><script>alert("fixture")</script>';
+const inquiryQuery = new URLSearchParams({ purpose: "기업행사", product: "브루키", quantity: "60", fulfillment: "차량 퀵", reference, budget: "123", untrusted: "ignored" });
+const inquiryDocument = { getElementById: (id) => id === "contact-inquiry-form" ? { elements: inquiryFields, addEventListener: (name, callback) => { inquiryEvents[name] = callback; } } : inquiryOutput };
+runInNewContext(inquiryJs, { document: inquiryDocument, window: { location: { search: `?${inquiryQuery}` } }, URLSearchParams });
+assert.equal(inquiryFields.budget.value, "", "only allowlisted query fields may prefill contact inputs");
+assert.equal(inquiryFields.fulfillment.value, "차량 퀵");
+inquiryFields.date.value = "2026-11-20"; inquiryFields.budget.value = "500000"; inquiryFields.packaging.value = "깔끔한 개별 포장";
+inquiryFields.messageOption.value = "필요"; inquiryFields.note.value = "회사 세미나 참석자용입니다.";
+inquiryEvents.input();
+for (const text of ["행사/용도: 기업행사", "희망 수령일: 2026년 11월 20일", "예상 수량: 약 60개", "예산: 약 500,000원", "관심 제품: 브루키", "원하는 분위기/포장: 깔끔한 개별 포장", "문구/스티커: 필요", "수령 방법: 차량 퀵", "추가 메모: 회사 세미나 참석자용입니다.", `참고 제작 사례:\n${reference}`]) assert.ok(inquiryOutput.textContent.includes(text));
+inquiryFields.quantity.value = "0"; inquiryEvents.change();
+assert.ok(inquiryOutput.textContent.includes("예상 수량: 미정"));
+inquiryQuery.set("purpose", "untrusted"); inquiryQuery.set("product", "untrusted"); inquiryQuery.set("quantity", "1.5"); inquiryQuery.set("fulfillment", "untrusted");
+inquiryFields.purpose.value = ""; inquiryFields.product.value = ""; inquiryFields.quantity.value = ""; inquiryFields.fulfillment.value = "상담 필요";
+runInNewContext(inquiryJs, { document: inquiryDocument, window: { location: { search: `?${inquiryQuery}` } }, URLSearchParams });
+assert.equal(inquiryFields.purpose.value, ""); assert.equal(inquiryFields.product.value, ""); assert.equal(inquiryFields.quantity.value, ""); assert.equal(inquiryFields.fulfillment.value, "상담 필요");
+inquiryQuery.set("fulfillment", "예약 픽업");
+runInNewContext(inquiryJs, { document: inquiryDocument, window: { location: { search: `?${inquiryQuery}` } }, URLSearchParams });
+assert.equal(inquiryFields.fulfillment.value, "공항동 예약 픽업", "case pickup value should map to the contact select whitelist");
+
+const workFilterEvents = {};
+const filterButtons = ["", "기업행사", "학교·기관"].map((value) => ({ dataset: { workPurposeFilter: value }, setAttribute() {}, addEventListener(name, callback) { this[name] = callback; } }));
+const filterFields = { product: { value: "" }, quantity: { value: "" } };
+const filterCards = [
+  { dataset: { workPurpose: "기업행사", workProduct: "브루키", workQuantity: "60" } },
+  { dataset: { workPurpose: "결혼식 답례", workProduct: "수제꾸덕쿠키", workQuantity: "20" } },
+  { dataset: { workPurpose: "학교·기관", workProduct: "행운쿠키", workQuantity: "101" } },
+  { dataset: { workPurpose: "기업 행사", workProduct: "브라우니쿠키", workQuantity: "" } }
+];
+const filterCount = { textContent: "" }; const filterEmpty = { hidden: true };
+runInNewContext(worksJs, { document: {
+  getElementById: () => ({ elements: filterFields, querySelectorAll: () => filterButtons, addEventListener: (name, callback) => { workFilterEvents[name] = callback; } }),
+  querySelectorAll: () => filterCards, querySelector: (selector) => selector === "[data-works-count]" ? filterCount : filterEmpty,
+} });
+assert.equal(filterCards.filter((card) => !card.hidden).length, 4, "all server-rendered cards stay readable by default");
+filterButtons[1].click(); filterFields.product.value = "브루키"; workFilterEvents.change();
+assert.equal(filterCards.filter((card) => !card.hidden).length, 2);
+filterFields.quantity.value = "51-100"; workFilterEvents.change();
+assert.equal(filterCount.textContent, "총 1개의 제작 사례");
+filterButtons[0].click(); filterFields.product.value = ""; filterFields.quantity.value = "100+"; workFilterEvents.change();
+assert.equal(filterCards[2].hidden, false); assert.equal(filterCards.filter((card) => !card.hidden).length, 1);
+filterFields.quantity.value = "21-50"; workFilterEvents.change();
+assert.equal(filterEmpty.hidden, false); assert.equal(filterCount.textContent, "총 0개의 제작 사례");
+filterFields.quantity.value = "1-20"; workFilterEvents.change();
+assert.equal(filterCards[1].hidden, false); assert.equal(filterCount.textContent, "총 1개의 제작 사례");
 const llms = fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8");
 assert.equal(llms.includes("in-store pickup"), false, "llms should not describe pickup as an in-store purchase");
 assert.match(llms, /reservation pickup at the Gonghang-dong workshop or vehicle quick consultation depending on schedule and quantity/);

@@ -29,19 +29,28 @@
           <input type="password" name="token" autocomplete="current-password" required placeholder="Railway의 GALLERY_ADMIN_TOKEN">
         </label>
         <label class="gallery-admin-file">
-          사진 선택
+          대표 사진 *
           <input type="file" name="photo" accept="image/*" required>
           <span data-file-name>휴대폰 사진 가능 · 자동 압축</span>
         </label>
         <img class="gallery-admin-preview" data-preview alt="선택한 이미지 미리보기" hidden>
         <label>
-          사진 설명
+          사례 제목 *
           <input type="text" name="caption" maxlength="80" required placeholder="예: 기업 행사에 맞춘 쿠키 세트">
         </label>
+        <label>용도 *<select name="purpose" required><option value="">선택해 주세요</option><option>기업행사</option><option>결혼식 답례</option><option>학교·기관</option><option>퇴사·승진</option><option>작은 선물</option><option>기타</option></select></label>
+        <label>제품 *<select name="product" required><option value="">선택해 주세요</option><option>브루키</option><option>수제꾸덕쿠키</option><option>행운쿠키</option><option>COOKIE FLIGHT</option><option>TERMINAL 카라멜 샌드쿠키</option><option>비행기 버터쿠키</option><option>쿠키크루</option><option>기타</option></select></label>
+        <label>행사 유형 *<input name="context" maxlength="120" required placeholder="예: 회사 세미나 / 워크숍 / 결혼식"></label>
+        <label>수량 <small>SEO 공개 시 필수</small><input name="quantity" type="number" min="1" max="100000" step="1"></label>
+        <label>지역 <small>실제 확인된 경우에만 입력</small><input name="region" maxlength="80" placeholder="예: 마곡 / 강서구"></label>
+        <label>포장·문구 <small>선택</small><input name="packaging" maxlength="120" placeholder="예: 행사 문구 추가"></label>
+        <label>수령 방식 *<select name="fulfillment" required><option value="">선택해 주세요</option><option>예약 픽업</option><option>차량 퀵</option><option>상담 후 결정</option></select></label>
+        <label class="gallery-admin-wide">사례 설명 <small>관리자가 확인한 실제 정보만 입력</small><textarea name="caseNote" maxlength="300" rows="3"></textarea></label>
         <label>
-          연결할 주소 <small>선택</small>
+          관련 페이지 <small>선택</small>
           <input type="text" name="href" maxlength="500" placeholder="예: /products/handmade-cookie/">
         </label>
+        <label class="gallery-admin-seo"><input name="seoPublished" type="checkbox"><span>독립 제작사례 페이지를 검색에 공개<small>체크하면 /works/case-.../ 페이지와 제작사례 전용 사이트맵에 포함됩니다.</small></span></label>
         <button type="submit">사진 올리기</button>
         <p class="gallery-admin-status" data-status aria-live="polite"></p>
       </form>

@@ -192,11 +192,23 @@
       const body = document.createElement("div");
       const caption = document.createElement("p");
       caption.textContent = item.caption || "최근 만든 쿠키";
+      const metadata = document.createElement("ul");
+      metadata.className = "gallery-admin-case-meta";
+      for (const [label, value] of [["용도", item.purpose], ["제품", item.product], ["수량", Number.isInteger(item.quantity) ? `${item.quantity.toLocaleString("ko-KR")}개` : ""], ["SEO 공개", item.seoPublished === true ? "공개" : "미공개"]]) {
+        if (!value) continue;
+        const row = document.createElement("li"); row.textContent = `${label}: ${value}`; metadata.append(row);
+      }
+      body.append(caption, metadata);
+      if (item.seoPublished === true && /^case-\d{8}-[a-f0-9]{8}$/.test(item.caseSlug)) {
+        const link = document.createElement("a");
+        link.href = `/works/${item.caseSlug}/`; link.textContent = "사례페이지 보기 →";
+        link.target = "_blank"; link.rel = "noopener noreferrer"; body.append(link);
+      }
       const removeButton = document.createElement("button");
       removeButton.type = "button";
       removeButton.textContent = "삭제";
       removeButton.addEventListener("click", () => removeItem(item.id, removeButton));
-      body.append(caption, removeButton);
+      body.append(removeButton);
       card.append(image, body);
       list.append(card);
     });
@@ -243,12 +255,16 @@
 
   storageRefreshButton?.addEventListener("click", () => loadStorageStatus());
   tokenInput.addEventListener("change", () => loadStorageStatus());
+  form.elements.seoPublished.addEventListener("change", () => {
+    form.elements.quantity.required = form.elements.seoPublished.checked;
+  });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector("button[type=submit]");
     const file = fileInput.files?.[0];
     const token = tokenInput.value.trim();
+    if (!form.reportValidity()) return;
 
     if (!file || !token) {
       setStatus("관리자 키와 사진을 확인해주세요.", true);
@@ -271,7 +287,16 @@
         body: JSON.stringify({
           dataUrl,
           caption: form.elements.caption.value,
-          href: form.elements.href.value
+          href: form.elements.href.value,
+          purpose: form.elements.purpose.value,
+          product: form.elements.product.value,
+          context: form.elements.context.value,
+          region: form.elements.region.value,
+          packaging: form.elements.packaging.value,
+          fulfillment: form.elements.fulfillment.value,
+          caseNote: form.elements.caseNote.value,
+          seoPublished: form.elements.seoPublished.checked,
+          ...(form.elements.quantity.value ? { quantity: Number(form.elements.quantity.value) } : {})
         })
       });
       const payload = await response.json();
@@ -280,6 +305,9 @@
       fileInput.value = "";
       form.elements.caption.value = "";
       form.elements.href.value = "";
+      for (const key of ["purpose", "product", "context", "quantity", "region", "packaging", "fulfillment", "caseNote"]) form.elements[key].value = "";
+      form.elements.seoPublished.checked = false;
+      form.elements.quantity.required = false;
       preview.hidden = true;
       fileName.textContent = "휴대폰 사진 가능 · 자동 압축";
       setStatus("홈 RECENTLY MADE에 사진을 추가했습니다.");
