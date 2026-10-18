@@ -57,6 +57,14 @@ sandbox.window.NMQuote.navigateToKakao = () => events.push('kakao');
 const html = fs.readFileSync('order/brookie.html', 'utf8');
 const inline = Array.from(html.matchAll(/<script>([\s\S]*?)<\/script>/g)).at(-1)[1];
 vm.runInContext(inline.replace(/    init\(\);\s*$/, ''), sandbox);
+// Unit prices exercise the actual customer page code, including the unchanged horse/custom fees.
+for (const [character, heart, paper, expected] of [
+  ['bear',false,'navy',7800], ['rabbit',false,'navy',7800], ['tiger',false,'navy',7800],
+  ['birthday_bear',false,'navy',8500], ['miss_bear',false,'navy',8500], ['horse',false,'navy',8300],
+  ['bear',true,'navy',8500], ['birthday_bear',true,'navy',9200], ['birthday_bear',true,'custom',9900],
+]) {
+  assert.equal(vm.runInContext(`comboUnitPrice({character:'${character}',heartTextEnabled:${heart},heartText:'LOVE',paper:'${paper}'})`, sandbox), expected);
+}
 vm.runInContext(`Object.assign(state, {customerName:'검증', customerPhone:'010-1234-5678', date:'2026-10-20', pickupTime:'12:00~13:00', items:[{character:'bear',paper:'navy',qty:12}]}); activeStep=4; renderBuilderProgress();`, sandbox);
 assert(panels.every(panel => !panel.hidden));
 await Promise.all([vm.runInContext('receiveQuote()', sandbox), vm.runInContext('receiveQuote()', sandbox)]);
@@ -72,7 +80,7 @@ node('customerEmail').value = 'invalid';
 assert.equal(vm.runInContext('validateStep(3)', sandbox), false);
 vm.runInContext(`state.customerEmail='kim@example.com'; state.items=[{character:'bear',paper:'navy',qty:6},{character:'birthday_bear',paper:'custom',qty:6,heartTextEnabled:true,heartText:'LOVE',customPaperLine1:'첫번째',customPaperLine2:'두번째'}];state.topper=true;state.sticker=true;`, sandbox);
 node('customerEmail').value = 'kim@example.com';
-assert.equal(vm.runInContext('totalPrice()', sandbox), 132200);
+assert.equal(vm.runInContext('totalPrice()', sandbox), 134600);
 events.length = 0;
 emailFail = true;
 await vm.runInContext('receiveQuote()', sandbox);
@@ -120,4 +128,4 @@ for (const [step, label] of [[1, '추가 옵션 확인하기 →'], [2, '고객 
   vm.runInContext(`activeStep=${step}`, sandbox);
   assert.equal(vm.runInContext('floatingNextLabel()', sandbox), label);
 }
-console.log('Brookie actual page: all panels, minimum 12, unchanged multi-combo pricing, optional/invalid email, save → email → PNG → Kakao, failure/retry, duplicate/concurrent protection: PASS');
+console.log('Brookie actual page: all panels, minimum 12, updated multi-combo pricing, optional/invalid email, save → email → PNG → Kakao, failure/retry, duplicate/concurrent protection: PASS');

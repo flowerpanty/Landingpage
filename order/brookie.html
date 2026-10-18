@@ -2521,7 +2521,7 @@
 
   </style>
   <link rel="stylesheet" href="/order/assets/order-confirmation.css?v=cf9f255d554c" />
-  <link rel="stylesheet" href="/order/assets/brookie-mobile.css?v=77775daf528d" />
+  <link rel="stylesheet" href="/order/assets/brookie-mobile.css?v=50ec751b5892" />
 </head>
 <body>
   <a class="skipLink" href="#top">본문으로 건너뛰기</a>
@@ -2681,7 +2681,7 @@
           <span class="orderBadge orderBadge--optional">선택</span>
           <div class="seg">
             <button class="pill" id="noText" type="button">기본 하트</button>
-            <button class="pill" id="withText" type="button">문구 추가 +500원</button>
+            <button class="pill" id="withText" type="button">문구 추가 +700원</button>
           </div>
           <p class="helper" id="heartGuide"></p>
           <input id="heartText" value="" placeholder="영문은 4글자 한글은 2글자" />
@@ -2860,7 +2860,10 @@
       ["custom", "커스텀 종이", "#c7f2eb"]
     ];
 
-    const premiumChars = new Set(["birthday_bear", "miss_bear", "horse"]);
+    const characterAddonPrices = { birthday_bear: 700, miss_bear: 700, horse: 500 };
+    function characterAddonPrice(character) {
+      return Object.prototype.hasOwnProperty.call(characterAddonPrices, character) ? characterAddonPrices[character] : 0;
+    }
     const topperGroups = {
       square: ["01", "02", "03", "04"],
       circle: ["05", "06", "07"],
@@ -3163,7 +3166,7 @@
         const button = makePill({
           className: "charPill",
           pressed: state.character === id,
-          html: `<img src="/order/assets/public/images/characters/${id}.webp" alt="${label}"><span>${label}</span>${premiumChars.has(id) ? '<small class="premium">+500원</small>' : ""}`,
+          html: `<img src="/order/assets/public/images/characters/${id}.webp" alt="${label}"><span>${label}</span>${characterAddonPrice(id) ? `<small class="premium">+${characterAddonPrice(id)}원</small>` : ""}`,
           onClick: () => {
             state.character = id;
             state.heartText = clampHeartText($("heartText").value);
@@ -3208,7 +3211,7 @@
         : "영문은 4글자 한글은 2글자";
       $("charStepHint").textContent = `${nameOf(chars, state.character)} 선택`;
       $("heartStepHint").textContent = state.heartTextEnabled
-        ? (state.heartText ? `${state.heartText} 입력` : "+500 적용")
+        ? (state.heartText ? `${state.heartText} 입력` : "+700 적용")
         : "기본 하트";
       $("paperStepHint").textContent = `${nameOf(papers, state.paper)} 선택`;
       $("noText").setAttribute("aria-pressed", String(!state.heartTextEnabled));
@@ -3363,8 +3366,9 @@
 
     function comboUnitItems(combo) {
       const items = [["기본 브루키", 7800]];
-      if (premiumChars.has(combo.character)) items.push([`${nameOf(chars, combo.character)} 캐릭터`, 500]);
-      if (combo.heartTextEnabled) items.push(["하트 문구 추가", 500]);
+      const characterFee = characterAddonPrice(combo.character);
+      if (characterFee > 0) items.push([`${nameOf(chars, combo.character)} 캐릭터`, characterFee]);
+      if (combo.heartTextEnabled) items.push(["하트 문구 추가", 700]);
       if (combo.paper === "custom") items.push(["커스텀 종이", 700]);
       return items;
     }

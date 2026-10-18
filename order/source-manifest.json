@@ -88,5 +88,18 @@
     },
     "repository": "flowerpanty/ThingMattersReserve",
     "commit": "3385734a97a646b61d27450ac2bf08a25aa4a117"
+  },
+  "brookieGridPriceImport": {
+    "repository": "flowerpanty/ThingMattersReserve",
+    "commit": "46429a893b5b6677be99180104e2168532950797",
+    "updatedAt": "2026-10-18",
+    "sourceFiles": {
+      "brookie.html": "7e7ed348b417bef438482178c77c0cc4385837dde7af850fd969ba290b4bb670",
+      "brookie-mobile.css": "50ec751b58921bb87d093aed40f896f06ef0ba1aeae8225e26e1689bb3d68780"
+    },
+    "deployedFiles": {
+      "brookie.html": "523352a4ee2e475c316db37fc939fd2ac1948c3f5b7d1db613d9f0c36bb5b5c9",
+      "brookie-mobile.css": "50ec751b58921bb87d093aed40f896f06ef0ba1aeae8225e26e1689bb3d68780"
+    }
   }
 }

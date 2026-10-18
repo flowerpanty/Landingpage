@@ -29,6 +29,7 @@
     "prestart": "npm run site:build",
     "start": "node server.js",
     "order:browser:test": "node scripts/test-order-browser.mjs",
+    "brookie:browser:test": "node scripts/test-brookie-mobile-browser.mjs",
     "order:verify-live": "node scripts/verify-order-deployment.mjs"
   }
 }
