@@ -72,7 +72,7 @@ async function waitForJson(port) {
 
 async function evaluate(cdp, callbackSource) {
   const response = await cdp.command("Runtime.evaluate", {
-    expression: `JSON.stringify((${callbackSource})())`,
+    expression: `(async () => JSON.stringify(await (${callbackSource})()))()`,
     awaitPromise: true,
     returnByValue: true
   });
@@ -114,8 +114,59 @@ async function waitFor(cdp, callbackSource, message) {
   }
   throw new Error(message);
 }
-
-
+async function verifyPaperLogos(cdp, width, screenshots, live) {
+  const characters=['bear','rabbit','tiger','birthday_bear','miss_bear','horse'];
+  if(width<=600) {
+    await evaluate(cdp,`()=>{const panel=document.querySelector('[data-builder-panel="paper"]');scrollTo({top:panel.getBoundingClientRect().top+scrollY-340,behavior:'instant'});return true;}`);
+    await wait(150);
+  }
+  for (const [index, character] of characters.entries()) {
+    for (const [fixture,line1,line2] of [
+      ['one-line','THANK YOU',''],
+      ['two-line','함께해 주셔서','감사합니다'],
+      ['long-two-line','가'.repeat(28),'W'.repeat(28)],
+    ]) {
+      await evaluate(cdp,`()=>{
+        document.querySelectorAll('#characters button')[${index}].click();
+        document.querySelectorAll('#papers button')[5].click();
+        for(const [id,value] of ${JSON.stringify([['paper1',line1],['paper2',line2]])}) {
+          const input=document.getElementById(id);input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));
+        }
+        return true;
+      }`);
+      await waitFor(cdp,`()=>{const image=document.getElementById('render');return image.complete&&image.naturalWidth>0&&image.src.endsWith('/${character}_custom.webp');}`,`${character} custom paper image loaded`);
+      await evaluate(cdp,`async()=>{
+        await document.fonts.ready;
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));return true;
+      }`);
+      const geometry=await evaluate(cdp,`()=>{
+        const rect=node=>node.getBoundingClientRect().toJSON();
+        const paper=document.querySelector('.customPaperPlacement'),logo=document.querySelector('.customPaperLogo'),copy=document.querySelector('.customPaperCopy'),preview=document.getElementById('preview');
+        if(!paper||!logo||!copy)throw new Error(JSON.stringify({character:state.character,paper:state.paper,step:activeStep,previewWidth:preview.clientWidth,html:document.getElementById('customText').innerHTML,src:document.getElementById('render').src}));
+        return {paper:rect(paper),logo:rect(logo),copy:rect(copy),preview:rect(preview),color:getComputedStyle(logo).color,fontSize:parseFloat(getComputedStyle(logo).fontSize),bottom:logo.style.bottom,overflow:getComputedStyle(paper).overflow,
+          lines:[...copy.children].map(node=>({rect:rect(node),text:node.textContent,scroll:node.scrollWidth,client:node.clientWidth})),
+          unit:comboUnitPrice(currentCombo()),pricing:characterAddonPrice(state.character),sticky:getComputedStyle(document.querySelector('.previewWrap')).position};
+      }`);
+      const {paper,logo,copy,preview}=geometry;
+      const within=(inner,outer)=>inner.left>=outer.left-.75&&inner.right<=outer.right+.75&&inner.top>=outer.top-.75&&inner.bottom<=outer.bottom+.75;
+      const context=`${width}px ${character} ${fixture}: ${JSON.stringify(geometry)}`;
+      assert(within(logo,paper)&&within(logo,preview),context);
+      assert(within(copy,paper),context);assert(copy.bottom<=logo.top-.5,context);
+      assert(geometry.lines.every(line=>line.rect.bottom<=logo.top-.5&&line.scroll<=line.client+1),context);
+      assert.equal(geometry.color,'rgb(255, 255, 255)',context);
+      assert(geometry.fontSize>=6&&geometry.fontSize<=10,context);
+      assert.equal(geometry.bottom,'6%');assert.equal(geometry.overflow,'hidden');
+      assert(Math.abs(logo.left+logo.width/2-(paper.left+paper.width/2))<.75,context);
+      assert.equal(geometry.pricing,index===3||index===4?700:index===5?500:0);
+      if(width<=600) assert.equal(geometry.sticky,'sticky');
+      if(fixture==='two-line'&&(width===390||width===1280)) {
+        // Capture the viewport so sticky elements stay in their actual on-screen position.
+        fs.writeFileSync(`${screenshots}/${live?'live':'local'}-${width}-${character}-preview.png`,(await cdp.command('Page.captureScreenshot',{format:'png'})).data,'base64');
+      }
+    }
+    console.log(`${live?'PRODUCTION':'LOCAL'} ${width}px ${character}: white centered logo inside paper; 1/2-line and long text separated PASS`);
+  }
+}
 
 const live = process.argv.includes('--live');
 const baselineCss = execFileSync('git',['show','HEAD:order/assets/brookie-mobile.css'],{encoding:'utf8'});
@@ -179,6 +230,7 @@ try {
       return {unit:comboUnitPrice(currentCombo()),summary:document.getElementById('mobileComboSummary').textContent,preview:document.getElementById('mobilePreviewSummary').textContent,src:document.getElementById('render').getAttribute('src')};
     }`);
     assert.equal(customized.unit,9900);assert(customized.summary.includes('9,900원')&&customized.preview.includes('LOVE')&&customized.preview.includes('커스텀 종이'));assert(customized.src.includes('birthday_bear_custom'));
+    await verifyPaperLogos(cdp,width,screenshots,live);
     if(width<=600) {
       await evaluate(cdp,`()=>{const panel=document.querySelector('[data-builder-panel="paper"]');scrollTo({top:panel.getBoundingClientRect().top+scrollY-340,behavior:'instant'});return true;}`);await wait(120);
       const sticky=await evaluate(cdp,`()=>{const node=document.querySelector('.previewWrap'),r=node.getBoundingClientRect();return {position:getComputedStyle(node).position,top:r.top,bottom:r.bottom,header:document.querySelector('.siteHeader').getBoundingClientRect().bottom};}`);

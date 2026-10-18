@@ -101,5 +101,16 @@
       "brookie.html": "523352a4ee2e475c316db37fc939fd2ac1948c3f5b7d1db613d9f0c36bb5b5c9",
       "brookie-mobile.css": "50ec751b58921bb87d093aed40f896f06ef0ba1aeae8225e26e1689bb3d68780"
     }
+  },
+  "brookieLogoImport": {
+    "repository": "flowerpanty/ThingMattersReserve",
+    "commit": "d46a7146d3c4f830baa5ca9cdff6e1490259c05d",
+    "updatedAt": "2026-10-18",
+    "sourceFiles": {
+      "brookie.html": "9a14b307b941bf661a15362a45040565fd41f715d63efe2d8576c9111072d527"
+    },
+    "deployedFiles": {
+      "brookie.html": "fcd75bb2b593e409fc474df737d739c08650afb6c55c83f27179622bc7403e58"
+    }
   }
 }
