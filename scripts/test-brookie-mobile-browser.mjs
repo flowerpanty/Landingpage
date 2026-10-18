@@ -153,7 +153,7 @@ async function verifyPaperLogos(cdp, width, screenshots, live) {
       assert(within(logo,paper)&&within(logo,preview),context);
       assert(within(copy,paper),context);assert(copy.bottom<=logo.top-.5,context);
       assert(geometry.lines.every(line=>line.rect.bottom<=logo.top-.5&&line.scroll<=line.client+1),context);
-      assert.equal(geometry.color,'rgb(255, 255, 255)',context);
+      assert.equal(geometry.color,'rgb(0, 0, 0)',context);
       assert(geometry.fontSize>=6&&geometry.fontSize<=10,context);
       assert.equal(geometry.bottom,'6%');assert.equal(geometry.overflow,'hidden');
       assert(Math.abs(logo.left+logo.width/2-(paper.left+paper.width/2))<.75,context);
@@ -164,7 +164,7 @@ async function verifyPaperLogos(cdp, width, screenshots, live) {
         fs.writeFileSync(`${screenshots}/${live?'live':'local'}-${width}-${character}-preview.png`,(await cdp.command('Page.captureScreenshot',{format:'png'})).data,'base64');
       }
     }
-    console.log(`${live?'PRODUCTION':'LOCAL'} ${width}px ${character}: white centered logo inside paper; 1/2-line and long text separated PASS`);
+    console.log(`${live?'PRODUCTION':'LOCAL'} ${width}px ${character}: black centered logo inside paper; 1/2-line and long text separated PASS`);
   }
 }
 

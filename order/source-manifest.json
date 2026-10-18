@@ -104,13 +104,13 @@
   },
   "brookieLogoImport": {
     "repository": "flowerpanty/ThingMattersReserve",
-    "commit": "d46a7146d3c4f830baa5ca9cdff6e1490259c05d",
+    "commit": "20ee6dc96fd348ebcb58de160f4bb042bc2a657c",
     "updatedAt": "2026-10-18",
     "sourceFiles": {
-      "brookie.html": "9a14b307b941bf661a15362a45040565fd41f715d63efe2d8576c9111072d527"
+      "brookie.html": "28778b789bb0a85afcd4be3bb0d1766aefe04ac370556978a9c7fcac421d6474"
     },
     "deployedFiles": {
-      "brookie.html": "fcd75bb2b593e409fc474df737d739c08650afb6c55c83f27179622bc7403e58"
+      "brookie.html": "0be372c03f68b3fbb0c21667ed36f50e14ff0f852d091708ac040fc3e67cdabb"
     }
   }
 }
