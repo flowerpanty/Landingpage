@@ -179,7 +179,7 @@ const MAX_GALLERY_UPLOAD_BYTES = 8 * 1024 * 1024;
 const CASE_SLUG_PATTERN = /^case-\d{8}-[a-f0-9]{8}$/;
 const WORK_PURPOSES = new Set(["기업행사", "결혼식 답례", "학교·기관", "퇴사·승진", "작은 선물", "기타"]);
 const WORK_PRODUCTS = new Set(["브루키", "수제꾸덕쿠키", "행운쿠키", "COOKIE FLIGHT", "TERMINAL 카라멜 샌드쿠키", "비행기 버터쿠키", "쿠키크루", "기타"]);
-const WORK_FULFILLMENTS = new Set(["예약 픽업", "차량 퀵", "상담 후 결정"]);
+const WORK_FULFILLMENTS = new Set(["예약 픽업", "차량 퀵", "상담 후 결정", "택배 배송"]);
 const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "site-pages.json"), "utf8"));
 const WORK_CARD_DETAIL_FIELDS = [
   ["purpose", "용도"],

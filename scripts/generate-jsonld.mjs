@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BUSINESS_FACTS = JSON.parse(fs.readFileSync(path.join(ROOT, "data/business.json"), "utf8"));
 const SITE_URL = BUSINESS_FACTS.siteUrl;
+const SMARTSTORE_SHIPPING_PRODUCTS = new Set(["/products/cookie-flight/", "/out/fortune/", "/products/terminal-sand-cookie/"]);
 const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 const LOCAL_BUSINESS_ID = `${SITE_URL}/#localbusiness`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
@@ -464,7 +465,9 @@ function buildProduct(page) {
     {
       "@type": "PropertyValue",
       name: "수령 방식",
-      value: "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담",
+      value: SMARTSTORE_SHIPPING_PRODUCTS.has(page.path)
+        ? "네이버 스마트스토어 택배 주문 · 강서구 공항동 예약 픽업 · 일정·수량에 따른 차량 퀵 상담"
+        : "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담",
     },
   ].filter(Boolean);
 

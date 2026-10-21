@@ -305,6 +305,15 @@ await withTemporaryStorage(async ({ storageDir, baseUrl, output }) => {
   }
   assert.deepEqual(await readdir(storageDir), beforeInvalidFiles, "invalid registrations must leave no orphan image files");
   assert.equal(await readFile(path.join(storageDir, "manifest.json"), "utf8"), beforeInvalidManifest);
+  const shipping = await upload({ caption: "택배로 전달한 COOKIE FLIGHT", purpose: "작은 선물", product: "COOKIE FLIGHT", context: "선물", quantity: 3, fulfillment: "택배 배송", seoPublished: true });
+  assert.equal(shipping.response.status, 201, "shipping is allowed as actual production metadata");
+  assert.equal(shipping.payload.item.fulfillment, "택배 배송");
+  const shippingPath = `/works/${shipping.payload.item.caseSlug}/`;
+  const shippingPage = await requestText(baseUrl, shippingPath);
+  assert.equal(shippingPage.response.status, 200);
+  assert.match(shippingPage.body, /<dt>수령 방식<\/dt><dd>택배 배송<\/dd>/);
+  assert.match((await requestText(baseUrl, "/works/")).body, /<dt>수령 방식<\/dt><dd>택배 배송<\/dd>/);
+  assert.equal((await requestJson(baseUrl, `/api/gallery/${shipping.payload.item.id}`, { method: "DELETE", headers: adminHeaders() })).response.status, 200);
   const minimal = await upload({ caption: "입력한 기본 사례", purpose: "작은 선물", product: "행운쿠키", context: "선물", quantity: 1, fulfillment: "상담 후 결정", seoPublished: true, href: "https://example.com/not-public" });
   assert.equal(minimal.response.status, 201);
   const minimalPath = `/works/${minimal.payload.item.caseSlug}/`;

@@ -12,7 +12,8 @@ This file is a guide to public website information. Crawler access is defined by
 - General reservation pickup guide: https://nothingmatters.co.kr/pickup/
 - Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
 - Nearby: 김포공항, 송정역
-- Pickup policy: 예약 픽업 전용 / 방문 전 일정 예약 필요
+- Workshop visit policy: 방문 수령은 예약 픽업 방식 / 방문 전 일정 예약 필요
+- Shipping: COOKIE FLIGHT, 행운쿠키, TERMINAL 카라멜 샌드쿠키는 네이버 스마트스토어에서 택배 주문 가능. 다른 제품은 상품별 수령 안내 확인.
 - Available cookie gifts: 브루키, 수제꾸덕쿠키, 행운쿠키, 쿠키크루
 - Use cases: 김포공항 인근 디저트 선물, 쿠키 선물, 답례품
 - Fulfillment: reservation pickup at the Gonghang-dong workshop or vehicle quick consultation depending on schedule and quantity
@@ -105,14 +106,14 @@ This file is a guide to public website information. Crawler access is defined by
 - [브라우니쿠키 답례품](https://nothingmatters.co.kr/products/brownie-cookie/): 결혼식과 회사 답례에 어울리는 브라우니쿠키입니다. 최소 12개부터 문구와 포장을 상담합니다.
 - [문구 커스텀 브라우니쿠키](https://nothingmatters.co.kr/products/custom-brownie-cookie/): 퇴사, 승진, 육아휴직 답례에 짧은 문구와 스티커를 더하는 커스텀 브라우니쿠키입니다.
 - [수제 꾸덕쿠키 선물세트](https://nothingmatters.co.kr/products/handmade-cookie/): 7가지 맛과 1구·2구·4구 포장을 고르는 수제 꾸덕쿠키입니다. 답례품과 간식 선물로 주문할 수 있어요.
-- [행운쿠키 응원 선물세트](https://nothingmatters.co.kr/products/lucky-cookie/): HAPPY, RESET, MONEY, UP 네 가지 감정을 담은 행운쿠키 세트입니다. 응원과 감사 선물로 주문하세요.
+- [행운쿠키 응원 선물세트](https://nothingmatters.co.kr/products/lucky-cookie/): HAPPY, RESET, MONEY, UP 네 가지 감정을 담은 행운쿠키 세트입니다. 응원과 감사 선물로 주문하세요. 네이버 스마트스토어에서 택배 주문 가능.
 - [곰돌이 스콘·구움과자 선물](https://nothingmatters.co.kr/products/scone/): 플레인과 초코맛을 고르는 곰돌이 스콘입니다. 최소 12개부터 답례품과 기업 선물 포장을 상담합니다.
-- [TERMINAL 카라멜 샌드쿠키 선물](https://nothingmatters.co.kr/products/terminal-sand-cookie/): ‘수고했어’를 한 입으로 전하는 TERMINAL 카라멜 샌드쿠키. 천천히 끓인 카라멜과 6가지 맛, 선물 패키지와 공항동 예약 픽업 안내를 확인하세요.
-- [COOKIE FLIGHT 비행기 쿠키 4종 선물세트](https://nothingmatters.co.kr/products/cookie-flight/): 클래식버터, 오렌지, 제주말차, 더블초코 4가지 맛을 전용 박스에 담은 4개입 세트.
+- [TERMINAL 카라멜 샌드쿠키 선물](https://nothingmatters.co.kr/products/terminal-sand-cookie/): ‘수고했어’를 한 입으로 전하는 TERMINAL 카라멜 샌드쿠키. 천천히 끓인 카라멜과 6가지 맛, 선물 패키지와 공항동 예약 픽업 안내를 확인하세요. 네이버 스마트스토어에서 택배 주문 가능.
+- [COOKIE FLIGHT 비행기 쿠키 4종 선물세트](https://nothingmatters.co.kr/products/cookie-flight/): 클래식버터, 오렌지, 제주말차, 더블초코 4가지 맛을 전용 박스에 담은 4개입 세트. 네이버 스마트스토어에서 택배 주문 가능.
 - [비행기 버터쿠키 단품](https://nothingmatters.co.kr/products/airplane-cookie/): 비행기 모양 버터쿠키를 개별 포장한 작은 선물용 단품.
 - [브루키 답례품·커스텀 쿠키](https://nothingmatters.co.kr/brookie/): 캐릭터와 짧은 문구를 골라 만드는 브루키 답례품·커스텀 쿠키.
 - [수제꾸덕쿠키 선물세트](https://nothingmatters.co.kr/out/): 7가지 맛과 패키지를 고르는 수제꾸덕쿠키 선물세트.
-- [행운쿠키 응원 선물세트](https://nothingmatters.co.kr/out/fortune/): HAPPY, RESET, MONEY, UP 메시지를 담은 행운쿠키·응원 선물세트.
+- [행운쿠키 응원 선물세트](https://nothingmatters.co.kr/out/fortune/): HAPPY, RESET, MONEY, UP 메시지를 담은 행운쿠키·응원 선물세트. 네이버 스마트스토어에서 택배 주문 가능.
 - [쿠키크루 캐릭터 쿠키 선물](https://nothingmatters.co.kr/cookie-crew/): 캐릭터 쿠키와 굿즈를 함께 고르는 COOKIE CREW 선물.
 
 ## Gimpo Airport and local pickup

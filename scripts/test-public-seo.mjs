@@ -8,6 +8,17 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_URL = "https://nothingmatters.co.kr";
 const INSTAGRAM_URL = "https://instagram.com/nothingmatters_c";
 const NAVER_PLACE_URL = "https://naver.me/Gsj2pwAu";
+const COOKIE_FLIGHT_SMARTSTORE = "https://mkt.shopping.naver.com/link/6ad84808a30a4751f926bfde";
+const LUCKY_SMARTSTORE = "https://mkt.shopping.naver.com/link/69c702c6f5f5b45f0ce04250";
+const TERMINAL_SMARTSTORE = "https://mkt.shopping.naver.com/link/6ad84808bb270c6ca6310878";
+const smartstoreLinksByPath = new Map([
+  ["/products/cookie-flight/", COOKIE_FLIGHT_SMARTSTORE], ["/order/cookie-flight", COOKIE_FLIGHT_SMARTSTORE],
+  ["/products/lucky-cookie/", LUCKY_SMARTSTORE], ["/out/fortune/", LUCKY_SMARTSTORE], ["/order/lucky", LUCKY_SMARTSTORE],
+  ["/products/terminal-sand-cookie/", TERMINAL_SMARTSTORE], ["/order/terminal-cookie", TERMINAL_SMARTSTORE],
+]);
+const shippingPrimaryPaths = ["/products/cookie-flight/", "/out/fortune/", "/products/terminal-sand-cookie/"];
+const shippingReceipt = "네이버 스마트스토어 택배 주문 · 강서구 공항동 예약 픽업 · 일정·수량에 따른 차량 퀵 상담";
+const shippingPolicy = "COOKIE FLIGHT, 행운쿠키, TERMINAL 카라멜 샌드쿠키는 네이버 스마트스토어에서 택배 주문할 수 있습니다. 다른 제품은 상품별 수령 안내를 확인해 주세요.";
 const businessFacts = JSON.parse(fs.readFileSync(path.join(ROOT, "data/business.json"), "utf8"));
 const sitePages = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site-pages.json"), "utf8"));
 const products = (sitePages.products || []).map((product) => ({
@@ -28,6 +39,8 @@ for (const page of sitePages.pages || []) {
 }
 
 for (const entry of sourceHtmlEntries) {
+  assert.doesNotMatch(readHtml(entry.filePath), /https:\/\/smartstore\.naver\.com\/nothingmatters/, `${entry.pathname}: generic Smartstore CTA must be replaced by product links`);
+  assert.doesNotMatch(readHtml(entry.filePath), /일반 택배는 진행하지 (?:않습니다|않으며|않음)/, `${entry.pathname}: blanket shipping bans must not remain in public content`);
   if (!entry.pathname.startsWith("/gimpo/")) {
     assert.equal(readHtml(entry.filePath).includes("매장 픽업"), false, `${entry.pathname}: public source must describe reservation pickup instead of store pickup`);
   }
@@ -178,6 +191,7 @@ assert.deepEqual(terminalFaq?.mainEntity.map((item) => item.name), [
   "어떻게 보관하나요?",
   "김포공항 근처에서 픽업할 수 있나요?",
   "단체 주문이나 일정 상담이 가능한가요?",
+  "택배로 받을 수 있나요?",
 ]);
 assert.doesNotMatch(terminalHtml, /SEARCH KEYWORDS|BENEFIT FIRST|전환이 올라갑니다|placeholder\.com/);
 
@@ -773,7 +787,7 @@ assert.ok(cookieFlightSchemaProduct, "COOKIE FLIGHT should have Product schema")
 assert.equal(cookieFlightSchemaProduct?.offers?.price, 16000, "COOKIE FLIGHT Product schema should use the supplied 16,000원 price");
 assert.deepEqual(
   cookieFlightSchemaProduct?.additionalProperty?.map((property) => [property.name, property.value]),
-  [["맛 구성", "클래식버터 · 오렌지 · 제주말차 · 더블초코"], ["구성", "4개입 전용 박스"], ["수령 방식", "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담"]],
+  [["맛 구성", "클래식버터 · 오렌지 · 제주말차 · 더블초코"], ["구성", "4개입 전용 박스"], ["수령 방식", shippingReceipt]],
   "COOKIE FLIGHT Product schema should contain the supplied flavor and box facts"
 );
 assert.deepEqual(cookieFlightWebPage?.about, { "@id": `${SITE_URL}${cookieFlightPath}#product` }, "COOKIE FLIGHT ProductPage should link to its Product entity");
@@ -1084,7 +1098,7 @@ assert.match(showroomHomeCss, /@media \(max-width: 760px\)\s*\{\s*\.theme-showro
 assert.match(getAttribute(homeHtml, /<title>([\s\S]*?)<\/title>/i), /낫띵메터스.*수제쿠키.*김포공항/);
 assert.match(getMeta(homeHtml, "name", "description"), /서울 강서구 공항동/);
 assert.match(homeHtml, /서울특별시 강서구 송정로 25 1층/);
-assert.match(homeHtml, /예약 제작 · 예약 픽업 전용/);
+assert.match(homeHtml, /예약 제작 · 예약 픽업 \/ 일부 제품 택배 주문 가능/);
 assert.match(homeHtml, /href="guides\/">쿠키 선물·답례품 가이드 →<\/a>/);
 assert.equal((homeHtml.match(/data-analytics-label="COOKIE FLIGHT"/g) || []).length, 1, "home should show COOKIE FLIGHT exactly once");
 assert.match(homeHtml, /href="products\/cookie-flight\/"/, "home COOKIE FLIGHT card should use its public product URL");
@@ -1139,7 +1153,63 @@ assert.match(worksHtml, /data-works-count/); assert.match(worksHtml, /data-works
 const worksJs = fs.readFileSync(path.join(ROOT, "assets/works.js"), "utf8");
 assert.doesNotMatch(worksJs, /fetch\s*\(|XMLHttpRequest|innerHTML|history\.|location\./, "works filters must only filter server-rendered cards without new URLs or fetches");
 const contactHtml = readHtml(filePathForPathname("/contact/"));
+const shippingPages = [["/products/cookie-flight/", "COOKIE FLIGHT", 8], ["/products/lucky-cookie/", "행운쿠키", 6], ["/products/terminal-sand-cookie/", "TERMINAL 카라멜 샌드쿠키", 6]];
+function assertSmartstoreLink(html, label, expectedUrl = smartstoreLinksByPath.get(label)) {
+  assert.ok(expectedUrl, `${label}: direct product URL must be specified`);
+  const links = [...html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>/g)].filter((match) => match[1] === expectedUrl);
+  assert.ok(links.length, `${label}: correct direct Smartstore product link is required`);
+  assert.doesNotMatch(html, /https:\/\/smartstore\.naver\.com\/nothingmatters/);
+  if (smartstoreLinksByPath.has(label)) {
+    for (const match of html.matchAll(/<a\b[^>]*href="(https:\/\/mkt\.shopping\.naver\.com\/link\/[^\"]+)"[^>]*>/g)) assert.equal(match[1], expectedUrl, `${label}: shipping CTAs must point to this product`);
+  }
+  for (const [tag] of links) {
+    assert.match(tag, /target="_blank"/);
+    assert.match(tag, /rel="noopener noreferrer"/);
+  }
+}
+for (const [pathname, name, faqCount] of shippingPages) {
+  const html = readHtml(filePathForPathname(pathname));
+  assertSmartstoreLink(html, pathname);
+  assert.match(html, /택배 주문하기 →/);
+  assert.match(html, /택배 주문은 네이버 스마트스토어에서 가능합니다\./);
+  const faq = getStaticSchema(html)["@graph"].find((node) => node["@type"] === "FAQPage");
+  assert.equal(faq.mainEntity.find((question) => question.name === "택배로 받을 수 있나요?")?.acceptedAnswer.text, `네. ${name}는 네이버 스마트스토어에서 택배 주문할 수 있습니다. 공항동 예약 픽업도 가능하며 차량 퀵은 일정과 수량에 따라 상담합니다.`);
+  assertContentFaqParity(html, faqCount, pathname);
+  assert.doesNotMatch(html, /일반 택배는 진행하지|무료배송|전국배송|배송비|출고일/, `${pathname}: no blanket shipping ban or unverified shipping promises`);
+}
+const shippingSchemaSource = fs.readFileSync(path.join(ROOT, "scripts/generate-jsonld.mjs"), "utf8");
+assert.deepEqual(JSON.parse(shippingSchemaSource.match(/SMARTSTORE_SHIPPING_PRODUCTS = new Set\((\[[^\]]+\])\)/)?.[1] || "[]"), shippingPrimaryPaths, "schema generation must opt in only the three confirmed products");
+for (const pathname of [...new Set([...primaryProducts.map((product) => normalizePathname(product.primaryUrl)), "/products/scone/", "/products/terminal-sand-cookie/"])]) {
+  const html = readHtml(filePathForPathname(pathname));
+  const product = getStaticSchema(html)["@graph"].find((node) => node["@type"] === "Product");
+  const receipt = product?.additionalProperty?.find((property) => property.name === "수령 방식");
+  assert.equal(receipt?.value, shippingPrimaryPaths.includes(pathname) ? shippingReceipt : "강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담", `${pathname}: product-specific receipt policy`);
+  if (shippingPrimaryPaths.includes(pathname)) assertSmartstoreLink(html, pathname);
+  else for (const url of new Set(smartstoreLinksByPath.values())) assert.equal(html.includes(url), false, `${pathname}: unconfirmed products must not get a shipping CTA`);
+}
+for (const [pathname, html, count] of [["/bulk/", bulkHtml, 7], ["/contact/", contactHtml, 6]]) {
+  assert.ok(html.includes(shippingPolicy), `${pathname}: describe the three eligible products and other product guidance`);
+  for (const url of new Set(smartstoreLinksByPath.values())) assertSmartstoreLink(html, pathname, url);
+  assert.doesNotMatch(html, /일반 택배는 진행하지|무료배송|전국배송|배송비|출고일/);
+  assertContentFaqParity(html, count, pathname);
+}
+const luckyPrimaryHtml = readHtml(filePathForPathname("/out/fortune/"));
+assert.match(luckyPrimaryHtml.split(/<body\b[^>]*>/)[1] || "", /<a\b[^>]*href="https:\/\/mkt\.shopping\.naver\.com\/link\/69c702c6f5f5b45f0ce04250"[^>]*>택배 주문하기 →<\/a>/, "lucky primary page must have a visible shipping CTA");
+assert.match(luckyPrimaryHtml, /href="\/order\/lucky\?step=1"/, "lucky primary page should retain its internal pickup/quick ordering CTA");
+const weddingShippingHtml = readHtml(filePathForPathname("/guides/wedding-favor-cookie/"));
+assert.match(weddingShippingHtml, /COOKIE FLIGHT, 행운쿠키, TERMINAL 카라멜 샌드쿠키는 네이버 스마트스토어에서 택배 주문할 수 있으며, 다른 제품은 상품별 수령 안내를 확인해 주세요\./);
+assert.doesNotMatch(weddingShippingHtml, /일반 택배는 진행하지|무료배송|전국배송|확정\s*배송비|출고일/);
+assertContentFaqParity(weddingShippingHtml, 4, "wedding guide");
+for (const pathname of ["/order/cookie-flight", "/order/lucky", "/order/terminal-cookie"]) {
+  const html = fs.readFileSync(path.join(ROOT, `${pathname.slice(1)}.html`), "utf8");
+  assertSmartstoreLink(html, pathname);
+  assert.ok(html.includes("택배 주문은 네이버 스마트스토어에서 가능합니다 →"));
+  for (const [field] of html.matchAll(/<(?:input|option)\b[^>]*>/g)) assert.doesNotMatch(field, /택배/, "internal order delivery controls must not add shipping");
+}
+const galleryAdminHtml = fs.readFileSync(path.join(ROOT, "gallery-admin/index.html"), "utf8");
+assert.match(galleryAdminHtml.match(/<select name="fulfillment"[^>]*>[\s\S]*?<\/select>/)?.[0] || "", /<option>택배 배송<\/option>/);
 const inquiryForm = contactHtml.match(/<form id="contact-inquiry-form"[\s\S]*?<\/form>/)?.[0] || "";
+assert.doesNotMatch(inquiryForm.match(/<select name="fulfillment"[^>]*>[\s\S]*?<\/select>/)?.[0] || "", /택배/, "contact shipping orders must go to Smartstore, outside the inquiry delivery select");
 for (const field of ["purpose", "date", "quantity", "budget", "product", "packaging", "messageOption", "fulfillment", "note"]) assert.ok(inquiryForm.includes(`name="${field}"`), `contact inquiry requires ${field}`);
 assert.match(contactHtml, /<pre id="inquiry-template"/);
 assert.match(contactHtml, /data-copy-template data-copy-target="#inquiry-template"/);
@@ -1254,6 +1324,9 @@ assert.equal(inquiryFields.purpose.value, ""); assert.equal(inquiryFields.produc
 inquiryQuery.set("fulfillment", "예약 픽업");
 runInNewContext(inquiryJs, { document: inquiryDocument, window: { location: { search: `?${inquiryQuery}` } }, URLSearchParams });
 assert.equal(inquiryFields.fulfillment.value, "공항동 예약 픽업", "case pickup value should map to the contact select whitelist");
+inquiryFields.fulfillment.value = "상담 필요"; inquiryQuery.set("fulfillment", "택배 배송");
+runInNewContext(inquiryJs, { document: inquiryDocument, window: { location: { search: `?${inquiryQuery}` } }, URLSearchParams });
+assert.equal(inquiryFields.fulfillment.value, "상담 필요", "gallery shipping metadata must not introduce a contact delivery method");
 
 const workFilterEvents = {};
 const filterButtons = ["", "기업행사", "학교·기관"].map((value) => ({ dataset: { workPurposeFilter: value }, setAttribute() {}, addEventListener(name, callback) { this[name] = callback; } }));
@@ -1284,5 +1357,12 @@ const llms = fs.readFileSync(path.join(ROOT, "llms.txt"), "utf8");
 assert.equal(llms.includes("in-store pickup"), false, "llms should not describe pickup as an in-store purchase");
 assert.match(llms, /reservation pickup at the Gonghang-dong workshop or vehicle quick consultation depending on schedule and quantity/);
 assert.match(llms, /Official Naver Place: https:\/\/naver\.me\/Gsj2pwAu/);
+assert.match(llms, /Workshop visit policy: 방문 수령은 예약 픽업 방식 \/ 방문 전 일정 예약 필요/);
+assert.match(llms, /Shipping: COOKIE FLIGHT, 행운쿠키, TERMINAL 카라멜 샌드쿠키는 네이버 스마트스토어에서 택배 주문 가능\./);
+assert.doesNotMatch(llms, /Pickup policy: 예약 픽업 전용|무료배송|전국배송|확정\s*배송비|출고일/);
+for (const pathname of ["/products/cookie-flight/", "/products/lucky-cookie/", "/products/terminal-sand-cookie/", "/out/fortune/"]) {
+  const productLine = llms.split("\n").find((line) => line.includes(`${SITE_URL}${pathname}):`)) || "";
+  assert.ok(productLine.includes("네이버 스마트스토어에서 택배 주문 가능."), `${pathname}: llms product entry should clarify the shipping channel`);
+}
 
 console.log(`public SEO checks: passed ${locs.length} sitemap URLs, ${sourceHtmlEntries.length} discovered public HTML files`);
