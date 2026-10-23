@@ -2155,7 +2155,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (requestUrl.pathname === "/api/landing-orders" || /^\/api\/orders\/[A-Za-z0-9_-]+\/email-quote$/.test(requestUrl.pathname)) {
+  if (requestUrl.pathname === "/api/landing-orders" || requestUrl.pathname === "/api/christmas-order-status" || /^\/api\/orders\/[A-Za-z0-9_-]+\/email-quote$/.test(requestUrl.pathname)) {
     await handleOrderApi(req, res);
     return;
   }

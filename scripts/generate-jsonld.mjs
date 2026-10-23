@@ -12,6 +12,7 @@ const WEBSITE_ID = `${SITE_URL}/#website`;
 const STATIC_SCHEMA_REGEX =
   /\n?\s*<script type="application\/ld\+json" data-nm-schema="static">[\s\S]*?<\/script>\n?/;
 const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site-pages.json"), "utf8"));
+const CHRISTMAS_CATALOG = JSON.parse(fs.readFileSync(path.join(ROOT, "data/christmas-products.json"), "utf8"));
 const PRODUCT_CATALOG = (SITE_PAGE_DATA.products || []).map((product) => ({
   ...product,
   detailPath: product.primaryUrl
@@ -384,6 +385,21 @@ function buildFaq(html, page) {
 
 function buildItemList(page) {
   const collection = page.occasionLanding || page.giftLanding;
+  if (collection?.productCatalog === 'christmas') {
+    return {
+      '@type': 'ItemList', '@id': `${page.pageUrl}#itemlist`,
+      itemListElement: CHRISTMAS_CATALOG.products.map((product, index) => ({
+        '@type': 'ListItem', position: index + 1, name: product.name,
+        url: `${page.pageUrl}#${product.sku}`,
+        item: {
+          '@type': 'Product', name: product.name, sku: product.sku,
+          description: product.composition, image: absoluteUrl(product.image),
+          url: `${page.pageUrl}#${product.sku}`,
+          offers: { '@type': 'Offer', price: product.price, priceCurrency: 'KRW', url: `${page.pageUrl}#${product.sku}` }
+        }
+      }))
+    };
+  }
   const items = collection?.items?.map((item) => [item.name, item.url]) || ITEM_LISTS[page.path];
   if (!items?.length) return null;
 

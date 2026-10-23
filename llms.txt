@@ -140,10 +140,14 @@ This file is a guide to public website information. Crawler access is defined by
 **Christmas / Holiday gifts**
 
 - Landing: https://nothingmatters.co.kr/christmas/
-- Seasonal products: 산타 브루키 / 크리스마스 트리 브루키 / 크리스마스 얼굴쿠키 4구
-- Use cases: 크리스마스 답례품, 기업·회사 연말 행사, 어린이집·유치원 크리스마스 선물, 친구·동료 선물
-- Exact seasonal price, quantity and order deadline: confirm on the Christmas landing page or official consultation channel.
-- Seasonal ordering schedule: announced after orders open. General Brookie prices and minimum quantities do not establish Christmas seasonal conditions.
+- christmas-bear-brookie: 곰돌이 브루키 / 8,500원 / 곰돌이 브루키 1개
+- christmas-tree-brookie: 트리 브루키 / 9,000원 / 트리 브루키 1개
+- christmas-brookie-set: 브루키 2종 세트 / 17,000원 / 곰돌이 브루키 1개 + 트리 브루키 1개
+- christmas-santa-bundle: 산타꾸러미 4종 / 23,000원 / 루돌프초코 · 버터산타 · 말차리스 · 로투스노우맨 각 1개
+- Use cases: 크리스마스 쿠키 선물, 크리스마스 답례품, 기업 크리스마스 선물, 어린이집 크리스마스 선물, 크리스마스 단체 간식, 연말 답례품.
+- The set is an independent SKU; never automatically combine or convert single items.
+- Online submission is unavailable pending Railway support. Consult via https://pf.kakao.com/_QdCaK/chat; a request is not payment or production confirmation.
+- Stock, minimum quantities, delivery fees, deadlines and available pickup dates must be confirmed by consultation. Prices above are product totals only.
 
 ## Official channels
 

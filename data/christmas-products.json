@@ -1,0 +1,111 @@
+{
+  "version": "christmas-2026-v1",
+  "updatedAt": "2026-10-21",
+  "products": [
+    {
+      "sku": "christmas-bear-brookie",
+      "name": "곰돌이 브루키",
+      "price": 8500,
+      "composition": "곰돌이 브루키 1개",
+      "image": "/images/christmas/bear-brookie.webp",
+      "width": 798,
+      "height": 1024,
+      "alt": "트리와 곰돌이 브루키 실물 사진, 오른쪽이 곰돌이 브루키",
+      "caption": "사진 오른쪽의 곰돌이 브루키입니다.",
+      "sourceImage": "images/brookie_bear_main.jpg",
+      "gallery": [
+        {
+          "image": "/images/christmas/brookie-detail-1.webp",
+          "width": 768,
+          "height": 1024,
+          "alt": "가운데 곰돌이와 양옆 트리 브루키 실물 상세 사진",
+          "caption": "가운데가 곰돌이 브루키입니다. 단품은 곰돌이 1개 구성입니다."
+        },
+        {
+          "image": "/images/christmas/brookie-detail-2.webp",
+          "width": 767,
+          "height": 1024,
+          "alt": "개별 포장된 곰돌이와 트리 브루키 실물 사진",
+          "caption": "양옆이 곰돌이 브루키입니다. 여러 상품을 함께 촬영한 사진입니다."
+        }
+      ]
+    },
+    {
+      "sku": "christmas-tree-brookie",
+      "name": "트리 브루키",
+      "price": 9000,
+      "composition": "트리 브루키 1개",
+      "image": "/images/christmas/tree-brookie.webp",
+      "width": 768,
+      "height": 1024,
+      "alt": "크리스마스 트리 장식의 브루키 개별 포장 실물 사진",
+      "caption": "사진은 트리 브루키 2개를 함께 촬영했습니다.",
+      "sourceImage": "images/brookie_tree_main.jpg",
+      "gallery": [
+        {
+          "image": "/images/christmas/brookie-detail-1.webp",
+          "width": 768,
+          "height": 1024,
+          "alt": "곰돌이 브루키 양옆의 트리 브루키 실물 상세 사진",
+          "caption": "양옆이 트리 브루키입니다. 단품은 트리 1개 구성입니다."
+        },
+        {
+          "image": "/images/christmas/brookie-detail-2.webp",
+          "width": 767,
+          "height": 1024,
+          "alt": "가운데 트리 브루키의 개별 포장 실물 사진",
+          "caption": "가운데가 트리 브루키입니다. 여러 상품을 함께 촬영한 사진입니다."
+        }
+      ]
+    },
+    {
+      "sku": "christmas-brookie-set",
+      "name": "브루키 2종 세트",
+      "price": 17000,
+      "composition": "곰돌이 브루키 1개 + 트리 브루키 1개",
+      "image": "/images/christmas/brookie-set.webp",
+      "width": 768,
+      "height": 1024,
+      "alt": "곰돌이와 트리 브루키가 함께 담긴 브루키 2종 세트 실물 사진",
+      "caption": "곰돌이와 트리, 두 가지를 한 세트로.",
+      "sourceImage": "images/brookie_set_1.jpg",
+      "gallery": [
+        {
+          "image": "/images/christmas/brookie-set-detail.webp",
+          "width": 768,
+          "height": 1024,
+          "alt": "곰돌이와 트리 브루키 2종 세트 포장 상세 사진",
+          "caption": "곰돌이 브루키와 트리 브루키 각 1개가 담긴 세트입니다."
+        }
+      ]
+    },
+    {
+      "sku": "christmas-santa-bundle",
+      "name": "산타꾸러미 4종",
+      "price": 23000,
+      "composition": "루돌프초코 · 버터산타 · 말차리스 · 로투스노우맨 각 1개",
+      "image": "/images/christmas/santa-bundle.webp",
+      "width": 764,
+      "height": 1024,
+      "alt": "루돌프, 산타, 리스, 눈사람 쿠키로 구성된 산타꾸러미 4종 실물 사진",
+      "caption": "네 가지 크리스마스 쿠키를 담았어요.",
+      "sourceImage": "images/santa_package_main.jpg",
+      "gallery": [
+        {
+          "image": "/images/christmas/santa-bundle-detail-1.webp",
+          "width": 1024,
+          "height": 867,
+          "alt": "산타꾸러미 네 가지 쿠키와 상자 실물 상세 사진",
+          "caption": "루돌프초코·버터산타·말차리스·로투스노우맨 각 1개 구성입니다."
+        },
+        {
+          "image": "/images/christmas/santa-bundle-detail-2.webp",
+          "width": 768,
+          "height": 1024,
+          "alt": "트리 그림이 있는 산타꾸러미 선물 상자 실물 사진",
+          "caption": "산타꾸러미 포장 참고 사진입니다. 세부 포장 요청은 상담에서 확인해 주세요."
+        }
+      ]
+    }
+  ]
+}
