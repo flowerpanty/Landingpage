@@ -13,6 +13,9 @@ const { createKakaoQuickCallbackHandler } = require("./lib/kakao-quick-callback.
 const { createKakaoQuickApiHandler } = require("./lib/kakao-quick-api.js");
 
 const ROOT = process.cwd();
+const noticeServiceReady = import('./lib/notice-admin.mjs').then(({ createNoticeService }) => createNoticeService({ root: ROOT }));
+process.once('exit', () => { noticeServiceReady.then(service => service.close()); });
+process.once('SIGTERM', () => { noticeServiceReady.then(service => service.close()).finally(() => process.exit(0)); });
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
 const HOST = process.env.HOST || "0.0.0.0";
 const CANONICAL_HOST = "nothingmatters.co.kr";
@@ -514,7 +517,7 @@ function resolvePath(urlPathname) {
   }
 
   let filePath = path.normalize(path.join(ROOT, cleanPath));
-  if (!filePath.startsWith(ROOT)) {
+  if (filePath !== ROOT && !filePath.startsWith(ROOT + path.sep)) {
     return null;
   }
 
@@ -2109,6 +2112,21 @@ const server = http.createServer(async (req, res) => {
     });
     res.end();
     return;
+  }
+
+  try {
+    const notices = await noticeServiceReady;
+    if (await notices.handle(req, res, { pathname: requestUrl.pathname, proto: requestProto, host: requestHost, transformHome: html => injectHomePreviewMeta(html, responseOrigin) })) return;
+  } catch {
+    let guardedPath = requestUrl.pathname;
+    try { guardedPath = path.posix.normalize(decodeURIComponent(guardedPath).replace(/\\/g, '/')); } catch { /* generic resolver rejects malformed encoding */ }
+    if (guardedPath === '/data/notices.json' || /(?:^|\/)\.(?:env|git)(?:[./]|$)/.test(guardedPath)) {
+      res.writeHead(404, { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' }); res.end(); return;
+    }
+    if (/^\/(?:notice|api\/notice-admin)(?:\/|$)/.test(guardedPath)) {
+      res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
+      res.end('공지 서비스를 확인 중입니다.'); return;
+    }
   }
 
   if (requestUrl.pathname === "/callbacks" || requestUrl.pathname.startsWith("/callbacks/") ||

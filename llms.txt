@@ -160,3 +160,13 @@ This file is a guide to public website information. Crawler access is defined by
 - [Sitemap](https://nothingmatters.co.kr/sitemap.xml): Public indexable page directory.
 - [RSS feed](https://nothingmatters.co.kr/feed.xml): Published gift and travel guides.
 - [Crawler access policy](https://nothingmatters.co.kr/robots.txt): Crawler rules for public, administrator and API paths.
+
+<!-- NM_NOTICES:START -->
+## Official notices · 공식 공지사항
+
+Official product and fulfillment announcements: https://nothingmatters.co.kr/notice/
+Notice RSS (separate from the cookie-guide feed at /feed.xml): https://nothingmatters.co.kr/notice/feed.xml
+- 김포공항 인근 예약 픽업 안내: https://nothingmatters.co.kr/notice/pickup-guide/
+- 2026 크리스마스 쿠키 4종 상품 안내: https://nothingmatters.co.kr/notice/christmas-2026/
+- 쿠키 택배 주문 안내: https://nothingmatters.co.kr/notice/shipping-guide/
+<!-- NM_NOTICES:END -->

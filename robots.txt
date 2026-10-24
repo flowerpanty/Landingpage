@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /gallery-admin/
 Disallow: /dashboard/
+Disallow: /notice/admin/
 Disallow: /api/
 
 Sitemap: https://nothingmatters.co.kr/sitemap.xml

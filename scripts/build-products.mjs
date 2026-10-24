@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderSiteSitemap } from "../lib/site-sitemap.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_PAGE_DATA_PATH = path.join(ROOT, "data/site-pages.json");
@@ -452,32 +453,7 @@ function buildDetailPages() {
 }
 
 function buildSitemap() {
-  const staticEntries = sitePageData.pages
-    .filter((page) => page.sitemap && page.indexing === "index")
-    .map((page) => ({
-      loc: `${SITE_URL}${page.path}`,
-      lastmod: page.lastmod,
-    }));
-  const productEntries = products
-    .filter((product) => {
-      const outputPath = path.join(ROOT, product.detailPath.slice(1), "index.html");
-      return ["generated", "existing"].includes(product.detailPageMode) && fs.existsSync(outputPath);
-    })
-    .map((product) => ({
-      loc: `${SITE_URL}${product.detailPath}`,
-      lastmod: product.updatedAt,
-    }));
-  const entries = [...staticEntries, ...productEntries];
-  const seen = new Set();
-  const body = entries
-    .filter((entry) => {
-      if (seen.has(entry.loc)) return false;
-      seen.add(entry.loc);
-      return true;
-    })
-    .map((entry) => `  <url>\n    <loc>${entry.loc}</loc>\n    <lastmod>${entry.lastmod}</lastmod>\n  </url>`)
-    .join("\n");
-  const next = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+  const next = renderSiteSitemap(sitePageData, { root: ROOT, siteUrl: SITE_URL });
 
   if (isCheckMode) {
     if (next !== fs.readFileSync(SITEMAP_PATH, "utf8")) {

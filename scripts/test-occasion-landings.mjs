@@ -36,7 +36,8 @@ for (const [slug, expectedItems] of pages) {
   for (const meta of ["og:title", "og:description", "og:url", "og:image", "twitter:card", "twitter:title", "twitter:description", "twitter:image"]) {
     assert.ok(html.includes(`="${meta}"`), `${pathname}: missing ${meta}`);
   }
-  assert.deepEqual([...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map((match) => match[1]), sectionOrder);
+  const expectedSections = slug === 'corporate-gift' ? [...sectionOrder.slice(0, 2), 'business-checklist', ...sectionOrder.slice(2)] : sectionOrder;
+  assert.deepEqual([...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map((match) => match[1]), expectedSections);
   assert.match(html, /기본형 1구 7,800원 · 최소 12개/);
   assert.ok(html.includes("강서구 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담"));
   assert.doesNotMatch(html, /택배|무료배송|전국배송|대량 할인|당일 제작/);
@@ -72,7 +73,7 @@ for (const [slug, expectedItems] of pages) {
   const visibleFaq = [...html.matchAll(/<details><summary>([^<]+)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)].map((match) => [clean(match[1]), clean(match[2])]);
   const faq = graph.find((node) => node["@type"] === "FAQPage");
   assert.deepEqual(faq.mainEntity.map((item) => [item.name, item.acceptedAnswer.text]), visibleFaq);
-  assert.equal(visibleFaq.length, slug === "farewell-favor" ? 5 : 3);
+  assert.equal(visibleFaq.length, slug === "farewell-favor" ? 5 : slug === 'corporate-gift' ? 7 : 3);
 
   if (["corporate-gift", "wedding-favor", "farewell-favor"].includes(slug)) {
     assert.match(html, /data-occasion-conversion/);

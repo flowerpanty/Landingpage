@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadNotices, publicNotices, noticePath, renderNoticeContent } from '../lib/notices.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BUSINESS_FACTS = JSON.parse(fs.readFileSync(path.join(ROOT, "data/business.json"), "utf8"));
@@ -13,6 +14,7 @@ const STATIC_SCHEMA_REGEX =
   /\n?\s*<script type="application\/ld\+json" data-nm-schema="static">[\s\S]*?<\/script>\n?/;
 const SITE_PAGE_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "data/site-pages.json"), "utf8"));
 const CHRISTMAS_CATALOG = JSON.parse(fs.readFileSync(path.join(ROOT, "data/christmas-products.json"), "utf8"));
+const NOTICES = loadNotices(ROOT);
 const PRODUCT_CATALOG = (SITE_PAGE_DATA.products || []).map((product) => ({
   ...product,
   detailPath: product.primaryUrl
@@ -258,10 +260,10 @@ function filePathForUrl(loc) {
   return path.join(pathname.slice(1), "index.html");
 }
 
-function getPageData(html, loc) {
+function getPageData(html, loc, { registry = SITE_PAGE_DATA, notices = NOTICES } = {}) {
   const url = new URL(loc);
   const canonical = getCanonicalHref(html) || loc;
-  const registryPage = (SITE_PAGE_DATA.pages || []).find((entry) => entry.path === url.pathname)
+  const registryPage = (registry.pages || []).find((entry) => entry.path === url.pathname)
     || PRODUCT_CATALOG.find((product) => product.primaryUrl === url.pathname);
 
   return {
@@ -286,10 +288,12 @@ function getPageData(html, loc) {
     about: registryPage?.about || null,
     occasionLanding: registryPage?.occasionLanding || null,
     giftLanding: registryPage?.giftLanding || null,
+    notice: registryPage?.urlRole === 'notice-article' ? publicNotices(notices).find(notice => notice.slug === registryPage.noticeSlug) : null,
   };
 }
 
 function getPageType(page) {
+  if (page.urlRole === 'notice-index') return 'CollectionPage';
   if (page.occasionLanding || page.giftLanding) return "CollectionPage";
   if (["primary-product", "search-landing"].includes(page.urlRole)) return "ProductPage";
   if (page.path === "/" || page.path === "/works/" || page.path === "/gimpo/" || page.path === "/order") return "CollectionPage";
@@ -305,7 +309,9 @@ function buildBreadcrumb(page) {
 
   const items = [{ name: "쿠키 메인", item: SITE_URL }];
 
-  if (page.path.startsWith("/guides/") && page.path !== "/guides/") {
+  if (page.notice) {
+    items.push({ name: '공지사항', item: `${SITE_URL}/notice/` });
+  } else if (page.path.startsWith("/guides/") && page.path !== "/guides/") {
     items.push({ name: "가이드 허브", item: `${SITE_URL}/guides/` });
   } else if (page.occasionLanding) {
     items.push({ name: WORK_REGISTRY_BY_HREF.get("/bulk/")?.breadcrumbName || "쿠키답례품", item: `${SITE_URL}/bulk/` });
@@ -383,7 +389,13 @@ function buildFaq(html, page) {
   };
 }
 
-function buildItemList(page) {
+function buildItemList(page, notices = NOTICES) {
+  if (page.urlRole === 'notice-index') return {
+    '@type': 'ItemList', '@id': `${page.pageUrl}#itemlist`,
+    itemListElement: publicNotices(notices).map((notice, index) => ({
+      '@type': 'ListItem', position: index + 1, name: notice.title, url: absoluteUrl(noticePath(notice))
+    }))
+  };
   const collection = page.occasionLanding || page.giftLanding;
   if (collection?.productCatalog === 'christmas') {
     return {
@@ -607,14 +619,25 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
   return schema;
 }
 
-function buildSchema(html, loc) {
-  const page = getPageData(html, loc);
+export function buildSchema(html, loc, options = {}) {
+  const page = getPageData(html, loc, options);
   const breadcrumb = buildBreadcrumb(page);
   const faq = buildFaq(html, page);
-  const itemList = buildItemList(page);
+  const itemList = buildItemList(page, options.notices);
   const product = buildProduct(page);
   const service = buildService(page);
   const webPage = buildWebPage(page, breadcrumb, itemList, product, service);
+  const article = page.notice ? {
+    '@type': 'Article', '@id': `${page.pageUrl}#article`,
+    url: page.pageUrl, headline: page.notice.title, description: page.notice.summary,
+    datePublished: page.notice.publishedAt, dateModified: page.notice.modifiedAt,
+    articleSection: page.notice.category, inLanguage: 'ko-KR',
+    author: { '@id': ORGANIZATION_ID }, publisher: { '@id': ORGANIZATION_ID },
+    mainEntityOfPage: { '@id': `${page.pageUrl}#webpage` },
+    articleBody: renderNoticeContent(page.notice, { root: ROOT }).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+      .replace(/&(?:amp|lt|gt|quot|#39);/g, entity => ({ '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" }[entity]))
+  } : null;
+  if (article) webPage.mainEntity = { '@id': article['@id'] };
   const flightInformation = page.path === "/gimpo-board/";
   const publisher = flightInformation ? {
     "@type": "Organization", "@id": ORGANIZATION_ID,
@@ -628,6 +651,7 @@ function buildSchema(html, loc) {
   if (product) graph.push(product);
   if (service) graph.push(service);
   if (faq) graph.push(faq);
+  if (article) graph.push(article);
 
   return {
     "@context": "https://schema.org",
@@ -636,13 +660,13 @@ function buildSchema(html, loc) {
 }
 
 function renderSchemaScript(schema) {
-  return `  <script type="application/ld+json" data-nm-schema="static">\n${JSON.stringify(schema, null, 2)
+  return `  <script type="application/ld+json" data-nm-schema="static">\n${JSON.stringify(schema, null, 2).replace(/</g, '\\u003c')
     .split("\n")
     .map((line) => `  ${line}`)
     .join("\n")}\n  </script>\n`;
 }
 
-function insertSchema(html, schema) {
+export function insertSchema(html, schema) {
   const script = renderSchemaScript(schema);
   if (STATIC_SCHEMA_REGEX.test(html)) {
     return html.replace(STATIC_SCHEMA_REGEX, () => `\n${script}`);
@@ -683,6 +707,7 @@ function getGraphTypes(schema) {
   return new Set((schema?.["@graph"] || []).map((entry) => entry["@type"]));
 }
 
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 const sitemap = readFile("sitemap.xml");
 const locs = [...sitemap.matchAll(/<loc>(https:\/\/nothingmatters\.co\.kr[^<]+)<\/loc>/g)].map((match) => match[1]);
 const failures = [];
@@ -804,4 +829,6 @@ if (failures.length) {
 
 if (isCheckMode) {
   console.log(`schema: checked ${locs.length} pages`);
+}
+
 }

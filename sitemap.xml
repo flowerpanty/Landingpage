@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://nothingmatters.co.kr/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-10-24</lastmod>
   </url>
   <url>
     <loc>https://nothingmatters.co.kr/order</loc>
@@ -19,6 +19,10 @@
   <url>
     <loc>https://nothingmatters.co.kr/first-birthday-favor/</loc>
     <lastmod>2026-10-06</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/farewell-favor/</loc>
+    <lastmod>2026-10-14</lastmod>
   </url>
   <url>
     <loc>https://nothingmatters.co.kr/corporate-gift/</loc>
@@ -133,6 +137,22 @@
     <lastmod>2026-10-13</lastmod>
   </url>
   <url>
+    <loc>https://nothingmatters.co.kr/notice/</loc>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/notice/pickup-guide/</loc>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/notice/christmas-2026/</loc>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://nothingmatters.co.kr/notice/shipping-guide/</loc>
+    <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
     <loc>https://nothingmatters.co.kr/products/cookie-flight/</loc>
     <lastmod>2026-09-24</lastmod>
   </url>
@@ -155,9 +175,5 @@
   <url>
     <loc>https://nothingmatters.co.kr/cookie-crew/</loc>
     <lastmod>2026-09-22</lastmod>
-  </url>
-  <url>
-    <loc>https://nothingmatters.co.kr/farewell-favor/</loc>
-    <lastmod>2026-10-14</lastmod>
   </url>
 </urlset>

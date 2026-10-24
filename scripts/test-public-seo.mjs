@@ -1025,7 +1025,7 @@ const reservationQuestion = pickupFaq?.mainEntity?.find((item) => item.name === 
 assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 픽업 전용/);
 assert.match(reservationQuestion?.acceptedAnswer?.text || "", /예약 없이 방문/);
 assert.match(pickupHtml, /예약 픽업 전용 작업실/);
-assert.match(pickupHtml, /예약 없이 방문하면 현장 구매가 어렵습니다/);
+assert.match(pickupHtml, /예약 없이 방문하시면 구매할 쿠키가 없습니다/);
 assert.match(pickupHtml, /홈[\s\S]*김포공항 디저트 선물·픽업/, "pickup should expose a visible breadcrumb");
 assert.match(pickupHtml, /김포공항 내부 매장이 아니며 방문 전 픽업 예약이 필요합니다/, "pickup answer-first should clarify the reservation-only location");
 assert.match(pickupHtml, /원하는 쿠키를 먼저 고르고 픽업 날짜를 예약한 뒤 공항동 작업실에서 수령하면 됩니다/, "pickup quick answer should explain the reservation flow directly");
@@ -1074,7 +1074,7 @@ assert.deepEqual(
 const homeHtml = readHtml(filePathForPathname("/"));
 assert.deepEqual(
   [...homeHtml.matchAll(/<section\b([^>]*)>/g)].map((match) => match[1].match(/\bid="([^"]+)"/)?.[1] || ""),
-  ["mainpage-home", "our-cookies", "", "use-case-guide", "actual-cases", "", "journal", "local-pickup", "main-faq", "contact"],
+  ["mainpage-home", "our-cookies", "", "use-case-guide", "actual-cases", "", "journal", "official-notices", "local-pickup", "main-faq", "contact"],
   "homepage should preserve all existing sections and their order"
 );
 const homeCases = homeHtml.match(/<section\b[^>]*\bid="actual-cases"[^>]*>([\s\S]*?)<\/section>/)?.[1] || "";
