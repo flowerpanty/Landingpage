@@ -575,7 +575,7 @@ for (const [pathname, h1] of kimpoGuides) {
   const url = `${SITE_URL}${pathname}`;
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/guides/gimpo-airport-flight-status/" ? "2026-10-10" : "2026-10-01" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/guides/gimpo-airport-flight-status/" ? "2026-10-10" : "2026-10-26" },
     `${pathname}: informational guide registry`
   );
   assert.equal(getCanonical(html), url);

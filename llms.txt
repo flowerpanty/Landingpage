@@ -173,4 +173,6 @@ Notice RSS (separate from the cookie-guide feed at /feed.xml): https://nothingma
 
 ## National Aviation Museum visitor guide · 국립항공박물관
 
-- https://nothingmatters.co.kr/national-aviation-museum/ — Official-source visitor information (last checked 2026-10-26), parking, experience reservations, children’s visits and NOTHINGMATTERS airplane cookies. The atelier is independent from the museum; cookies require advance reservation and pickup at 송정로 25 1층, not at the museum.
+- https://nothingmatters.co.kr/national-aviation-museum/ — 국립항공박물관 입장료·주차요금·관람시간·체험예약·아이랑 방문 준비. 공식 자료 확인일 2026-10-26. 전시관람 무료와 개별 체험 예약·요금은 구분한다. HS-748 특별전 공식 안내 기간은 2026-08-11~2027-07-31이며, 방문일 변경 공지는 박물관 원문에서 확인한다.
+- 쿠키 컬렉션: COOKIE FLIGHT, COOKIE CREW, TERMINAL 샌드쿠키, 수제 꾸덕쿠키. 상품별 네이버 픽업예약으로 연결하며, 택배주문은 COOKIE FLIGHT와 TERMINAL 스마트스토어만 안내한다. 다른 두 상품은 택배 가능 여부를 문의한다.
+- 낫띵메터스는 박물관과 공식 제휴 관계가 없는 별도 예약 제작·예약 픽업 작업실이다. 박물관 내부 판매점이 아니며 픽업 주소는 서울특별시 강서구 송정로 25 1층이다. 예약 없이 방문하셔도 바로 구매할 쿠키가 없다. 클릭은 구매나 예약 완료를 의미하지 않는다.

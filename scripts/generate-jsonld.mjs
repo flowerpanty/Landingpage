@@ -286,6 +286,7 @@ function getPageData(html, loc, { registry = SITE_PAGE_DATA, notices = NOTICES }
     urlRole: registryPage?.urlRole || "",
     relatedProductPrimaryUrl: registryPage?.relatedProductPrimaryUrl || "",
     about: registryPage?.about || null,
+    itemList: registryPage?.itemList || null,
     occasionLanding: registryPage?.occasionLanding || null,
     giftLanding: registryPage?.giftLanding || null,
     notice: registryPage?.urlRole === 'notice-article' ? publicNotices(notices).find(notice => notice.slug === registryPage.noticeSlug) : null,
@@ -412,7 +413,7 @@ function buildItemList(page, notices = NOTICES) {
       }))
     };
   }
-  const items = collection?.items?.map((item) => [item.name, item.url]) || ITEM_LISTS[page.path];
+  const items = (page.itemList || collection?.items)?.map((item) => [item.name, item.url]) || ITEM_LISTS[page.path];
   if (!items?.length) return null;
 
   return {

@@ -15,6 +15,13 @@ const products = [
   { name: 'TERMINAL 샌드쿠키', detail: '/products/terminal-sand-cookie/', image: '/images/terminal/terminal-hero-package.jpg', pickup: 'https://naver.me/GArtG2FK', shipping: 'https://mkt.shopping.naver.com/link/6ad84808bb270c6ca6310878', shippingLabel: '택배주문' },
   { name: '수제 꾸덕쿠키', detail: '/products/handmade-cookie/', image: '/images/handmade-hero.jpg', pickup: 'https://naver.me/FQuvqNt0', shipping: 'https://pf.kakao.com/_QdCaK/chat', shippingLabel: '택배 문의' },
 ];
+['cookie-flight', 'cookie-crew', 'terminal-sand-cookie', 'handmade-cookie'].forEach((id, index) => { products[index].id = id; });
+const expectedAnalytics = (product, action, placement = 'collection') => [
+  ({ collection: { pickup: 'museum_pickup_click', shipping: 'museum_shipping_click', inquiry: 'museum_shipping_inquiry_click' }, floating: { pickup: 'museum_floating_pickup_click', shipping: 'museum_floating_shipping_click' } })[placement][action],
+  { product_id: product.id, placement, destination_type: ({ pickup: 'naver_pickup', shipping: 'smartstore_shipping', inquiry: 'kakao_inquiry' })[action], page_path: pathname },
+];
+const readAnalytics = page => page.evaluate(() => (window.dataLayer || []).filter(entry => entry?.[0] === 'event' && String(entry[1]).startsWith('museum_')).map(entry => [entry[1], entry[2]]));
+const analyticsEvidence = [];
 const externalUrls = new Set(products.flatMap(product => [product.pickup, product.shipping]));
 const purchaseNavigations = [];
 const mockPurchaseNavigation = route => {
@@ -23,16 +30,24 @@ const mockPurchaseNavigation = route => {
   purchaseNavigations.push(request.url());
   return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html lang="ko"><title>구매 채널 이동 테스트</title><body>로컬 모의 응답</body></html>' });
 };
-async function checkPurchasePopup(page, link, expectedUrl, touch = false) {
+async function checkPurchasePopup(page, link, expectedUrl, touch = false, expected = null) {
   assert.equal(await link.getAttribute('href'), expectedUrl);
   assert.equal(await link.getAttribute('target'), '_blank');
   assert.equal(await link.getAttribute('rel'), 'noopener noreferrer');
-  const [popup] = await Promise.all([page.waitForEvent('popup'), touch ? link.tap() : link.click()]);
+  const before = await readAnalytics(page);
+  const activate = async () => {
+    if (touch === 'keyboard') { await link.focus(); return page.keyboard.press('Enter'); }
+    return touch ? link.tap() : link.click();
+  };
+  const [popup] = await Promise.all([page.waitForEvent('popup'), activate()]);
   await popup.waitForLoadState('domcontentloaded');
   assert.equal(popup.url(), expectedUrl);
   assert.equal(await popup.evaluate(() => window.opener === null), true, 'purchase tab has no opener');
   assert.equal(await popup.evaluate(() => document.referrer), '', 'noreferrer omits the guide referrer');
   await popup.close();
+  const added = (await readAnalytics(page)).slice(before.length);
+  assert.deepEqual(added, expected ? [expected] : [], 'one exact click event, or none when analytics is unavailable');
+  analyticsEvidence.push({ destination: expectedUrl, event: expected, actual: added });
 }
 let browser;
 try {
@@ -52,11 +67,18 @@ try {
   page.on('console', message => { if (message.type() === 'error' && message.location().url.startsWith(base)) errors.push(message.text()); });
   page.on('response', response => { if (response.url().startsWith(base) && response.status() >= 400) missing.push([response.status(), response.url()]); });
   let commonContent;
-  for (const width of [320, 390, 768, 1280]) {
+  for (const width of [320, 390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     assert.equal((await page.goto(base + pathname, { waitUntil: 'networkidle' })).status(), 200);
     const fontFaces = await checkBrandFonts(page);
     assert.equal(await page.locator('h1').count(), 1);
+    assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' '), '국립항공박물관 방문 가이드');
+    assert.equal(await page.title(), '국립항공박물관 입장료·주차·예약·체험 안내 | 낫띵메터스');
+    assert.equal(await page.locator('.museum-answer').count(), 5);
+    assert.equal(await page.locator('.museum-faq summary').count(), 9);
+    assert.ok((await page.locator('#museum-exhibition').innerText()).includes('2027.07.31'));
+    assert.equal(await page.locator('#visit-checklist li').count(), 5);
+    assert.equal(await page.evaluate(() => window[Symbol.for('nothingmatters.museum.analytics')]), true);
     const content = await page.locator('main').textContent();
     commonContent ??= content;
     assert.equal(content, commonContent, 'same content on desktop and mobile');
@@ -122,6 +144,8 @@ try {
     assert.deepEqual(await handmade.evaluate(image => [image.naturalWidth, image.naturalHeight]), [1024, 867]);
     const columns = await page.locator('.museum-products').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
     assert.equal(columns, width >= 1024 ? 4 : 2);
+    const quickColumns = await page.locator('.museum-quick-grid').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
+    assert.equal(quickColumns, width >= 1280 ? 5 : width >= 768 ? 3 : 1);
     // Isolate the collection from fixed page controls in the section capture.
     await page.locator('#cookie-collection').screenshot({ path: `${output}/museum-products-${width}.png`, style: '.showroom-header, .museum-mobile-actions, .nm-skip-link { visibility: hidden !important; }' });
     for (const summary of await page.locator('summary').all()) {
@@ -145,7 +169,7 @@ try {
     const artifact = `museum-${width}.png`;
     await page.screenshot({ path: `${output}/${artifact}`, fullPage: true });
     evidence.push({ viewport: `${width}x900`, artifact, observation: 'Shared brand header, white page, preserved hero ratio, visit information, four photos, pickup, FAQ and sources; no overflow or CTA obstruction.' });
-    measurements.push({ ...geometry, columns, fontFaces });
+    measurements.push({ ...geometry, columns, quickColumns, fontFaces });
   }
   await page.goto(base + pathname);
   await page.keyboard.press('Tab');
@@ -159,6 +183,13 @@ try {
   await page.keyboard.press('Enter');
   await page.waitForURL('**#visit-info');
   assert.ok(await page.locator('#visit-title').isVisible());
+  for (const anchor of await page.locator('.museum-answer a[href^="#"]').all()) {
+    const id = (await anchor.getAttribute('href')).slice(1);
+    await anchor.click();
+    await page.waitForURL(`**#${id}`);
+    const rect = await page.locator(`#${id}`).boundingBox();
+    assert.ok(rect.y >= (await page.locator('.showroom-header').boundingBox()).height - 1, 'detail anchor is not hidden under the header');
+  }
   const contrast = await page.evaluate(() => {
     const luminance = color => {
       const channels = color.match(/[\d.]+/g).slice(0, 3).map(Number).map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
@@ -184,8 +215,8 @@ try {
     }
     await page.goto(base + pathname);
     const actions = page.locator('.museum-product').nth(index).locator('.museum-purchase-actions a');
-    await checkPurchasePopup(page, actions.nth(0), product.pickup);
-    await checkPurchasePopup(page, actions.nth(1), product.shipping);
+    await checkPurchasePopup(page, actions.nth(0), product.pickup, false, expectedAnalytics(product, 'pickup'));
+    await checkPurchasePopup(page, actions.nth(1), product.shipping, false, expectedAnalytics(product, product.shippingLabel === '택배주문' ? 'shipping' : 'inquiry'));
     assert.equal(page.url(), base + pathname);
   }
   await page.goto(`${base}/gimpo/`);
@@ -198,6 +229,9 @@ try {
   await crawler.locator('summary').first().click();
   assert.equal(await crawler.locator('details').first().getAttribute('open'), '');
   assert.ok((await crawler.locator('main').innerText()).includes('예약 픽업 전용 작업실'));
+  assert.equal(await crawler.locator('.museum-answer').count(), 5);
+  await crawler.locator('.museum-product h3 a').first().click();
+  await crawler.waitForURL('**/products/cookie-flight/');
   await noJs.close();
   const touch = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await touch.route('**/*', route => {
@@ -212,12 +246,43 @@ try {
   for (const width of [320, 390]) {
     await mobile.setViewportSize({ width, height: 844 });
     await mobile.goto(base + pathname);
-    await checkPurchasePopup(mobile, mobile.locator('.museum-mobile-actions a').nth(0), products[0].pickup, true);
-    await checkPurchasePopup(mobile, mobile.locator('.museum-mobile-actions a').nth(1), products[0].shipping, true);
+    await checkPurchasePopup(mobile, mobile.locator('.museum-mobile-actions a').nth(0), products[0].pickup, true, expectedAnalytics(products[0], 'pickup', 'floating'));
+    await checkPurchasePopup(mobile, mobile.locator('.museum-mobile-actions a').nth(1), products[0].shipping, true, expectedAnalytics(products[0], 'shipping', 'floating'));
     assert.equal(mobile.url(), base + pathname, 'floating purchase leaves the guide intact');
   }
   assert.deepEqual(purchaseNavigations, [...products.flatMap(product => [product.pickup, product.shipping]), products[0].pickup, products[0].shipping, products[0].pickup, products[0].shipping]);
   await touch.close();
+  // Duplicate script loading must not add a second listener; queries/fragments never enter GA params.
+  await page.goto(`${base}${pathname}?private_test=do-not-send#private-fragment`, { waitUntil: 'networkidle' });
+  const config = await page.evaluate(() => (window.dataLayer || []).find(entry => entry?.[0] === 'config' && entry[1] === 'G-DR5XLDB042')?.[2]);
+  assert.deepEqual(config, { page_location: 'https://nothingmatters.co.kr' + pathname, page_path: pathname });
+  await page.addScriptTag({ url: base + '/assets/national-aviation-museum-analytics.js' });
+  await checkPurchasePopup(page, page.locator('.museum-product').first().locator('.museum-purchase-actions a').first(), products[0].pickup, 'keyboard', expectedAnalytics(products[0], 'pickup'));
+  const beforeNonPurchase = await readAnalytics(page);
+  await page.locator('.museum-answer a[href="#museum-hours"]').first().click();
+  assert.deepEqual(await readAnalytics(page), beforeNonPurchase, 'visitor information is not a purchase event');
+  assert.doesNotMatch(JSON.stringify(await readAnalytics(page)), /private_test|do-not-send|private-fragment|link_url|customer|phone|email/);
+  await page.evaluate(() => { window.gtag = undefined; });
+  assert.equal(await page.evaluate(() => typeof window.gtag), 'undefined');
+  await checkPurchasePopup(page, page.locator('.museum-product').first().locator('.museum-purchase-actions a').first(), products[0].pickup);
+  await page.evaluate(() => { window.gtag = () => { throw new Error('Analytics unavailable'); }; });
+  await checkPurchasePopup(page, page.locator('.museum-product').first().locator('.museum-purchase-actions a').last(), products[0].shipping);
+  const blocked = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  await blocked.route('**/*', async route => {
+    const request = route.request();
+    if (request.method() !== 'GET') { mutations.push(request.url()); return route.abort(); }
+    if (request.url().endsWith('/assets/national-aviation-museum-analytics.js')) return route.abort();
+    if (await routeBrandFont(route, fonts)) return;
+    const mocked = mockPurchaseNavigation(route);
+    if (mocked) return mocked;
+    return new URL(request.url()).origin === base ? route.continue() : route.abort();
+  });
+  const blockedPage = await blocked.newPage();
+  blockedPage.on('pageerror', error => errors.push(error.message));
+  await blockedPage.goto(base + pathname);
+  assert.equal(await blockedPage.evaluate(() => window[Symbol.for('nothingmatters.museum.analytics')]), undefined);
+  await checkPurchasePopup(blockedPage, blockedPage.locator('.museum-mobile-actions a').first(), products[0].pickup);
+  await blocked.close();
   const failedImages = await browser.newContext({ viewport: { width: 390, height: 900 } });
   await failedImages.route('**/*', async route => {
     if (route.request().resourceType() === 'image') return route.abort();
@@ -236,6 +301,6 @@ try {
   assert.deepEqual(errors, [], 'no local JavaScript/console errors');
   assert.deepEqual(missing, [], 'no failed local resources');
   assert.deepEqual(mutations, [], 'no order or other writes');
-  fs.writeFileSync(`${output}/browser-results.json`, JSON.stringify({ passed: true, measurements, contrast, errors, missing, mutations, purchaseNavigations, renderedEvidence: evidence }, null, 2));
-  console.log('museum browser PASS: 320/390/768/1280, final four photos/detail links, four pickup URLs, shipping/inquiry mapping, green colors/contrast/one-line equal buttons, safe floating CTA, 12 mocked external popup clicks/no opener/referrer, keyboard/no-JS/fallback; no production writes');
+  fs.writeFileSync(`${output}/browser-results.json`, JSON.stringify({ passed: true, measurements, contrast, errors, missing, mutations, purchaseNavigations, analyticsEvidence, renderedEvidence: evidence }, null, 2));
+  console.log(`museum browser PASS: five widths 320/390/768/1280/1440, quick answers/details/9 FAQs, preserved four products and purchase channels, green contrast/safe CTA; ${purchaseNavigations.length} mocked external popups, five exact click events without duplication/private URL values, duplicate script/keyboard/missing or throwing gtag/blocked analytics/no-JS resilience; no production writes`);
 } finally { await browser?.close(); await stopNoticeTestServer(server); }
