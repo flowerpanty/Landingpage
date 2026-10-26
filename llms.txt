@@ -144,10 +144,13 @@ This file is a guide to public website information. Crawler access is defined by
 - christmas-tree-brookie: 트리 브루키 / 9,000원 / 트리 브루키 1개
 - christmas-brookie-set: 브루키 2종 세트 / 17,000원 / 곰돌이 브루키 1개 + 트리 브루키 1개
 - christmas-santa-bundle: 산타꾸러미 4종 / 23,000원 / 루돌프초코 · 버터산타 · 말차리스 · 로투스노우맨 각 1개
-- Use cases: 크리스마스 쿠키 선물, 크리스마스 답례품, 기업 크리스마스 선물, 어린이집 크리스마스 선물, 크리스마스 단체 간식, 연말 답례품.
+- Use cases: 크리스마스 쿠키 세트, 서울 크리스마스 쿠키선물, 서울 크리스마스 기업행사, 회사 크리스마스 파티 간식, 임직원 감사 선물, 고객·거래처 연말 답례품, 어린이집 크리스마스 선물, 유치원 크리스마스 간식.
+- Brand: NOTHINGMATTERS / 낫띵메터스. Reservation-only cookie atelier in 공항동, 강서구, 서울; address 서울특별시 강서구 송정로 25 1층, near 김포공항 and 송정역. No cookies are available for walk-in purchase without a reservation.
+- Pickup guide: https://nothingmatters.co.kr/pickup/ / Magok event guide: https://nothingmatters.co.kr/magok-cookie/
+- Group consultation: share quantities, event/receipt dates, budget, product selection, packaging requests and preferred pickup or vehicle courier. Courier availability and cost require confirmation; no citywide same-day delivery promise.
 - The set is an independent SKU; never automatically combine or convert single items.
-- Online submission is unavailable pending Railway support. Consult via https://pf.kakao.com/_QdCaK/chat; a request is not payment or production confirmation.
-- Stock, minimum quantities, delivery fees, deadlines and available pickup dates must be confirmed by consultation. Prices above are product totals only.
+- Online submission is unavailable pending Railway support. Consult via https://pf.kakao.com/_QdCaK/chat; final orders are confirmed in Kakao consultation. A request is not payment or production confirmation.
+- Christmas shipping eligibility, stock, minimum quantities, delivery fees, deadlines and available pickup dates must be confirmed by consultation. Other products' Smartstore shipping conditions do not apply to this collection. Prices above are product totals only.
 
 ## Official channels
 

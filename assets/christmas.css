@@ -32,7 +32,14 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-brand span { color: var(--muted); font-size: 10px; font-weight: 400; letter-spacing: .03em; margin-top: 4px; }
 .xmas-header-link { display: flex; align-items: center; min-height: 44px; font-size: 13px; color: var(--red); text-decoration: none; font-weight: 700; }
 .xmas-intro { padding-block: 24px; display: flex; justify-content: space-between; align-items: end; gap: 24px; }
-.xmas-intro > p { font-size: 13px; color: var(--muted); }
+.xmas-intro > p { max-width: 400px; font-size: 13px; color: var(--muted); }
+.xmas-gift-guide { padding-bottom: 18px; }
+.xmas-gift-guide h2 { font-size: 16px; }
+.xmas-gift-guide ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 20px; list-style: none; margin: 10px 0 0; padding: 0; }
+.xmas-gift-guide li { min-width: 0; font-size: 12px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
+.xmas-gift-guide strong, .xmas-gift-guide span { display: block; }
+.xmas-gift-guide strong { color: var(--green); font-size: 11px; }
+.xmas-gift-guide span { color: var(--muted); }
 .xmas-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--red); margin-bottom: 8px; }
 .xmas-order-shell { padding-bottom: 44px; }
 .xmas-steps { border-block: 1px solid var(--line); }
@@ -137,6 +144,10 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-group-columns h3 { font-size: 16px; }
 .xmas-group-columns p { font-size: 13px; margin-top: 8px; }
 .xmas-group-columns a { display: inline-flex; align-items: center; min-height: 44px; font-size: 12px; margin-right: 18px; }
+.xmas-guide-links { display: flex; flex-wrap: wrap; gap: 0 20px; margin-top: 8px; }
+.xmas-guide-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--green); font-size: 13px; }
+.xmas-consult-title { margin-top: 20px; font-size: 16px; }
+.xmas-consult-list { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-left: 18px; margin-block: 12px 0; font-size: 13px; line-height: 1.6; }
 .xmas-faq { max-width: 900px; }
 .xmas-faq > p:not(.xmas-eyebrow) { margin-bottom: 18px; }
 .xmas-faq details { border-top: 1px solid var(--line); }
@@ -195,8 +206,11 @@ body.xmas-gallery-open { overflow: hidden; }
   .xmas-brand { font-size: 16px; }
   .xmas-brand span { font-size: 9px; }
   .xmas-header-link { font-size: 12px; }
-  .xmas-intro { padding-block: 18px; }
-  .xmas-intro > p { display: none; }
+  .xmas-intro { padding-block: 16px; display: block; }
+  .xmas-intro > p { max-width: none; margin-top: 8px; font-size: 12px; line-height: 1.6; }
+  .xmas-gift-guide { padding-bottom: 14px; }
+  .xmas-gift-guide h2 { font-size: 15px; }
+  .xmas-gift-guide ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; margin-top: 8px; }
   .xmas-eyebrow { font-size: 9px; }
   .xmas-steps button { padding: 10px 6px; grid-template-columns: 1fr; text-align: center; justify-items: center; min-height: 64px; gap: 2px; }
   .xmas-steps button > span { font-size: 14px; grid-row: auto; }

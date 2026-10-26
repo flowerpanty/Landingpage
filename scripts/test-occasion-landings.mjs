@@ -22,7 +22,9 @@ for (const [slug, expectedItems] of pages) {
   const pathname = `/${slug}/`;
   const html = read(`${slug}/index.html`);
   const entry = registry.pages.find((page) => page.path === pathname);
-  assert.deepEqual([entry.status, entry.indexing, entry.sitemap, entry.lastmod], ["active", "index", true, slug === "farewell-favor" ? "2026-10-14" : "2026-10-06"]);
+  assert.deepEqual([entry.status, entry.indexing, entry.sitemap], ["active", "index", true]);
+  assert.match(entry.lastmod, /^\d{4}-\d{2}-\d{2}$/);
+  assert.ok(sitemap.includes(`<loc>${SITE}${pathname}</loc>\n    <lastmod>${entry.lastmod}</lastmod>`));
   assert.ok(entry.breadcrumbName);
   assert.match(html, new RegExp(`<link rel="canonical" href="${SITE}${pathname}">`));
   assert.match(html, /name="robots" content="index,follow/);

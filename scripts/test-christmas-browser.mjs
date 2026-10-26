@@ -27,7 +27,7 @@ try {
     await pause(50);
   }
   browser = await playwright.chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
-  const context = await browser.newContext({ viewport: { width: 375, height: 812 }, reducedMotion: 'reduce' });
+  const context = await browser.newContext({ viewport: { width: 390, height: 812 }, reducedMotion: 'reduce' });
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     requestedUrls.push(decodeURIComponent(url.href));
@@ -122,7 +122,7 @@ try {
     await page.waitForFunction(() => document.activeElement?.getAttribute('data-gallery') === 'christmas-bear-brookie');
     assert.equal(await page.locator(':focus').getAttribute('data-gallery'), catalog.products[0].sku);
     await opener.click(); await page.goBack(); await page.locator('#xmas-gallery').waitFor({ state: 'hidden' }); await step(1);
-    if (width === 375 || width === 1440) {
+    if (width === 390 || width === 1440) {
       for (let productIndex = 1; productIndex < catalog.products.length; productIndex++) {
         await page.locator('[data-gallery]').nth(productIndex).click();
         const photos = [catalog.products[productIndex], ...catalog.products[productIndex].gallery];
@@ -138,10 +138,20 @@ try {
     }
   }
   const renderedEvidence = [];
-  for (const [width, height] of [[320, 844], [375, 812], [768, 1024], [1024, 900], [1440, 1000]]) {
+  for (const [width, height] of [[320, 844], [390, 844], [430, 932], [768, 1024], [1024, 900], [1280, 900], [1440, 1000]]) {
     mode = 'disabled'; await page.setViewportSize({ width, height }); await page.goto(base + '/christmas/');
     await page.waitForFunction(() => !document.querySelector('[data-delta="1"]').disabled);
     await step(1);
+    assert.equal(await page.locator('h1').textContent(), '2026 크리스마스 쿠키 세트·선물');
+    assert.ok(await page.locator('.xmas-intro-lead').isVisible(), 'hero lead remains readable on mobile');
+    assert.equal(await page.locator('#gift-guide li').count(), 4);
+    const firstScreen = await page.evaluate(() => ({
+      guideHeight: document.querySelector('#gift-guide').getBoundingClientRect().height,
+      photoTop: document.querySelector('[data-gallery]').getBoundingClientRect().top,
+      bottom: innerWidth < 960 ? document.querySelector('.xmas-sticky').getBoundingClientRect().top : innerHeight
+    }));
+    assert.ok(firstScreen.guideHeight <= 180, `compact summary at ${width}: ${firstScreen.guideHeight}`);
+    assert.ok(firstScreen.photoTop + 44 < firstScreen.bottom, `product photo remains reachable in first viewport at ${width}: ${JSON.stringify(firstScreen)}`);
     if (width === 320) {
       await page.keyboard.press('Tab'); assert.equal(await page.locator(':focus').getAttribute('data-nm-skip-link'), '');
       await page.keyboard.press('Enter'); assert.equal(await page.locator(':focus').getAttribute('id'), 'main-content');
@@ -171,7 +181,7 @@ try {
     if (width < 960) {
       await page.locator('#xmas-name').focus(); assert.equal(await page.locator('.xmas-sticky').isVisible(), false); await focusHeading(2);
     }
-    if (width === 375) {
+    if (width === 390) {
       await page.setViewportSize({ width: 1440, height: 1000 }); await step(2);
       assert.equal(await page.locator('#xmas-name').inputValue(), 'LOCAL MOCK CUSTOMER'); await assertLayout(1440, 2);
       await page.setViewportSize({ width, height });
@@ -189,14 +199,64 @@ try {
     await page.locator('[data-edit-step="1"]').click(); await step(1); await qty(0, '2'); await focusHeading(1);
     await next(); await step(2); await next(); await step(3); assert.equal(await page.locator('#xmas-review-total').textContent(), '57,000원');
     await page.locator('#xmas-submit').evaluate(button => button.form.requestSubmit()); assert.equal(requests.length, 0, 'real capability blocks saves');
-    if (width === 375) {
+    if (width === 390) {
       await page.evaluate(() => Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: async () => { throw new Error('Mock denied'); } }));
       await page.locator('#xmas-copy').click(); const copy = await page.locator('#xmas-copy-fallback').inputValue();
       assert.ok(copy.includes('57,000원') && !copy.includes('LOCAL MOCK') && !copy.includes('010-0000-0000'));
       await page.evaluate(() => Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: async value => { window.__copied = value; } }));
       await page.locator('#xmas-copy').click(); assert.equal(await page.evaluate(() => window.__copied), copy);
     }
-    renderedEvidence.push({ viewport: `${width}x${height}`, artifact: `${width}-step-1.png`, observation: `All three step screenshots at width ${width}; retained quantities/contact on back/forward/edit and width change, one panel, shared totals, sticky desktop summary or mobile bottom CTA. Separate gallery screenshot verifies modal/full screen.` });
+    renderedEvidence.push({ firstScreen, viewport: `${width}x${height}`, artifact: `${width}-step-1.png`, observation: `All three step screenshots at width ${width}; retained quantities/contact on back/forward/edit and width change, one panel, shared totals, sticky desktop summary or mobile bottom CTA. Separate gallery screenshot verifies modal/full screen.` });
+  }
+  // SEO content is available as static HTML, even with ordering JavaScript disabled.
+  const staticContext = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+  await staticContext.route('**/*', route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
+  const staticPage = await staticContext.newPage();
+  await staticPage.goto(base + '/christmas/');
+  assert.ok(await staticPage.locator('#gift-guide').isVisible());
+  assert.equal(await staticPage.locator('.xmas-product').count(), 4);
+  assert.ok((await staticPage.locator('noscript').textContent()).includes('카카오톡으로 상담'));
+  for (const product of catalog.products) {
+    const card = staticPage.locator(`[data-sku="${product.sku}"]`);
+    assert.ok((await card.textContent()).includes(`${product.price.toLocaleString('ko-KR')}원`));
+  }
+  assert.equal(await staticPage.locator('#faq details').count(), 11);
+  const staticFaqs = await staticPage.locator('#faq details').evaluateAll(nodes => nodes.map(node => [node.querySelector('summary').textContent.trim(), node.querySelector('p').textContent.trim()]));
+  const structuredFaqs = await staticPage.locator('[data-nm-schema]').textContent();
+  assert.deepEqual(JSON.parse(structuredFaqs)['@graph'].find(node => node['@type'] === 'FAQPage').mainEntity.map(node => [node.name, node.acceptedAnswer.text]), staticFaqs);
+  await staticPage.locator('#faq summary').first().click();
+  assert.ok(await staticPage.locator('#faq details').first().locator('p').isVisible());
+  assert.ok((await staticPage.locator('#seoul-pickup').textContent()).includes('예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.'));
+  for (const href of ['/pickup/', '/magok-cookie/', '/corporate-gift/', '/guides/corporate-event-cookie/', '/guides/teacher-snack-gift/']) {
+    assert.equal((await staticContext.request.get(base + href)).status(), 200, `internal link ${href}`);
+  }
+  await staticPage.screenshot({ path: `${artifactDir}/390-no-js.png`, fullPage: true });
+  await staticContext.close();
+
+  // Native FAQ controls remain keyboard accessible and do not alter order state.
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: width < 960 ? 844 : 1000 });
+    await page.goto(base + '/christmas/?campaign=seo-regression');
+    await page.waitForFunction(() => !document.querySelector('[data-delta="1"]').disabled);
+    for (const details of await page.locator('#faq details').all()) {
+      await details.locator('summary').focus(); await page.keyboard.press('Enter');
+      assert.ok(await details.locator('p').isVisible());
+    }
+    await step(1);
+    assert.equal(await page.locator('#xmas-total-price').textContent(), '0원');
+    const analytics = await page.evaluate(() => (window.dataLayer || []).map(item => Array.from(item)));
+    const config = analytics.find(item => item[0] === 'config');
+    assert.equal(config[2].page_location, base + '/christmas/');
+    assert.ok(!JSON.stringify(analytics).includes('seo-regression'), 'analytics excludes URL query');
+    await page.locator('#group-orders').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${artifactDir}/${width}-seo-content.png`, fullPage: true });
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    if (width < 960) {
+      const footer = await page.locator('.xmas-footer small').boundingBox();
+      const sticky = await page.locator('.xmas-sticky').boundingBox();
+      assert.ok(footer.y + footer.height < sticky.y, 'footer content clears mobile CTA');
+    }
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   }
   async function prepare(width, nextMode) {
     mode = nextMode; await page.setViewportSize({ width, height: width < 960 ? 844 : 1000 });
@@ -211,7 +271,7 @@ try {
     await page.locator('#xmas-consent').check(); await focusHeading(3);
   }
   // Both desktop and mobile execute the complete receipt flow against local mocks.
-  for (const width of [375, 1440]) {
+  for (const width of [390, 1440]) {
     await prepare(width, 'success'); const before = requests.length;
     await next(); await page.locator('#xmas-submit').evaluate(button => { button.form.requestSubmit(); button.form.requestSubmit(); });
     await page.locator('#xmas-success').waitFor({ state: 'visible' }); assert.equal(requests.length, before + 1);
@@ -220,7 +280,7 @@ try {
     await page.locator('#xmas-submit').evaluate(button => button.form.requestSubmit()); await pause(50); assert.equal(requests.length, before + 1);
     await assertPrivacy(); await page.screenshot({ path: `${artifactDir}/${width}-mock-success.png`, fullPage: true });
   }
-  for (const [width, kind] of [[375, '400'], [375, '500'], [375, 'disconnect'], [375, 'mismatch'], [375, 'missing-id'], [375, 'items-mismatch'], [375, 'missing-success'], [1440, '500'], [1440, 'mismatch']]) {
+  for (const [width, kind] of [[390, '400'], [390, '500'], [390, 'disconnect'], [390, 'mismatch'], [390, 'missing-id'], [390, 'items-mismatch'], [390, 'missing-success'], [1440, '500'], [1440, 'mismatch']]) {
     await prepare(width, kind); const before = requests.length; await next();
     await page.locator('#xmas-submit-error').waitFor({ state: 'visible' }); assert.equal(await page.locator('#xmas-success').isVisible(), false);
     if (kind === '400') {
@@ -236,10 +296,11 @@ try {
   assert.ok(requestedUrls.every(url => !url.includes('LOCAL MOCK') && !url.includes('010-0000-0000')));
   assert.deepEqual(errors, []); assert.deepEqual(missing, []);
   const evidence = {
-    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, compact products and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. SEO and FAQ follow the workflow.',
+    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, compact products and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. Static seasonal summary precedes selection; Seoul/group guidance and 11 FAQs follow the workflow and work without JavaScript.',
     targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence,
+    seo: { status: 'pass', evidence: 'Static seasonal summary and 11 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, first product visible in every initial viewport, analytics excludes query strings.' },
     accessibility: { status: 'pass', evidence: 'Skip link, first invalid field focus, labelled 44px+ quantity/photo controls, gallery Tab trap, arrow keys, Escape and restored opener focus. Reduced motion and no runtime exceptions.' },
-    responsive: { status: 'pass', evidence: 'All three panels tested at 320/375/768/1024/1440, one visible panel, no overflow; desktop 2-column summary sticky every step; mobile bottom CTA hides while input focused; resize during step 2 retains data.' },
+    responsive: { status: 'pass', evidence: 'All three panels tested at 320/390/430/768/1024/1280/1440, one visible panel, no overflow; desktop 2-column summary sticky every step; mobile bottom CTA hides while input focused; resize during step 2 retains data.' },
     contentStates: {
       loading: { status: 'pass', evidence: 'Local mock in-flight POST blocks repeated submits and edits on desktop/mobile.' },
       empty: { status: 'pass', evidence: 'Zero selection shows zero total and disables forward navigation.' },
@@ -250,5 +311,5 @@ try {
     }
   };
   fs.writeFileSync(`${artifactDir}/evidence.json`, JSON.stringify(evidence, null, 2) + '\n');
-  console.log('Christmas 3-step browser PASS: five responsive widths, desktop/mobile full flow, retained data/back/forward/resize, gallery/focus, totals/validation/privacy, local mock success/duplicates/errors. No production writes.');
+  console.log('Christmas 3-step browser PASS: seven responsive widths, desktop/mobile full flow, retained data/back/forward/resize, gallery/focus, totals/validation/privacy, local mock success/duplicates/errors. Static SEO/11 FAQ schema parity without JS, first-viewport product access and mobile CTA clearance. No production writes.');
 } finally { await browser?.close(); server.kill('SIGTERM'); }

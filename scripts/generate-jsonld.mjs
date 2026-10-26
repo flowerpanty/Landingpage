@@ -211,14 +211,14 @@ function decodeEntities(value = "") {
     .replace(/&gt;/g, ">");
 }
 
-function cleanText(value = "") {
+function cleanText(value = "", { preserveOperators = false } = {}) {
   return decodeEntities(
     value
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<br\s*\/?>/gi, " ")
       .replace(/<[^>]+>/g, " ")
-      .replace(/[＋+−]/g, "")
+      .replace(/[＋+−]/g, operator => preserveOperators ? operator : "")
       .replace(/\s+/g, " ")
       .trim()
   );
@@ -346,7 +346,8 @@ function buildFaq(html, page) {
   for (const match of html.matchAll(/<details\b[^>]*>([\s\S]*?)<\/details>/gi)) {
     const block = match[1];
     const question = cleanText(block.match(/<summary\b[^>]*>([\s\S]*?)<\/summary>/i)?.[1] || "");
-    const answer = cleanText(block.replace(/<summary\b[^>]*>[\s\S]*?<\/summary>/i, " "));
+    // Operators in answer text can describe real product compositions, not accordion controls.
+    const answer = cleanText(block.replace(/<summary\b[^>]*>[\s\S]*?<\/summary>/i, " "), { preserveOperators: true });
     if (!question || !answer || seen.has(question)) continue;
     seen.add(question);
     questions.push({
@@ -367,7 +368,8 @@ function buildFaq(html, page) {
     );
     const answer = cleanText(
       block.match(/<div\b[^>]*class=["'][^"']*nm-faq-answer[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)?.[1] ||
-        ""
+        "",
+      { preserveOperators: true }
     );
     if (!question || !answer || seen.has(question)) continue;
     seen.add(question);
