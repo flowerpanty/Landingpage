@@ -170,3 +170,7 @@ Notice RSS (separate from the cookie-guide feed at /feed.xml): https://nothingma
 - 2026 크리스마스 쿠키 4종 상품 안내: https://nothingmatters.co.kr/notice/christmas-2026/
 - 쿠키 택배 주문 안내: https://nothingmatters.co.kr/notice/shipping-guide/
 <!-- NM_NOTICES:END -->
+
+## National Aviation Museum visitor guide · 국립항공박물관
+
+- https://nothingmatters.co.kr/national-aviation-museum/ — Official-source visitor information (last checked 2026-10-26), parking, experience reservations, children’s visits and NOTHINGMATTERS airplane cookies. The atelier is independent from the museum; cookies require advance reservation and pickup at 송정로 25 1층, not at the museum.

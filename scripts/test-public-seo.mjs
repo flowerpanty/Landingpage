@@ -472,7 +472,7 @@ for (const [pathname, title, h1, pageType] of [
   const graph = getStaticSchema(html)["@graph"];
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : pathname === "/gimpo-board/" ? "2026-10-10" : "2026-10-04" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : pathname === "/gimpo-board/" ? "2026-10-10" : "2026-10-26" },
     `${pathname}: registry must publish the new route`
   );
   assert.equal(getCanonical(html), `${SITE_URL}${pathname}`);

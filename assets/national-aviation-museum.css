@@ -1,0 +1,111 @@
+/* Scoped visitor guide; the logo, navigation, fonts and buttons use the showroom styles. */
+body.museum-page { --museum-naver-green: #03c75a; --museum-purchase-ink: #06351b; color: #111; background: #fff; font-weight: 500; line-height: 1.7; }
+.museum-page .showroom-page { background: #fff; }
+.museum-page .showroom-wrap, .museum-wrap { width: min(1160px, calc(100% - 40px)); margin-inline: auto; }
+.museum-page .showroom-logo, .museum-page .showroom-nav a, .museum-page .showroom-footer a { min-height: 44px; display: inline-flex; align-items: center; }
+.museum-page .showroom-nav { font-family: var(--showroom-font); }
+.museum-page .showroom-nav a:last-child { min-height: 44px; }
+.museum-page h1, .museum-page h2, .museum-page h3 { margin: 0; color: #111; text-wrap: balance; word-break: keep-all; overflow-wrap: anywhere; }
+.museum-page p { margin: 0 0 14px; }
+.museum-page address { font-style: normal; }
+.museum-page main a:not(.showroom-button):not(.museum-buy-button):hover, .museum-page .showroom-footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.museum-page a:focus-visible, .museum-page summary:focus-visible { outline: 3px solid #1554ad; outline-offset: 4px; }
+.museum-page .showroom-button { min-height: 48px; padding: 12px 20px; font-family: var(--showroom-font); line-height: 1.4; text-align: center; transition: none; }
+.museum-page .showroom-button:hover, .museum-page .showroom-button:focus-visible { transform: none; }
+.museum-page .showroom-button--paper { background: #fff; }
+.museum-page [id] { scroll-margin-top: 110px; }
+.museum-page .nm-skip-link { position: fixed; top: -100px; left: 12px; z-index: 10000; min-height: 44px; padding: 10px 16px; color: #111; background: #fff; border: 2px solid #111; }
+.museum-page .nm-skip-link:focus { top: 12px; }
+.museum-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 12px; color: #555; font-size: 12px; }
+.museum-breadcrumb a { display: inline-flex; align-items: center; min-height: 44px; }
+.museum-hero { display: grid; grid-template-columns: 1fr; align-items: center; gap: 30px; padding-block: 32px 64px; }
+.museum-eyebrow { color: #1554ad; font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+.museum-page h1 { font-size: clamp(34px, 6vw, 58px); line-height: 1.2; letter-spacing: -.055em; }
+.museum-page h1 span { display: block; margin-top: 16px; font-size: .48em; line-height: 1.5; letter-spacing: -.035em; }
+.museum-page .museum-lead { margin-block: 24px; font-size: 16px; }
+.museum-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.museum-page .museum-hero-note { margin: 18px 0 0; color: #555; font-size: 12px; }
+.museum-hero-photo { width: min(100%, 360px); margin: 0 auto; }
+.museum-hero-photo img { width: 100%; height: auto; }
+.museum-hero-photo figcaption { margin-top: 10px; color: #555; font-size: 11px; text-align: center; }
+.museum-section { padding-block: 48px; border-top: 1px solid #d9d9d9; }
+.museum-page h2 { font-size: clamp(25px, 3vw, 36px); line-height: 1.35; letter-spacing: -.045em; }
+.museum-page h3 { font-size: 20px; line-height: 1.4; letter-spacing: -.03em; }
+.museum-section-heading { display: grid; gap: 18px; margin-bottom: 28px; }
+.museum-section-heading > p { margin: 0; color: #555; font-size: 13px; }
+.museum-info-grid { display: grid; }
+.museum-info { min-width: 0; padding-block: 26px; border-top: 1px solid #ddd; }
+.museum-index { color: #666; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.museum-info h3 { margin-bottom: 16px; }
+.museum-info p { font-size: 14px; }
+.museum-info .museum-fact { margin-block: 10px 16px; font-size: 23px; font-weight: 700; line-height: 1.5; }
+.museum-fact span { display: block; color: #555; font-size: 14px; font-weight: 500; }
+.museum-source, .museum-source-links a { display: inline-flex; align-items: center; min-height: 44px; color: #1554ad !important; font-size: 13px; text-decoration: underline !important; text-underline-offset: 4px; }
+.museum-source-links { display: flex; flex-wrap: wrap; gap: 0 22px; }
+.museum-page .museum-collection-note { max-width: 740px; margin-bottom: 28px; color: #555; font-size: 13px; }
+.museum-products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 16px; }
+.museum-product { display: flex; flex-direction: column; min-width: 0; }
+.museum-product-photo { display: block; }
+.museum-product figure { display: grid; align-items: center; aspect-ratio: 4 / 5; margin: 0 0 16px; background: #f7f7f7; }
+.museum-product img { width: 100%; height: 100%; max-height: 100%; object-fit: contain; aspect-ratio: 4 / 5; }
+.museum-product .museum-product-tag { margin-bottom: 6px; color: #555; font-size: 10px; font-weight: 700; letter-spacing: .025em; }
+.museum-product h3 { margin-bottom: 10px; font-size: 17px; }
+.museum-product h3 a { display: flex; align-items: center; min-height: 44px; }
+.museum-product p { font-size: 13px; }
+.museum-purchase-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: auto; padding-top: 4px; }
+.museum-page .museum-buy-button { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 48px; padding: 12px 8px; border: 2px solid var(--museum-naver-green); border-radius: 12px; color: var(--museum-purchase-ink); background: #fff; font-family: var(--showroom-font); font-size: 13px; font-weight: 700; line-height: 1.4; text-align: center; text-decoration: none; white-space: nowrap; }
+.museum-page .museum-buy-button--pickup { background: var(--museum-naver-green); }
+.museum-page .museum-buy-button:hover { border-color: #007c38; box-shadow: 0 0 0 1px #007c38; }
+.museum-page .museum-buy-button:focus-visible { outline: 3px solid #1554ad; outline-offset: 3px; }
+.museum-pickup { display: grid; gap: 32px; }
+.museum-pickup h2 { margin-bottom: 24px; }
+.museum-pickup p { font-size: 14px; }
+.museum-page .museum-pickup-required { padding-left: 16px; border-left: 3px solid #1554ad; font-size: 17px; font-weight: 700; }
+.museum-pickup address { margin-block: 24px 14px; font-weight: 700; }
+.museum-pickup-flow ol { margin: 0 0 24px; padding: 0; list-style: none; }
+.museum-pickup-flow li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 16px; padding-block: 18px; border-bottom: 1px solid #ddd; }
+.museum-pickup-flow li > span { color: #1554ad; font-weight: 900; }
+.museum-pickup-flow h3 { margin-bottom: 8px; font-size: 18px; }
+.museum-pickup-flow li p { margin-bottom: 0; }
+.museum-page .museum-shipping { margin-top: 18px; color: #555; font-size: 12px; }
+.museum-shipping a { display: inline-flex; align-items: center; min-height: 44px; color: #1554ad; text-decoration: underline; }
+.museum-faq details { border-top: 1px solid #ddd; }
+.museum-faq details:last-child { border-bottom: 1px solid #ddd; }
+.museum-faq summary { min-height: 56px; padding: 18px 4px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.museum-faq details p { max-width: 800px; padding: 0 4px 14px; font-size: 14px; }
+.museum-faq details a { display: inline-flex; align-items: center; min-height: 44px; color: #1554ad; text-decoration: underline; text-underline-offset: 4px; }
+.museum-sources h2 { margin-bottom: 18px; }
+.museum-sources > p { max-width: 780px; color: #555; font-size: 13px; }
+.museum-next-stop { display: grid; gap: 8px; margin-top: 24px; padding-block: 20px; border-top: 1px solid #ddd; }
+.museum-next-stop span { color: #555; font-size: 12px; }
+.museum-next-stop strong { font-size: 17px; }
+.museum-page .showroom-footer { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+.museum-mobile-actions { position: fixed; right: 0; bottom: 0; left: 0; z-index: 60; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid #bbdfc7; background: #effbf3; }
+.museum-page .museum-mobile-actions > p { grid-column: 1 / -1; margin: 0; color: var(--museum-purchase-ink); font-size: 11px; line-height: 1.4; text-align: center; }
+.museum-mobile-actions .museum-buy-button { font-size: 14px; }
+@media (min-width: 768px) {
+  .museum-hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 56px; padding-block: 46px 80px; }
+  .museum-hero-photo { width: min(100%, 380px); }
+  .museum-section { padding-block: 64px; }
+  .museum-section-heading { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 36px; margin-bottom: 36px; }
+  .museum-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
+  .museum-info--wide { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-items: center; }
+  .museum-pickup { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; }
+  .museum-mobile-actions { display: none; }
+  .museum-page .showroom-footer { padding-bottom: 40px; }
+}
+@media (min-width: 1024px) {
+  .museum-products { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
+}
+@media (max-width: 600px) {
+  .museum-page .showroom-header-inner { display: flex; flex-wrap: wrap; gap: 0 18px; justify-content: space-between; }
+  .museum-page .showroom-logo { font-size: 18px; }
+  .museum-page .showroom-nav--quick { width: 100%; justify-content: space-between; gap: 12px; font-size: 12px; }
+  .museum-page .showroom-nav--quick a:nth-child(2) { display: inline-flex; }
+  .museum-actions { display: grid; }
+  .museum-hero-photo { width: min(100%, 290px); }
+  .museum-page .showroom-footer p a { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .museum-page *, .museum-page *::before, .museum-page *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
