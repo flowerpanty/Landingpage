@@ -1,0 +1,13 @@
+{
+  "representative": {
+    "image": "/images/christmas/christmas-2026-gifts-1200x630.jpg",
+    "width": 1200,
+    "height": 630,
+    "alt": "브루키 2종 세트와 산타꾸러미 4종의 서로 다른 실물 상품 사진을 나란히 배치한 크리스마스 대표 이미지",
+    "background": "#fff9ec",
+    "sources": [
+      { "image": "/images/christmas/brookie-set.webp", "left": 130, "top": 12, "width": 454, "height": 606 },
+      { "image": "/images/christmas/santa-bundle.webp", "left": 616, "top": 12, "width": 454, "height": 606 }
+    ]
+  }
+}

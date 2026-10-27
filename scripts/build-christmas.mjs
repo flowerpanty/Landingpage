@@ -3,6 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-products.json'), 'utf8'));
+const { representative: socialImage } = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-media.json'), 'utf8'));
+const socialImageUrl = `https://nothingmatters.co.kr${socialImage.image}`;
+if (!fs.existsSync(path.join(root, socialImage.image)) || socialImage.width !== 1200 || socialImage.height !== 630) throw new Error('Invalid Christmas representative image');
 const check = process.argv.includes('--check');
 const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const won = value => `${value.toLocaleString('ko-KR')}원`;
@@ -52,8 +55,14 @@ update('christmas/index.html', html => html
   .replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`)
   .replace(/(<meta (?:property="og:title"|name="twitter:title") content=")[^"]*(">)/g, `$1${escape(title)}$2`)
   .replace(/(<meta (?:name="description"|property="og:description"|name="twitter:description") content=")[^"]*(">)/g, `$1${escape(description)}$2`)
+  .replace(/(<meta (?:property="og:image"|name="twitter:image") content=")[^"]*(">)/g, `$1${escape(socialImageUrl)}$2`)
+  .replace(/(<meta (?:property="og:image:alt"|name="twitter:image:alt") content=")[^"]*(">)/g, `$1${escape(socialImage.alt)}$2`)
+  .replace(/(<meta property="og:image:width" content=")[^"]*(">)/, `$1${socialImage.width}$2`)
+  .replace(/(<meta property="og:image:height" content=")[^"]*(">)/, `$1${socialImage.height}$2`)
+  .replace(/(<meta property="og:image:type" content=")[^"]*(">)/, '$1image/jpeg$2')
   .replace(/(<h1 id="christmas-title">)[\s\S]*?(<\/h1>)/, `$1${escape(heading)}$2`)
   .replace(/(<p class="xmas-intro-lead">)[\s\S]*?(<\/p>)/, `$1${escape(lead)}$2`)
+  .replace(/<!-- christmas-hero-image:start -->[\s\S]*?<!-- christmas-hero-image:end -->/, `<!-- christmas-hero-image:start -->\n      <figure class="xmas-hero-media"><img id="xmas-hero-image" src="${escape(socialImage.image)}" alt="${escape(socialImage.alt)}" width="${socialImage.width}" height="${socialImage.height}" loading="eager" fetchpriority="high" decoding="async"></figure>\n      <!-- christmas-hero-image:end -->`)
   .replace(/<!-- christmas-summary:start -->[\s\S]*?<!-- christmas-summary:end -->/, `<!-- christmas-summary:start -->\n    <section class="xmas-wrap xmas-gift-guide" id="gift-guide" aria-labelledby="gift-guide-title">\n      <h2 id="gift-guide-title">크리스마스 쿠키 세트, 어떤 선물을 고를까요?</h2>\n      <ul>${summary.map(([purpose, products]) => `<li><strong>${escape(purpose)}</strong><span>${escape(products)}</span></li>`).join('')}</ul>\n    </section>\n    <!-- christmas-summary:end -->`)
   .replace(/<!-- christmas-faq:start -->[\s\S]*?<!-- christmas-faq:end -->/, `<!-- christmas-faq:start -->\n      ${faqs.map(([question, answer]) => `<details><summary>${escape(question)}</summary><p>${escape(answer)}</p></details>`).join('\n      ')}\n      <!-- christmas-faq:end -->`)
   .replace(/<!-- christmas-products:start -->[\s\S]*?<!-- christmas-products:end -->/, `<!-- christmas-products:start -->\n      ${cards}\n      <!-- christmas-products:end -->`)

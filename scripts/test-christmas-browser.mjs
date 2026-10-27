@@ -11,6 +11,7 @@ let playwright;
 try { playwright = require('playwright'); }
 catch { playwright = require(process.env.PLAYWRIGHT_MODULE_PATH || path.join(os.homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright')); }
 const catalog = JSON.parse(fs.readFileSync('data/christmas-products.json', 'utf8'));
+const { representative: thumbnail } = JSON.parse(fs.readFileSync('data/christmas-media.json', 'utf8'));
 const probe = http.createServer();
 await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
 const port = probe.address().port;
@@ -28,6 +29,19 @@ try {
   }
   browser = await playwright.chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
   const context = await browser.newContext({ viewport: { width: 390, height: 812 }, reducedMotion: 'reduce' });
+  const imageResponses = [];
+  for (const userAgent of ['Mozilla/5.0', 'Googlebot-Image/1.0', 'Yeti/1.1', 'bingbot/2.0', 'facebookexternalhit/1.1', 'Twitterbot/1.0']) {
+    const response = await context.request.get(base + thumbnail.image, { headers: { 'User-Agent': userAgent } });
+    assert.equal(response.status(), 200, `anonymous image GET: ${userAgent}`);
+    assert.equal(response.headers()['content-type'], 'image/jpeg');
+    assert.ok(!/noindex|noimageindex|none/i.test(response.headers()['x-robots-tag'] || ''));
+    assert.deepEqual(await response.body(), fs.readFileSync('.' + thumbnail.image));
+    imageResponses.push({ userAgent, status: response.status(), contentType: response.headers()['content-type'] });
+  }
+  const imageHead = await context.request.head(base + thumbnail.image);
+  assert.equal(imageHead.status(), 200); assert.equal(imageHead.headers()['content-type'], 'image/jpeg');
+  const robotsResponse = await context.request.get(base + '/robots.txt');
+  assert.equal(robotsResponse.status(), 200); assert.match(await robotsResponse.text(), /User-agent: \*\s+Allow: \//);
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     requestedUrls.push(decodeURIComponent(url.href));
@@ -144,6 +158,14 @@ try {
     await step(1);
     assert.equal(await page.locator('h1').textContent(), '2026 크리스마스 쿠키 세트·선물');
     assert.ok(await page.locator('.xmas-intro-lead').isVisible(), 'hero lead remains readable on mobile');
+    await page.waitForFunction(() => { const image = document.querySelector('#xmas-hero-image'); return image.complete && image.naturalWidth === 1200 && image.naturalHeight === 630; });
+    const heroImage = page.locator('#xmas-hero-image');
+    assert.ok(await heroImage.isVisible());
+    assert.equal(await heroImage.getAttribute('src'), thumbnail.image);
+    const heroRect = await heroImage.boundingBox();
+    assert.ok(heroRect.y >= 0 && heroRect.y + heroRect.height < height, `hero in initial viewport ${width}`);
+    assert.ok(Math.abs(heroRect.width / heroRect.height - 1200 / 630) < 0.04, 'photo ratio preserved');
+    for (const selector of ['meta[property="og:image"]', 'meta[name="twitter:image"]']) assert.equal(await page.locator(selector).getAttribute('content'), 'https://nothingmatters.co.kr' + thumbnail.image);
     assert.equal(await page.locator('#gift-guide li').count(), 4);
     const firstScreen = await page.evaluate(() => ({
       guideHeight: document.querySelector('#gift-guide').getBoundingClientRect().height,
@@ -214,6 +236,8 @@ try {
   const staticPage = await staticContext.newPage();
   await staticPage.goto(base + '/christmas/');
   assert.ok(await staticPage.locator('#gift-guide').isVisible());
+  assert.ok(await staticPage.locator('#xmas-hero-image').isVisible());
+  assert.equal(await staticPage.locator('#xmas-hero-image').getAttribute('src'), thumbnail.image);
   assert.equal(await staticPage.locator('.xmas-product').count(), 4);
   assert.ok((await staticPage.locator('noscript').textContent()).includes('카카오톡으로 상담'));
   for (const product of catalog.products) {
@@ -297,7 +321,7 @@ try {
   assert.deepEqual(errors, []); assert.deepEqual(missing, []);
   const evidence = {
     contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, compact products and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. Static seasonal summary precedes selection; Seoul/group guidance and 11 FAQs follow the workflow and work without JavaScript.',
-    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence,
+    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses,
     seo: { status: 'pass', evidence: 'Static seasonal summary and 11 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, first product visible in every initial viewport, analytics excludes query strings.' },
     accessibility: { status: 'pass', evidence: 'Skip link, first invalid field focus, labelled 44px+ quantity/photo controls, gallery Tab trap, arrow keys, Escape and restored opener focus. Reduced motion and no runtime exceptions.' },
     responsive: { status: 'pass', evidence: 'All three panels tested at 320/390/430/768/1024/1280/1440, one visible panel, no overflow; desktop 2-column summary sticky every step; mobile bottom CTA hides while input focused; resize during step 2 retains data.' },
