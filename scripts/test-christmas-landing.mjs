@@ -46,7 +46,28 @@ for(const p of catalog.products){
   const image=card.match(/<img\b[^>]*>/)[0];for(const attribute of ['width','height','alt','loading','decoding']) assert.ok(image.includes(`${attribute}="`));
   assert.ok(fs.statSync(path.join(root,p.image)).size<200*1024);assert.ok(card.includes('data-delta="-1"'));assert.ok(card.includes('data-delta="1"'));
 }
-assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','gift-guide','christmas-products','order-details','order-review','seoul-pickup','group-orders','faq']);
+assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','gift-guide','christmas-products','order-details','order-review','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
+const section=id=>html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)<\\/section>`))[1];
+const choice=section('gift-choice'), comparison=section('gift-comparison'), orderGuide=section('ordering-guide');
+for(const id of ['gift-choice','gift-comparison','ordering-guide'])assert.ok(html.indexOf(`id="${id}"`)>html.indexOf('id="order-review"'),'long guidance follows the order flow');
+assert.equal((choice.match(/<article>/g)||[]).length,4);
+for(const useCase of ['개인에게','연인·친구','크리스마스 파티 간식','회사·기관 단체 선물'])assert.ok(clean(choice).includes(useCase));
+const comparisonCards=[...comparison.matchAll(/<article class="xmas-comparison-card" data-compare-sku="([^"]+)"[\s\S]*?<\/article>/g)];
+assert.deepEqual(comparisonCards.map(card=>card[1]),catalog.products.map(p=>p.sku));
+for(const [index,card] of comparisonCards.entries()){
+  const p=catalog.products[index], text=clean(card[0]);
+  for(const value of [p.name,p.composition,`${p.price.toLocaleString('ko-KR')}원`,'포장 사진','선물 용도'])assert.ok(text.includes(value),`${p.sku}: ${value}`);
+}
+assert.match(clean(comparisonCards[1][0]),/2개를 함께 촬영.*단품 구성은 1개/);
+assert.match(clean(comparisonCards[2][0]),/손잡이 포장 실물 사진/);
+assert.match(clean(comparisonCards[3][0]),/선물 상자/);
+assert.match(clean(comparison),/별도 포장 요청은 가능 여부와 비용을 상담/);
+assert.equal((orderGuide.match(/<li>/g)||[]).length,4);
+for(const text of ['희망 수량','날짜와 시간','주문 마감일','택배 가능 여부','온라인 주문 신청은 현재 준비 중','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','카카오톡'])assert.ok(clean(orderGuide).includes(text));
+assert.doesNotMatch(choice+comparison+orderGuide,/아이싱|레시피|DIY|무료\s*배송|재고\s*\d|\d+%\s*할인/);
+assert.doesNotMatch(choice+comparison+orderGuide,/href="#/,'guidance must not insert fragment-history entries into the order flow');
+const visibleMain=clean(html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1].replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''));
+for(const keyword of ['크리스마스 쿠키','크리스마스 쿠키 세트','크리스마스 쿠키 선물세트','크리스마스 수제쿠키','크리스마스 쿠키 추천','크리스마스 쿠키 주문','크리스마스 쿠키 포장','크리스마스 쿠키 가격','크리스마스 답례품','크리스마스 기업 선물','서울 크리스마스 쿠키선물','크리스마스 파티 간식','어린이집 크리스마스 쿠키'])assert.ok(visibleMain.includes(keyword),`visible purchase intent: ${keyword}`);
 const summary=html.match(/<!-- christmas-summary:start -->([\s\S]*?)<!-- christmas-summary:end -->/)[1];
 assert.ok(html.indexOf('id="gift-guide"')<html.indexOf('id="christmas-order"'));
 assert.equal((summary.match(/<li>/g)||[]).length,4);
@@ -76,7 +97,8 @@ assert.deepEqual(list.itemListElement.map(n=>[n.item.sku,n.item.name,n.item.offe
 assert.deepEqual(list.itemListElement.map(n=>[n.item.description,n.item.image,n.item.offers.priceCurrency]),catalog.products.map(p=>[p.composition,`https://nothingmatters.co.kr${p.image}`,'KRW']));
 assert.doesNotMatch(JSON.stringify(list),/availability|shippingDetails|priceValidUntil|inventoryLevel|hasMerchantReturnPolicy/);
 const faqs=[...html.matchAll(/<details><summary>([^<]+)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)].map(m=>[clean(m[1]),clean(m[2])]);
-assert.equal(faqs.length,11);assert.equal(new Set(faqs.map(f=>f[0])).size,faqs.length);
+assert.equal(faqs.length,13);assert.equal(new Set(faqs.map(f=>f[0])).size,faqs.length);
+for(const question of ['개인 선물과 파티 간식은 어떻게 고르면 좋을까요?','크리스마스 쿠키 포장은 어떻게 확인하나요?'])assert.ok(faqs.some(f=>f[0]===question));
 for(const question of ['크리스마스 쿠키 세트에는 어떤 상품이 있나요?','브루키 2종 세트와 산타꾸러미는 어떻게 다른가요?','서울에서 크리스마스 쿠키 선물을 픽업할 수 있나요?','서울 크리스마스 기업행사 단체 주문도 가능한가요?','어린이집·유치원 크리스마스 간식으로 준비할 수 있나요?','크리스마스 쿠키는 언제까지 주문해야 하나요?','크리스마스 쿠키를 택배로 받을 수 있나요?','예약 없이 방문해도 구매할 수 있나요?'])assert.ok(faqs.some(f=>f[0]===question),question);
 assert.deepEqual(graph.find(n=>n['@type']==='FAQPage').mainEntity.map(n=>[n.name,n.acceptedAnswer.text]),faqs);
 for(const p of catalog.products)assert.ok(faqs[0][1].includes(`${p.name} ${p.price.toLocaleString('ko-KR')}원`));
@@ -94,11 +116,12 @@ assert.ok(read('sitemap.xml').includes(`<loc>https://nothingmatters.co.kr/christ
 const guidance=read('llms.txt').split('**Christmas / Holiday gifts**')[1].split('## Official channels')[0];
 for(const p of catalog.products) assert.ok(guidance.includes(p.name)&&guidance.includes(p.sku)&&guidance.includes(`${p.price.toLocaleString('ko-KR')}원`));
 for(const text of ['서울 크리스마스 기업행사','서울특별시 강서구 송정로 25 1층','No cookies are available for walk-in purchase','Christmas shipping eligibility'])assert.ok(guidance.includes(text));
-for(const source of ['index.html','corporate-gift/index.html','guides/corporate-event-cookie/index.html'])assert.equal((read(source).match(/href="\/christmas\/"/g)||[]).length,1,`${source}: one contextual seasonal link`);
+for(const id of ['gift-choice','gift-comparison','ordering-guide'])assert.ok(guidance.includes(`https://nothingmatters.co.kr/christmas/#${id}`));
+for(const source of ['index.html','corporate-gift/index.html','guides/corporate-event-cookie/index.html','small-gift/index.html','bulk/index.html','guides/index.html'])assert.equal((read(source).match(/href="\/christmas\/"/g)||[]).length,1,`${source}: one contextual seasonal link`);
 for(const link of html.matchAll(/href="([^"]+)"/g)){
  const url=new URL(link[1],'https://nothingmatters.co.kr/christmas/');if(url.origin!=='https://nothingmatters.co.kr') continue;
  const file=url.pathname==='/'?'index.html':url.pathname.endsWith('/')?url.pathname.slice(1)+'index.html':url.pathname.slice(1);
  assert.ok(fs.existsSync(path.join(root,file)),`missing link ${url}`);if(url.hash)assert.ok(read(file).includes(`id="${url.hash.slice(1)}"`),`missing anchor ${url}`);
 }
 const js=read('christmas/christmas-order.js');assert.doesNotMatch(js,/localStorage|sessionStorage|gtag\(|URLSearchParams/);
-console.log('Christmas landing PASS: seasonal meta/hero, compact static summary, Seoul/group guidance, 11 matching FAQs, unchanged four-product catalog/photos/prices, independent page date, schema/llms/internal links and gated ordering');
+console.log('Christmas landing PASS: 13 purchase intents in static content, recipient advice, four catalog comparisons, packaging/order guidance, 13 matching FAQs, six contextual inbound links, unchanged catalog/photos/prices and gated ordering');

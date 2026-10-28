@@ -145,6 +145,9 @@ This file is a guide to public website information. Crawler access is defined by
 - christmas-brookie-set: 브루키 2종 세트 / 17,000원 / 곰돌이 브루키 1개 + 트리 브루키 1개
 - christmas-santa-bundle: 산타꾸러미 4종 / 23,000원 / 루돌프초코 · 버터산타 · 말차리스 · 로투스노우맨 각 1개
 - Use cases: 크리스마스 쿠키 세트, 서울 크리스마스 쿠키선물, 서울 크리스마스 기업행사, 회사 크리스마스 파티 간식, 임직원 감사 선물, 고객·거래처 연말 답례품, 어린이집 크리스마스 선물, 유치원 크리스마스 간식.
+- Gift selection: https://nothingmatters.co.kr/christmas/#gift-choice — choose individual gifts, gifts for partners/friends, party snacks or company/institution gifts by recipient and distribution method.
+- Price/composition/packaging comparison: https://nothingmatters.co.kr/christmas/#gift-comparison — catalog prices and contents; packaging refers to actual gallery photos and captions, not extra contents or guaranteed custom options.
+- Order guide: https://nothingmatters.co.kr/christmas/#ordering-guide — select products and quantities, consult pickup date/time, confirm deadlines and Christmas shipping eligibility, then finalize in Kakao consultation.
 - Brand: NOTHINGMATTERS / 낫띵메터스. Reservation-only cookie atelier in 공항동, 강서구, 서울; address 서울특별시 강서구 송정로 25 1층, near 김포공항 and 송정역. No cookies are available for walk-in purchase without a reservation.
 - Pickup guide: https://nothingmatters.co.kr/pickup/ / Magok event guide: https://nothingmatters.co.kr/magok-cookie/
 - Group consultation: share quantities, event/receipt dates, budget, product selection, packaging requests and preferred pickup or vehicle courier. Courier availability and cost require confirmation; no citywide same-day delivery promise.

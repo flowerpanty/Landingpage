@@ -824,12 +824,7 @@ assert.equal(
   "handoff source files must not be discovered as public pages"
 );
 assert.match(fs.readFileSync(path.join(ROOT, ".gitignore"), "utf8"), /^_handoff\/$/m, "handoff files must stay out of deploy commits");
-assert.match(
-  sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/guides\/<\/loc>\s*<lastmod>2026-09-28<\/lastmod>/,
-  "guides sitemap lastmod should reflect the updated guide directory"
-);
-for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
+for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/", "/guides/corporate-event-cookie/", "/guides/dessert-gift-set/"]) {
   assert.match(
     sitemap,
     new RegExp(`<loc>${SITE_URL.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}${pathname.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}<\\/loc>\\s*<lastmod>${registryEntries.get(normalizePathname(pathname)).lastmod}<\\/lastmod>`),

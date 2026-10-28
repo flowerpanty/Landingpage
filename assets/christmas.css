@@ -143,6 +143,23 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-copy-fallback { width: 100%; min-height: 100px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); background: var(--paper); font-size: 14px; }
 .xmas-section { padding-block: 36px; border-top: 1px solid var(--line); }
 .xmas-section > p:not(.xmas-eyebrow) { font-size: 13px; margin-top: 12px; }
+.xmas-advice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 36px; margin-top: 24px; }
+.xmas-advice-grid article { min-width: 0; border-top: 2px solid var(--green); padding-top: 14px; }
+.xmas-advice-grid h3, .xmas-order-guide-list h3 { font-size: 16px; }
+.xmas-advice-grid p, .xmas-order-guide-list p { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.xmas-comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 24px; }
+.xmas-comparison-card { min-width: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); padding: 20px; }
+.xmas-comparison-price { margin-top: 5px; font-size: 20px; font-weight: 800; color: var(--green); }
+.xmas-comparison-card dl { margin-top: 16px; font-size: 13px; line-height: 1.65; }
+.xmas-comparison-card dl > div + div { margin-top: 12px; }
+.xmas-comparison-card dt { color: var(--green); font-size: 11px; font-weight: 700; }
+.xmas-comparison-card dd { margin: 4px 0 0; overflow-wrap: anywhere; word-break: keep-all; }
+.xmas-order-guide-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 40px; margin: 24px 0 8px; padding-left: 24px; }
+.xmas-order-guide-list li { min-width: 0; padding-left: 4px; }
+.xmas-order-guide-list li::marker { color: var(--green); font-weight: 800; }
+@media (min-width: 1200px) {
+  .xmas-comparison-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 .xmas-group-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 20px; }
 .xmas-group-columns h3 { font-size: 16px; }
 .xmas-group-columns p { font-size: 13px; margin-top: 8px; }
@@ -238,6 +255,8 @@ body.xmas-gallery-open { overflow: hidden; }
   .xmas-consult-actions .xmas-button { flex: 1 1 auto; font-size: 12px; padding-inline: 10px; }
   .xmas-review-details { grid-template-columns: 80px minmax(0, 1fr); }
   .xmas-section { padding-block: 28px; }
+  .xmas-advice-grid, .xmas-comparison-grid, .xmas-order-guide-list { grid-template-columns: 1fr; }
+  .xmas-comparison-card { padding: 16px; }
   .xmas-group-columns { grid-template-columns: 1fr; gap: 20px; }
   #xmas-gallery { inset: 0; width: 100%; height: 100dvh; margin: 0; border-radius: 0; }
   .xmas-gallery-shell { padding: max(12px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom)); gap: 12px; }
