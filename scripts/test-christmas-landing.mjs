@@ -7,9 +7,11 @@ const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const html=read('christmas/index.html'), catalog=JSON.parse(read('data/christmas-products.json'));
 const clean=text=>text.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
 assert.equal((html.match(/<h1\b/g)||[]).length,1);
-const title='2026 크리스마스 쿠키 세트·서울 기업행사 선물 | 낫띵메터스';
-const description='2026 크리스마스 쿠키 세트와 서울 크리스마스 쿠키선물을 준비하세요. 곰돌이·트리 브루키 2종 세트, 산타꾸러미 4종부터 기업행사·어린이집 연말 간식까지. 서울 강서구 예약 픽업 및 단체주문 상담 안내.';
+const title='2026 크리스마스 쿠키 세트·수제쿠키 선물 | 낫띵메터스';
+const description=`2026 크리스마스 수제쿠키 선물세트 4종. ${catalog.products.map(p=>`${p.name} ${p.price.toLocaleString('ko-KR')}원`).join(', ')}. 서울 강서구 예약 픽업과 기업행사·어린이집 단체주문 상담을 안내합니다.`;
 assert.equal(html.match(/<title>([^<]+)<\/title>/)[1],title);
+assert.equal((html.match(/<title>/g)||[]).length,1);
+assert.match(html,/<meta name="robots" content="index,follow/);
 assert.equal(html.match(/<h1 id="christmas-title">([^<]+)<\/h1>/)[1],'2026 크리스마스 쿠키 세트·선물');
 for(const name of ['og:title','twitter:title'])assert.ok(html.includes(`="${name}" content="${title}"`));
 for(const name of ['description','og:description','twitter:description'])assert.ok(html.includes(`="${name}" content="${description}"`));
@@ -67,14 +69,25 @@ for(const text of ['희망 수량','날짜와 시간','주문 마감일','택배
 assert.doesNotMatch(choice+comparison+orderGuide,/아이싱|레시피|DIY|무료\s*배송|재고\s*\d|\d+%\s*할인/);
 assert.doesNotMatch(choice+comparison+orderGuide,/href="#/,'guidance must not insert fragment-history entries into the order flow');
 const visibleMain=clean(html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1].replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''));
-for(const keyword of ['크리스마스 쿠키','크리스마스 쿠키 세트','크리스마스 쿠키 선물세트','크리스마스 수제쿠키','크리스마스 쿠키 추천','크리스마스 쿠키 주문','크리스마스 쿠키 포장','크리스마스 쿠키 가격','크리스마스 답례품','크리스마스 기업 선물','서울 크리스마스 쿠키선물','크리스마스 파티 간식','어린이집 크리스마스 쿠키'])assert.ok(visibleMain.includes(keyword),`visible purchase intent: ${keyword}`);
+for(const keyword of ['크리스마스 쿠키','크리스마스 쿠키 세트','크리스마스 쿠키 선물세트','크리스마스 수제쿠키','크리스마스 쿠키 추천','크리스마스 쿠키 주문','크리스마스 쿠키 포장','크리스마스 쿠키 가격','크리스마스 답례품','크리스마스 기업 선물','서울 크리스마스 쿠키 선물','크리스마스 파티 간식','어린이집 크리스마스 쿠키','크리스마스 단체 쿠키','산타 쿠키 선물','크리스마스 브루키','크리스마스 쿠키 2종 세트','김포공항 근처 크리스마스 선물'])assert.ok(visibleMain.includes(keyword),`visible purchase intent: ${keyword}`);
 const summary=html.match(/<!-- christmas-summary:start -->([\s\S]*?)<!-- christmas-summary:end -->/)[1];
 assert.ok(html.indexOf('id="gift-guide"')<html.indexOf('id="christmas-order"'));
-assert.equal((summary.match(/<li>/g)||[]).length,4);
-for(const p of catalog.products)assert.ok(summary.includes(p.name));
-assert.match(summary,/수량·예산·수령일 상담/);
+assert.equal((summary.match(/<li\b/g)||[]).length,4);
+for(const p of catalog.products){
+  const item=summary.match(new RegExp(`<li data-summary-sku="${p.sku}">([\\s\\S]*?)</li>`))[1];
+  assert.ok(item.includes(p.name)&&item.includes(`${p.price.toLocaleString('ko-KR')}원`),'top answers use catalog names and prices');
+}
+const lead=clean(html.match(/<p class="xmas-intro-lead">([\s\S]*?)<\/p>/)[1]);
+for(const text of ['낫띵메터스','크리스마스 수제쿠키 4종','서울 강서구 공항동','사전 예약 픽업','어린이집','수량·일정'])assert.ok(lead.includes(text),`concise static hero: ${text}`);
+assert.ok(lead.length<150,'hero summary stays compact');
+assert.match(clean(choice),/쿠키 한 개 선물과 세트 선물 중 무엇을 고르면/);
+assert.match(clean(comparison),/크리스마스 쿠키 2종 세트와 4종 세트는 무엇이 다른가요/);
+assert.match(clean(orderGuide),/크리스마스 전에 받으려면 언제 예약해야 하나요/);
 assert.ok(html.indexOf('id="seoul-pickup"')>html.indexOf('id="order-review"'));
-for(const text of ['서울 크리스마스 쿠키선물, 예약 픽업으로 준비하세요','서울 크리스마스 기업행사·연말 단체 간식','서울특별시 강서구 송정로 25 1층','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','김포공항·송정역','희망 수량','행사일·수령 희망일','예산','상품 구성','포장 요청','픽업 또는 차량 퀵 희망 여부'])assert.ok(html.includes(text),text);
+for(const text of ['서울에서 크리스마스 수제쿠키를 예약 픽업할 수 있나요?','서울 크리스마스 기업행사·연말 단체 간식','기업행사·어린이집 단체주문은 어떻게 상담하나요?','서울특별시 강서구 송정로 25 1층','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','김포공항·송정역','희망 수량','행사일·수령 희망일','예산','상품 구성','포장 요청','픽업 또는 차량 퀵 희망 여부'])assert.ok(html.includes(text),text);
+const consult=section('christmas-products').match(/<a class="xmas-product-consult"[^>]*>[\s\S]*?<\/a>/)[0];
+for(const text of ['href="https://pf.kakao.com/_QdCaK/chat"','target="_blank"','rel="noopener noreferrer"','data-analytics-label="christmas-products-consult"','카카오톡 주문 상담'])assert.ok(consult.includes(text));
+assert.ok(section('christmas-products').indexOf('xmas-product-consult')<section('christmas-products').indexOf('class="xmas-products"'),'consultation is next to selection, not after all cards');
 for(const href of ['/pickup/','/magok-cookie/','/corporate-gift/','/guides/corporate-event-cookie/','/guides/teacher-snack-gift/'])assert.ok(html.includes(`href="${href}"`));
 assert.deepEqual([...html.matchAll(/data-order-step="(\d)"/g)].map(m=>m[1]),['1','2','3']);
 assert.equal((html.match(/data-step-link="/g)||[]).length,3);
@@ -117,11 +130,16 @@ const guidance=read('llms.txt').split('**Christmas / Holiday gifts**')[1].split(
 for(const p of catalog.products) assert.ok(guidance.includes(p.name)&&guidance.includes(p.sku)&&guidance.includes(`${p.price.toLocaleString('ko-KR')}원`));
 for(const text of ['서울 크리스마스 기업행사','서울특별시 강서구 송정로 25 1층','No cookies are available for walk-in purchase','Christmas shipping eligibility'])assert.ok(guidance.includes(text));
 for(const id of ['gift-choice','gift-comparison','ordering-guide'])assert.ok(guidance.includes(`https://nothingmatters.co.kr/christmas/#${id}`));
-for(const source of ['index.html','corporate-gift/index.html','guides/corporate-event-cookie/index.html','small-gift/index.html','bulk/index.html','guides/index.html'])assert.equal((read(source).match(/href="\/christmas\/"/g)||[]).length,1,`${source}: one contextual seasonal link`);
+for(const [source,anchor] of [['index.html','크리스마스 쿠키 세트 4종 보기'],['corporate-gift/index.html','서울 크리스마스 기업행사 쿠키'],['guides/corporate-event-cookie/index.html','서울 크리스마스 기업행사 쿠키'],['small-gift/index.html','크리스마스 답례품·수제쿠키 선물'],['bulk/index.html','크리스마스 답례품·수제쿠키 선물'],['guides/index.html','크리스마스 쿠키 세트 4종 보기']]){
+  assert.equal((read(source).match(/href="\/christmas\/"/g)||[]).length,1,`${source}: one contextual seasonal link`);
+  assert.ok(read(source).includes(`href="/christmas/">${anchor}`),`${source}: relevant seasonal anchor`);
+}
+const notice=JSON.parse(read('data/notices.json')).notices.find(item=>item.slug==='christmas-2026');
+assert.ok(notice.content.some(block=>block.items?.some(item=>new URL(item.href,'https://nothingmatters.co.kr').href==='https://nothingmatters.co.kr/christmas/')),'existing official notice links to the canonical');
 for(const link of html.matchAll(/href="([^"]+)"/g)){
  const url=new URL(link[1],'https://nothingmatters.co.kr/christmas/');if(url.origin!=='https://nothingmatters.co.kr') continue;
  const file=url.pathname==='/'?'index.html':url.pathname.endsWith('/')?url.pathname.slice(1)+'index.html':url.pathname.slice(1);
  assert.ok(fs.existsSync(path.join(root,file)),`missing link ${url}`);if(url.hash)assert.ok(read(file).includes(`id="${url.hash.slice(1)}"`),`missing anchor ${url}`);
 }
 const js=read('christmas/christmas-order.js');assert.doesNotMatch(js,/localStorage|sessionStorage|gtag\(|URLSearchParams/);
-console.log('Christmas landing PASS: 13 purchase intents in static content, recipient advice, four catalog comparisons, packaging/order guidance, 13 matching FAQs, six contextual inbound links, unchanged catalog/photos/prices and gated ordering');
+console.log('Christmas landing PASS: focused gift/set metadata, catalog-backed first-screen prices, direct purchase answers and Kakao CTA, 18 natural purchase intents, 13 matching FAQs, six focused inbound links, preserved catalog/photos/order state and schema dates');

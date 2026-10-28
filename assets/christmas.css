@@ -60,6 +60,10 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 #xmas-order-form { min-width: 0; }
 .xmas-section-heading { margin-bottom: 18px; }
 .xmas-section-heading p { color: var(--muted); font-size: 13px; margin-top: 6px; }
+.xmas-product-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.xmas-product-heading p { font-size: 12px; }
+.xmas-product-consult { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-height: 44px; padding: 7px 10px; border: 1px solid var(--green); border-radius: 4px; color: var(--green); font-size: 12px; font-weight: 700; text-decoration: none; }
+.xmas-product-consult:hover { background: #e9eee5; }
 .xmas-products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .xmas-product { min-width: 0; display: grid; grid-template-columns: 104px minmax(0, 1fr); grid-template-rows: 1fr auto auto; gap: 8px 14px; padding: 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; }
 .xmas-product figure { grid-row: 1 / 4; min-width: 0; }
@@ -240,6 +244,8 @@ body.xmas-gallery-open { overflow: hidden; }
   .xmas-steps small { display: none; }
   .xmas-step-toolbar { min-height: 38px; padding-block: 0; }
   .xmas-section-heading { margin-bottom: 14px; }
+  .xmas-product-heading h2 { font-size: 19px; }
+  .xmas-product-heading p { display: none; }
   h2 { font-size: 21px; }
   .xmas-products { grid-template-columns: 1fr; gap: 12px; }
   .xmas-product { grid-template-columns: 84px minmax(0, 1fr); padding: 12px; gap: 6px 14px; }
@@ -262,6 +268,13 @@ body.xmas-gallery-open { overflow: hidden; }
   .xmas-gallery-shell { padding: max(12px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom)); gap: 12px; }
   .xmas-gallery-header h2 { font-size: 18px; }
   .xmas-gallery-controls { gap: 12px; }
+}
+@media (max-width: 359px) {
+  .xmas-header { min-height: 60px; }
+  .xmas-intro { padding-block: 8px; }
+  .xmas-gift-guide { padding-bottom: 10px; }
+  .xmas-product-heading h2 { font-size: 18px; }
+  .xmas-product-consult { padding-inline: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }

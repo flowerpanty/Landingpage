@@ -29,7 +29,24 @@ try {
   }
   browser = await playwright.chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
   const context = await browser.newContext({ viewport: { width: 390, height: 812 }, reducedMotion: 'reduce' });
-  const imageResponses = [];
+  await context.addInitScript(() => {
+    window.__xmasVitals = { lcp: null, cls: 0 };
+    let sessionStart = 0, lastShift = 0, sessionValue = 0;
+    new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) window.__xmasVitals.lcp = Math.round(entry.startTime);
+    }).observe({type:'largest-contentful-paint', buffered:true});
+    new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) {
+        if (entry.hadRecentInput) continue;
+        if (entry.startTime - lastShift > 1000 || entry.startTime - sessionStart > 5000) {
+          sessionStart = entry.startTime; sessionValue = 0;
+        }
+        sessionValue += entry.value; lastShift = entry.startTime;
+        window.__xmasVitals.cls = Math.max(window.__xmasVitals.cls, sessionValue);
+      }
+    }).observe({type:'layout-shift', buffered:true});
+  });
+  const imageResponses = [], crawlerResponses = [], labVitals = [];
   for (const userAgent of ['Mozilla/5.0', 'Googlebot-Image/1.0', 'Yeti/1.1', 'bingbot/2.0', 'facebookexternalhit/1.1', 'Twitterbot/1.0']) {
     const response = await context.request.get(base + thumbnail.image, { headers: { 'User-Agent': userAgent } });
     assert.equal(response.status(), 200, `anonymous image GET: ${userAgent}`);
@@ -38,6 +55,18 @@ try {
     assert.deepEqual(await response.body(), fs.readFileSync('.' + thumbnail.image));
     imageResponses.push({ userAgent, status: response.status(), contentType: response.headers()['content-type'] });
   }
+  for (const userAgent of ['Googlebot/2.1', 'Yeti/1.1']) {
+    const response = await context.request.get(base + '/christmas/', {headers:{'User-Agent':userAgent}});
+    assert.equal(response.status(), 200);
+    assert.match(response.headers()['content-type'], /text\/html/);
+    assert.ok(!/noindex|none/i.test(response.headers()['x-robots-tag'] || ''));
+    const source = await response.text();
+    assert.match(source, /<meta name="robots" content="index,follow/);
+    assert.match(source, /rel="canonical" href="https:\/\/nothingmatters.co.kr\/christmas\/"/);
+    for (const product of catalog.products) assert.ok(source.includes(product.name) && source.includes(product.price.toLocaleString('ko-KR')+'원'));
+    assert.equal((source.match(/<h1\b/g)||[]).length, 1);
+    crawlerResponses.push({userAgent, status:response.status(), contentType:response.headers()['content-type']});
+  }
   const imageHead = await context.request.head(base + thumbnail.image);
   assert.equal(imageHead.status(), 200); assert.equal(imageHead.headers()['content-type'], 'image/jpeg');
   const robotsResponse = await context.request.get(base + '/robots.txt');
@@ -45,6 +74,7 @@ try {
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     requestedUrls.push(decodeURIComponent(url.href));
+    if (url.href === 'https://pf.kakao.com/_QdCaK/chat') return route.fulfill({contentType:'text/html', body:'<!doctype html><title>LOCAL MOCK 상담</title>'});
     if (url.origin !== base) return route.abort();
     if (url.pathname === '/api/christmas-order-status' && mode !== 'disabled') {
       if (mode === 'status-fail') return route.abort();
@@ -82,6 +112,18 @@ try {
     else await page.locator('#xmas-next').click();
   };
   async function focusHeading(number) { await page.locator(['#products-title', '#details-title', '#review-title'][number - 1]).focus(); }
+  async function assertProductConsultation() {
+    const link = page.locator('.xmas-product-consult');
+    assert.equal(await link.getAttribute('href'), 'https://pf.kakao.com/_QdCaK/chat');
+    assert.equal(await link.getAttribute('target'), '_blank');
+    assert.equal(await link.getAttribute('rel'), 'noopener noreferrer');
+    const box = await link.boundingBox(); assert.ok(box.height >= 44 && box.width >= 44);
+    const opened = page.waitForEvent('popup'); await link.click();
+    const popup = await opened; await popup.waitForLoadState('domcontentloaded');
+    assert.equal(popup.url(), 'https://pf.kakao.com/_QdCaK/chat', 'consultation has no quantity or private URL parameters');
+    assert.match(await popup.title(), /LOCAL MOCK/); await popup.close();
+    await step(1);
+  }
   async function fillCustomer() {
     await page.locator('#xmas-date').fill('2026-12-20');
     await page.locator('#xmas-time').fill('14:30');
@@ -167,6 +209,11 @@ try {
     assert.ok(Math.abs(heroRect.width / heroRect.height - 1200 / 630) < 0.04, 'photo ratio preserved');
     for (const selector of ['meta[property="og:image"]', 'meta[name="twitter:image"]']) assert.equal(await page.locator(selector).getAttribute('content'), 'https://nothingmatters.co.kr' + thumbnail.image);
     assert.equal(await page.locator('#gift-guide li').count(), 4);
+    for (const product of catalog.products) {
+      const summary = page.locator(`[data-summary-sku="${product.sku}"]`);
+      assert.ok((await summary.textContent()).includes(product.name));
+      assert.ok((await summary.textContent()).includes(product.price.toLocaleString('ko-KR')+'원'));
+    }
     assert.equal(await page.locator('#gift-choice article').count(), 4);
     assert.equal(await page.locator('#gift-comparison [data-compare-sku]').count(), 4);
     assert.equal(await page.locator('#ordering-guide li').count(), 4);
@@ -185,6 +232,27 @@ try {
     }));
     assert.ok(firstScreen.guideHeight <= 180, `compact summary at ${width}: ${firstScreen.guideHeight}`);
     assert.ok(firstScreen.photoTop + 44 < firstScreen.bottom, `product photo remains reachable in first viewport at ${width}: ${JSON.stringify(firstScreen)}`);
+    const consultRect = await page.locator('.xmas-product-consult').boundingBox();
+    assert.ok(consultRect.y >= 0 && consultRect.y + consultRect.height <= firstScreen.bottom, 'product consultation is above the mobile sticky CTA');
+    if (width === 320) {
+      await page.setViewportSize({width:320,height:667});
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const shortScreen = await page.evaluate(() => ({
+        photoTop: document.querySelector('[data-gallery]').getBoundingClientRect().top,
+        bottom: document.querySelector('.xmas-sticky').getBoundingClientRect().top,
+        overflow: document.documentElement.scrollWidth > innerWidth
+      }));
+      assert.ok(shortScreen.photoTop + 44 < shortScreen.bottom, `short mobile first-screen product access: ${JSON.stringify(shortScreen)}`);
+      assert.equal(shortScreen.overflow, false);
+      firstScreen.shortViewport = {viewport:'320x667', ...shortScreen};
+      await page.screenshot({path:`${artifactDir}/320x667-first-screen.png`});
+      await page.setViewportSize({width,height});
+    }
+    await page.waitForFunction(() => window.__xmasVitals.lcp !== null);
+    await pause(250);
+    const vitals = await page.evaluate(() => window.__xmasVitals);
+    assert.ok(vitals.cls <= 0.1, `initial layout shifts ${width}: ${vitals.cls}`);
+    labVitals.push({width, ...vitals, profile:'Local Chromium, default CPU/network, external scripts blocked; viewport-based lab observation, not mobile field data'});
     if (width === 320) {
       await page.keyboard.press('Tab'); assert.equal(await page.locator(':focus').getAttribute('data-nm-skip-link'), '');
       await page.keyboard.press('Enter'); assert.equal(await page.locator(':focus').getAttribute('id'), 'main-content');
@@ -230,6 +298,12 @@ try {
     await assertLayout(width, 3); await assertPrivacy(); await page.screenshot({ path: `${artifactDir}/${width}-step-3.png` });
     await page.goBack(); await step(2); await page.goForward(); await step(3);
     await page.locator('[data-edit-step="1"]').click(); await step(1); await qty(0, '2'); await focusHeading(1);
+    if ([390,1440].includes(width)) {
+      await assertProductConsultation();
+      assert.equal(await page.locator('#xmas-phone').inputValue(), '010-0000-0000');
+      assert.equal(await page.locator('.xmas-product input').first().inputValue(), '2');
+      await assertPrivacy();
+    }
     await next(); await step(2); await next(); await step(3); assert.equal(await page.locator('#xmas-review-total').textContent(), '57,000원');
     await page.locator('#xmas-submit').evaluate(button => button.form.requestSubmit()); assert.equal(requests.length, 0, 'real capability blocks saves');
     if (width === 390) {
@@ -258,6 +332,7 @@ try {
   const staticPage = await staticContext.newPage();
   await staticPage.goto(base + '/christmas/');
   assert.ok(await staticPage.locator('#gift-guide').isVisible());
+  assert.ok(await staticPage.locator('.xmas-product-consult').isVisible());
   assert.ok(await staticPage.locator('#xmas-hero-image').isVisible());
   assert.equal(await staticPage.locator('#xmas-hero-image').getAttribute('src'), thumbnail.image);
   assert.equal(await staticPage.locator('.xmas-product').count(), 4);
@@ -357,7 +432,7 @@ try {
   assert.deepEqual(errors, []); assert.deepEqual(missing, []);
   const evidence = {
     contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, compact products and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. Static seasonal summary precedes selection; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
-    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses,
+    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals,
     seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, first product visible in every initial viewport, analytics excludes query strings.' },
     accessibility: { status: 'pass', evidence: 'Skip link, first invalid field focus, labelled 44px+ quantity/photo controls, gallery Tab trap, arrow keys, Escape and restored opener focus. Reduced motion and no runtime exceptions.' },
     responsive: { status: 'pass', evidence: 'All three panels tested at 320/390/430/768/1024/1280/1440, one visible panel, no overflow; desktop 2-column summary sticky every step; mobile bottom CTA hides while input focused; resize during step 2 retains data.' },
@@ -371,5 +446,5 @@ try {
     }
   };
   fs.writeFileSync(`${artifactDir}/evidence.json`, JSON.stringify(evidence, null, 2) + '\n');
-  console.log('Christmas 3-step browser PASS: seven responsive widths, desktop/mobile full flow, retained data/back/forward/resize, gallery/focus, totals/validation/privacy, local mock success/duplicates/errors. Static SEO/13 FAQ schema parity without JS, first-viewport product access and mobile CTA clearance. No production writes.');
+  console.log('Christmas 3-step browser PASS: seven widths, unchanged order/gallery/calculation/privacy flow, catalog-backed static summary and 13 FAQs, product consultation opens exact mocked Kakao URL and preserves data, Googlebot/Yeti HTML 200, first-screen CTA clearance. Local LCP/CLS observations saved; no production writes.');
 } finally { await browser?.close(); server.kill('SIGTERM'); }
