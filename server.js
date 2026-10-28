@@ -11,6 +11,7 @@ const { renderGimpoBoardPage } = require("./lib/gimpo-board-html.js");
 const { createOrderApiHandler } = require("./lib/order-api.js");
 const { createKakaoQuickCallbackHandler } = require("./lib/kakao-quick-callback.js");
 const { createKakaoQuickApiHandler } = require("./lib/kakao-quick-api.js");
+const { buildChristmasSearchAudit, unavailableAudit, errorStatus } = require("./lib/christmas-search-audit.js");
 
 const ROOT = process.cwd();
 const noticeServiceReady = import('./lib/notice-admin.mjs').then(({ createNoticeService }) => createNoticeService({ root: ROOT }));
@@ -1379,18 +1380,25 @@ function parseBasicAuthHeader(headerValue) {
 
 function isDashboardAuthorized(req, dashboardConfig) {
   const { dashboardUsername, dashboardPassword } = dashboardConfig;
-  if (!dashboardUsername && !dashboardPassword) return true;
+  if (!dashboardUsername || !dashboardPassword) return false;
   const credentials = parseBasicAuthHeader(req.headers.authorization);
+  const equal = (left, right) => crypto.timingSafeEqual(
+    crypto.createHash("sha256").update(left).digest(),
+    crypto.createHash("sha256").update(right).digest()
+  );
   return (
     credentials &&
-    credentials.username === dashboardUsername &&
-    credentials.password === dashboardPassword
+    equal(credentials.username, dashboardUsername) &&
+    equal(credentials.password, dashboardPassword)
   );
 }
 
 function requestDashboardAuth(res) {
   res.writeHead(401, {
     "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Robots-Tag": "noindex, nofollow",
+    Vary: "Authorization",
     "WWW-Authenticate": 'Basic realm="nothingmatters dashboard"'
   });
   res.end(JSON.stringify({ error: "dashboard_auth_required" }));
@@ -1428,6 +1436,7 @@ async function getGoogleAccessToken(serviceAccount) {
   });
 
   const response = await fetch(GOOGLE_TOKEN_URL, {
+    signal: AbortSignal.timeout(15000),
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
@@ -1436,8 +1445,7 @@ async function getGoogleAccessToken(serviceAccount) {
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(`Google access token 발급 실패: ${response.status} ${message}`);
+    throw Object.assign(new Error("Google 인증 요청 실패"), { status: response.status });
   }
 
   const data = await response.json();
@@ -1483,8 +1491,7 @@ async function fetchGaReport(accessToken, propertyId, requestBody) {
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(`GA4 보고서 조회 실패: ${response.status} ${message}`);
+    throw Object.assign(new Error("GA4 보고서 조회 실패"), { status: response.status });
   }
 
   return response.json();
@@ -1496,6 +1503,7 @@ async function fetchSearchConsoleReport(accessToken, siteUrl, requestBody) {
     `${SEARCH_CONSOLE_API_BASE}/sites/${encodedSiteUrl}/searchAnalytics/query`,
     {
       method: "POST",
+      signal: AbortSignal.timeout(15000),
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json"
@@ -1505,8 +1513,7 @@ async function fetchSearchConsoleReport(accessToken, siteUrl, requestBody) {
   );
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(`Search Console 조회 실패: ${response.status} ${message}`);
+    throw Object.assign(new Error("Search Console 조회 실패"), { status: response.status });
   }
 
   return response.json();
@@ -2058,8 +2065,34 @@ async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
   } catch (error) {
     sendJson(res, 502, {
       error: "dashboard_fetch_failed",
-      message: error.message
+      message: "Google 성과 자료를 가져오지 못했습니다. 서버 설정과 서비스 계정 권한을 확인해 주세요."
     });
+  }
+}
+
+async function handleChristmasSearchAudit(req, res, requestUrl, config) {
+  // No caller-supplied page/date/filter can turn this into a site-wide query endpoint.
+  if ([...requestUrl.searchParams].length) {
+    sendJson(res, 400, { error: "invalid_query", message: "이 분석은 크리스마스 canonical의 28일·90일 기간으로 고정됩니다." });
+    return;
+  }
+  const missing = [];
+  if (!config.serviceAccount?.client_email || !config.serviceAccount?.private_key || config.configError) {
+    missing.push("GOOGLE_SERVICE_ACCOUNT_JSON 또는 GOOGLE_SERVICE_ACCOUNT_JSON_BASE64");
+  }
+  if (!config.searchConsoleSiteUrl) missing.push("SEARCH_CONSOLE_SITE_URL");
+  if (missing.length) {
+    sendJson(res, 503, unavailableAudit("not_configured", missing));
+    return;
+  }
+  try {
+    const accessToken = await getGoogleAccessToken(config.serviceAccount);
+    const payload = await buildChristmasSearchAudit({
+      requestReport: body => fetchSearchConsoleReport(accessToken, config.searchConsoleSiteUrl, body)
+    });
+    sendJson(res, 200, payload);
+  } catch (error) {
+    sendJson(res, 502, unavailableAudit(errorStatus(error)));
   }
 }
 
@@ -2168,6 +2201,40 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Quick's existing public lookup routes have already returned above.
+  // Use the same decoded/normalized path as static resolution to close encoded aliases.
+  if (/^\/(?:dashboard|api\/dashboard)(?:\/|$)/.test(quickPath)) {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.setHeader("Vary", "Authorization");
+    if (!dashboardConfig.dashboardUsername || !dashboardConfig.dashboardPassword) {
+      req.resume();
+      sendJson(res, 503, { error: "dashboard_auth_not_configured", message: "관리자 인증 설정 전에는 대시보드와 성과 API를 사용할 수 없습니다." });
+      return;
+    }
+    if (!isDashboardAuthorized(req, dashboardConfig)) {
+      req.resume(); requestDashboardAuth(res); return;
+    }
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      req.resume(); res.setHeader("Allow", "GET, HEAD");
+      sendJson(res, 405, { error: "method_not_allowed" }); return;
+    }
+    if (quickPath === "/api/dashboard/christmas-search") {
+      if (req.method === "HEAD") { res.writeHead(200); res.end(); return; }
+      await handleChristmasSearchAudit(req, res, requestUrl, dashboardConfig); return;
+    }
+    if (quickPath === "/api/dashboard/summary") {
+      if (req.method === "HEAD") { res.writeHead(200); res.end(); return; }
+      await handleDashboardSummary(req, res, requestUrl, dashboardConfig); return;
+    }
+    if (["/dashboard", "/dashboard/", "/dashboard/index.html"].includes(quickPath)) {
+      // Avoid conditional/static public caching of an authenticated document.
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.end(req.method === "HEAD" ? undefined : fs.readFileSync(path.join(ROOT, "dashboard/index.html"))); return;
+    }
+    sendJson(res, 404, { error: "not_found" }); return;
+  }
+
   if (requestUrl.pathname === "/api/gallery" || requestUrl.pathname.startsWith("/api/gallery/")) {
     await handleGalleryApi(req, res, requestUrl);
     return;
@@ -2216,16 +2283,6 @@ const server = http.createServer(async (req, res) => {
   if (req.method !== "GET" && req.method !== "HEAD") {
     res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("Method Not Allowed");
-    return;
-  }
-
-  if (requestUrl.pathname === "/api/dashboard/summary") {
-    await handleDashboardSummary(req, res, requestUrl, dashboardConfig);
-    return;
-  }
-
-  if (requestUrl.pathname.startsWith("/dashboard") && !isDashboardAuthorized(req, dashboardConfig)) {
-    requestDashboardAuth(res);
     return;
   }
 
