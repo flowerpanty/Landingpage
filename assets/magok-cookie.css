@@ -22,6 +22,9 @@
 
 .nm-magok-page * { box-sizing: border-box; }
 .nm-magok-page a { color: inherit; text-decoration: none; }
+.nm-magok-page .magok-brand, .magok-header-nav a, .magok-visible-breadcrumb a, .magok-product-card a, .magok-favor-card a, .magok-faq-answer a, .magok-footer a { min-height: 44px; display: inline-flex; align-items: center; }
+.magok-section[id] { scroll-margin-top: 140px; }
+.magok-faq-answer a { text-decoration: underline; text-underline-offset: 3px; }
 .nm-magok-page img { display: block; max-width: 100%; }
 
 .nm-magok-page .nm-skip-link {
@@ -90,7 +93,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
+  min-height: 44px !important;
   padding: 7px 11px;
   border: 2px solid var(--magok-ink);
   border-radius: 999px;
@@ -284,7 +287,7 @@
 
 .magok-quick-nav a {
   flex: 0 0 auto;
-  min-height: 34px;
+  min-height: 44px;
   padding: 7px 11px;
   border: 2px solid var(--magok-ink);
   border-radius: 999px;
@@ -462,7 +465,7 @@
   .magok-header-inner { min-height: 56px; gap: 8px; }
   .nm-magok-page .magok-brand { font-size: 17px; }
   .nm-magok-page .magok-header-nav { gap: 5px; flex-wrap: nowrap; }
-  .nm-magok-page .magok-header-nav a { min-height: 32px; padding: 6px 8px; font-size: 10px; }
+  .nm-magok-page .magok-header-nav a { min-height: 44px; padding: 6px 8px; font-size: 10px; }
   .nm-magok-page .magok-header-nav a:nth-child(1),
   .nm-magok-page .magok-header-nav a:nth-child(2),
   .nm-magok-page .magok-header-nav a[data-analytics-event="blog_header_click"] { display: none !important; }

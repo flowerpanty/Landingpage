@@ -15,7 +15,7 @@
     "site:build": "npm run notices:build && npm run christmas:build && npm run a11y:build && npm run products:build && npm run schema:build && npm run feed:build",
     "public-seo:test": "node scripts/test-public-seo.mjs",
     "public-perf:test": "node scripts/test-public-performance.mjs",
-    "site:check": "npm run museum:test && npm run notices:check && npm run notices:test && npm run christmas:check && npm run products:check && npm run schema:check && npm run public-seo:test && node scripts/test-occasion-landings.mjs && node scripts/test-flight-attendant-gift.mjs && node scripts/test-christmas-landing.mjs && node scripts/test-anniversary-landing.mjs && npm run public-perf:test && npm run a11y:check && npm run feed:check",
+    "site:check": "npm run magok:test && npm run museum:test && npm run notices:check && npm run notices:test && npm run christmas:check && npm run products:check && npm run schema:check && npm run public-seo:test && node scripts/test-occasion-landings.mjs && node scripts/test-flight-attendant-gift.mjs && node scripts/test-christmas-landing.mjs && node scripts/test-anniversary-landing.mjs && npm run public-perf:test && npm run a11y:check && npm run feed:check",
     "gallery:test": "node scripts/test-gallery-storage.mjs",
     "server:test": "node scripts/test-gimpo-board.mjs && node scripts/test-server-http.mjs && node scripts/test-christmas-search-audit.mjs",
     "christmas:search:test": "node scripts/test-christmas-search-audit.mjs",
@@ -43,6 +43,8 @@
     "notices:test": "node scripts/test-notices.mjs",
     "notices:browser:test": "node scripts/test-notices-browser.mjs",
     "notices:admin:test": "node scripts/test-notice-admin.mjs",
-    "notices:admin:browser:test": "node scripts/test-notice-admin-browser.mjs"
+    "notices:admin:browser:test": "node scripts/test-notice-admin-browser.mjs",
+    "magok:test": "node scripts/test-magok-landing.mjs",
+    "magok:browser:test": "node scripts/test-magok-browser.mjs"
   }
 }

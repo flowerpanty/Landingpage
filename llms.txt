@@ -24,7 +24,7 @@ This file is a guide to public website information. Crawler access is defined by
 
 **Local intent hubs**
 
-**마곡 답례품·쿠키 선물**
+**마곡 디저트·답례품·회사 간식**
 - Landing: https://nothingmatters.co.kr/magok-cookie/
 - Actual workshop is NOT in Magok.
 - Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
@@ -119,7 +119,7 @@ This file is a guide to public website information. Crawler access is defined by
 ## Gimpo Airport and local pickup
 
 - [김포공항 쿠키 픽업 · 디저트 선물·답례품](https://nothingmatters.co.kr/pickup/): 김포공항·송정역 인근 공항동에서 예약 픽업하는 수제쿠키와 디저트 선물, 답례품을 확인하세요. TERMINAL·COOKIE FLIGHT·쿠키크루·브루키·수제꾸덕쿠키·행운쿠키를 고른 뒤 네이버플레이스에서 픽업 일정을 예약할 수 있습니다.
-- [마곡 쿠키 · 마곡 답례품 | 수제쿠키 선물·단체주문 - 낫띵메터스](https://nothingmatters.co.kr/magok-cookie/): 마곡 인근 공항동에서 만드는 수제쿠키와 답례품을 확인하세요. 쿠키 선물, 회사·기업행사 단체주문, 공항동 예약 픽업과 일정·수량에 따른 마곡 차량 퀵을 상담합니다.
+- [마곡 디저트·답례품 | 회사 간식·수제쿠키 선물 - 낫띵메터스](https://nothingmatters.co.kr/magok-cookie/): 마곡 디저트 선물과 회사 답례품을 준비하는 수제쿠키 안내. 브루키·수제꾸덕쿠키·행운쿠키부터 기업행사·세미나 단체 간식까지 비교하세요. 서울 강서구 공항동 예약 픽업, 일정·수량·주소에 따른 마곡 차량 퀵 상담.
 - [김포공항 도착정보·도착시간 | 출발·도착 실시간 항공편](https://nothingmatters.co.kr/gimpo-board/): 김포공항 도착정보와 출발정보를 실시간 항공편 전광판에서 확인하세요. 김포공항 도착시간·출발시간, 편명, 출발지·목적지, 게이트와 운항상태를 확인할 수 있습니다. 한국공항공사 제공 자료를 바탕으로 표시합니다.
 - [김포공항 선물·디저트·기념품 | 비행기 쿠키 예약 픽업 - 낫띵메터스](https://nothingmatters.co.kr/gimpo/): 김포공항 근처에서 특별한 선물이나 디저트를 찾고 있다면. 비행기 쿠키 COOKIE FLIGHT부터 터미널 쿠키, 공항 테마 선물까지 만나보세요. 김포공항·송정역 인근 공항동 예약 픽업.
 - [김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS](https://nothingmatters.co.kr/gimpo/pickup/): 김포공항 가기 전 공항동에서 쿠키를 예약 픽업하는 방법. 쿠키 선택, 네이버 픽업 예약, 서울 강서구 송정로 25 1층 매장 수령을 안내합니다.

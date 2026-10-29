@@ -548,12 +548,12 @@ function buildService(page) {
     return {
       "@type": "Service",
       "@id": `${page.pageUrl}#service`,
-      name: "마곡 답례품·기업행사 쿠키 제작 상담",
-      serviceType: "답례품·기업행사 쿠키 제작",
+      name: "마곡 디저트·답례품 예약 제작 상담",
+      serviceType: "쿠키 선물·회사 간식·답례품 예약 제작",
       provider: { "@id": LOCAL_BUSINESS_ID },
       url: page.pageUrl,
       areaServed: "마곡",
-      description: "실제 작업실은 공항동에 있으며 마곡 기업행사·단체 답례품을 상담합니다. 차량 퀵은 일정과 수량에 따라 안내합니다.",
+      description: page.description,
     };
   }
 

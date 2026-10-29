@@ -892,15 +892,15 @@ assert.match(magokLineup, /김포공항 인근 시그니처 선물/, "magok shou
 for (const forbidden of ["마곡 전용 상품", "마곡 매장 상품"]) {
   assert.equal(magokLineup.includes(forbidden), false, `magok COOKIE FLIGHT lineup must not imply ${forbidden}`);
 }
-assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 쿠키/);
+assert.match(getAttribute(magokHtml, /<title>([\s\S]*?)<\/title>/i), /마곡 디저트·답례품/);
 assert.match(getMeta(magokHtml, "name", "description"), /쿠키|답례품/);
 assert.match(magokHtml, /<h1\b[^>]*>/i, "magok cookie hub should have an h1");
-assert.equal(magokEntry?.lastmod, "2026-09-22", "magok registry lastmod should reflect COOKIE FLIGHT activation");
-assert.match(getAttribute(magokHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /마곡 답례품/);
+assert.equal(magokEntry?.lastmod, "2026-10-30", "magok registry lastmod should reflect the dessert/favor content update");
+assert.match(getAttribute(magokHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i), /마곡 디저트 선물/);
 assert.match(magokHtml, /실제 작업실은 마곡 인근 서울 강서구 공항동/, "magok quick answer should clarify the actual workshop location");
 assert.match(magokHtml, /QUICK ANSWER/, "magok should include an answer-first block");
-assert.match(magokHtml, /마곡 회사 답례품을 준비한다면 행사 날짜, 필요한 수량, 선물 목적을 먼저 정한 뒤 쿠키와 포장·문구 가능 범위를 상담하면 됩니다\./, "magok should answer how to prepare a company gift");
-assert.match(magokHtml, /홈[\s\S]*마곡 답례품·쿠키 선물/, "magok should expose a visible breadcrumb");
+assert.match(magokHtml, /마곡 회사 간식·행사 답례품은 필요한 날짜, 수량, 예산과 수령 주소를 알려주세요\./, "magok should answer how to prepare a company gift");
+assert.match(magokHtml, /홈[\s\S]*마곡 디저트·답례품/, "magok should expose a visible breadcrumb");
 assert.match(magokHtml, /실제로 이런 쿠키를 만들고 있어요/, "magok should include first-party proof");
 assert.match(magokHtml, /class="magok-proof-grid"[^>]*data-live-gallery-preview[^>]*data-archive-href="\.\.\/#actual-cases"[^>]*data-gallery-preview-limit="3"/, "magok proof should use the live homepage archive preview");
 assert.match(magokHtml, /href="\.\.\/#actual-cases">메인에서 최근 제작 아카이브 보기 →<\/a>/, "magok proof should link to the homepage production archive");
@@ -908,16 +908,16 @@ assert.match(magokHtml, /href="\.\.\/works\/">실제 제작 사례 더 보기 �
 assert.match(magokHtml, /<script src="\.\.\/assets\/gallery\.js"><\/script>/, "magok should load the shared live archive renderer");
 assert.match(magokHtml, /href="https:\/\/naver\.me\/Gsj2pwAu"/, "magok pickup section should expose the official Naver Place link");
 const magokFavorGuide = magokHtml.match(/<section class="magok-section magok-favor-guide" id="magok-favor-guide"[\s\S]*?<\/section>/)?.[0] || "";
-assert.match(magokFavorGuide, /회사·팀 감사 답례품/);
-assert.match(magokFavorGuide, /행사·세미나 답례품/);
-assert.match(magokFavorGuide, /소량 쿠키 선물/);
+assert.match(magokFavorGuide, /한 사람씩 건네는 선물/);
+assert.match(magokFavorGuide, /회의·팀에서 나누는 간식/);
+assert.match(magokFavorGuide, /문구를 전하는 답례품/);
 assert.equal((magokFavorGuide.match(/<a href=/g) || []).length, 3, "magok favor guide should provide three contextual links");
 const magokCompanyChoice = magokHtml.match(/<section class="magok-section magok-company-choice"[\s\S]*?<\/section>/)?.[0] || "";
-assert.match(magokCompanyChoice, /마곡 회사 선물,[\s\S]*어떤 경우에 무엇부터 확인하면 될까요\?/);
+assert.match(magokCompanyChoice, /마곡 회사 간식·기업 선물,[\s\S]*상황별로 준비해요\./);
 for (const label of ["팀·직원 감사 선물", "세미나·기업행사", "승진·퇴사·송별", "외부 방문객·가벼운 선물"]) {
   assert.match(magokCompanyChoice, new RegExp(label), `magok company choice should include ${label}`);
 }
-for (const href of ["../small-gift/", "../guides/corporate-event-cookie/", "/farewell-favor/", "../index.html#cookies", "../works/"]) {
+for (const href of ["../small-gift/", "../guides/corporate-event-cookie/", "/farewell-favor/", "#cookies", "../works/"]) {
   assert.match(magokCompanyChoice, new RegExp(`href="${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `magok company choice should link to ${href}`);
 }
 for (const productHint of ["브루키는 캐릭터와 짧은 문구", "수제꾸덕쿠키는 여러 맛과 패키지", "행운쿠키는 HAPPY", "COOKIE FLIGHT는 비행기 모양", "쿠키크루는 쿠키와 캐릭터 굿즈"]) {
@@ -929,7 +929,7 @@ for (const type of ["Organization", "Bakery", "WebSite", "WebPage", "BreadcrumbL
   assert.ok(magokGraph.some((entry) => entry["@type"] === type), `magok cookie hub missing ${type} schema`);
 }
 const magokBreadcrumb = magokGraph.find((entry) => entry["@type"] === "BreadcrumbList");
-assert.equal(magokBreadcrumb?.itemListElement?.at(-1)?.name, "마곡 쿠키·답례품");
+assert.equal(magokBreadcrumb?.itemListElement?.at(-1)?.name, "마곡 디저트·답례품");
 const magokWebPage = magokGraph.find((entry) => entry["@type"] === "WebPage");
 assert.deepEqual(magokWebPage?.about, { "@id": `${SITE_URL}/#localbusiness` }, "magok WebPage should identify the actual LocalBusiness");
 const magokService = magokGraph.find((entry) => entry["@type"] === "Service");
