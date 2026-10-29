@@ -618,6 +618,10 @@ function buildWebPage(page, breadcrumb, itemList, product, service) {
   const mainEntities = [itemList, service].filter(Boolean).map((entry) => ({ "@id": entry["@id"] }));
   if (mainEntities.length === 1) schema.mainEntity = mainEntities[0];
   if (mainEntities.length > 1) schema.mainEntity = mainEntities;
+  if (page.about?.["@type"] === "Museum" && page.about["@id"]) {
+    schema.mainEntity = { "@id": page.about["@id"] };
+    if (itemList) schema.mentions = { "@id": itemList["@id"] };
+  }
 
   return schema;
 }

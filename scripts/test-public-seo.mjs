@@ -472,7 +472,7 @@ for (const [pathname, title, h1, pageType] of [
   const graph = getStaticSchema(html)["@graph"];
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : pathname === "/gimpo-board/" ? "2026-10-10" : "2026-10-26" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/gimpo/pickup/" ? "2026-09-28" : pathname === "/gimpo-board/" ? "2026-10-10" : "2026-10-29" },
     `${pathname}: registry must publish the new route`
   );
   assert.equal(getCanonical(html), `${SITE_URL}${pathname}`);
@@ -500,7 +500,10 @@ assert.equal((gimpoHtml.match(/class="hub-intents"[\s\S]*?<\/nav>/)?.[0].match(/
 assert.equal((gimpoHtml.match(/class="hub-faq-list"[\s\S]*?<\/div>/)?.[0].match(/<details>/g) || []).length, 5, "hub needs five visible FAQ answers");
 assert.ok(gimpoHtml.includes("김포공항 안에서 판매하지 않습니다."));
 assert.ok(gimpoHtml.includes("서울특별시 강서구 송정로 25 1층"));
-assert.doesNotMatch(gimpoHtml, /(?:김포공항\s*5분|도보|주차|\d+번 출구)/);
+// The museum discovery link may describe verified museum parking; the airport
+// cookie hub must still avoid unverified workshop parking or walking claims.
+const gimpoWithoutMuseumLink = gimpoHtml.replace(/<a\b[^>]*href="\/national-aviation-museum\/"[^>]*>[\s\S]*?<\/a>/g, '');
+assert.doesNotMatch(gimpoWithoutMuseumLink, /(?:김포공항\s*5분|도보|주차|\d+번 출구)/);
 assert.doesNotMatch(gimpoHtml, /SNS COOKIE|href="\/gimpo2\/"/);
 const gimpoGraph = getStaticSchema(gimpoHtml)["@graph"];
 const gimpoFaq = gimpoGraph.find((node) => node["@type"] === "FAQPage");
@@ -575,7 +578,7 @@ for (const [pathname, h1] of kimpoGuides) {
   const url = `${SITE_URL}${pathname}`;
   assert.deepEqual(
     { status: entry?.status, indexing: entry?.indexing, sitemap: entry?.sitemap, lastmod: entry?.lastmod },
-    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/guides/gimpo-airport-flight-status/" ? "2026-10-10" : "2026-10-26" },
+    { status: "active", indexing: "index", sitemap: true, lastmod: pathname === "/guides/gimpo-airport-flight-status/" ? "2026-10-10" : "2026-10-29" },
     `${pathname}: informational guide registry`
   );
   assert.equal(getCanonical(html), url);
@@ -833,8 +836,8 @@ for (const pathname of ["/", "/bulk/", "/small-gift/", "/works/", "/guides/", "/
 }
 assert.match(
   sitemap,
-  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-10-02<\/lastmod>/,
-  "pickup sitemap lastmod should reflect the updated product lineup"
+  /<loc>https:\/\/nothingmatters\.co\.kr\/pickup\/<\/loc>\s*<lastmod>2026-10-29<\/lastmod>/,
+  "pickup sitemap lastmod should reflect the updated visitor guidance"
 );
 
 const cookieStoragePath = "/guides/cookie-storage/";
@@ -976,7 +979,7 @@ assert.ok(guidesItemList?.itemListElement?.some((item) => item.url === `${SITE_U
 
 const pickupPath = "/pickup/";
 const pickupEntry = registryEntries.get(pickupPath);
-assert.equal(pickupEntry?.lastmod, "2026-10-02", "pickup registry lastmod should reflect the updated product lineup");
+assert.equal(pickupEntry?.lastmod, "2026-10-29", "pickup registry lastmod should reflect its updated visitor guidance");
 const pickupHtml = readHtml(filePathForPathname(pickupPath));
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /김포공항/);
 assert.match(getAttribute(pickupHtml, /<title>([\s\S]*?)<\/title>/i), /디저트/);

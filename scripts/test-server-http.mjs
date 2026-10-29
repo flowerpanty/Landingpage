@@ -189,6 +189,17 @@ try {
     assert.equal(legacy.headers.location, new URL(target, "https://nothingmatters.co.kr").toString(), `${alias} should redirect to its registry target`);
     assert.match(legacy.headers["cache-control"], /max-age=86400/, `${alias} should use the long redirect cache policy`);
   }
+  for (const alias of ["/national-aviation-museum", "/national-aviation-museum/index.html"]) {
+    for (const method of ["GET", "HEAD"]) {
+      const response = await request(server.baseUrl, `${alias}?utm_source=audit`, { method });
+      assert.equal(response.status, 301);
+      assert.equal(response.headers.location, "https://nothingmatters.co.kr/national-aviation-museum/");
+      if (method === "HEAD") assert.equal(response.body.length, 0);
+    }
+  }
+  const museum = await request(server.baseUrl, "/national-aviation-museum/");
+  assert.equal(museum.status, 200);
+  assert.equal(museum.headers["x-robots-tag"], undefined);
   assert.equal((await request(server.baseUrl, "/brookie")).headers.location, "https://nothingmatters.co.kr/brookie/");
   assert.equal((await request(server.baseUrl, "/cookies")).headers.location, "https://nothingmatters.co.kr/out/");
   assert.equal((await request(server.baseUrl, "/lucky")).headers.location, "https://nothingmatters.co.kr/out/fortune/");

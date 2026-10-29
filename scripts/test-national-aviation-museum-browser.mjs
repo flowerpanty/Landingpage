@@ -58,6 +58,7 @@ try {
     const request = route.request();
     if (request.method() !== 'GET') { mutations.push(request.url()); return route.abort(); }
     if (await routeBrandFont(route, fonts)) return;
+    if (request.url() === 'https://www.aviation.or.kr/index.do' && request.isNavigationRequest()) return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html lang="ko"><title>공식 홈페이지 이동 테스트</title><body>로컬 모의 응답</body></html>' });
     const mocked = mockPurchaseNavigation(route);
     if (mocked) return mocked;
     return new URL(request.url()).origin === base ? route.continue() : route.abort();
@@ -74,7 +75,7 @@ try {
     assert.equal(await page.locator('h1').count(), 1);
     assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' '), '국립항공박물관 방문 가이드');
     assert.equal(await page.title(), '국립항공박물관 입장료·주차·예약·체험 안내 | 낫띵메터스');
-    assert.equal(await page.locator('.museum-answer').count(), 5);
+    assert.equal(await page.locator('.museum-answer').count(), 4);
     assert.equal(await page.locator('.museum-faq summary').count(), 9);
     assert.ok((await page.locator('#museum-exhibition').innerText()).includes('2027.07.31'));
     assert.equal(await page.locator('#visit-checklist li').count(), 5);
@@ -87,6 +88,14 @@ try {
     assert.ok(geometry.scrollWidth <= width + 1, `horizontal overflow @${width}`);
     assert.equal(geometry.background, 'rgb(255, 255, 255)');
     assert.ok(geometry.font.includes('SeoulNotice'));
+    assert.equal(await page.locator('.museum-hero img').count(), 0);
+    const visitTop = await page.locator('#visit-info').boundingBox();
+    const cardsBottom = await page.locator('.museum-answer').last().boundingBox();
+    const viewportBottom = width < 768 ? (await page.locator('.museum-mobile-actions').boundingBox()).y : 900;
+    assert.ok(visitTop.y > 0 && cardsBottom.y + cardsBottom.height < viewportBottom, `all four visitor answers above the fold and floating CTA @${width}`);
+    assert.ok(await page.locator('.museum-actions a').first().isVisible());
+    const firstScreen = { visitTop: visitTop.y, lastAnswerBottom: cardsBottom.y + cardsBottom.height, viewportBottom };
+    await page.screenshot({ path: `${output}/museum-visitor-first-${width}.png` });
     const floating = page.locator('.museum-mobile-actions');
     assert.equal(await floating.locator('a').count(), 2);
     assert.deepEqual(await floating.locator('a').allTextContents(), ['픽업예약', '택배주문']);
@@ -133,11 +142,10 @@ try {
       const box = await link.boundingBox();
       assert.ok(box.height >= 43, `touch target @${width}: ${await link.textContent()}`);
     }
-    await page.locator('.museum-hero-photo img').waitFor();
-    assert.ok(await page.locator('.museum-hero-photo img').evaluate(image => image.complete && image.naturalWidth > 0));
-    const hero = await page.locator('.museum-hero-photo img').boundingBox();
-    assert.ok(Math.abs(hero.width / hero.height - 1084 / 1341) < .01, 'hero preserves photo aspect ratio');
     await page.locator('#cookie-collection').scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => { const image = document.querySelector('.museum-collection-photo img'); return image.complete && image.naturalWidth > 0; });
+    const photo = await page.locator('.museum-collection-photo img').boundingBox();
+    assert.ok(Math.abs(photo.width / photo.height - 1084 / 1341) < .01, 'smaller collection photo preserves original aspect ratio');
     await page.waitForFunction(() => [...document.querySelectorAll('.museum-product img')].every(image => image.complete && image.naturalWidth > 0));
     await page.locator('.museum-product img').evaluateAll(images => Promise.all(images.map(image => image.decode())));
     const handmade = page.locator('.museum-product img[src="/images/handmade-hero.jpg"]');
@@ -145,7 +153,7 @@ try {
     const columns = await page.locator('.museum-products').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
     assert.equal(columns, width >= 1024 ? 4 : 2);
     const quickColumns = await page.locator('.museum-quick-grid').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
-    assert.equal(quickColumns, width >= 1280 ? 5 : width >= 768 ? 3 : 1);
+    assert.equal(quickColumns, 2);
     // Isolate the collection from fixed page controls in the section capture.
     await page.locator('#cookie-collection').screenshot({ path: `${output}/museum-products-${width}.png`, style: '.showroom-header, .museum-mobile-actions, .nm-skip-link { visibility: hidden !important; }' });
     for (const summary of await page.locator('summary').all()) {
@@ -168,8 +176,8 @@ try {
     await page.screenshot({ path: `${output}/museum-top-${width}.png` });
     const artifact = `museum-${width}.png`;
     await page.screenshot({ path: `${output}/${artifact}`, fullPage: true });
-    evidence.push({ viewport: `${width}x900`, artifact, observation: 'Shared brand header, white page, preserved hero ratio, visit information, four photos, pickup, FAQ and sources; no overflow or CTA obstruction.' });
-    measurements.push({ ...geometry, columns, quickColumns, fontFaces });
+    evidence.push({ viewport: `${width}x900`, artifact, observation: 'All four visitor answers and official homepage in the first screen; original photo in the lower collection; four purchase cards, FAQ and sources preserved; no overflow or CTA obstruction.' });
+    measurements.push({ ...geometry, ...firstScreen, columns, quickColumns, fontFaces });
   }
   await page.goto(base + pathname);
   await page.keyboard.press('Tab');
@@ -180,9 +188,14 @@ try {
   const heroAction = page.locator('.museum-actions a').first();
   await heroAction.focus();
   assert.equal(await heroAction.evaluate(element => getComputedStyle(element).outlineStyle), 'solid');
-  await page.keyboard.press('Enter');
-  await page.waitForURL('**#visit-info');
-  assert.ok(await page.locator('#visit-title').isVisible());
+  const guideUrl = page.url();
+  await checkPurchasePopup(page, heroAction, 'https://www.aviation.or.kr/index.do', 'keyboard');
+  assert.equal(page.url(), guideUrl, 'official homepage opens separately and preserves the guide position');
+  await page.locator('.museum-secondary-link').click();
+  await page.waitForURL('**#cookie-collection');
+  const collectionTop = await page.locator('#cookie-collection').boundingBox();
+  assert.ok(collectionTop.y >= (await page.locator('.showroom-header').boundingBox()).height - 1, 'secondary cookie shortcut remains clear of the header');
+  assert.deepEqual(await readAnalytics(page), [], 'museum and collection navigation are not purchase conversions');
   for (const anchor of await page.locator('.museum-answer a[href^="#"]').all()) {
     const id = (await anchor.getAttribute('href')).slice(1);
     await anchor.click();
@@ -229,14 +242,18 @@ try {
   await crawler.locator('summary').first().click();
   assert.equal(await crawler.locator('details').first().getAttribute('open'), '');
   assert.ok((await crawler.locator('main').innerText()).includes('예약 픽업 전용 작업실'));
-  assert.equal(await crawler.locator('.museum-answer').count(), 5);
+  assert.equal(await crawler.locator('.museum-answer').count(), 4);
+  assert.equal(await crawler.locator('.museum-fee-table tbody tr').count(), 4);
+  assert.equal(await crawler.locator('.museum-children-checklist li').count(), 3);
+  assert.equal(await crawler.locator('.museum-actions a').first().getAttribute('href'), 'https://www.aviation.or.kr/index.do');
   await crawler.locator('.museum-product h3 a').first().click();
   await crawler.waitForURL('**/products/cookie-flight/');
   await noJs.close();
   const touch = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  await touch.route('**/*', route => {
+  await touch.route('**/*', async route => {
     const request = route.request();
     if (request.method() !== 'GET') { mutations.push(request.url()); return route.abort(); }
+    if (await routeBrandFont(route, fonts)) return;
     // Mock the external destination while checking the actual new-tab navigation.
     const mocked = mockPurchaseNavigation(route);
     if (mocked) return mocked;
@@ -246,6 +263,10 @@ try {
   for (const width of [320, 390]) {
     await mobile.setViewportSize({ width, height: 844 });
     await mobile.goto(base + pathname);
+    await checkBrandFonts(mobile);
+    const answer = await mobile.locator('.museum-answer').last().boundingBox();
+    const bar = await mobile.locator('.museum-mobile-actions').boundingBox();
+    assert.ok(answer.y + answer.height < bar.y, `visitor summary clear of floating actions @${width}x844`);
     await checkPurchasePopup(mobile, mobile.locator('.museum-mobile-actions a').nth(0), products[0].pickup, true, expectedAnalytics(products[0], 'pickup', 'floating'));
     await checkPurchasePopup(mobile, mobile.locator('.museum-mobile-actions a').nth(1), products[0].shipping, true, expectedAnalytics(products[0], 'shipping', 'floating'));
     assert.equal(mobile.url(), base + pathname, 'floating purchase leaves the guide intact');

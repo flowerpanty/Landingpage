@@ -13,12 +13,15 @@ const entry = registry.pages.find(page => page.path === '/national-aviation-muse
 const clean = value => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().replaceAll('&amp;', '&');
 const graph = JSON.parse(html.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/)[1])['@graph'];
 
-assert.deepEqual([entry.status, entry.indexing, entry.sitemap, entry.lastmod], ['active', 'index', true, '2026-10-26']);
+assert.deepEqual([entry.status, entry.indexing, entry.sitemap, entry.lastmod], ['active', 'index', true, '2026-10-29']);
 assert.ok(read('sitemap.xml').includes(`<loc>${url}</loc>`));
 assert.equal((html.match(/<h1\b/g) || []).length, 1);
 assert.equal(clean(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)[1]), '국립항공박물관 방문 가이드');
 assert.equal(html.match(/<title>([^<]+)<\/title>/)[1], '국립항공박물관 입장료·주차·예약·체험 안내 | 낫띵메터스');
-assert.equal(html.match(/<meta name="description" content="([^"]+)"/)[1], '국립항공박물관 방문 전 입장료, 주차요금, 관람시간, 예약 방법과 어린이 체험 정보를 확인하세요. 김포공항 근처 비행기 쿠키 선물과 네이버 픽업예약·택배주문도 안내합니다.');
+assert.equal(html.match(/<meta name="description" content="([^"]+)"/)[1], '국립항공박물관 무료 관람과 유료 체험, 주차요금 계산 예시, 어린이 연령·예약 조건과 김포공항역 이동 동선을 확인하세요. 공식 출처와 확인일을 바탕으로 정리한 방문 가이드입니다.');
+const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
+for (const property of ['og:description', 'twitter:description']) assert.ok(html.includes(`="${property}" content="${description}"`));
+assert.equal(graph.find(node => node['@type'] === 'WebPage').description, description);
 assert.ok(html.includes(`<link rel="canonical" href="${url}">`));
 for (const meta of ['og:title', 'og:description', 'og:url', 'og:image', 'og:image:alt', 'twitter:title', 'twitter:description', 'twitter:image']) assert.ok(html.includes(`="${meta}"`), meta);
 assert.ok(html.includes('e627e1eaae68060408cb4e512e46d6b98a64401c'));
@@ -35,7 +38,7 @@ for (const type of ['WebPage', 'BreadcrumbList', 'FAQPage', 'Organization', 'Bak
 assert.equal(new Set(graph.map(node => node['@id'])).size, graph.length, 'unique entities');
 assert.equal(graph.filter(node => ['Product', 'Service', 'Museum', 'Offer', 'Review', 'AggregateRating', 'Event'].includes(node['@type'])).length, 0, 'no invented product/event/review or locally-owned museum entity');
 assert.equal(graph.find(node => node['@type'] === 'WebPage').url, url);
-assert.equal(graph.find(node => node['@type'] === 'WebPage').dateModified, '2026-10-26');
+assert.equal(graph.find(node => node['@type'] === 'WebPage').dateModified, '2026-10-29');
 assert.deepEqual(graph.find(node => node['@type'] === 'WebPage').about, entry.about);
 assert.equal(entry.about['@id'], 'https://www.aviation.or.kr/');
 assert.equal(entry.about.name, '국립항공박물관');
@@ -52,7 +55,7 @@ const sectionIds = ['visit-info', 'visit-details', 'museum-exhibition', 'visit-c
 const positions = sectionIds.map(id => main.indexOf(`id="${id}"`));
 assert.ok(positions.every((position, index) => position > 0 && (!index || position > positions[index - 1])), 'visitor information precedes collection, pickup and FAQ');
 for (const id of ['museum-hours', 'museum-reservation', 'museum-parking', 'museum-location', 'museum-children']) assert.ok(main.includes(`id="${id}"`));
-for (const term of ['10:00~18:00', '17:30', '08:00~20:00', '만 48개월~미취학 아동', '온라인 사전예약·현장예약', '현장예약', '하늘길 177', '2026-10-26']) assert.ok(main.includes(term), term);
+for (const term of ['10:00~18:00', '17:30', '08:00~20:00', '만 48개월~미취학 아동', '온라인 사전예약·현장예약', '현장예약', '하늘길 177', '2026-10-29']) assert.ok(main.includes(term), term);
 for (const suffix of ['contents.do?menuno=65', 'contents.do?menuno=168', 'contents.do?menuno=311', 'contents.do?menuno=311&amp;tabno=4', 'reservation.do?gcode=gcode1&amp;menuno=189', 'board.do?boardno=24&amp;menuno=68']) assert.ok(main.includes(`href="https://www.aviation.or.kr/${suffix}"`), suffix);
 assert.match(main, /낫띵메터스는 예약 제작·예약 픽업 전용 작업실입니다\. 예약 없이 방문하셔도 바로 구매할 쿠키가 없습니다\./);
 assert.match(main, /서울특별시 강서구 송정로 25 1층/);
@@ -60,8 +63,26 @@ assert.match(main, /박물관 내부 판매 매장이나 공식 기념품 판매
 assert.doesNotMatch(main, /도보 \d+분|차량 \d+분|제휴 상품|공식 인증|당일 구매 가능|재고 확보|결제 완료|무료 배송/);
 assert.doesNotMatch(html, /<form\b|\/api\/landing-orders|\/api\/gimpo|data-gimpo-preview/);
 const quick = main.match(/<section[^>]*id="visit-info"[\s\S]*?<\/section>/)[0];
-assert.equal((quick.match(/class="museum-answer"/g) || []).length, 5);
-assert.deepEqual([...quick.matchAll(/<h3>([^<]+)<\/h3>/g)].map(match => match[1]), ['입장료', '관람시간', '주차', '예약', '위치']);
+assert.equal((quick.match(/class="museum-answer"/g) || []).length, 4);
+assert.deepEqual([...quick.matchAll(/<h3>([^<]+)<\/h3>/g)].map(match => match[1]), ['입장료', '관람시간', '주차', '예약']);
+const hero = main.slice(main.indexOf('class="museum-wrap museum-hero"'), main.indexOf('id="visit-details"'));
+assert.ok(hero.includes('id="visit-info"'), 'all four answers belong to the first-screen hero');
+assert.doesNotMatch(hero, /<img\b/, 'cookie photos are kept in the lower collection');
+assert.match(hero, /href="https:\/\/www\.aviation\.or\.kr\/index\.do" target="_blank" rel="noopener noreferrer">박물관 공식 홈페이지/);
+assert.deepEqual([...quick.matchAll(/<strong>([^<]+)<\/strong>/g)].map(match => match[1]), ['전시 무료', '10:00~18:00', '첫 30분 무료', '체험별 예약']);
+const feeRows = [...main.matchAll(/<tr data-parking-steps="([^"]+)">([\s\S]*?)<\/tr>/g)];
+assert.deepEqual(feeRows.map(([_, step, cells]) => [step, Number([...cells.matchAll(/<td>([^<]+)<\/td>/g)].at(-1)[1].replace(/[^\d]/g, ''))]), [['free', 0], ['0', 1000], ['1', 1500], ['2', 2000]]);
+assert.match(main, /기본금액과 추가 과금 횟수로 계산한 예시/);
+assert.match(main, /정산 후 15분 이내 미출차/);
+assert.equal((main.match(/class="museum-route-steps">([\s\S]*?)<\/ol>/)[1].match(/<li>/g) || []).length, 3);
+for (const fact of ['국내선 터미널 1층', '제2주차장 방면 게이트', '약 400m는 이 국내선 동선', 'Gate4', '여객+화물청사', '여객청사전용', '45분 · 2,000원', '일반 3,000원/우대 2,000원']) assert.ok(main.includes(fact), fact);
+for (const [name, count] of [['children', 3], ['exhibition', 4]]) assert.equal((main.match(new RegExp(`class="museum-${name}-checklist">([\\s\\S]*?)<\\/ul>`))[1].match(/<li>/g) || []).length, count);
+assert.match(main, /datetime="2026-10-29">2026년 10월 29일/);
+for (const alias of ['/national-aviation-museum', '/national-aviation-museum/index.html']) {
+  assert.equal(registry.redirects[alias], '/national-aviation-museum/');
+  assert.ok(!read('sitemap.xml').includes(`<loc>https://nothingmatters.co.kr${alias}</loc>`), 'aliases are not sitemap entries');
+}
+assert.ok(read('sitemap.xml').includes(`<loc>${url}</loc>\n    <lastmod>${entry.lastmod}</lastmod>`));
 for (const card of quick.matchAll(/<article class="museum-answer">([\s\S]*?)<\/article>/g)) {
   const id = card[1].match(/href="#([^"]+)"/)[1];
   assert.ok(main.includes(`id="${id}"`));
@@ -88,7 +109,8 @@ assert.equal(cards.length, 4);
 const itemList = graph.find(node => node['@type'] === 'ItemList');
 assert.deepEqual(itemList.itemListElement.map(item => [item.position, item.name, item.url]), expectedProducts.map(([name, href], index) => [index + 1, name, 'https://nothingmatters.co.kr' + href]));
 assert.deepEqual(entry.itemList, expectedProducts.map(([name, href]) => ({ name, url: href })));
-assert.deepEqual(graph.find(node => node['@type'] === 'WebPage').mainEntity, { '@id': itemList['@id'] });
+assert.deepEqual(graph.find(node => node['@type'] === 'WebPage').mainEntity, { '@id': entry.about['@id'] });
+assert.deepEqual(graph.find(node => node['@type'] === 'WebPage').mentions, { '@id': itemList['@id'] });
 for (const [index, [name, href, src, pickup, shippingLabel, shipping]] of expectedProducts.entries()) {
   const card = cards[index][1];
   assert.equal(clean(card.match(/<h3>([\s\S]*?)<\/h3>/)[1]), name, 'collection order');
@@ -110,7 +132,7 @@ for (const [index, [name, href, src, pickup, shippingLabel, shipping]] of expect
 assert.doesNotMatch(html, /비행기 버터쿠키|\/products\/airplane-cookie\/|airplane-cookie-handheld/);
 assert.match(cards[3][1], /width="1024" height="867"/);
 assert.match(cards[3][1], /7가지 맛과 1구·2구·4구 포장/);
-assert.match(main, /loading="eager" decoding="async" fetchpriority="high"/);
+assert.match(main, /class="museum-collection-photo"><img[^>]+loading="lazy" decoding="async"/);
 for (const tag of html.matchAll(/<img\b[^>]*>/g)) {
   for (const attr of ['width', 'height', 'alt', 'loading', 'decoding']) assert.ok(tag[0].includes(`${attr}="`));
 }
@@ -131,7 +153,7 @@ assert.doesNotMatch(floating, /href="#cookie-collection"|pf\.kakao\.com/);
 const storeLinks = [...main.matchAll(/href="(https:\/\/mkt\.shopping\.naver\.com\/link\/[^"?]+)"/g)].map(match => match[1]);
 assert.deepEqual(storeLinks, [expectedProducts[0][5], expectedProducts[2][5], expectedProducts[0][5], expectedProducts[2][5]], 'shipping only for the two verified collection products, on cards and in pickup guidance');
 assert.ok(read('gimpo/index.html').includes('href="/national-aviation-museum/"'));
-for (const file of ['index.html', 'guides/gimpo-airport-departure-checklist/index.html']) assert.equal((read(file).match(/href="\/national-aviation-museum\/"/g) || []).length, 1, 'one contextual inbound link');
+for (const file of ['index.html', 'gimpo/index.html', 'pickup/index.html', 'guides/gimpo-airport-departure-checklist/index.html']) assert.equal((read(file).match(/href="\/national-aviation-museum\/"/g) || []).length, 1, 'one contextual inbound link');
 assert.ok(read('llms.txt').includes(url));
 // Do not transplant the existing airport hub's gift and dessert paragraphs.
 const airportParagraphs = [...read('gimpo/index.html').matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g)].map(match => clean(match[1])).filter(text => text.length > 70);

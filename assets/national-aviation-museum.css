@@ -18,17 +18,19 @@ body.museum-page { --museum-naver-green: #03c75a; --museum-purchase-ink: #06351b
 .museum-page .nm-skip-link:focus { top: 12px; }
 .museum-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-top: 12px; color: #555; font-size: 12px; }
 .museum-breadcrumb a { display: inline-flex; align-items: center; min-height: 44px; }
-.museum-hero { display: grid; grid-template-columns: 1fr; align-items: center; gap: 30px; padding-block: 32px 64px; }
+.museum-hero { display: grid; grid-template-columns: 1fr; align-items: start; gap: 22px; padding-block: 20px 40px; }
 .museum-eyebrow { color: #1554ad; font-size: 11px; font-weight: 900; letter-spacing: .12em; }
 .museum-page h1 { font-size: clamp(34px, 6vw, 58px); line-height: 1.2; letter-spacing: -.055em; }
 .museum-page h1 span { display: block; margin-top: 16px; font-size: .48em; line-height: 1.5; letter-spacing: -.035em; }
-.museum-page .museum-lead { margin-block: 24px; font-size: 16px; }
-.museum-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.museum-page .museum-hero-note { margin: 18px 0 0; color: #555; font-size: 12px; }
+.museum-page .museum-lead { margin-block: 12px 16px; font-size: 14px; }
+.museum-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.museum-page .museum-actions .showroom-button { width: auto; }
+.museum-secondary-link { display: inline-flex; align-items: center; min-height: 44px; color: #1554ad; font-size: 12px; }
 .museum-page .museum-lead { max-width: 520px; }
-.museum-hero-photo { width: min(100%, 360px); margin: 0 auto; }
-.museum-hero-photo img { width: 100%; height: auto; }
-.museum-hero-photo figcaption { margin-top: 10px; color: #555; font-size: 11px; text-align: center; }
+.museum-quick { min-width: 0; }
+.museum-quick-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 10px; }
+.museum-page .museum-quick-heading h2 { font-size: 18px; }
+.museum-quick-heading p { margin: 0; font-size: 11px; color: #555; }
 .museum-section { padding-block: 48px; border-top: 1px solid #d9d9d9; }
 .museum-page h2 { font-size: clamp(25px, 3vw, 36px); line-height: 1.35; letter-spacing: -.045em; }
 .museum-page h3 { font-size: 20px; line-height: 1.4; letter-spacing: -.03em; }
@@ -36,13 +38,32 @@ body.museum-page { --museum-naver-green: #03c75a; --museum-purchase-ink: #06351b
 .museum-section-heading > p { margin: 0; color: #555; font-size: 13px; }
 .museum-info-grid { display: grid; }
 .museum-info { min-width: 0; padding-block: 26px; border-top: 1px solid #ddd; }
-.museum-quick-grid { display: grid; gap: 12px; }
-.museum-answer { display: grid; grid-template-columns: 66px minmax(0, 1fr); gap: 4px 14px; min-width: 0; padding: 14px; border: 1px solid #d9d9d9; border-radius: 12px; }
-.museum-answer h3 { font-size: 16px; }
+.museum-quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.museum-answer { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 10px; border: 1px solid #d9d9d9; border-radius: 10px; }
+.museum-answer h3 { font-size: 12px; color: #555; }
 .museum-answer p { margin: 0; font-size: 13px; }
-.museum-answer strong { font-weight: 700; }
-.museum-answer nav { display: flex; flex-wrap: wrap; gap: 0 16px; grid-column: 2; }
-.museum-answer a { display: inline-flex; align-items: center; min-height: 44px; color: #1554ad; font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+.museum-answer strong { display: block; font-size: 15px; font-weight: 700; }
+.museum-answer p span { display: block; font-size: 11px; }
+.museum-answer nav { display: flex; flex-wrap: wrap; gap: 0 8px; margin-top: auto; }
+.museum-answer a { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; color: #1554ad; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
+.museum-fee-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-block: 14px; font-size: 12px; }
+.museum-fee-table caption { text-align: left; font-weight: 700; padding-bottom: 8px; }
+.museum-fee-table th, .museum-fee-table td { padding: 9px 6px; border-bottom: 1px solid #ddd; text-align: left; overflow-wrap: anywhere; }
+.museum-fee-table thead { background: #f5f7f9; }
+.museum-page .museum-detail-note { font-size: 12px; color: #555; }
+.museum-route-steps, .museum-children-checklist, .museum-exhibition-checklist { padding-left: 22px; margin: 12px 0 18px; font-size: 14px; }
+.museum-route-steps li, .museum-children-checklist li, .museum-exhibition-checklist li { margin-bottom: 8px; }
+.museum-experience-options { margin: 0; }
+.museum-experience-options > div { padding-block: 14px; border-top: 1px solid #ddd; }
+.museum-experience-options dt { font-size: 15px; font-weight: 700; }
+.museum-experience-options dd { margin: 6px 0 0; font-size: 14px; }
+.museum-info h4 { font-size: 18px; margin: 0 0 12px; }
+.museum-collection-intro { display: grid; grid-template-columns: minmax(0, 1fr) 96px; align-items: start; gap: 20px; }
+.museum-collection-intro .museum-section-heading { display: block; }
+.museum-collection-intro .museum-section-heading > p { margin-top: 12px; }
+.museum-collection-photo { margin: 0; }
+.museum-collection-photo img { display: block; width: 100%; height: auto; aspect-ratio: 1084 / 1341; }
+.museum-collection-photo figcaption { font-size: 11px; color: #555; margin-top: 8px; }
 .museum-exhibition h2, .museum-checklist h2 { margin-bottom: 22px; }
 .museum-exhibition-grid { display: grid; gap: 20px; }
 .museum-exhibition h3 { margin-bottom: 12px; }
@@ -102,17 +123,16 @@ body.museum-page { --museum-naver-green: #03c75a; --museum-purchase-ink: #06351b
 .museum-page .museum-mobile-actions > p { grid-column: 1 / -1; margin: 0; color: var(--museum-purchase-ink); font-size: 11px; line-height: 1.4; text-align: center; }
 .museum-mobile-actions .museum-buy-button { font-size: 14px; }
 @media (min-width: 768px) {
-  .museum-quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .museum-answer { display: flex; flex-direction: column; gap: 10px; }
   .museum-answer nav { margin-top: auto; }
   .museum-exhibition-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; }
   .museum-checklist ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .museum-hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 56px; padding-block: 46px 80px; }
-  .museum-hero-photo { width: min(100%, 380px); }
+  .museum-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; padding-block: 32px 48px; }
+  .museum-collection-intro { grid-template-columns: minmax(0, 1fr) 132px; gap: 32px; }
   .museum-section { padding-block: 64px; }
   .museum-section-heading { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 36px; margin-bottom: 36px; }
   .museum-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
-  .museum-info--wide { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-items: center; }
+  .museum-info--wide { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; align-items: start; }
   .museum-pickup { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; }
   .museum-mobile-actions { display: none; }
   .museum-page .showroom-footer { padding-bottom: 40px; }
@@ -120,16 +140,16 @@ body.museum-page { --museum-naver-green: #03c75a; --museum-purchase-ink: #06351b
 @media (min-width: 1024px) {
   .museum-products { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
 }
-@media (min-width: 1280px) {
-  .museum-quick-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-}
 @media (max-width: 600px) {
+  .museum-breadcrumb { padding-top: 0; }
+  .museum-hero { padding-top: 8px; gap: 12px; }
+  .museum-quick-heading { margin-bottom: 8px; }
   .museum-page .showroom-header-inner { display: flex; flex-wrap: wrap; gap: 0 18px; justify-content: space-between; }
   .museum-page .showroom-logo { font-size: 18px; }
   .museum-page .showroom-nav--quick { width: 100%; justify-content: space-between; gap: 12px; font-size: 12px; }
   .museum-page .showroom-nav--quick a:nth-child(2) { display: inline-flex; }
-  .museum-actions { display: grid; }
-  .museum-hero-photo { width: min(100%, 290px); }
+  .museum-actions .showroom-button { font-size: 12px; padding-inline: 10px; }
+  .museum-actions .museum-secondary-link { font-size: 11px; }
   .museum-page .showroom-footer p a { overflow-wrap: anywhere; }
 }
 @media (prefers-reduced-motion: reduce) {
