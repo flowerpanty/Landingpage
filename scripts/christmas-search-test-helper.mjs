@@ -18,6 +18,18 @@ export async function startAuditTestServer(options = {}) {
       if (target === 'https://oauth2.googleapis.com/token') {
         return Response.json({access_token:'SYNTHETIC-TOKEN', expires_in:3600});
       }
+      if (target.startsWith('https://analyticsdata.googleapis.com/')) {
+        const body = JSON.parse(options.body);
+        fs.appendFileSync(${JSON.stringify(calls)}, JSON.stringify({fixtureApi:'ga4', ...body}) + '\\n');
+        if (process.env.MOCK_SEARCH_MODE === 'ga-denied') return Response.json({error:'SYNTHETIC-PRIVATE-UPSTREAM'}, {status:403});
+        const dimensions = body.dimensions || [], metrics = body.metrics || [];
+        const values = {hour:'12', date:new Date().toISOString().slice(0,10).replaceAll('-',''), sessionSourceMedium:'google / organic', sessionDefaultChannelGroup:'Organic Search', landingPage:'/christmas/', deviceCategory:'mobile', eventName:'consult_click'};
+        const counts = {sessions:12, activeUsers:10, engagedSessions:6, engagementRate:.5, eventCount:2};
+        return Response.json({dimensionHeaders:dimensions, metricHeaders:metrics, rows:[{
+          dimensionValues:dimensions.map(({name}) => ({value:values[name] || 'SYNTHETIC'})),
+          metricValues:metrics.map(({name}) => ({value:String(counts[name] || 0)}))
+        }]});
+      }
       if (target.startsWith('https://www.googleapis.com/webmasters/v3/')) {
         const body = JSON.parse(options.body);
         fs.appendFileSync(${JSON.stringify(calls)}, JSON.stringify(body) + '\\n');
@@ -46,9 +58,9 @@ export async function startAuditTestServer(options = {}) {
     cwd: process.cwd(), stdio: 'ignore', env: {
       ...process.env, NODE_ENV:'test', HOST:'127.0.0.1', PORT:String(port), WORDPRESS_JOURNAL_OFFLINE:'1',
       ORDER_API_ORIGIN:'http://127.0.0.1:1', GOOGLE_SERVICE_ACCOUNT_JSON:serviceAccount,
-      GOOGLE_SERVICE_ACCOUNT_JSON_BASE64:'', GA4_PROPERTY_ID:'',
+      GOOGLE_SERVICE_ACCOUNT_JSON_BASE64:'', GA4_PROPERTY_ID:options.ga4 ? 'SYNTHETIC-GA4-PROPERTY' : '',
       SEARCH_CONSOLE_SITE_URL:options.google ? 'sc-domain:nothingmatters.co.kr' : '',
-      DASHBOARD_USERNAME:'synthetic-admin', DASHBOARD_PASSWORD:'synthetic-password',
+      DASHBOARD_ACCESS_MODE:'private', DASHBOARD_USERNAME:'synthetic-admin', DASHBOARD_PASSWORD:'synthetic-password',
       MOCK_SEARCH_MODE:options.mode || 'available', ...options.env
     }
   });

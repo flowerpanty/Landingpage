@@ -83,7 +83,7 @@ async function startServer(extra = {}) {
   const value = await port();
   const proc = spawn(process.execPath, ["server.js"], { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"], env: {
     ...process.env, NODE_ENV: "test", HOST: "127.0.0.1", PORT: String(value), WORDPRESS_JOURNAL_OFFLINE: "1", KAC_FLIGHT_API_KEY: "",
-    DASHBOARD_USERNAME: "mock-admin", DASHBOARD_PASSWORD: "mock-password", KAKAO_QUICK_VENDOR_ID: vendor, KAKAO_QUICK_API_KEY: fakeKey,
+    DASHBOARD_ACCESS_MODE: "public", DASHBOARD_USERNAME: "mock-admin", DASHBOARD_PASSWORD: "mock-password", KAKAO_QUICK_VENDOR_ID: vendor, KAKAO_QUICK_API_KEY: fakeKey,
     KAKAO_QUICK_BASE_URL: `http://127.0.0.1:${provider.address().port}/goa-sandbox-service`,
     KAKAO_LOCAL_REST_API_KEY: localKey, KAKAO_LOCAL_TEST_API_URL: `http://127.0.0.1:${provider.address().port}/v2/local/search/address.json`,
     KAKAO_QUICK_PICKUP_ADDRESS: "MOCK_FIXED_PICKUP_ADDRESS", KAKAO_QUICK_PICKUP_DETAIL: "1층",

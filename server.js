@@ -39,6 +39,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_DASHBOARD_DAYS = 90;
 const DASHBOARD_TIME_ZONE = "Asia/Seoul";
 const DEFAULT_DASHBOARD_RANGE_KEY = "today";
+const PUBLIC_DASHBOARD_CACHE_MS = 60_000;
+const publicDashboardReports = new Map();
+let publicDashboardReads = [];
 const DASHBOARD_RANGE_PRESETS = {
   today: { days: 1, label: "오늘" },
   "7d": { days: 7, label: "7일" },
@@ -625,6 +628,7 @@ function getDashboardConfig() {
   const searchConsoleSiteUrl = (process.env.SEARCH_CONSOLE_SITE_URL || "").trim();
   const dashboardUsername = (process.env.DASHBOARD_USERNAME || "").trim();
   const dashboardPassword = (process.env.DASHBOARD_PASSWORD || "").trim();
+  const accessMode = (process.env.DASHBOARD_ACCESS_MODE || "public").trim().toLowerCase();
 
   const missing = [];
 
@@ -650,6 +654,7 @@ function getDashboardConfig() {
     searchConsoleSiteUrl,
     dashboardUsername,
     dashboardPassword,
+    publicRead: accessMode === "public",
     missing,
     configError
   };
@@ -1483,6 +1488,7 @@ function isNaverSource(value = "") {
 async function fetchGaReport(accessToken, propertyId, requestBody) {
   const response = await fetch(`${GA4_API_BASE}/properties/${propertyId}:runReport`, {
     method: "POST",
+    signal: AbortSignal.timeout(15000),
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json"
@@ -2029,12 +2035,40 @@ async function buildDashboardPayload(range, dashboardConfig) {
   };
 }
 
-async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
-  if (!isDashboardAuthorized(req, dashboardConfig)) {
-    requestDashboardAuth(res);
+async function readPublicDashboardReport(key, load) {
+  const now = Date.now();
+  for (const [name, entry] of publicDashboardReports) {
+    if (entry.expiresAt <= now) publicDashboardReports.delete(name);
+  }
+  const existing = publicDashboardReports.get(key);
+  if (existing) return existing.promise;
+  publicDashboardReads = publicDashboardReads.filter(time => time > now - PUBLIC_DASHBOARD_CACHE_MS);
+  if (publicDashboardReads.length >= 8) {
+    throw Object.assign(new Error("dashboard_rate_limited"), { status: 429 });
+  }
+  publicDashboardReads.push(now);
+  const entry = { expiresAt: Infinity };
+  entry.promise = Promise.resolve().then(load).then(payload => {
+    entry.expiresAt = Date.now() + PUBLIC_DASHBOARD_CACHE_MS;
+    return payload;
+  }).catch(error => {
+    publicDashboardReports.delete(key);
+    throw error;
+  });
+  publicDashboardReports.set(key, entry);
+  return entry.promise;
+}
+
+function sendDashboardReadError(res, error, payload) {
+  if (error?.status === 429) {
+    res.setHeader("Retry-After", "60");
+    sendJson(res, 429, { error: "dashboard_rate_limited", message: "조회가 많습니다. 잠시 후 다시 확인해 주세요." });
     return;
   }
+  sendJson(res, 502, payload);
+}
 
+async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
   if (dashboardConfig.missing.length) {
     sendJson(res, 503, {
       error: "dashboard_not_configured",
@@ -2060,10 +2094,13 @@ async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
   const dashboardRange = getDashboardRange(requestUrl);
 
   try {
-    const payload = await buildDashboardPayload(dashboardRange, dashboardConfig);
+    const load = () => buildDashboardPayload(dashboardRange, dashboardConfig);
+    const payload = await (dashboardConfig.publicRead
+      ? readPublicDashboardReport(`summary:${dashboardRange.days}:${dashboardRange.startDate}:${dashboardRange.endDate}`, load)
+      : load());
     sendJson(res, 200, payload);
   } catch (error) {
-    sendJson(res, 502, {
+    sendDashboardReadError(res, error, {
       error: "dashboard_fetch_failed",
       message: "Google 성과 자료를 가져오지 못했습니다. 서버 설정과 서비스 계정 권한을 확인해 주세요."
     });
@@ -2086,13 +2123,16 @@ async function handleChristmasSearchAudit(req, res, requestUrl, config) {
     return;
   }
   try {
-    const accessToken = await getGoogleAccessToken(config.serviceAccount);
-    const payload = await buildChristmasSearchAudit({
-      requestReport: body => fetchSearchConsoleReport(accessToken, config.searchConsoleSiteUrl, body)
-    });
+    const load = async () => {
+      const accessToken = await getGoogleAccessToken(config.serviceAccount);
+      return buildChristmasSearchAudit({
+        requestReport: body => fetchSearchConsoleReport(accessToken, config.searchConsoleSiteUrl, body)
+      });
+    };
+    const payload = await (config.publicRead ? readPublicDashboardReport("christmas-search", load) : load());
     sendJson(res, 200, payload);
   } catch (error) {
-    sendJson(res, 502, unavailableAudit(errorStatus(error)));
+    sendDashboardReadError(res, error, unavailableAudit(errorStatus(error)));
   }
 }
 
@@ -2201,18 +2241,18 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Quick's existing public lookup routes have already returned above.
+  // Analytics public reads do not grant Quick's authenticated admin capability.
   // Use the same decoded/normalized path as static resolution to close encoded aliases.
   if (/^\/(?:dashboard|api\/dashboard)(?:\/|$)/.test(quickPath)) {
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Robots-Tag", "noindex, nofollow");
     res.setHeader("Vary", "Authorization");
-    if (!dashboardConfig.dashboardUsername || !dashboardConfig.dashboardPassword) {
+    if (!dashboardConfig.publicRead && (!dashboardConfig.dashboardUsername || !dashboardConfig.dashboardPassword)) {
       req.resume();
       sendJson(res, 503, { error: "dashboard_auth_not_configured", message: "관리자 인증 설정 전에는 대시보드와 성과 API를 사용할 수 없습니다." });
       return;
     }
-    if (!isDashboardAuthorized(req, dashboardConfig)) {
+    if (!dashboardConfig.publicRead && !isDashboardAuthorized(req, dashboardConfig)) {
       req.resume(); requestDashboardAuth(res); return;
     }
     if (req.method !== "GET" && req.method !== "HEAD") {

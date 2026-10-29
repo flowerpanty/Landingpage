@@ -14,14 +14,15 @@ const browser = await playwright.chromium.launch({ executablePath:process.env.CH
 const errors = [];
 try {
   for (const mode of ['available', 'empty', 'denied', 'not-configured']) {
-    const server = await startAuditTestServer({google:mode !== 'not-configured', mode});
-    const context = await browser.newContext({httpCredentials:{username:'synthetic-admin', password:'synthetic-password'}, reducedMotion:'reduce'});
+    const server = await startAuditTestServer({google:mode !== 'not-configured', mode, env:{DASHBOARD_ACCESS_MODE:'', DASHBOARD_USERNAME:'', DASHBOARD_PASSWORD:''}});
+    const context = await browser.newContext({reducedMotion:'reduce'});
     try {
       await context.route('**/*', route => new URL(route.request().url()).origin === server.base ? route.continue() : route.abort());
       const page = await context.newPage();
       page.on('pageerror', error => errors.push(error.message));
       const response = await page.goto(server.base + '/dashboard/');
       assert.equal(response.status(), 200);
+      assert.equal(response.headers()['www-authenticate'], undefined, 'anonymous dashboard navigation has no login challenge');
       assert.match(response.headers()['cache-control'], /no-store/);
       const panel = page.locator('[data-christmas-search]');
       await panel.locator('table').first().waitFor();
@@ -71,6 +72,14 @@ try {
       assert.match(await page.locator('meta[name="robots"]').getAttribute('content'), /noindex/);
     } finally { await context.close(); await server.stop(); }
   }
+  const privateServer = await startAuditTestServer({env:{DASHBOARD_ACCESS_MODE:'private'}});
+  const privateContext = await browser.newContext({httpCredentials:{username:'synthetic-admin', password:'synthetic-password'}});
+  try {
+    await privateContext.route('**/*', route => new URL(route.request().url()).origin === privateServer.base ? route.continue() : route.abort());
+    const privatePage = await privateContext.newPage();
+    assert.equal((await privatePage.goto(privateServer.base + '/dashboard/')).status(), 200);
+    await privatePage.locator('[data-christmas-results] table').first().waitFor();
+  } finally { await privateContext.close(); await privateServer.stop(); }
   assert.deepEqual(errors, []);
-  console.log('Christmas search dashboard browser: 320/390/768/1280/1440px, 28/90 day switching, private authenticated responses, XSS, keyboard focus, missing/empty/denied/retry states passed (synthetic only).');
+  console.log('Public dashboard browser without credentials: 320/390/768/1280/1440px, 28/90 days, XSS, keyboard, missing/empty/denied/retry states; optional private authenticated mode passed (synthetic only).');
 } finally { await browser.close(); }

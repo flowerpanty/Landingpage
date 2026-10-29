@@ -103,5 +103,65 @@ for (const mode of ['available', 'empty', 'denied']) {
     assert.equal((await fetch(server.base + '/christmas/')).status, 200);
   } finally { await server.stop(); }
 }
+// Public analytics must work without either credential, while Quick writes and
+// customer/order administration keep their independent authentication boundary.
+for (const accessMode of ['', 'public']) {
+  const server = await startAuditTestServer({env:{DASHBOARD_ACCESS_MODE:accessMode, DASHBOARD_USERNAME:'', DASHBOARD_PASSWORD:''}});
+  try {
+    for (const pathname of protectedPaths) {
+      const response = await fetch(server.base + pathname, {headers:{Authorization:'Basic broken'}});
+      assert.equal(response.status, pathname.startsWith('/api') ? 503 : 200, `public ${pathname}`);
+      assert.equal(response.headers.get('www-authenticate'), null, 'public reads never prompt for login');
+      assert.match(response.headers.get('cache-control'), /no-store/);
+      assert.match(response.headers.get('x-robots-tag'), /noindex/);
+      if (pathname.startsWith('/api')) assert.notEqual((await response.json()).error, 'dashboard_auth_not_configured');
+    }
+    for (const pathname of ['/dashboard/', '/api/dashboard/summary', '/api/dashboard/christmas-search']) {
+      const head = await fetch(server.base + pathname, {method:'HEAD'});
+      assert.equal(head.status, 200); assert.equal(await head.text(), '');
+      const post = await fetch(server.base + pathname, {method:'POST'});
+      assert.equal(post.status, 405); assert.equal(post.headers.get('allow'), 'GET, HEAD');
+    }
+    for (const [pathname, method] of [
+      ['/dashboard/quick/admin/', 'GET'], ['/dashboard/quick/admin.html', 'GET'], ['/dash%62oard%2Fquick%2Fadmin/', 'GET'],
+      ['/api/kakao-quick/admin-config', 'GET'], ['/api/kakao-quick/orders/SYNTHETIC-ORDER', 'GET'], ['/api/kakao-quick/orders', 'POST']
+    ]) assert.equal((await fetch(server.base + pathname, {method})).status, 401, `Quick stays protected: ${pathname}`);
+    assert.equal((await fetch(server.base + '/dashboard/quick/')).status, 200);
+    assert.equal(server.calls().length, 0, 'unconfigured Google and rejected writes never contact a provider');
+  } finally { await server.stop(); }
+}
+for (const mode of ['available', 'ga-denied']) {
+  const server = await startAuditTestServer({google:true, ga4:true, mode, env:{DASHBOARD_ACCESS_MODE:'public', DASHBOARD_USERNAME:'', DASHBOARD_PASSWORD:''}});
+  try {
+    const auditResponses = await Promise.all(Array.from({length:4}, () => fetch(server.base + '/api/dashboard/christmas-search')));
+    assert.ok(auditResponses.every(response => response.status === 200));
+    const auditData = await auditResponses[0].json();
+    assert.equal(auditData.status, 'available');
+    assert.equal(server.calls().length, 6, 'concurrent public readers share one Google audit');
+    server.calls().forEach(assertFilter);
+    await fetch(server.base + '/api/dashboard/christmas-search');
+    assert.equal(server.calls().length, 6, 'repeat public reads reuse the short server cache');
+    const response = await fetch(server.base + '/api/dashboard/summary?range=7d');
+    assert.equal(response.status, 200); assert.equal(response.headers.get('www-authenticate'), null);
+    const summary = await response.json();
+    assert.equal(summary.range.days, 7);
+    if (mode === 'available') assert.equal(summary.summary.sessions, 12);
+    else assert.ok(summary.errors.some(error => error.message === 'GA4 보고서 조회 실패'));
+    assert.doesNotMatch(JSON.stringify([summary, auditData]), /SYNTHETIC-TOKEN|SYNTHETIC-PRIVATE-UPSTREAM|SYNTHETIC-GA4-PROPERTY|private_key|client_email|BEGIN PRIVATE|synthetic-password/);
+    const calls = server.calls().length;
+    await fetch(server.base + '/api/dashboard/summary?range=7d');
+    assert.equal(server.calls().length, calls, 'summary cache avoids repeat Google reports');
+    const burst = await Promise.all(Array.from({length:9}, (_,i) => fetch(server.base + `/api/dashboard/summary?days=${i+10}`)));
+    assert.equal(burst.filter(response => response.status === 429).length, 3, 'new public report loads are globally bounded');
+    for (const limited of burst.filter(response => response.status === 429)) {
+      assert.equal(limited.headers.get('retry-after'), '60');
+      assert.equal((await limited.json()).error, 'dashboard_rate_limited');
+    }
+    assert.equal((await fetch(server.base + '/api/dashboard/christmas-search')).status, 200, 'cached reports remain readable while new loads are limited');
+  } finally { await server.stop(); }
+}
+const unknownMode = await startAuditTestServer({env:{DASHBOARD_ACCESS_MODE:'invalid', DASHBOARD_USERNAME:'', DASHBOARD_PASSWORD:''}});
+try { assert.equal((await fetch(unknownMode.base + '/dashboard/')).status, 503, 'an invalid explicit access mode cannot enable public access'); }
+finally { await unknownMode.stop(); }
 assertFilter(requestFor(periodsFor(now)[0], ['query']));
-console.log('Christmas search audit: auth, canonical filters, PT ranges, pagination, weighted topics, missing/empty/denied/partial data passed (synthetic only).');
+console.log('Dashboard public/private reads, no-credential access, protected Quick writes/admin, cache/single-flight/load limits, canonical filters, PT ranges, pagination, missing/empty/denied/partial data passed (synthetic only).');

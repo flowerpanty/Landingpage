@@ -1,6 +1,6 @@
 # Dashboard Setup
 
-`/dashboard/` 는 Google Analytics 4 Data API 와 Google Search Console API 를 함께 읽는 관리자용 페이지입니다.
+`/dashboard/` 는 Google Analytics 4 Data API 와 Google Search Console API 를 함께 읽는 성과 대시보드입니다. 기본값은 로그인 없이 조회하는 공개 모드입니다.
 
 ## Required env
 
@@ -10,12 +10,20 @@
 - `GA4_PROPERTY_ID`
 - `SEARCH_CONSOLE_SITE_URL`
 
-관리자 인증 필수:
+## 공개 모드와 관리자 인증
+
+2026-10-30 변경: `/dashboard/`와 읽기 전용 `/api/dashboard/summary`, `/api/dashboard/christmas-search`는 아이디·비밀번호 없이 이용합니다. 환경변수를 추가하지 않아도 공개 모드이며, 명시하려면 `DASHBOARD_ACCESS_MODE=public`을 사용합니다. 사이트 전체 유입·검색어 및 크리스마스 검색 성과도 누구나 조회할 수 있습니다.
+
+공개 응답에도 `no-store`, `noindex, nofollow`를 유지합니다. 성과 API는 GET·HEAD만 허용하며 고객 주문 DB를 조회하지 않습니다. 동일 보고서는 서버 메모리에서 60초간 공유하고 동시 요청을 합칩니다. 새로운 보고서 로드는 서버 전체 분당 8회까지이며 초과하면 429와 `Retry-After: 60`을 반환합니다. 캐시된 보고서는 계속 조회할 수 있습니다. 브라우저에는 기존 조회 시각을 표시합니다.
+
+관리자 로그인으로 되돌리려면 `DASHBOARD_ACCESS_MODE=private`와 아래 두 값을 모두 설정합니다.
 
 - `DASHBOARD_USERNAME`
 - `DASHBOARD_PASSWORD`
 
-두 값 모두 설정해야 `/dashboard/`와 `/api/dashboard/*`를 사용할 수 있습니다. 하나라도 비어 있으면 503으로 닫히며, 설정 후 인증 누락·실패는 401입니다. 브라우저의 Basic Auth 창으로 로그인합니다. 운영에서는 HTTPS를 사용하세요. 인증된 HTML과 성과 API는 `no-store`, `noindex, nofollow`로 응답합니다. 기존 `/dashboard/quick/`의 공개 요금·시간 조회는 유지됩니다.
+비공개 모드에서 두 값 중 하나라도 비어 있으면 503으로 닫히며, 설정 후 인증 누락·실패는 401입니다. 브라우저의 Basic Auth 창으로 로그인합니다. 잘못된 `DASHBOARD_ACCESS_MODE` 값도 비공개로 처리합니다.
+
+차량 퀵 주문 생성·주문 상태 조회·`/dashboard/quick/admin/`에는 공개 모드를 적용하지 않습니다. 이 기능은 위 관리자 ID·비밀번호가 항상 필요합니다. 기존 `/dashboard/quick/`의 공개 요금·시간 조회와 공지 관리자 인증은 유지합니다. Google 자격증명과 관리자 비밀번호는 서버 환경변수에만 둡니다.
 
 ## Google setup
 
