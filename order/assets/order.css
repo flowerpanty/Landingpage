@@ -462,33 +462,37 @@
     min-height: 0 !important;
   }
 
-  .mobilePackageHint {
-    display: block;
-    margin: -4px 2px 10px;
-    color: var(--muted, #6b5a51);
-    font-size: 12px;
-    font-weight: 700;
-  }
-
   .packageRail {
-    gap: 10px !important;
+    gap: 8px !important;
     padding-bottom: 8px !important;
   }
 
   .packageCard {
-    flex: 0 0 76vw !important;
-    max-width: 304px !important;
-    padding: 10px !important;
+    padding: 8px !important;
+    border-radius: 16px !important;
+  }
+
+  .packageCard[aria-pressed="true"]::after {
+    top: auto !important;
+    right: 6px !important;
+    bottom: 6px !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 12px !important;
   }
 
   .packageImage {
-    height: 164px !important;
+    height: auto !important;
     margin: 8px 0 !important;
+    border-radius: 10px !important;
   }
 
   .packageCard h3 {
+    min-height: 2.7em;
     margin-bottom: 2px !important;
-    font-size: 18px !important;
+    font-size: clamp(12px, 3.2vw, 16px) !important;
+    line-height: 1.35;
+    word-break: keep-all;
   }
 
   .packageCard > p {
@@ -497,6 +501,8 @@
 
   .packageCard .packageUse {
     margin-top: 4px !important;
+    padding: 4px !important;
+    font-size: 10px !important;
   }
 
   .packageCard .badge {
