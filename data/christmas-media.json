@@ -9,5 +9,13 @@
       { "image": "/images/christmas/brookie-set.webp", "left": 130, "top": 12, "width": 454, "height": 606 },
       { "image": "/images/christmas/santa-bundle.webp", "left": 616, "top": 12, "width": 454, "height": 606 }
     ]
+  },
+  "workshop": {
+    "image": "/images/christmas/nothingmatters-workshop-exterior.webp",
+    "fallback": "/images/christmas/nothingmatters-workshop-exterior.jpg",
+    "width": 842,
+    "height": 748,
+    "alt": "노란 COOKIE 간판과 NOTHING MATTERS 유리창 로고, 쿠키 캐릭터가 보이는 낫띵메터스 실제 매장 외관",
+    "caption": "NOTHINGMATTERS / 낫띵메터스 · 서울 공항동 작업실"
   }
 }

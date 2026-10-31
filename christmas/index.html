@@ -32,7 +32,8 @@
   :focus-visible { outline: 3px solid #111; outline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
-  <link rel="stylesheet" href="/assets/christmas.css?v=20261029-search-coverage">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="/assets/christmas.css?v=20261031-storefront">
   <script type="application/ld+json" data-nm-schema="static">
   {
     "@context": "https://schema.org",
@@ -182,7 +183,7 @@
           "@type": "ImageObject",
           "url": "https://nothingmatters.co.kr/images/christmas/christmas-2026-gifts-1200x630.jpg"
         },
-        "dateModified": "2026-10-29",
+        "dateModified": "2026-10-31",
         "breadcrumb": {
           "@id": "https://nothingmatters.co.kr/christmas/#breadcrumb"
         },
@@ -458,22 +459,20 @@
 <body class="christmas-page" data-disable-kakao-float>
   <a data-nm-skip-link class="nm-skip-link" href="#main-content">본문으로 건너뛰기</a>
   <header class="xmas-header xmas-wrap">
-    <a class="xmas-brand" href="/" aria-label="낫띵메터스 홈">NOTHINGMATTERS<span>작은 선물, 오래 남는 마음.</span></a>
-    <a class="xmas-header-link" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-header">주문 상담 ↗</a>
+    <a class="xmas-brand" href="/" aria-label="낫띵메터스 홈"><img src="/images/nm-bear-mark.svg" alt="" width="40" height="40" aria-hidden="true"><span>NOTHINGMATTERS</span></a>
+    <nav class="xmas-header-nav" aria-label="공식 채널과 주문 상담">
+      <a class="xmas-header-link" href="/">공식 홈페이지</a>
+      <a class="xmas-header-link" href="https://instagram.com/nothingmatters_c" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
+      <a class="xmas-header-link xmas-header-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-header">주문 상담 ↗</a>
+    </nav>
   </header>
   <main id="main-content" tabindex="-1">
     <section class="xmas-intro xmas-wrap" id="hero" aria-labelledby="christmas-title">
-      <div><p class="xmas-eyebrow">NOTHINGMATTERS · HOLIDAY 2026</p><h1 id="christmas-title">2026 크리스마스 쿠키 세트·선물</h1></div><p class="xmas-intro-lead">낫띵메터스의 크리스마스 수제쿠키 4종. 서울 강서구 공항동 사전 예약 픽업과 기업행사·어린이집 선물은 수량·일정을 상담해 주세요.</p>
       <!-- christmas-hero-image:start -->
       <figure class="xmas-hero-media"><img id="xmas-hero-image" src="/images/christmas/christmas-2026-gifts-1200x630.jpg" alt="브루키 2종 세트와 산타꾸러미 4종의 서로 다른 실물 상품 사진을 나란히 배치한 크리스마스 대표 이미지" width="1200" height="630" loading="eager" fetchpriority="high" decoding="async"></figure>
       <!-- christmas-hero-image:end -->
+      <div class="xmas-hero-copy"><div><p class="xmas-eyebrow">NOTHINGMATTERS · HOLIDAY 2026</p><h1 id="christmas-title">2026 크리스마스 쿠키 세트·선물</h1><p class="xmas-brand-copy">작은 쿠키에 담은, 커다란 크리스마스.</p></div><a id="xmas-hero-order" class="xmas-button" href="#christmas-order">쿠키 선택·주문 안내 ↓</a></div>
     </section>
-    <!-- christmas-summary:start -->
-    <section class="xmas-wrap xmas-gift-guide" id="gift-guide" aria-labelledby="gift-guide-title">
-      <h2 id="gift-guide-title">크리스마스 쿠키 4종</h2>
-      <ul><li data-summary-sku="christmas-bear-brookie"><strong>곰돌이 브루키</strong><span>8,500원</span></li><li data-summary-sku="christmas-tree-brookie"><strong>트리 브루키</strong><span>9,000원</span></li><li data-summary-sku="christmas-brookie-set"><strong>브루키 2종 세트</strong><span>17,000원</span></li><li data-summary-sku="christmas-santa-bundle"><strong>산타꾸러미 4종</strong><span>23,000원</span></li></ul>
-    </section>
-    <!-- christmas-summary:end -->
     <div class="xmas-wrap xmas-order-shell" id="christmas-order">
       <nav class="xmas-steps" aria-label="주문 단계"><ol>
         <li><button type="button" data-step-link="1" aria-current="step"><span>01</span><strong>상품 선택</strong><small>상품과 상세 사진</small></button></li>
@@ -484,27 +483,27 @@
       <div class="xmas-order-layout">
         <form id="xmas-order-form" action="/api/landing-orders" method="post" novalidate>
           <section id="christmas-products" data-order-step="1" aria-labelledby="products-title">
-            <div class="xmas-section-heading xmas-product-heading"><div><h2 id="products-title" tabindex="-1">선물할 쿠키 선택</h2><p>실물 사진 확대 보기</p></div><a class="xmas-product-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-products-consult">카카오톡 주문 상담 ↗</a></div>
+            <div class="xmas-section-heading xmas-product-heading"><div><h2 id="products-title" tabindex="-1">크리스마스 쿠키 4종</h2><p>사진을 누르면 포장과 상세 모습을 더 크게 볼 수 있어요.</p></div><a class="xmas-product-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-products-consult">카카오톡 주문 상담 ↗</a></div>
             <noscript><p class="xmas-notice">수량 선택과 단계 이동에는 자바스크립트가 필요합니다. 상품과 가격을 확인한 뒤 <a href="https://pf.kakao.com/_QdCaK/chat">카카오톡으로 상담해 주세요.</a></p></noscript>
             <!-- christmas-products:start -->
       <div class="xmas-products">
         <article class="xmas-product" id="christmas-bear-brookie" data-sku="christmas-bear-brookie" aria-labelledby="christmas-bear-brookie-title">
-          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-bear-brookie" aria-label="곰돌이 브루키 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/bear-brookie.webp" alt="트리와 곰돌이 브루키 실물 사진, 오른쪽이 곰돌이 브루키" width="798" height="1024" loading="eager" fetchpriority="high" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-sr-only">사진 오른쪽의 곰돌이 브루키입니다.</figcaption></figure>
+          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-bear-brookie" aria-label="곰돌이 브루키 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/bear-brookie.webp" alt="트리와 곰돌이 브루키 실물 사진, 오른쪽이 곰돌이 브루키" width="798" height="1024" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-photo-caption">사진 오른쪽의 곰돌이 브루키입니다.</figcaption></figure>
           <div class="xmas-product-info"><h3 id="christmas-bear-brookie-title">곰돌이 브루키</h3><p class="xmas-price">8,500원</p><p class="xmas-composition">곰돌이 브루키 1개</p></div>
           <div class="xmas-counter" role="group" aria-label="곰돌이 브루키 수량"><button type="button" data-delta="-1" aria-label="곰돌이 브루키 수량 줄이기" disabled>−</button><input id="qty-christmas-bear-brookie" type="number" inputmode="numeric" min="0" step="1" value="0" aria-label="곰돌이 브루키 수량" aria-describedby="xmas-quantity-help"><button type="button" data-delta="1" aria-label="곰돌이 브루키 수량 늘리기" disabled>+</button></div><output class="xmas-line-total" data-line-total>0원</output>
         </article>
         <article class="xmas-product" id="christmas-tree-brookie" data-sku="christmas-tree-brookie" aria-labelledby="christmas-tree-brookie-title">
-          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-tree-brookie" aria-label="트리 브루키 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/tree-brookie.webp" alt="크리스마스 트리 장식의 브루키 개별 포장 실물 사진" width="768" height="1024" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-sr-only">사진은 트리 브루키 2개를 함께 촬영했습니다.</figcaption></figure>
+          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-tree-brookie" aria-label="트리 브루키 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/tree-brookie.webp" alt="크리스마스 트리 장식의 브루키 개별 포장 실물 사진" width="768" height="1024" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-photo-caption">사진은 트리 브루키 2개를 함께 촬영했습니다.</figcaption></figure>
           <div class="xmas-product-info"><h3 id="christmas-tree-brookie-title">트리 브루키</h3><p class="xmas-price">9,000원</p><p class="xmas-composition">트리 브루키 1개</p></div>
           <div class="xmas-counter" role="group" aria-label="트리 브루키 수량"><button type="button" data-delta="-1" aria-label="트리 브루키 수량 줄이기" disabled>−</button><input id="qty-christmas-tree-brookie" type="number" inputmode="numeric" min="0" step="1" value="0" aria-label="트리 브루키 수량" aria-describedby="xmas-quantity-help"><button type="button" data-delta="1" aria-label="트리 브루키 수량 늘리기" disabled>+</button></div><output class="xmas-line-total" data-line-total>0원</output>
         </article>
         <article class="xmas-product" id="christmas-brookie-set" data-sku="christmas-brookie-set" aria-labelledby="christmas-brookie-set-title">
-          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-brookie-set" aria-label="브루키 2종 세트 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/brookie-set.webp" alt="곰돌이와 트리 브루키가 함께 담긴 브루키 2종 세트 실물 사진" width="768" height="1024" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-sr-only">곰돌이와 트리, 두 가지를 한 세트로.</figcaption></figure>
+          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-brookie-set" aria-label="브루키 2종 세트 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/brookie-set.webp" alt="곰돌이와 트리 브루키가 함께 담긴 브루키 2종 세트 실물 사진" width="768" height="1024" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-photo-caption">곰돌이와 트리, 두 가지를 한 세트로.</figcaption></figure>
           <div class="xmas-product-info"><h3 id="christmas-brookie-set-title">브루키 2종 세트</h3><p class="xmas-price">17,000원<span class="xmas-saving">단품 합계보다 500원 절약</span></p><p class="xmas-composition">곰돌이 브루키 1개 + 트리 브루키 1개</p></div>
           <div class="xmas-counter" role="group" aria-label="브루키 2종 세트 수량"><button type="button" data-delta="-1" aria-label="브루키 2종 세트 수량 줄이기" disabled>−</button><input id="qty-christmas-brookie-set" type="number" inputmode="numeric" min="0" step="1" value="0" aria-label="브루키 2종 세트 수량" aria-describedby="xmas-quantity-help"><button type="button" data-delta="1" aria-label="브루키 2종 세트 수량 늘리기" disabled>+</button></div><output class="xmas-line-total" data-line-total>0원</output>
         </article>
         <article class="xmas-product" id="christmas-santa-bundle" data-sku="christmas-santa-bundle" aria-labelledby="christmas-santa-bundle-title">
-          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-santa-bundle" aria-label="산타꾸러미 4종 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/santa-bundle.webp" alt="루돌프, 산타, 리스, 눈사람 쿠키로 구성된 산타꾸러미 4종 실물 사진" width="764" height="1024" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-sr-only">네 가지 크리스마스 쿠키를 담았어요.</figcaption></figure>
+          <figure><button type="button" class="xmas-photo-button" data-gallery="christmas-santa-bundle" aria-label="산타꾸러미 4종 상세 사진 보기" aria-haspopup="dialog" disabled><img src="/images/christmas/santa-bundle.webp" alt="루돌프, 산타, 리스, 눈사람 쿠키로 구성된 산타꾸러미 4종 실물 사진" width="764" height="1024" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-photo-caption">네 가지 크리스마스 쿠키를 담았어요.</figcaption></figure>
           <div class="xmas-product-info"><h3 id="christmas-santa-bundle-title">산타꾸러미 4종</h3><p class="xmas-price">23,000원</p><p class="xmas-composition">루돌프초코 · 버터산타 · 말차리스 · 로투스노우맨 각 1개</p></div>
           <div class="xmas-counter" role="group" aria-label="산타꾸러미 4종 수량"><button type="button" data-delta="-1" aria-label="산타꾸러미 4종 수량 줄이기" disabled>−</button><input id="qty-christmas-santa-bundle" type="number" inputmode="numeric" min="0" step="1" value="0" aria-label="산타꾸러미 4종 수량" aria-describedby="xmas-quantity-help"><button type="button" data-delta="1" aria-label="산타꾸러미 4종 수량 늘리기" disabled>+</button></div><output class="xmas-line-total" data-line-total>0원</output>
         </article>
@@ -553,6 +552,18 @@
       </div>
       <p id="xmas-live-total" class="xmas-sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
     </div>
+    <section class="xmas-wrap xmas-about" id="about-nothingmatters" aria-labelledby="xmas-about-title">
+      <!-- christmas-about-image:start -->
+      <figure class="xmas-about-media"><picture><source srcset="/images/christmas/nothingmatters-workshop-exterior.webp" type="image/webp"><img src="/images/christmas/nothingmatters-workshop-exterior.jpg" alt="노란 COOKIE 간판과 NOTHING MATTERS 유리창 로고, 쿠키 캐릭터가 보이는 낫띵메터스 실제 매장 외관" width="842" height="748" loading="lazy" decoding="async"></picture><figcaption>NOTHINGMATTERS / 낫띵메터스 · 서울 공항동 작업실</figcaption></figure>
+      <!-- christmas-about-image:end -->
+      <div class="xmas-about-body"><div class="xmas-about-heading"><img src="/images/nm-bear-mark.svg" alt="" width="48" height="48" loading="lazy" decoding="async" aria-hidden="true"><div><p class="xmas-eyebrow">ABOUT NOTHINGMATTERS</p><h2 id="xmas-about-title">이 쿠키는 여기서 만들어요.</h2></div></div><p class="xmas-brand-intro">낫띵메터스는 서울 강서구 공항동에서 귀여운 캐릭터 쿠키와 마음을 전하는 선물을 만드는 작은 쿠키 작업실이에요.</p><p class="xmas-brand-season">올해 크리스마스에도 곰돌이와 트리, 산타와 루돌프를 쿠키에 담았습니다.</p><p><strong>서울특별시 강서구 송정로 25 1층</strong><br>사전 예약 제작·예약 픽업으로 운영하며, 예약 없이 방문하시면 바로 구매할 쿠키가 없습니다. 크리스마스 상품의 최종 주문은 카카오톡 상담으로 확정해 주세요.</p><nav class="xmas-about-links" aria-label="낫띵메터스 공식 채널"><a href="/">낫띵메터스 공식 홈페이지 ↗</a><a href="https://instagram.com/nothingmatters_c" target="_blank" rel="noopener noreferrer">인스타그램 @nothingmatters_c ↗</a></nav></div>
+    </section>
+    <!-- christmas-summary:start -->
+    <section class="xmas-wrap xmas-gift-guide" id="gift-guide" aria-labelledby="gift-guide-title">
+      <h2 id="gift-guide-title">크리스마스 쿠키 4종</h2>
+      <ul><li data-summary-sku="christmas-bear-brookie"><strong>곰돌이 브루키</strong><span>8,500원</span></li><li data-summary-sku="christmas-tree-brookie"><strong>트리 브루키</strong><span>9,000원</span></li><li data-summary-sku="christmas-brookie-set"><strong>브루키 2종 세트</strong><span>17,000원</span></li><li data-summary-sku="christmas-santa-bundle"><strong>산타꾸러미 4종</strong><span>23,000원</span></li></ul>
+    </section>
+    <!-- christmas-summary:end -->
     <!-- christmas-shopping-guide:start -->
     <section class="xmas-wrap xmas-section" id="gift-choice" aria-labelledby="gift-choice-title">
       <p class="xmas-eyebrow">CHOOSE YOUR CHRISTMAS</p><h2 id="gift-choice-title">크리스마스 쿠키 추천, 받는 분과 나누는 방식부터 골라보세요</h2>
@@ -604,7 +615,7 @@
       <!-- christmas-faq:end -->
     </section>
   </main>
-  <footer class="xmas-footer"><div class="xmas-wrap"><a class="xmas-brand" href="/">NOTHINGMATTERS</a><p>서울특별시 강서구 송정로 25 1층 · 예약 픽업<br><a href="tel:01028667976">010-2866-7976</a> · <a href="mailto:eddiefactory@naver.com">eddiefactory@naver.com</a></p><nav aria-label="도움말"><a href="/pickup/">픽업 안내</a><a href="/contact/">문의</a><a href="/guides/cookie-storage/">보관 가이드</a><a href="/bulk/">답례품 안내</a><a data-notice-link href="/notice/" style="display:inline-flex;align-items:center;min-height:44px">공지사항</a></nav><small>Made with love, given with warmth.</small></div></footer>
+  <footer class="xmas-footer"><div class="xmas-wrap"><a class="xmas-brand" href="/">NOTHINGMATTERS</a><p>서울특별시 강서구 송정로 25 1층 · 사전 예약 제작·예약 픽업<br><a href="tel:01028667976">010-2866-7976</a> · <a href="mailto:eddiefactory@naver.com">eddiefactory@naver.com</a></p><nav aria-label="공식 채널"><a href="/">공식 홈페이지 ↗</a><a href="https://instagram.com/nothingmatters_c" target="_blank" rel="noopener noreferrer">Instagram @nothingmatters_c ↗</a></nav><nav aria-label="도움말"><a href="/pickup/">픽업 안내</a><a href="/contact/">문의</a><a href="/guides/cookie-storage/">보관 가이드</a><a href="/bulk/">답례품 안내</a><a data-notice-link href="/notice/" style="display:inline-flex;align-items:center;min-height:44px">공지사항</a></nav><small>Made with love, given with warmth.</small></div></footer>
   <aside class="xmas-sticky" aria-label="주문 합계 및 다음 단계"><div><span id="xmas-sticky-count">선택한 선물 0개</span><strong id="xmas-sticky-total">0원</strong></div><button class="xmas-button" id="xmas-sticky-next" type="button" disabled>수령 정보 입력 →</button></aside>
   <dialog id="xmas-gallery" aria-labelledby="xmas-gallery-title">
     <div class="xmas-gallery-shell"><header class="xmas-gallery-header"><div><h2 id="xmas-gallery-title">상품 상세 사진</h2><p id="xmas-gallery-count" aria-live="polite"></p></div><button type="button" id="xmas-gallery-close" aria-label="상세 사진 닫기">닫기 ×</button></header><figure class="xmas-gallery-photo"><img id="xmas-gallery-image" alt="" width="1" height="1" decoding="async"><p id="xmas-gallery-loading" role="status" hidden>사진을 불러오는 중…</p><figcaption id="xmas-gallery-caption"></figcaption></figure><div class="xmas-gallery-controls"><button type="button" id="xmas-gallery-prev" aria-label="이전 사진">←</button><div id="xmas-gallery-thumbnails" aria-label="상세 사진 선택"></div><button type="button" id="xmas-gallery-next" aria-label="다음 사진">→</button></div></div>

@@ -6,12 +6,13 @@ import os from 'node:os';
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { setTimeout as pause } from 'node:timers/promises';
+import { brandFonts, routeBrandFont, checkBrandFonts } from './notice-browser-support.mjs';
 const require = createRequire(import.meta.url);
 let playwright;
 try { playwright = require('playwright'); }
 catch { playwright = require(process.env.PLAYWRIGHT_MODULE_PATH || path.join(os.homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright')); }
 const catalog = JSON.parse(fs.readFileSync('data/christmas-products.json', 'utf8'));
-const { representative: thumbnail } = JSON.parse(fs.readFileSync('data/christmas-media.json', 'utf8'));
+const { representative: thumbnail, workshop: workshopPhoto } = JSON.parse(fs.readFileSync('data/christmas-media.json', 'utf8'));
 const probe = http.createServer();
 await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
 const port = probe.address().port;
@@ -23,6 +24,7 @@ fs.mkdirSync(artifactDir, { recursive: true });
 const errors = [], requests = [], requestedUrls = [], missing = [];
 let browser, mode = 'disabled';
 try {
+  const fonts = await brandFonts();
   for (let i = 0; i < 100; i++) {
     try { if ((await fetch(base + '/christmas/')).ok) break; } catch { /* starting */ }
     await pause(50);
@@ -47,6 +49,12 @@ try {
     }).observe({type:'layout-shift', buffered:true});
   });
   const imageResponses = [], crawlerResponses = [], labVitals = [];
+  for(const [file,type] of [[workshopPhoto.image,'image/webp'],[workshopPhoto.fallback,'image/jpeg']]){
+    const response=await context.request.get(base+file);
+    assert.equal(response.status(),200);assert.equal(response.headers()['content-type'],type);
+    assert.deepEqual(await response.body(),fs.readFileSync('.'+file));
+    imageResponses.push({image:file,status:response.status(),contentType:type});
+  }
   for (const userAgent of ['Mozilla/5.0', 'Googlebot-Image/1.0', 'Yeti/1.1', 'bingbot/2.0', 'facebookexternalhit/1.1', 'Twitterbot/1.0']) {
     const response = await context.request.get(base + thumbnail.image, { headers: { 'User-Agent': userAgent } });
     assert.equal(response.status(), 200, `anonymous image GET: ${userAgent}`);
@@ -74,7 +82,9 @@ try {
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     requestedUrls.push(decodeURIComponent(url.href));
+    if (await routeBrandFont(route, fonts)) return;
     if (url.href === 'https://pf.kakao.com/_QdCaK/chat') return route.fulfill({contentType:'text/html', body:'<!doctype html><title>LOCAL MOCK 상담</title>'});
+    if (url.href === 'https://instagram.com/nothingmatters_c') return route.fulfill({contentType:'text/html', body:'<!doctype html><title>LOCAL MOCK Instagram</title>'});
     if (url.origin !== base) return route.abort();
     if (url.pathname === '/api/christmas-order-status' && mode !== 'disabled') {
       if (mode === 'status-fail') return route.abort();
@@ -193,18 +203,88 @@ try {
       }
     }
   }
-  const renderedEvidence = [];
+  const renderedEvidence = [], brandEvidence = [], storefrontEvidence = [];
+  async function assertStorefront(width){
+    const image=page.locator('.xmas-about-media img'),source=page.locator('.xmas-about-media source');
+    await image.scrollIntoViewIfNeeded();
+    await page.waitForFunction(photo=>{const i=document.querySelector('.xmas-about-media img');return i.complete&&i.naturalWidth===photo.width&&i.naturalHeight===photo.height&&new URL(i.currentSrc).pathname===photo.image;},workshopPhoto);
+    await image.evaluate(async node=>{await node.decode();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
+    const actual=await image.evaluate(node=>{const r=node.getBoundingClientRect();return {width:r.width,height:r.height,naturalWidth:node.naturalWidth,naturalHeight:node.naturalHeight,fit:getComputedStyle(node).objectFit,transform:getComputedStyle(node).transform,src:new URL(node.currentSrc).pathname};});
+    assert.equal(actual.fit,'contain');assert.equal(actual.transform,'none');
+    assert.ok(Math.abs(actual.width/actual.height-workshopPhoto.width/workshopPhoto.height)<.002,'complete original storefront ratio; no crop or distortion');
+    assert.ok(actual.width>= (width<640?width*.7:width<960?600:width*.35),'large real workshop photo');
+    assert.ok(actual.width<=workshopPhoto.width,'no original photo upscaling');
+    assert.equal(await image.getAttribute('alt'),workshopPhoto.alt);
+    assert.equal(await page.locator('#xmas-about-title').textContent(),'이 쿠키는 여기서 만들어요.');
+    assert.equal(await page.locator('.xmas-brand-intro').textContent(),'낫띵메터스는 서울 강서구 공항동에서 귀여운 캐릭터 쿠키와 마음을 전하는 선물을 만드는 작은 쿠키 작업실이에요.');
+    assert.equal(await page.locator('.xmas-brand-season').textContent(),'올해 크리스마스에도 곰돌이와 트리, 산타와 루돌프를 쿠키에 담았습니다.');
+    await page.screenshot({path:`${artifactDir}/${width}-storefront.png`});
+    if([390,1280].includes(width)){
+      // Locally disable the WebP source to exercise the real JPEG fallback, without changing the application.
+      await source.evaluate(node=>node.media='not all');
+      await page.waitForFunction(photo=>{const i=document.querySelector('.xmas-about-media img');return i.complete&&i.naturalWidth===photo.width&&new URL(i.currentSrc).pathname===photo.fallback;},workshopPhoto);
+      await image.evaluate(node=>node.decode());
+      assert.ok(Math.abs((await image.boundingBox()).height-actual.height)<1,'fallback preserves the reserved photo area');
+      await source.evaluate(node=>node.removeAttribute('media'));
+      await page.waitForFunction(photo=>new URL(document.querySelector('.xmas-about-media img').currentSrc).pathname===photo.image,workshopPhoto);
+      await image.evaluate(node=>node.decode());
+    }
+    storefrontEvidence.push({viewport:width,...actual,jpegFallbackTested:[390,1280].includes(width)});
+  }
+  async function assertBrand(width) {
+    const faces = await checkBrandFonts(page);
+    const loaded = faces.filter(face => face.status === 'loaded');
+    for (const weight of ['500', '700', '900']) assert.ok(loaded.some(face => face.family === 'SeoulNotice' && face.weight === weight), `actual SeoulNotice ${weight} loaded`);
+    assert.match(await page.locator('body').evaluate(node => getComputedStyle(node).fontFamily), /SeoulNotice/);
+    assert.match(await page.locator('.xmas-brand').first().evaluate(node => getComputedStyle(node).fontFamily), /PretendardDisplay/);
+    assert.equal(await page.locator('.xmas-header-nav a').count(), 3);
+    const headerRects = await page.locator('.xmas-header a').evaluateAll(nodes => nodes.map(node => {const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};}));
+    for (const [i,rect] of headerRects.entries()) {
+      assert.ok(rect.left >= 0 && rect.right <= width && rect.height >= 44, `header touch area at ${width}`);
+      for (const other of headerRects.slice(i+1)) assert.ok(rect.right <= other.left || other.right <= rect.left || rect.bottom <= other.top || other.bottom <= rect.top, `header links never overlap at ${width}`);
+    }
+    assert.ok(await page.locator('.xmas-brand-copy').isVisible());
+    assert.ok((await page.locator('#about-nothingmatters').textContent()).includes('카카오톡 상담으로 확정'));
+    const contrast = await page.evaluate(() => {
+      const luminance = color => color.match(/[\d.]+/g).slice(0,3).map(Number).map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((v,n,i)=>v+n*[.2126,.7152,.0722][i],0);
+      const ratio = (a,b) => {const [lo,hi]=[luminance(a),luminance(b)].sort((x,y)=>x-y);return (hi+.05)/(lo+.05);};
+      return ['.xmas-header-consult','#xmas-next','.xmas-button-green','.xmas-brand-intro','.xmas-photo-label','#xmas-name'].map(selector=>{
+        const node=document.querySelector(selector),style=getComputedStyle(node);
+        let background=style.backgroundColor, ancestor=node;
+        while (background==='rgba(0, 0, 0, 0)' && ancestor.parentElement) {ancestor=ancestor.parentElement;background=getComputedStyle(ancestor).backgroundColor;}
+        return {selector,text:ratio(style.color,background),border:selector==='#xmas-name'?ratio(style.borderTopColor,background):null};
+      });
+    });
+    for (const item of contrast) {assert.ok(item.text>=4.5, `brand text contrast ${JSON.stringify(item)}`);if(item.border)assert.ok(item.border>=3,'input boundary contrast');}
+    for (const area of ['.xmas-header','#about-nothingmatters','.xmas-footer']) {
+      const instagram=page.locator(`${area} a[href="https://instagram.com/nothingmatters_c"]`);
+      assert.equal(await instagram.getAttribute('target'),'_blank'); assert.equal(await instagram.getAttribute('rel'),'noopener noreferrer');
+      assert.ok(await page.locator(`${area} a[href="/"]`).count()>0);
+      if ([390,1440].includes(width)) {
+        const opened=page.waitForEvent('popup');await instagram.click();const popup=await opened;await popup.waitForLoadState('domcontentloaded');
+        assert.equal(popup.url(),'https://instagram.com/nothingmatters_c');assert.equal(await popup.evaluate(()=>window.opener),null);await popup.close();
+      }
+    }
+    if ([390,1440].includes(width)) {
+      await page.locator('.xmas-header-nav a[href="/"]').click();await page.waitForURL(base+'/');
+      await page.goBack();await page.waitForFunction(()=>!document.querySelector('[data-delta="1"]').disabled);await checkBrandFonts(page);
+    }
+    await page.evaluate(()=>scrollTo(0,0));
+    brandEvidence.push({width,faces:loaded,headerRects,contrast,channels:'Home link navigates locally; all three Instagram links open their exact URL in isolated local mock tabs at 390/1440. No external account writes.'});
+  }
   for (const [width, height] of [[320, 844], [390, 844], [430, 932], [768, 1024], [1024, 900], [1280, 900], [1440, 1000]]) {
     mode = 'disabled'; await page.setViewportSize({ width, height }); await page.goto(base + '/christmas/');
     await page.waitForFunction(() => !document.querySelector('[data-delta="1"]').disabled);
     await step(1);
+    await assertBrand(width);
     assert.equal(await page.locator('h1').textContent(), '2026 크리스마스 쿠키 세트·선물');
-    assert.ok(await page.locator('.xmas-intro-lead').isVisible(), 'hero lead remains readable on mobile');
+    assert.ok(await page.locator('.xmas-brand-intro').isVisible(), 'brand introduction remains visible in HTML');
     await page.waitForFunction(() => { const image = document.querySelector('#xmas-hero-image'); return image.complete && image.naturalWidth === 1200 && image.naturalHeight === 630; });
     const heroImage = page.locator('#xmas-hero-image');
     assert.ok(await heroImage.isVisible());
     assert.equal(await heroImage.getAttribute('src'), thumbnail.image);
     const heroRect = await heroImage.boundingBox();
+    assert.ok(heroRect.width <= thumbnail.width, 'hero stays within the original image resolution');
     assert.ok(heroRect.y >= 0 && heroRect.y + heroRect.height < height, `hero in initial viewport ${width}`);
     assert.ok(Math.abs(heroRect.width / heroRect.height - 1200 / 630) < 0.04, 'photo ratio preserved');
     for (const selector of ['meta[property="og:image"]', 'meta[name="twitter:image"]']) assert.equal(await page.locator(selector).getAttribute('content'), 'https://nothingmatters.co.kr' + thumbnail.image);
@@ -225,34 +305,26 @@ try {
       assert.equal(await comparison.locator('[data-compare-composition]').textContent(), product.composition);
       assert.equal(await comparison.locator('.xmas-comparison-price').textContent(), `${product.price.toLocaleString('ko-KR')}원`);
     }
-    const firstScreen = await page.evaluate(() => ({
-      guideHeight: document.querySelector('#gift-guide').getBoundingClientRect().height,
-      photoTop: document.querySelector('[data-gallery]').getBoundingClientRect().top,
-      bottom: innerWidth < 960 ? document.querySelector('.xmas-sticky').getBoundingClientRect().top : innerHeight
-    }));
-    assert.ok(firstScreen.guideHeight <= 180, `compact summary at ${width}: ${firstScreen.guideHeight}`);
-    assert.ok(firstScreen.photoTop + 44 < firstScreen.bottom, `product photo remains reachable in first viewport at ${width}: ${JSON.stringify(firstScreen)}`);
-    const consultRect = await page.locator('.xmas-product-consult').boundingBox();
-    assert.ok(consultRect.y >= 0 && consultRect.y + consultRect.height <= firstScreen.bottom, 'product consultation is above the mobile sticky CTA');
+    const firstScreen = await page.evaluate(() => {
+      const image=document.querySelector('#xmas-hero-image').getBoundingClientRect(), cta=document.querySelector('#xmas-hero-order').getBoundingClientRect();
+      return {heroWidth:image.width,heroHeight:image.height,ctaTop:cta.top,ctaBottom:cta.bottom,bottom:innerWidth<960?document.querySelector('.xmas-sticky').getBoundingClientRect().top:innerHeight};
+    });
+    assert.ok(firstScreen.heroWidth>=Math.min(width*.85,1180), `image-first hero at ${width}: ${JSON.stringify(firstScreen)}`);
+    assert.ok(firstScreen.ctaTop>=0 && firstScreen.ctaBottom<=firstScreen.bottom, `hero selection link clears fixed CTA ${width}`);
+    assert.equal(await page.locator('#xmas-hero-image').evaluate(node=>getComputedStyle(node).objectFit),'contain','hero shows the complete actual photograph');
+    assert.ok(await page.locator('#about-nothingmatters .xmas-about-media img').isVisible());
     if (width === 320) {
       await page.setViewportSize({width:320,height:667});
-      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-      const shortScreen = await page.evaluate(() => ({
-        photoTop: document.querySelector('[data-gallery]').getBoundingClientRect().top,
-        bottom: document.querySelector('.xmas-sticky').getBoundingClientRect().top,
-        overflow: document.documentElement.scrollWidth > innerWidth
-      }));
-      assert.ok(shortScreen.photoTop + 44 < shortScreen.bottom, `short mobile first-screen product access: ${JSON.stringify(shortScreen)}`);
-      assert.equal(shortScreen.overflow, false);
-      firstScreen.shortViewport = {viewport:'320x667', ...shortScreen};
-      await page.screenshot({path:`${artifactDir}/320x667-first-screen.png`});
-      await page.setViewportSize({width,height});
+      const shortScreen=await page.evaluate(()=>({ctaBottom:document.querySelector('#xmas-hero-order').getBoundingClientRect().bottom,bottom:document.querySelector('.xmas-sticky').getBoundingClientRect().top,overflow:document.documentElement.scrollWidth>innerWidth}));
+      assert.ok(shortScreen.ctaBottom<=shortScreen.bottom,'large hero still offers an unobscured route to selection on 320x667');
+      assert.equal(shortScreen.overflow,false);firstScreen.shortViewport={viewport:'320x667',...shortScreen};
+      await page.screenshot({path:`${artifactDir}/320x667-first-screen.png`});await page.setViewportSize({width,height});
     }
     await page.waitForFunction(() => window.__xmasVitals.lcp !== null);
     await pause(250);
     const vitals = await page.evaluate(() => window.__xmasVitals);
     assert.ok(vitals.cls <= 0.1, `initial layout shifts ${width}: ${vitals.cls}`);
-    labVitals.push({width, ...vitals, profile:'Local Chromium, default CPU/network, external scripts blocked; viewport-based lab observation, not mobile field data'});
+    labVitals.push({width, ...vitals, profile:'Local Chromium, default CPU/network, real brand font bytes replayed from successful CDN fetches, external scripts blocked; viewport-based lab observation, not cold-network mobile field data'});
     if (width === 320) {
       await page.keyboard.press('Tab'); assert.equal(await page.locator(':focus').getAttribute('data-nm-skip-link'), '');
       await page.keyboard.press('Enter'); assert.equal(await page.locator(':focus').getAttribute('id'), 'main-content');
@@ -260,6 +332,32 @@ try {
     assert.equal(await page.locator('#xmas-sticky-next').isDisabled(), true);
     await page.locator('.xmas-product img').evaluateAll(images => images.forEach(image => { image.loading = 'eager'; }));
     await page.waitForFunction(() => [...document.querySelectorAll('.xmas-product img')].every(image => image.complete && image.naturalWidth > 0));
+    const photoLayout=await page.locator('.xmas-product').evaluateAll(cards=>cards.map(card=>{
+      const rect=node=>{const r=node.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
+      const image=card.querySelector('figure img');
+      return {sku:card.dataset.sku,card:rect(card),image:rect(image),figure:rect(card.querySelector('figure')),info:rect(card.querySelector('.xmas-product-info')),counter:rect(card.querySelector('.xmas-counter')),fit:getComputedStyle(image).objectFit,natural:[image.naturalWidth,image.naturalHeight],caption:rect(card.querySelector('figcaption'))};
+    }));
+    assert.equal(await page.locator('.xmas-products').evaluate(node=>getComputedStyle(node).gridTemplateColumns.split(' ').length),width<960?1:2);
+    for(const item of photoLayout){
+      assert.equal(item.fit,'contain');assert.ok(item.image.width>=item.card.width*.95,'photo occupies the full card width');
+      assert.ok(item.image.width<=item.natural[0] && item.image.height<=item.natural[1],'no unnecessary product photo enlargement');
+      assert.ok(item.image.width>=(width<640?width*.8:width<960?500:240),`large product image at ${width}: ${JSON.stringify(item)}`);
+      assert.ok(item.image.height>item.card.height*.5,'real photo dominates the product card');
+      assert.ok(item.info.y>=item.figure.bottom && item.counter.y>=item.info.bottom,'name, price and quantity controls follow the photo');
+      assert.ok(item.caption.height>=16,'actual composition caption is visible');
+    }
+    firstScreen.photoLayout=photoLayout;
+    await page.locator('#xmas-hero-order').click();await step(1);
+    assert.ok(await page.locator('#christmas-order').evaluate(node=>Math.abs(node.getBoundingClientRect().top-20)<3),'hero anchor reaches the order collection');
+    await page.goBack();await step(1);await page.evaluate(()=>scrollTo(0,0));
+    let clickedTotal=0;
+    for(const product of catalog.products){
+      await page.locator(`[data-sku="${product.sku}"] [data-delta="1"]`).click();clickedTotal+=product.price;
+      assert.equal(await page.locator('#xmas-total-price').textContent(),clickedTotal.toLocaleString('ko-KR')+'원','large-card plus buttons retain the shared total');
+      if(width<960)assert.ok(await page.locator('.xmas-sticky').isVisible(),'pointer quantity changes keep the mobile next action available');
+    }
+    for(const product of catalog.products)await page.locator(`[data-sku="${product.sku}"] [data-delta="-1"]`).click();
+    assert.equal(await page.locator('#xmas-total-price').textContent(),'0원');
     const historyLength = await page.evaluate(() => history.length);
     await page.locator('[data-step-link="1"]').click();
     assert.equal(await page.evaluate(() => history.length), historyLength, 'current step does not create duplicate history');
@@ -275,7 +373,8 @@ try {
     assert.ok(touch.every(r => r.w >= 44 && r.h >= 44), `touch targets ${width}: ${JSON.stringify(touch)}`);
     await qty(0, '1000000'); await focusHeading(1); await assertLayout(width, 1); await qty(0, '1'); await focusHeading(1);
     await assertLayout(width, 1);
-    await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: `${artifactDir}/${width}-step-1.png` });
+    await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: `${artifactDir}/${width}-hero.png` });
+    await page.locator('#christmas-order').evaluate(node=>node.scrollIntoView({block:'start'}));await page.screenshot({ path: `${artifactDir}/${width}-step-1.png` });
     await next(); await step(2); assert.equal(await page.locator(':focus').getAttribute('id'), 'details-title');
     await next(); assert.equal(await page.locator(':focus').getAttribute('id'), 'xmas-date');
     await fillCustomer();
@@ -313,7 +412,8 @@ try {
       await page.evaluate(() => Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: async value => { window.__copied = value; } }));
       await page.locator('#xmas-copy').click(); assert.equal(await page.evaluate(() => window.__copied), copy);
     }
-    for (const id of ['gift-choice', 'gift-comparison', 'ordering-guide', 'group-orders']) {
+    await assertStorefront(width);
+    for (const id of ['about-nothingmatters', 'gift-choice', 'gift-comparison', 'ordering-guide', 'group-orders']) {
       await page.locator(`#${id}`).scrollIntoViewIfNeeded();
       await step(3);
       assert.equal(await page.locator('#xmas-review-total').textContent(), '57,000원', 'reading guidance preserves the reviewed order');
@@ -328,7 +428,7 @@ try {
   }
   // SEO content is available as static HTML, even with ordering JavaScript disabled.
   const staticContext = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
-  await staticContext.route('**/*', route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
+  await staticContext.route('**/*', async route => {if(await routeBrandFont(route,fonts))return;return new URL(route.request().url()).origin === base ? route.continue() : route.abort();});
   const staticPage = await staticContext.newPage();
   await staticPage.goto(base + '/christmas/');
   assert.ok(await staticPage.locator('#gift-guide').isVisible());
@@ -341,7 +441,7 @@ try {
     const card = staticPage.locator(`[data-sku="${product.sku}"]`);
     assert.ok((await card.textContent()).includes(`${product.price.toLocaleString('ko-KR')}원`));
   }
-  for (const id of ['gift-choice', 'gift-comparison', 'ordering-guide', 'seoul-pickup']) {
+  for (const id of ['about-nothingmatters', 'gift-guide', 'gift-choice', 'gift-comparison', 'ordering-guide', 'seoul-pickup']) {
     assert.ok(await staticPage.locator(`#${id}`).isVisible(), `static purchase guidance: ${id}`);
   }
   assert.equal(await staticPage.locator('#gift-choice article').count(), 4);
@@ -431,9 +531,9 @@ try {
   assert.ok(requestedUrls.every(url => !url.includes('LOCAL MOCK') && !url.includes('010-0000-0000')));
   assert.deepEqual(errors, []); assert.deepEqual(missing, []);
   const evidence = {
-    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, compact products and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. Static seasonal summary precedes selection; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
-    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals,
-    seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, first product visible in every initial viewport, analytics excludes query strings.' },
+    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, large image-first product cards and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. A wide uncropped actual hero precedes the collection; price summary follows ordering and the photo-led brand introduction; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
+    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals, brandEvidence, storefrontEvidence,
+    seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, wide uncropped hero and direct order navigation in every initial viewport, full-width product photos with information below, analytics excludes query strings.' },
     accessibility: { status: 'pass', evidence: 'Skip link, first invalid field focus, labelled 44px+ quantity/photo controls, gallery Tab trap, arrow keys, Escape and restored opener focus. Reduced motion and no runtime exceptions.' },
     responsive: { status: 'pass', evidence: 'All three panels tested at 320/390/430/768/1024/1280/1440, one visible panel, no overflow; desktop 2-column summary sticky every step; mobile bottom CTA hides while input focused; resize during step 2 retains data.' },
     contentStates: {
@@ -446,5 +546,5 @@ try {
     }
   };
   fs.writeFileSync(`${artifactDir}/evidence.json`, JSON.stringify(evidence, null, 2) + '\n');
-  console.log('Christmas 3-step browser PASS: seven widths, unchanged order/gallery/calculation/privacy flow, catalog-backed static summary and 13 FAQs, product consultation opens exact mocked Kakao URL and preserves data, Googlebot/Yeti HTML 200, first-screen CTA clearance. Local LCP/CLS observations saved; no production writes.');
+  console.log('Christmas 3-step browser PASS: seven widths, loaded homepage brand fonts, header touch areas, text/input contrast, exact home/Instagram navigation, static ABOUT; unchanged order/gallery/calculation/privacy flow, 13 FAQs, Kakao consultation, Googlebot/Yeti HTML 200, image-first hero and large uncropped product cards. Local LCP/CLS observations saved; no production writes.');
 } finally { await browser?.close(); server.kill('SIGTERM'); }

@@ -3,18 +3,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-products.json'), 'utf8'));
-const { representative: socialImage } = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-media.json'), 'utf8'));
+const { representative: socialImage, workshop: aboutPhoto } = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-media.json'), 'utf8'));
 const socialImageUrl = `https://nothingmatters.co.kr${socialImage.image}`;
 if (!fs.existsSync(path.join(root, socialImage.image)) || socialImage.width !== 1200 || socialImage.height !== 630) throw new Error('Invalid Christmas representative image');
+if (!aboutPhoto || !Number.isSafeInteger(aboutPhoto.width) || !Number.isSafeInteger(aboutPhoto.height) || aboutPhoto.width <= 0 || aboutPhoto.height <= 0 || !aboutPhoto.alt || !aboutPhoto.caption || ![aboutPhoto.image, aboutPhoto.fallback].every(image => image && fs.existsSync(path.join(root, image)))) throw new Error('Invalid Christmas workshop photo');
 const check = process.argv.includes('--check');
 const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const won = value => `${value.toLocaleString('ko-KR')}원`;
 const bySku = new Map(catalog.products.map(product => [product.sku, product]));
 if (bySku.size !== 4 || catalog.products.some(p => !Number.isSafeInteger(p.price) || p.price <= 0 || !fs.existsSync(path.join(root,p.image)))) throw new Error('Invalid Christmas catalog');
 const savings = bySku.get('christmas-bear-brookie').price + bySku.get('christmas-tree-brookie').price - bySku.get('christmas-brookie-set').price;
-const cards = `<div class="xmas-products">${catalog.products.map((p,index) => `
+const cards = `<div class="xmas-products">${catalog.products.map(p => `
         <article class="xmas-product" id="${p.sku}" data-sku="${p.sku}" aria-labelledby="${p.sku}-title">
-          <figure><button type="button" class="xmas-photo-button" data-gallery="${p.sku}" aria-label="${escape(p.name)} 상세 사진 보기" aria-haspopup="dialog" disabled><img src="${p.image}" alt="${escape(p.alt)}" width="${p.width}" height="${p.height}" loading="${index === 0 ? 'eager' : 'lazy'}" ${index === 0 ? 'fetchpriority="high" ' : ''}decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-sr-only">${escape(p.caption)}</figcaption></figure>
+          <figure><button type="button" class="xmas-photo-button" data-gallery="${p.sku}" aria-label="${escape(p.name)} 상세 사진 보기" aria-haspopup="dialog" disabled><img src="${p.image}" alt="${escape(p.alt)}" width="${p.width}" height="${p.height}" loading="lazy" decoding="async"><span class="xmas-photo-label"><svg class="xmas-photo-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="2"/><path d="m12.5 12.5 4.5 4.5M8 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><strong>상세사진</strong><span class="xmas-photo-sparkle" aria-hidden="true">✦</span></span></button><figcaption class="xmas-photo-caption">${escape(p.caption)}</figcaption></figure>
           <div class="xmas-product-info"><h3 id="${p.sku}-title">${escape(p.name)}</h3><p class="xmas-price">${won(p.price)}${p.sku === 'christmas-brookie-set' && savings > 0 ? `<span class="xmas-saving">단품 합계보다 ${won(savings)} 절약</span>` : ''}</p><p class="xmas-composition">${escape(p.composition)}</p></div>
           <div class="xmas-counter" role="group" aria-label="${escape(p.name)} 수량"><button type="button" data-delta="-1" aria-label="${escape(p.name)} 수량 줄이기" disabled>−</button><input id="qty-${p.sku}" type="number" inputmode="numeric" min="0" step="1" value="0" aria-label="${escape(p.name)} 수량" aria-describedby="xmas-quantity-help"><button type="button" data-delta="1" aria-label="${escape(p.name)} 수량 늘리기" disabled>+</button></div><output class="xmas-line-total" data-line-total>0원</output>
         </article>`).join('')}
@@ -31,7 +32,9 @@ const bundle = bySku.get('christmas-santa-bundle');
 const title = '2026 크리스마스 쿠키 세트·수제쿠키 선물 | 낫띵메터스';
 const description = `2026 크리스마스 수제쿠키 선물세트 4종. ${catalog.products.map(p => `${p.name} ${won(p.price)}`).join(', ')}. 서울 강서구 예약 픽업과 기업행사·어린이집 단체주문 상담을 안내합니다.`;
 const heading = '2026 크리스마스 쿠키 세트·선물';
-const lead = '낫띵메터스의 크리스마스 수제쿠키 4종. 서울 강서구 공항동 사전 예약 픽업과 기업행사·어린이집 선물은 수량·일정을 상담해 주세요.';
+const aboutTitle = '이 쿠키는 여기서 만들어요.';
+const brandIntro = '낫띵메터스는 서울 강서구 공항동에서 귀여운 캐릭터 쿠키와 마음을 전하는 선물을 만드는 작은 쿠키 작업실이에요.';
+const brandSeason = '올해 크리스마스에도 곰돌이와 트리, 산타와 루돌프를 쿠키에 담았습니다.';
 const giftAdvice = new Map([
   [bear.sku, { packaging: '곰돌이 브루키의 개별 포장 사진을 상세 갤러리에서 확인할 수 있습니다.', purpose: '한 사람에게 전하는 개별 선물·크리스마스 답례품' }],
   [tree.sku, { packaging: '개별 포장 사진은 트리 브루키 2개를 함께 촬영한 예시입니다. 단품 구성은 1개입니다.', purpose: '트리 모양으로 계절의 분위기를 전하는 개인 선물' }],
@@ -96,8 +99,11 @@ update('christmas/index.html', html => html
   .replace(/(<meta property="og:image:height" content=")[^"]*(">)/, `$1${socialImage.height}$2`)
   .replace(/(<meta property="og:image:type" content=")[^"]*(">)/, '$1image/jpeg$2')
   .replace(/(<h1 id="christmas-title">)[\s\S]*?(<\/h1>)/, `$1${escape(heading)}$2`)
-  .replace(/(<p class="xmas-intro-lead">)[\s\S]*?(<\/p>)/, `$1${escape(lead)}$2`)
+  .replace(/(<p class="xmas-brand-intro">)[\s\S]*?(<\/p>)/, `$1${escape(brandIntro)}$2`)
+  .replace(/(<h2 id="xmas-about-title">)[\s\S]*?(<\/h2>)/, `$1${escape(aboutTitle)}$2`)
+  .replace(/(<p class="xmas-brand-season">)[\s\S]*?(<\/p>)/, `$1${escape(brandSeason)}$2`)
   .replace(/<!-- christmas-hero-image:start -->[\s\S]*?<!-- christmas-hero-image:end -->/, `<!-- christmas-hero-image:start -->\n      <figure class="xmas-hero-media"><img id="xmas-hero-image" src="${escape(socialImage.image)}" alt="${escape(socialImage.alt)}" width="${socialImage.width}" height="${socialImage.height}" loading="eager" fetchpriority="high" decoding="async"></figure>\n      <!-- christmas-hero-image:end -->`)
+  .replace(/<!-- christmas-about-image:start -->[\s\S]*?<!-- christmas-about-image:end -->/, `<!-- christmas-about-image:start -->\n      <figure class="xmas-about-media"><picture><source srcset="${aboutPhoto.image}" type="image/webp"><img src="${aboutPhoto.fallback}" alt="${escape(aboutPhoto.alt)}" width="${aboutPhoto.width}" height="${aboutPhoto.height}" loading="lazy" decoding="async"></picture><figcaption>${escape(aboutPhoto.caption)}</figcaption></figure>\n      <!-- christmas-about-image:end -->`)
   .replace(/<!-- christmas-summary:start -->[\s\S]*?<!-- christmas-summary:end -->/, `<!-- christmas-summary:start -->\n    <section class="xmas-wrap xmas-gift-guide" id="gift-guide" aria-labelledby="gift-guide-title">\n      <h2 id="gift-guide-title">크리스마스 쿠키 4종</h2>\n      <ul>${catalog.products.map(p => `<li data-summary-sku="${p.sku}"><strong>${escape(p.name)}</strong><span>${won(p.price)}</span></li>`).join('')}</ul>\n    </section>\n    <!-- christmas-summary:end -->`)
   .replace(/<!-- christmas-shopping-guide:start -->[\s\S]*?<!-- christmas-shopping-guide:end -->/, `<!-- christmas-shopping-guide:start -->${shoppingGuide}\n    <!-- christmas-shopping-guide:end -->`)
   .replace(/<!-- christmas-faq:start -->[\s\S]*?<!-- christmas-faq:end -->/, `<!-- christmas-faq:start -->\n      ${faqs.map(([question, answer]) => `<details><summary>${escape(question)}</summary><p>${escape(answer)}</p></details>`).join('\n      ')}\n      <!-- christmas-faq:end -->`)

@@ -46,9 +46,11 @@ for(const p of catalog.products){
   const card=html.match(new RegExp(`<article class="xmas-product" id="${p.sku}"[\\s\\S]*?</article>`))[0];
   assert.ok(clean(card).includes(p.name));assert.ok(clean(card).includes(p.composition));assert.ok(clean(card).includes(`${p.price.toLocaleString('ko-KR')}원`));assert.ok(card.includes(p.image));
   const image=card.match(/<img\b[^>]*>/)[0];for(const attribute of ['width','height','alt','loading','decoding']) assert.ok(image.includes(`${attribute}="`));
+  assert.ok(image.includes('loading="lazy"')&&!image.includes('fetchpriority="high"'),'large hero is the only priority image');
+  assert.ok(card.includes(`<figcaption class="xmas-photo-caption">${p.caption}</figcaption>`),'actual photo composition captions remain visible');
   assert.ok(fs.statSync(path.join(root,p.image)).size<200*1024);assert.ok(card.includes('data-delta="-1"'));assert.ok(card.includes('data-delta="1"'));
 }
-assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','gift-guide','christmas-products','order-details','order-review','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
+assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','christmas-products','order-details','order-review','about-nothingmatters','gift-guide','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
 const section=id=>html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)<\\/section>`))[1];
 const choice=section('gift-choice'), comparison=section('gift-comparison'), orderGuide=section('ordering-guide');
 for(const id of ['gift-choice','gift-comparison','ordering-guide'])assert.ok(html.indexOf(`id="${id}"`)>html.indexOf('id="order-review"'),'long guidance follows the order flow');
@@ -71,15 +73,44 @@ assert.doesNotMatch(choice+comparison+orderGuide,/href="#/,'guidance must not in
 const visibleMain=clean(html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1].replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''));
 for(const keyword of ['크리스마스 쿠키','크리스마스 쿠키 세트','크리스마스 쿠키 선물세트','크리스마스 수제쿠키','크리스마스 쿠키 추천','크리스마스 쿠키 주문','크리스마스 쿠키 포장','크리스마스 쿠키 가격','크리스마스 답례품','크리스마스 기업 선물','서울 크리스마스 쿠키 선물','크리스마스 파티 간식','어린이집 크리스마스 쿠키','크리스마스 단체 쿠키','산타 쿠키 선물','크리스마스 브루키','크리스마스 쿠키 2종 세트','김포공항 근처 크리스마스 선물'])assert.ok(visibleMain.includes(keyword),`visible purchase intent: ${keyword}`);
 const summary=html.match(/<!-- christmas-summary:start -->([\s\S]*?)<!-- christmas-summary:end -->/)[1];
-assert.ok(html.indexOf('id="gift-guide"')<html.indexOf('id="christmas-order"'));
+assert.ok(html.indexOf('id="gift-guide"')>html.indexOf('id="about-nothingmatters"'),'repeated price guidance follows the photo collection and brand');
 assert.equal((summary.match(/<li\b/g)||[]).length,4);
 for(const p of catalog.products){
   const item=summary.match(new RegExp(`<li data-summary-sku="${p.sku}">([\\s\\S]*?)</li>`))[1];
   assert.ok(item.includes(p.name)&&item.includes(`${p.price.toLocaleString('ko-KR')}원`),'top answers use catalog names and prices');
 }
-const lead=clean(html.match(/<p class="xmas-intro-lead">([\s\S]*?)<\/p>/)[1]);
-for(const text of ['낫띵메터스','크리스마스 수제쿠키 4종','서울 강서구 공항동','사전 예약 픽업','어린이집','수량·일정'])assert.ok(lead.includes(text),`concise static hero: ${text}`);
-assert.ok(lead.length<150,'hero summary stays compact');
+const lead=clean(html.match(/<p class="xmas-brand-intro">([\s\S]*?)<\/p>/)[1]);
+assert.equal(lead,'낫띵메터스는 서울 강서구 공항동에서 귀여운 캐릭터 쿠키와 마음을 전하는 선물을 만드는 작은 쿠키 작업실이에요.');
+assert.ok(lead.length<150,'brand introduction stays concise');
+assert.ok(section('hero').includes('작은 쿠키에 담은, 커다란 크리스마스.'));
+assert.ok(section('hero').indexOf('id="xmas-hero-image"')<section('hero').indexOf('<h1'),'photograph precedes the short hero copy');
+assert.match(section('hero'),/id="xmas-hero-order"[^>]*href="#christmas-order"/);
+assert.ok(!section('hero').includes(lead),'long brand paragraph follows ordering');
+const about=section('about-nothingmatters');
+assert.ok(html.indexOf('id="about-nothingmatters"')>html.indexOf('</form>') && html.indexOf('id="about-nothingmatters"')<html.indexOf('id="gift-choice"'),'brand introduction follows the order flow');
+for(const text of ['ABOUT NOTHINGMATTERS','NOTHINGMATTERS / 낫띵메터스','이 쿠키는 여기서 만들어요.','올해 크리스마스에도 곰돌이와 트리, 산타와 루돌프를 쿠키에 담았습니다.','서울특별시 강서구 송정로 25 1층','사전 예약 제작·예약 픽업','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','카카오톡 상담으로 확정'])assert.ok(clean(about).includes(text),`static brand facts: ${text}`);
+for(const text of ['낫띵메터스 공식 홈페이지 ↗','인스타그램 @nothingmatters_c ↗'])assert.ok(about.includes(text));
+const aboutPhoto=JSON.parse(read('data/christmas-media.json')).workshop;
+assert.deepEqual([aboutPhoto.width,aboutPhoto.height],[842,748],'original attached storefront aspect ratio');
+assert.equal(aboutPhoto.image,'/images/christmas/nothingmatters-workshop-exterior.webp');
+assert.equal(aboutPhoto.fallback,'/images/christmas/nothingmatters-workshop-exterior.jpg');
+for(const attribute of [`src="${aboutPhoto.fallback}"`,`srcset="${aboutPhoto.image}"`,'type="image/webp"',`alt="${aboutPhoto.alt}"`,`width="${aboutPhoto.width}"`,`height="${aboutPhoto.height}"`,'loading="lazy"'])assert.ok(about.includes(attribute),'ABOUT uses the real attached storefront with a JPEG fallback and reserved dimensions');
+for(const text of ['COOKIE','NOTHING MATTERS','쿠키 캐릭터','실제 매장 외관'])assert.ok(aboutPhoto.alt.includes(text),'accurate storefront description');
+const webp=fs.readFileSync(path.join(root,aboutPhoto.image)), fallbackJpg=fs.readFileSync(path.join(root,aboutPhoto.fallback));
+assert.equal(webp.toString('ascii',0,4),'RIFF');assert.equal(webp.toString('ascii',8,12),'WEBP');assert.deepEqual([...fallbackJpg.subarray(0,3)],[255,216,255]);
+assert.ok(webp.length<200*1024 && fallbackJpg.length<200*1024,'both real storefront encodings are lightweight');
+const header=html.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)[1], footer=html.match(/<footer\b[^>]*>([\s\S]*?)<\/footer>/)[1];
+for(const area of [header,about,footer]){
+  assert.ok(area.includes('href="/"'));
+  assert.match(area,/<a[^>]+href="https:\/\/instagram.com\/nothingmatters_c"[^>]+target="_blank"[^>]+rel="noopener noreferrer"/);
+}
+assert.ok(header.includes('src="/images/nm-bear-mark.svg"'));
+const brandCss=read('assets/christmas.css');
+const brandFaces=[...read('assets/site.css').matchAll(/@font-face\s*\{[^}]+\}/g)].slice(0,4);
+for(const [face] of brandFaces)assert.ok(brandCss.includes(face),'same actual homepage font sources, weights and swap policy');
+assert.doesNotMatch(html,/<link[^>]+href="\/assets\/(site|showroom)(?:-home)?\.css/,'Christmas must not import global brand layout rules');
+assert.doesNotMatch(brandCss,/@import/);
+for(const color of ['#f7f0df','#171512','#ff8a62','#ffd766'])assert.ok(brandCss.includes(color),'actual showroom palette');
 assert.match(clean(choice),/쿠키 한 개 선물과 세트 선물 중 무엇을 고르면/);
 assert.match(clean(comparison),/크리스마스 쿠키 2종 세트와 4종 세트는 무엇이 다른가요/);
 assert.match(clean(orderGuide),/크리스마스 전에 받으려면 언제 예약해야 하나요/);
@@ -103,6 +134,7 @@ assert.match(html,/<form[^>]*method="post"/);assert.match(html,/<button id="xmas
 assert.match(html,/카카오톡 상담.*최종 주문/s);
 const graph=JSON.parse(html.match(/<script type="application\/ld\+json" data-nm-schema="static">([\s\S]*?)<\/script>/)[1])['@graph'];
 for(const type of ['Organization','Bakery','ItemList','FAQPage','Service','CollectionPage','BreadcrumbList']) assert.equal(graph.filter(n=>n['@type']===type).length,1);
+for(const type of ['Organization','Bakery'])assert.equal(graph.find(n=>n['@type']===type).sameAs.filter(url=>url==='https://instagram.com/nothingmatters_c').length,1,'one actual Instagram identity per brand entity');
 assert.equal(new Set(graph.map(n=>n['@id'])).size,graph.length);
 assert.ok(!graph.some(n=>['Product','Offer','Review','AggregateRating'].includes(n['@type'])),'no duplicate top-level products or invented reviews');
 const list=graph.find(n=>n['@type']==='ItemList');
@@ -142,4 +174,4 @@ for(const link of html.matchAll(/href="([^"]+)"/g)){
  assert.ok(fs.existsSync(path.join(root,file)),`missing link ${url}`);if(url.hash)assert.ok(read(file).includes(`id="${url.hash.slice(1)}"`),`missing anchor ${url}`);
 }
 const js=read('christmas/christmas-order.js');assert.doesNotMatch(js,/localStorage|sessionStorage|gtag\(|URLSearchParams/);
-console.log('Christmas landing PASS: focused gift/set metadata, catalog-backed first-screen prices, direct purchase answers and Kakao CTA, 18 natural purchase intents, 13 matching FAQs, six focused inbound links, preserved catalog/photos/order state and schema dates');
+console.log('Christmas landing PASS: preserved gift/set metadata, image-first hero and large photo cards, catalog prices and visible photo captions, static photo-led brand introduction, 18 natural purchase intents, 13 matching FAQs, focused inbound links and schema dates');
