@@ -12,6 +12,7 @@ const { createOrderApiHandler } = require("./lib/order-api.js");
 const { createKakaoQuickCallbackHandler } = require("./lib/kakao-quick-callback.js");
 const { createKakaoQuickApiHandler } = require("./lib/kakao-quick-api.js");
 const { buildChristmasSearchAudit, unavailableAudit, errorStatus } = require("./lib/christmas-search-audit.js");
+const { createWishingTreeHandler } = require("./lib/wishing-tree.js");
 
 const ROOT = process.cwd();
 const noticeServiceReady = import('./lib/notice-admin.mjs').then(({ createNoticeService }) => createNoticeService({ root: ROOT }));
@@ -244,6 +245,7 @@ const LEGACY_PRODUCT_REDIRECTS = SITE_PAGE_DATA.redirects || {};
 const handleOrderApi = createOrderApiHandler();
 const handleKakaoQuickCallback = createKakaoQuickCallbackHandler();
 const handleKakaoQuickApi = createKakaoQuickApiHandler();
+const handleWishingTree = createWishingTreeHandler({ root: ROOT });
 
 let googleTokenCache = {
   accessToken: "",
@@ -2211,6 +2213,14 @@ const server = http.createServer(async (req, res) => {
   // Decode aliases before deciding which Quick resources are public.
   let quickPath;
   try { quickPath = path.posix.normalize(decodeURIComponent(requestUrl.pathname).replace(/\\/g, "/")); } catch { quickPath = requestUrl.pathname; }
+  // Journal records contain private deletion credentials and are never static assets.
+  if (/^\/data\/wishing-tree(?:\/|$)/.test(quickPath) || quickPath === "/lib/wishing-tree.js") {
+    req.resume(); res.writeHead(404, { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" }); res.end(); return;
+  }
+  if (/^\/api\/wishing-tree(?:\/|$)/.test(quickPath)) {
+    await handleWishingTree(req, res, { pathname: quickPath, searchParams: requestUrl.searchParams });
+    return;
+  }
   if (/^\/dashboard\/quick(?:\/|$)/.test(quickPath) || /^\/api\/kakao-quick(?:\/|$)/.test(quickPath)) {
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("X-Robots-Tag", "noindex, nofollow");

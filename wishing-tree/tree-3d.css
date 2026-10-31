@@ -1,0 +1,101 @@
+@font-face {
+  font-family: "SeoulAlrim";
+  src: url("./fonts/SeoulAlrim-Medium.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SeoulAlrim";
+  src: url("./fonts/SeoulAlrim-Bold.woff2") format("woff2");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --sans: "SeoulAlrim", "Apple SD Gothic Neo", sans-serif;
+  --serif: var(--sans);
+}
+html { overflow-x: clip; overflow-y: auto; }
+body { overflow: visible; background: #0b1512; font-family: var(--sans); }
+button, input, textarea { font-family: inherit; }
+.sky { background: radial-gradient(ellipse at 50% 45%, #26382a80, transparent 65%), linear-gradient(115deg, #0d1917, #102019 65%, #0b1713); }
+.sky-glow { left: 50%; right: auto; transform: translateX(-50%); }
+.site-header { position: absolute; inset: 0 0 auto; z-index: 4; height: 80px; max-width: 1680px; }
+.brand { font-family: var(--sans); font-size: 25px; font-weight: 700; letter-spacing: -.7px; }
+.winter-scene { width: 100%; max-width: 1680px; height: max(1020px, 120svh); max-height: 1440px; min-height: 0; padding: 0; display: block; overflow: clip; }
+.intro { position: absolute; top: 95px; left: 50%; width: min(90%, 600px); padding: 0; margin: 0; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 3; }
+.intro h1 { font-family: var(--sans); font-size: 28px; line-height: 1.5; font-weight: 700; letter-spacing: -.6px; margin: 0; text-shadow: 0 2px 25px #08120b99; }
+.intro h1 em { display: inline-block; font-style: normal; }
+.intro-description { margin: 9px 0 0; font-size: 12px; line-height: 1.7; text-shadow: 0 2px 10px #08120b; }
+.tree-area { position: absolute; inset: 160px 0 45px; width: auto; height: auto; min-height: 0; justify-content: flex-end; padding-bottom: 50px; }
+.tree-halo { width: 100%; height: 100%; top: 0; left: 0; background: radial-gradient(ellipse at 50% 56%, #b69b4610, transparent 62%); }
+.tree-stage { position: absolute; inset: 0 0 100px; margin: 0; width: 100%; height: auto; aspect-ratio: auto; filter: none; }
+.christmas-tree { position: absolute; height: 100%; width: 100%; object-fit: contain; transition: opacity .6s; }
+.tree-canvas { position: absolute; inset: 0; }
+.tree-canvas canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: pan-y pinch-zoom; outline-offset: -6px; }
+.tree-canvas canvas:active { cursor: grabbing; }
+.tree-canvas canvas:focus-visible { outline: 1px solid #d4b57a88; }
+.tree-3d-ready .christmas-tree, .tree-3d-ready .tree-year { opacity: 0; pointer-events: none; }
+.tree-3d-ready .ornament > svg { opacity: 0; }
+.tree-3d-ready .ornament { width: 54px; height: 58px; transform: translate(-50%, -50%); filter: none; border-radius: 50%; }
+.tree-3d-ready .ornament:hover { background: radial-gradient(ellipse, #f9d48726, transparent 70%); }
+.tree-3d-ready .ornament:focus-visible { outline: 1px solid #f0d89c; background: #f9d48716; }
+.ornaments { pointer-events: none; }
+.ornament { pointer-events: auto; touch-action: pan-y pinch-zoom; }
+.tree-3d-ready .ornament-new { animation: none; }
+.tree-caption { position: absolute; bottom: 64px; left: 5%; right: 5%; z-index: 2; pointer-events: none; }
+.tree-caption p { font-size: 12px; text-shadow: 0 2px 10px #000; }
+.tree-controls { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; z-index: 3; }
+.tree-controls > span { font-size: 11px; color: #a6ad92; margin: 0 5px; }
+.tree-controls .icon-button { font-size: 21px; color: #cdbb90; }
+.tree-controls .reset-view { font-size: 20px; margin-left: 5px; border-left: 1px solid #d4b57a22; border-radius: 0; }
+.tree-navigation { position: absolute; bottom: 0; margin: 0; z-index: 3; }
+.connection-notice { position: absolute; bottom: 0; z-index: 4; background: #0b1813ed; padding: 7px 14px; border-radius: 5px; }
+.tree-area:has(.tree-navigation:not([hidden])) .tree-stage { bottom: 145px; }
+.tree-area:has(.tree-navigation:not([hidden])) .tree-controls { bottom: 52px; }
+.tree-area:has(.tree-navigation:not([hidden])) .tree-caption { bottom: 107px; }
+.write-action { position: fixed; bottom: max(22px, env(safe-area-inset-bottom)); left: 0; right: 0; z-index: 10; display: flex; justify-content: center; pointer-events: none; }
+.primary-button#write-button { position: static; transform: none; min-height: 54px; min-width: 240px; padding: 0 24px; border-radius: 999px; pointer-events: auto; font-size: 14px; font-weight: 700; box-shadow: 0 6px 30px #0006; }
+.primary-button#write-button:hover { transform: translateY(-2px); }
+.primary-button { border-radius: 12px; }
+.primary-button > span:last-child { margin-left: 15px; }
+.paper-heading h2, .read-dialog h2 { font-weight: 700; }
+.letter-content { font-family: var(--sans); }
+.ground { opacity: .2; }
+.site-footer { max-width: 1680px; padding: 22px 64px 110px; font-size: 11px; }
+.font-credit { color: #819279; font-size: 10px; text-decoration: none; }
+.font-credit:hover { color: var(--gold); }
+@media (min-width: 1681px) { .ground { left: calc((1680px - 100vw) / 2); } }
+@media (max-width: 760px) {
+  .site-header { height: 74px; padding: 0 20px; }
+  .brand { font-size: 21px; gap: 8px; }
+  .header-actions { gap: 3px; }
+  .sound-button { padding: 0 12px; font-size: 11px; }
+  .winter-scene { height: max(1040px, 130svh); max-height: none; padding: 0; }
+  .intro { top: 91px; left: 12px; right: 12px; width: auto; transform: none; }
+  .intro h1 { font-size: 20px; line-height: 1.5; letter-spacing: -.5px; }
+  .intro h1 em { display: inline-block; }
+  .intro-description { font-size: 10px; line-height: 1.6; margin-top: 6px; }
+  .tree-area { inset: 152px -17% 65px; padding-bottom: 75px; }
+  .tree-stage { inset: 0 0 100px; margin: 0; }
+  .tree-3d-ready .ornament { width: 46px; height: 48px; }
+  .tree-controls { top: 45%; bottom: auto; gap: 0; width: calc(100vw - 24px); justify-content: space-between; }
+  .tree-controls > span { display: none; }
+  .tree-controls .icon-button { background: #0b18134d; border: 1px solid #d4b57a22; }
+  .tree-controls .reset-view { position: absolute; right: 0; top: -52px; border-radius: 50%; }
+  .tree-caption { bottom: 84px; left: 15%; right: 15%; }
+  .tree-caption p { font-size: 10px; }
+  .tree-navigation { bottom: 8px; }
+  .tree-area:has(.tree-navigation:not([hidden])) .tree-controls { bottom: auto; }
+  .connection-notice { bottom: 2px; font-size: 10px; }
+  .site-footer { flex-direction: column; gap: 8px; padding: 22px 20px 115px; font-size: 10px; }
+  .site-footer button { font-size: 11px; }
+  .toast { bottom: 90px; }
+}
+@media (max-width: 370px) {
+  .intro h1 { font-size: 18px; }
+  .intro-description { font-size: 9px; }
+  .tree-area { left: -22%; right: -22%; }
+  .brand { font-size: 19px; }
+}
