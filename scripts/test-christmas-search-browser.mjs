@@ -30,7 +30,12 @@ try {
       const text = await panel.innerText();
       assert.match(text, /네이버 검색어 데이터 미확보/);
       assert.match(text, /GA4 네이버 유입 세션과 혼합하지 않습니다/);
-      assert.match(await page.locator('[data-dashboard-setup]').innerText(), /GA4|연결/);
+      if (mode === 'not-configured') assert.match(await page.locator('[data-dashboard-setup]').innerText(), /GA4|연결/);
+      else {
+        await page.locator('[data-dashboard-grid]').waitFor({state:'visible'});
+        assert.match(await page.locator('[data-dashboard-connections]').innerText(), /GA4.*설정 필요/s);
+        assert.equal(await page.locator('[data-metric="sessions"]').innerText(), '—', 'GSC-only setup does not invent GA4 zeroes');
+      }
       if (mode === 'available') {
         assert.match(text, /작은 표본/); assert.match(text, /SYNTHETIC 크리스마스 쿠키 가격 포장/);
         assert.match(text, /MOBILE/); assert.match(text, /DESKTOP/);

@@ -54,24 +54,30 @@
     table("우선 검토 후보 · 편집 확정 아님", ["검색어", "검토 근거", "클릭", "노출", "CTR", "평균순위"], period.reviewCandidates.slice(0, 100).map(row => [row.query, reasons(row), ...values(row)]), period.queryStatus === "available" ? "현재 확보한 행에서 검토 기준을 충족한 후보가 없습니다. 데이터 누락 또는 작은 표본일 수 있습니다." : "검색어 자료 미확보로 우선 보완 검색어 판단을 보류합니다.");
     table("크리스마스 canonical 검색어", ["검색어", "주제", "클릭", "노출", "CTR", "평균순위"], period.queries.slice(0, 100).map(row => [row.query, row.topics.join(", ") || "기타", ...values(row)]), labels[period.queryStatus] === "조회됨" ? "검색어 행 미관측 · 수요 없음이라는 뜻이 아닙니다." : labels[period.queryStatus]);
     line(`검색어 ${number(period.queries.length)}행 확보, 화면에는 최대 100행 표시. ${period.queryRowsCapped ? "50,000행 조회 한도 도달. " : ""}검색어 조회: ${labels[period.queryStatus]} / 기기 조회: ${labels[period.deviceStatus]}`);
-    payload.notes.forEach(line);
+    (payload.notes || []).forEach(line);
+    if(payload.dataSource?.label)line(payload.dataSource.label);
   }
+  let requestVersion = 0, controller;
   async function load() {
+    const version = ++requestVersion; controller?.abort(); controller = new AbortController();
+    const signal=controller.signal, timeout=setTimeout(()=>controller.abort(),25000);
     refresh.disabled = true; panel.setAttribute("aria-busy", "true");
     status.textContent = "Google 검색 성과 조회 중…";
     try {
       const response = await fetch("/api/dashboard/christmas-search", {
-        credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" }
+        credentials: "same-origin", cache: "no-store", signal, headers: { Accept: "application/json" }
       });
       const result = await response.json();
-      if (!Array.isArray(result.periods)) throw new Error("unavailable");
+      if(version!==requestVersion)return;
+      if (!Array.isArray(result.periods)) throw new Error(response.status===429?"조회가 많습니다. 1분 후 다시 조회해 주세요.":response.status===401?"비공개 모드의 접근 권한을 확인해 주세요.":"검색 성과를 가져오지 못했습니다. 서버 연결을 확인한 뒤 다시 조회해 주세요.");
       payload = result; render();
-    } catch {
+    } catch(error) {
+      if(version!==requestVersion)return;
       payload = null; output.replaceChildren();
-      status.textContent = "검색 성과를 가져오지 못했습니다. 관리자 인증과 서버 연결을 확인한 뒤 다시 조회해 주세요.";
-    } finally { refresh.disabled = false; panel.setAttribute("aria-busy", "false"); }
+      status.textContent = signal.aborted ? "검색 성과를 가져오지 못했습니다. 응답 시간이 초과되어 다시 조회가 필요합니다." : error.message.includes("조회") ? error.message : "검색 성과를 가져오지 못했습니다. 네트워크 연결을 확인하고 다시 조회해 주세요.";
+    } finally { clearTimeout(timeout); refresh.disabled = false; panel.setAttribute("aria-busy", "false"); }
   }
-  buttons.forEach(button => button.addEventListener("click", () => { days = Number(button.dataset.christmasDays); render(); }));
+  buttons.forEach(button => button.addEventListener("click", () => { days = Number(button.dataset.christmasDays); buttons.forEach(item=>{const active=Number(item.dataset.christmasDays)===days;item.classList.toggle("is-active",active);item.setAttribute("aria-pressed",String(active));}); render(); }));
   refresh.addEventListener("click", load);
   load();
 })();

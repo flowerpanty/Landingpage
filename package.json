@@ -17,7 +17,7 @@
     "public-perf:test": "node scripts/test-public-performance.mjs",
     "site:check": "npm run magok:test && npm run museum:test && npm run notices:check && npm run notices:test && npm run christmas:check && npm run products:check && npm run schema:check && npm run public-seo:test && node scripts/test-occasion-landings.mjs && node scripts/test-flight-attendant-gift.mjs && node scripts/test-christmas-landing.mjs && node scripts/test-anniversary-landing.mjs && npm run public-perf:test && npm run a11y:check && npm run feed:check",
     "gallery:test": "node scripts/test-gallery-storage.mjs",
-    "server:test": "node scripts/test-gimpo-board.mjs && node scripts/test-server-http.mjs && node scripts/test-christmas-search-audit.mjs",
+    "server:test": "node scripts/test-gimpo-board.mjs && node scripts/test-server-http.mjs && node scripts/test-christmas-search-audit.mjs && node scripts/test-dashboard.mjs",
     "christmas:search:test": "node scripts/test-christmas-search-audit.mjs",
     "christmas:search:browser:test": "node scripts/test-christmas-search-browser.mjs",
     "browser:test": "node scripts/test-public-browser.mjs && node scripts/benchmark-gimpo-board.mjs --verify",
@@ -45,6 +45,8 @@
     "notices:admin:test": "node scripts/test-notice-admin.mjs",
     "notices:admin:browser:test": "node scripts/test-notice-admin-browser.mjs",
     "magok:test": "node scripts/test-magok-landing.mjs",
-    "magok:browser:test": "node scripts/test-magok-browser.mjs"
+    "magok:browser:test": "node scripts/test-magok-browser.mjs",
+    "dashboard:test": "node scripts/test-dashboard.mjs",
+    "dashboard:browser:test": "node scripts/test-dashboard-browser.mjs"
   }
 }

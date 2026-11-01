@@ -16,6 +16,7 @@ export async function startAuditTestServer(options = {}) {
     global.fetch = async (url, options = {}) => {
       const target = String(url);
       if (target === 'https://oauth2.googleapis.com/token') {
+        if (process.env.MOCK_SEARCH_MODE === 'token-denied') return Response.json({error:'PRIVATE-FAILURE'}, {status:403});
         return Response.json({access_token:'SYNTHETIC-TOKEN', expires_in:3600});
       }
       if (target.startsWith('https://analyticsdata.googleapis.com/')) {
@@ -23,7 +24,9 @@ export async function startAuditTestServer(options = {}) {
         fs.appendFileSync(${JSON.stringify(calls)}, JSON.stringify({fixtureApi:'ga4', ...body}) + '\\n');
         if (process.env.MOCK_SEARCH_MODE === 'ga-denied') return Response.json({error:'SYNTHETIC-PRIVATE-UPSTREAM'}, {status:403});
         const dimensions = body.dimensions || [], metrics = body.metrics || [];
-        const values = {hour:'12', date:new Date().toISOString().slice(0,10).replaceAll('-',''), sessionSourceMedium:'google / organic', sessionDefaultChannelGroup:'Organic Search', landingPage:'/christmas/', deviceCategory:'mobile', eventName:'consult_click'};
+        if (process.env.MOCK_SEARCH_MODE === 'events-denied' && metrics.some(item=>item.name==='eventCount')) return Response.json({error:'PRIVATE-FAILURE'}, {status:403});
+        if (process.env.MOCK_SEARCH_MODE === 'ga-empty') return Response.json({dimensionHeaders:dimensions,metricHeaders:metrics});
+        const values = {hour:'8', date:new Date().toISOString().slice(0,10).replaceAll('-',''), sessionSourceMedium:'google / organic', sessionDefaultChannelGroup:'Organic Search', landingPage:'/christmas/?private=SYNTHETIC-PII', deviceCategory:'mobile', eventName:'consult_click'};
         const counts = {sessions:12, activeUsers:10, engagedSessions:6, engagementRate:.5, eventCount:2};
         return Response.json({dimensionHeaders:dimensions, metricHeaders:metrics, rows:[{
           dimensionValues:dimensions.map(({name}) => ({value:values[name] || 'SYNTHETIC'})),
@@ -33,7 +36,7 @@ export async function startAuditTestServer(options = {}) {
       if (target.startsWith('https://www.googleapis.com/webmasters/v3/')) {
         const body = JSON.parse(options.body);
         fs.appendFileSync(${JSON.stringify(calls)}, JSON.stringify(body) + '\\n');
-        if (process.env.MOCK_SEARCH_MODE === 'denied') return Response.json({error:'SYNTHETIC-PRIVATE-UPSTREAM'}, {status:403});
+        if (['denied','search-denied'].includes(process.env.MOCK_SEARCH_MODE)) return Response.json({error:'SYNTHETIC-PRIVATE-UPSTREAM'}, {status:403});
         if (process.env.MOCK_SEARCH_MODE === 'empty') return Response.json({});
         if (!body.dimensions) return Response.json({rows:[{clicks:4, impressions:80, ctr:0.05, position:12}]});
         if (body.dimensions[0] === 'device') return Response.json({rows:[{keys:['MOBILE'], clicks:3, impressions:60, ctr:0.05, position:13},{keys:['DESKTOP'], clicks:1, impressions:20, ctr:0.05, position:9}]});

@@ -146,16 +146,16 @@ const dashboardEventMetadata = {
   }
 };
 
-function formatNumber(value = 0) {
-  return Number(value || 0).toLocaleString("ko-KR");
+function formatNumber(value) {
+  return value === null || value === undefined || !Number.isFinite(Number(value)) ? "—" : Number(value).toLocaleString("ko-KR");
 }
 
-function formatPercent(value = 0) {
-  return `${(Number(value || 0) * 100).toFixed(1)}%`;
+function formatPercent(value) {
+  return value === null || value === undefined || !Number.isFinite(Number(value)) ? "—" : `${(Number(value) * 100).toFixed(1)}%`;
 }
 
-function formatPosition(value = 0) {
-  return Number(value || 0).toFixed(1);
+function formatPosition(value) {
+  return value === null || value === undefined ? "—" : Number(value).toFixed(1);
 }
 
 function formatShare(value = 0) {
@@ -193,6 +193,7 @@ function setStatus(message) {
 function setActiveRange(rangeKey) {
   rangeButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.rangeKey === rangeKey);
+    button.setAttribute("aria-pressed", String(button.dataset.rangeKey === rangeKey));
   });
 }
 
@@ -260,7 +261,7 @@ createSourceRow.emptyColSpan = 5;
 
 function createLandingRow(item) {
   const row = document.createElement("tr");
-  row.appendChild(createCell(item.page, { strong: true }));
+  row.appendChild(createPageCell(item.page));
   row.appendChild(createCell(formatNumber(item.sessions)));
   row.appendChild(createCell(formatPercent(item.engagementRate)));
   return row;
@@ -280,7 +281,7 @@ createQueryRow.emptyColSpan = 5;
 
 function createPageRow(item) {
   const row = document.createElement("tr");
-  row.appendChild(createCell(item.page, { strong: true }));
+  row.appendChild(createPageCell(item.page));
   row.appendChild(createCell(formatNumber(item.clicks)));
   row.appendChild(createCell(formatNumber(item.impressions)));
   row.appendChild(createCell(formatPercent(item.ctr)));
@@ -289,6 +290,14 @@ function createPageRow(item) {
   return row;
 }
 createPageRow.emptyColSpan = 6;
+
+function createPageCell(value) {
+  const cell = createCell(value);
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return cell;
+  const link = document.createElement("a");
+  link.href = value.split(/[?#]/)[0]; link.target = "_blank"; link.rel = "noopener noreferrer";
+  link.textContent = value; cell.replaceChildren(link); return cell;
+}
 
 function renderMetrics(payload) {
   const summary = payload.summary || {};
@@ -303,6 +312,7 @@ function renderMetrics(payload) {
     if (metricName === "comparisonLabel") return;
     const node = document.querySelector(`[data-delta="${metricName}"]`);
     if (!node) return;
+    if (!delta) { node.textContent = "비교 자료 미확보"; return; }
     node.textContent = `${payload.delta?.comparisonLabel || "비교"} ${formatDelta(delta)}`;
   });
 }
@@ -315,10 +325,10 @@ function renderInsights(payload) {
   const topQuery = payload.search?.queries?.[0];
   const actionText = summary.totalActionClicks
     ? `주문/상담 버튼 클릭이 ${formatNumber(summary.totalActionClicks)}번 발생했습니다.`
-    : "아직 주문/상담 버튼 클릭은 잡히지 않았습니다.";
+    : summary.totalActionClicks === null ? "주문/상담 클릭 자료를 조회하지 못했습니다." : "조회된 주문/상담 버튼 클릭은 0건입니다.";
 
   const insights = [
-    `${payload.range?.label || "선택 기간"} 방문은 ${formatNumber(summary.sessions)}회, 사람 수는 ${formatNumber(
+    summary.sessions === null ? "방문 자료를 조회하지 못했습니다. 아래 연결 상태를 확인해 주세요." : `${payload.range?.label || "선택 기간"} 방문은 ${formatNumber(summary.sessions)}회, 사람 수는 ${formatNumber(
       summary.activeUsers
     )}명입니다.`,
     topSource
@@ -355,12 +365,12 @@ function renderChart(rows = [], range = {}) {
   const padding = { top: 24, right: 28, bottom: 48, left: 42 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
-  const maxSessions = Math.max(...rows.map((row) => row.sessions), 1);
-  const maxActions = Math.max(...rows.map((row) => row.totalActionClicks), 1);
-  const barWidth = Math.max(8, plotWidth / rows.length - 8);
+  const maxSessions = Math.max(...rows.flatMap(row => [row.sessions || 0, row.totalActionClicks || 0]), 1);
+  const maxActions = maxSessions;
+  const barWidth = Math.max(2, Math.min(24, plotWidth / rows.length - 4));
   const labelStep = range.granularity === "hour" ? 3 : Math.max(1, Math.ceil(rows.length / 8));
   const points = rows.map((row, index) => {
-    const x = padding.left + (rows.length === 1 ? plotWidth / 2 : (plotWidth / (rows.length - 1)) * index);
+    const x = padding.left + (plotWidth / rows.length) * (index + .5);
     const y = padding.top + plotHeight - (row.totalActionClicks / maxActions) * plotHeight;
     return `${x},${y}`;
   });
@@ -391,7 +401,9 @@ function renderChart(rows = [], range = {}) {
     rect.setAttribute("height", String(barHeight));
     rect.setAttribute("rx", "8");
     rect.classList.add("dashboard-svg-bar");
-    svg.appendChild(rect);
+    const tooltip = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    tooltip.textContent = `${row.label} · 방문 ${formatNumber(row.sessions)} · 주문/상담 ${formatNumber(row.totalActionClicks)}`;
+    rect.append(tooltip); svg.appendChild(rect);
 
     if (index % labelStep === 0 || index === rows.length - 1) {
       const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -404,6 +416,7 @@ function renderChart(rows = [], range = {}) {
     }
   });
 
+  if (rows.some(row => row.totalActionClicks !== null)) {
   const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   line.setAttribute("points", points.join(" "));
   line.classList.add("dashboard-svg-line");
@@ -419,12 +432,22 @@ function renderChart(rows = [], range = {}) {
     svg.appendChild(circle);
   });
 
+  }
   const legend = document.createElement("div");
   legend.className = "dashboard-chart-legend";
-  legend.innerHTML = "<span><i></i>방문 수</span><span><i></i>주문/상담 클릭</span>";
+  legend.innerHTML = rows.some(row=>row.totalActionClicks!==null) ? "<span><i></i>방문 수</span><span><i></i>주문/상담 클릭</span>" : "<span><i></i>방문 수</span><span>주문/상담 클릭 자료 미확보</span>";
 
   chartNode.appendChild(svg);
   chartNode.appendChild(legend);
+  const details = document.createElement("details"), summary = document.createElement("summary");
+  summary.textContent = "추이 수치 표 보기"; details.className = "dashboard-chart-data"; details.append(summary);
+  const wrapper = document.createElement("div"); wrapper.className = "dashboard-table-wrap";
+  const table = document.createElement("table"); table.className = "dashboard-table";
+  const head = document.createElement("thead"), heading = document.createElement("tr");
+  ["날짜 / 시간", "방문", "주문·상담 클릭"].forEach(text => { const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = text; heading.append(cell); });
+  head.append(heading); table.append(head); const body = document.createElement("tbody");
+  rows.forEach(row => { const tr = document.createElement("tr"); [row.label, formatNumber(row.sessions), formatNumber(row.totalActionClicks)].forEach(value => tr.append(createCell(value))); body.append(tr); });
+  table.append(body); wrapper.append(table); details.append(wrapper); chartNode.append(details);
 }
 
 function renderBars(target, rows, labelAccessor) {
@@ -521,10 +544,10 @@ function renderFunnel(payload) {
   if (!target) return;
 
   const summary = payload.summary || {};
-  const sessions = Number(summary.sessions || 0);
-  const orderClicks = Number(summary.orderClicks || 0);
-  const consultClicks = Number(summary.consultClicks || 0);
-  const totalActionClicks = Number(summary.totalActionClicks || 0);
+  const sessions = summary.sessions ?? null;
+  const orderClicks = summary.orderClicks ?? null;
+  const consultClicks = summary.consultClicks ?? null;
+  const totalActionClicks = summary.totalActionClicks ?? null;
   const maxValue = Math.max(sessions, orderClicks, consultClicks, totalActionClicks, 1);
   const steps = [
     {
@@ -536,20 +559,20 @@ function renderFunnel(payload) {
     {
       label: "바로주문 클릭",
       value: orderClicks,
-      helper: "브루키·꾸덕쿠키·행운쿠키 주문 페이지 이동",
-      rate: sessions ? orderClicks / sessions : 0
+      helper: "상품 주문·예약 채널로 이동",
+      rate: sessions && orderClicks !== null ? orderClicks / sessions : null
     },
     {
       label: "카카오 클릭",
       value: consultClicks,
       helper: "추천받기·단체 상담 버튼 클릭",
-      rate: sessions ? consultClicks / sessions : 0
+      rate: sessions && consultClicks !== null ? consultClicks / sessions : null
     },
     {
       label: "전체 전환 신호",
       value: totalActionClicks,
       helper: "주문 페이지 이동 + 상담 클릭 합계",
-      rate: sessions ? totalActionClicks / sessions : 0
+      rate: sessions && totalActionClicks !== null ? totalActionClicks / sessions : null
     }
   ];
 
@@ -606,7 +629,7 @@ function renderOpportunities(items = [], searchError = "") {
   if (!items.length) {
     const empty = document.createElement("p");
     empty.className = "dashboard-empty";
-    empty.textContent = "클릭 개선 후보를 판단할 데이터가 아직 없습니다.";
+    empty.textContent = "현재 조회한 검색어에서 검토 기준을 충족한 후보가 없습니다. 작은 표본이나 검색어 누락일 수 있습니다.";
     target.appendChild(empty);
     return;
   }
@@ -633,6 +656,7 @@ function renderOpportunities(items = [], searchError = "") {
 }
 
 function showSetup(payload) {
+  document.querySelectorAll('.dashboard-jump a[href="#dashboard-overview"], .dashboard-jump a[href="#dashboard-traffic"], .dashboard-jump a[href="#dashboard-google"]').forEach(link => {link.hidden=true;});
   dashboardGrid?.classList.add("is-hidden");
   setupPanel?.classList.remove("is-hidden");
 
@@ -660,6 +684,7 @@ function showSetup(payload) {
 }
 
 function showDashboard(payload) {
+  document.querySelectorAll(".dashboard-jump a").forEach(link => {link.hidden=false;});
   setupPanel?.classList.add("is-hidden");
   dashboardGrid?.classList.remove("is-hidden");
 
@@ -714,6 +739,10 @@ function showDashboard(payload) {
       : `${payload.range?.label || "선택 기간"} 데이터를 봅니다.`;
   }
 
+  const searchPeriod = payload.search?.dateRange;
+  const searchPeriodText = searchPeriod ? `Google 검색: ${searchPeriod.startDate} ~ ${searchPeriod.endDate} · ${payload.search.legacyPeriod ? "운영 API의 기존 조회 기간 · 반영 지연 있음" : "미국 태평양 시간 · 최종 데이터 (최근 3일 제외)"}` : "Google 검색은 반영 지연이 있습니다. 실제 검색 기간은 운영 API의 조회 기준을 따릅니다.";
+  setText("[data-dashboard-search-period]", searchPeriodText);
+  setText("[data-dashboard-source-note]", `${payload.dataSource?.label || "Google API 직접 연결"} · ${searchPeriodText}`);
   partialBadge?.classList.toggle("is-hidden", !payload.range?.isPartial);
 
   if (searchConsoleSite) {
@@ -723,45 +752,118 @@ function showDashboard(payload) {
   }
 }
 
-async function fetchDashboard(rangeKey = "today") {
-  setActiveRange(rangeKey);
-  setStatus("대시보드 데이터를 불러오는 중입니다.");
-
-  try {
-    const response = await fetch(`/api/dashboard/summary?range=${encodeURIComponent(rangeKey)}`, {
-      headers: {
-        Accept: "application/json"
-      }
-    });
-
-    const payload = await response.json();
-
-    if (!response.ok) {
-      if (payload.error === "dashboard_not_configured") {
-        showSetup(payload);
-        setStatus("환경변수와 Google 속성 연결이 필요합니다.");
-        return;
-      }
-
-      throw new Error(payload.message || "대시보드 데이터를 읽지 못했습니다.");
-    }
-
-    showDashboard(payload);
-
-    const errorCount = payload.errors?.length || 0;
-    const suffix = errorCount ? ` · 일부 데이터 ${errorCount}개 미연결` : "";
-    setStatus(`${formatDateTime(payload.generatedAt)} 기준으로 갱신되었습니다.${suffix}`);
-  } catch (error) {
-    setupPanel?.classList.add("is-hidden");
-    dashboardGrid?.classList.add("is-hidden");
-    setStatus(error.message || "대시보드를 불러오는 중 오류가 발생했습니다.");
+let currentRange = "7d", latestPayload = null, requestVersion = 0, requestController;
+const refreshButton = document.querySelector("[data-dashboard-refresh]");
+const exportButton = document.querySelector("[data-dashboard-export]");
+const filterInput = document.querySelector("[data-dashboard-filter]");
+const ready = status => ["available", "no_data"].includes(status);
+function sourceState(payload, key, report) {
+  if (payload.connections?.[key]) return payload.connections[key];
+  const error = payload.errors?.find(item => item.source === report);
+  return {status: error ? "unavailable" : "available", message: error?.message || "조회됨"};
+}
+function renderConnections(payload = {}, missing = false) {
+  const target = document.querySelector("[data-dashboard-connections]"); target.replaceChildren();
+  const statuses = {available:"연결됨", no_data:"연결됨 · 보고된 행 없음", not_configured:"설정 필요", access_denied:"권한 확인 필요", unavailable:"조회 실패"};
+  for (const [key, title, report, copy] of [
+    ["ga4", "방문 · GA4", "overview", "방문자와 주문·상담 버튼 클릭"],
+    ["searchConsole", "Google 검색", "searchOverview", "검색어·클릭·노출·순위"],
+    ["naver", "네이버 유입 · GA4", "naverOverview", "네이버에서 들어온 방문 · 검색어 통계 아님"]
+  ]) {
+    const state = missing ? {status:"not_configured"} : sourceState(payload,key,report);
+    const card = document.createElement("article"); card.className = "dashboard-connection"; card.dataset.state = state.status;
+    const name = document.createElement("h2"), badge = document.createElement("strong"), note = document.createElement("p");
+    name.textContent = title; badge.textContent = statuses[state.status] || "확인 필요"; note.textContent = ready(state.status) ? copy : state.message || copy;
+    card.append(name,badge,note); target.append(card);
   }
 }
-
-rangeButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    fetchDashboard(button.dataset.rangeKey || "today");
+function applyReportStates(payload) {
+  const groups = {overview:["sessions","activeUsers","engagementRate"], events:["orderClicks","consultClicks","totalActionClicks","conversionSignalRate"], searchOverview:["searchClicks","searchImpressions"], naverOverview:["naverSessions"]};
+  for (const [key, names] of Object.entries(groups)) {
+    const failed = payload.availability?.[key] ? !ready(payload.availability[key].status) : payload.errors?.some(item=>item.source===key);
+    if (failed) names.forEach(name=>{ payload.summary[name] = null; if(payload.delta)payload.delta[name]=null; });
+  }
+  for(const [key, selector] of Object.entries({sources:'[data-table="sources"]',landingPages:'[data-table="landingPages"]',naverLandingPages:'[data-table="naverLandingPages"]',queries:'[data-table="queries"]',pages:'[data-table="pages"]',series:'[data-dashboard-chart]',events:'[data-dashboard-events]',devices:'[data-dashboard-devices]'})){
+    const failed = payload.availability?.[key] ? !ready(payload.availability[key].status) : payload.errors?.some(item=>item.source===key);
+    const node=document.querySelector(selector); if(!failed||!node)continue;
+    node.replaceChildren(); const message="조회하지 못한 자료입니다. 연결 상태 또는 권한을 확인하고 다시 조회해 주세요.";
+    if(node.tagName==="TBODY"){const tr=document.createElement("tr"),cell=createCell(message);cell.colSpan=node.closest("table").querySelectorAll("thead th").length;tr.append(cell);node.append(tr);}else{const p=document.createElement("p");p.className="dashboard-empty";p.textContent=message;node.append(p);}
+  }
+}
+function filterTables() {
+  const value = filterInput?.value.trim().toLocaleLowerCase() || "";
+  let matches = 0;
+  document.querySelectorAll("[data-table] tr").forEach(row => {row.hidden = !!value && !row.textContent.toLocaleLowerCase().includes(value); if(!row.hidden)matches++;});
+  setText("[data-dashboard-filter-status]",value ? `${matches}개 행 표시` : "");
+}
+function installTableControls() {
+  document.querySelectorAll(".dashboard-table-wrap").forEach(wrapper=>{wrapper.tabIndex=0;wrapper.setAttribute("role","region");wrapper.setAttribute("aria-label",wrapper.closest("article,section")?.querySelector("h2,h3")?.textContent||"성과 표");});
+  document.querySelectorAll('[data-table]').forEach(body=>{
+    body.closest('table').querySelectorAll('thead th').forEach((th,index)=>{
+      if(th.querySelector('button'))return;th.scope="col";
+      const button=document.createElement('button');button.type='button';button.textContent=th.textContent+' ↕';button.setAttribute('aria-label',th.textContent+' 정렬');th.replaceChildren(button);
+      button.addEventListener('click',()=>{
+        const ascending=th.getAttribute('aria-sort')!=="ascending";
+        body.closest('table').querySelectorAll('th').forEach(cell=>cell.removeAttribute('aria-sort'));th.setAttribute('aria-sort',ascending?'ascending':'descending');
+        const text=row=>row.cells[index]?.textContent.trim()||'';
+        const compare=(a,b)=>{const av=text(a),bv=text(b),number=v=>/^[\d,.%]+$/.test(v)?Number(v.replace(/[,%%]/g,'')):NaN;return (Number.isFinite(number(av))&&Number.isFinite(number(bv))?number(av)-number(bv):av.localeCompare(bv,'ko'))*(ascending?1:-1);};
+        [...body.rows].sort(compare).forEach(row=>body.append(row));
+      });
+    });
   });
-});
-
-fetchDashboard("today");
+}
+async function fetchDashboard(rangeKey = currentRange) {
+  currentRange = rangeKey; const version = ++requestVersion;
+  requestController?.abort(); const controller = new AbortController(); requestController = controller;
+  const timeout = setTimeout(()=>controller.abort(),25000);
+  const signal=controller.signal;
+  setActiveRange(rangeKey); setStatus("성과 데이터를 불러오는 중입니다.");
+  setText("[data-dashboard-range-copy]", `${rangeKey === "today" ? "오늘" : rangeKey.replace("d","일")} 방문 통계를 조회합니다. 검색 성과는 별도 기간입니다.`);
+  refreshButton.disabled=true; exportButton.disabled=true;
+  document.querySelector('.dashboard-content').setAttribute('aria-busy','true');
+  try {
+    const response = await fetch(`/api/dashboard/summary?range=${encodeURIComponent(rangeKey)}`, {credentials:"same-origin",cache:"no-store",signal,headers:{Accept:"application/json"}});
+    let payload;try{payload=await response.json();}catch{throw new Error("서버에서 올바른 보고서를 받지 못했습니다. 다시 조회해 주세요.");}
+    if(version!==requestVersion)return;
+    if (!response.ok) {
+      latestPayload=null;
+      if (payload.error === "dashboard_not_configured") {
+        showSetup(payload); renderConnections({},true);
+        setText("[data-dashboard-source-note]", "서버에 Google 데이터 연결이 필요합니다. 인증정보는 이 화면에 입력하지 않습니다.");
+        setStatus("데이터 연결 전입니다. 아래 설정 안내를 확인해 주세요."); return;
+      }
+      throw new Error(response.status===401?"접근 권한을 확인해 주세요. 비공개 모드에서는 관리자 로그인이 필요합니다.":response.status===429?"조회가 많습니다. 1분 뒤 다시 조회해 주세요.":payload.message||"성과를 읽지 못했습니다. 다시 조회해 주세요.");
+    }
+    if(!payload.summary || !payload.range)throw new Error("서버 응답에 성과 자료가 없습니다.");
+    latestPayload=payload;
+    // Mask failed report metrics before rendering, including older public APIs.
+    const groups={overview:["sessions","activeUsers","engagementRate"],events:["totalActionClicks","conversionSignalRate"],searchOverview:["searchClicks","searchImpressions"],naverOverview:["naverSessions"]};
+    for(const [key,names]of Object.entries(groups))if(payload.errors?.some(item=>item.source===key))names.forEach(name=>{payload.summary[name]=null;payload.delta[name]=null;});
+    showDashboard(payload); renderConnections(payload); applyReportStates(payload); installTableControls(); filterTables();
+    exportButton.disabled=false;
+    setStatus(`${formatDateTime(payload.generatedAt)} 기준 · ${payload.errors?.length ? "일부 자료 미확보 · 연결된 자료부터 표시합니다." : "조회 완료"}`);
+  } catch(error) {
+    if(version!==requestVersion)return;
+    latestPayload=null;setupPanel?.classList.add("is-hidden");dashboardGrid?.classList.add("is-hidden");
+    document.querySelectorAll('.dashboard-jump a[href="#dashboard-overview"], .dashboard-jump a[href="#dashboard-traffic"], .dashboard-jump a[href="#dashboard-google"]').forEach(link=>{link.hidden=true;});
+    renderConnections({connections:Object.fromEntries(['ga4','searchConsole','naver'].map(key=>[key,{status:'unavailable',message:'데이터 조회 실패 · 새로고침으로 다시 확인해 주세요.'}]))});
+    setStatus(signal.aborted?"응답 시간이 초과되었습니다. 새로고침으로 다시 조회해 주세요.":error.message||"네트워크 연결을 확인한 뒤 다시 조회해 주세요.");
+  } finally {
+    clearTimeout(timeout);
+    if(version===requestVersion){refreshButton.disabled=false;document.querySelector('.dashboard-content').setAttribute('aria-busy','false');}
+  }
+}
+function downloadCsv() {
+  if(!latestPayload)return;
+  const p=latestPayload, rows=[["NOTHINGMATTERS 성과 보고서"],["조회 시각",p.generatedAt],["GA4 기간",p.range.startDate,p.range.endDate],["Google 검색 기간",p.search?.dateRange?.startDate||"운영 API 기준",p.search?.dateRange?.endDate||""],["출처",p.dataSource?.label||"Google API"],[],["지표","값"]];
+  Object.entries(p.summary).forEach(([key,value])=>rows.push([key,value===null?"미확보":value]));
+  rows.push([],['사이트 전체 Google 검색어','클릭','노출','CTR','평균순위']);
+  (p.search?.queries||[]).forEach(row=>rows.push([row.query,row.clicks,row.impressions,row.ctr,row.position]));
+  rows.push([],['랜딩 페이지','방문','참여율']);(p.landingPages||[]).forEach(row=>rows.push([row.page,row.sessions,row.engagementRate]));
+  const cell=value=>{let text=String(value??'');if(/^[=+\-@\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';};
+  const url=URL.createObjectURL(new Blob(['\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  const link=document.createElement('a');link.href=url;link.download=`nothingmatters-${currentRange}-${p.range.endDate}.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+rangeButtons.forEach(button=>button.addEventListener('click',()=>fetchDashboard(button.dataset.rangeKey)));
+refreshButton?.addEventListener('click',()=>fetchDashboard());exportButton?.addEventListener('click',downloadCsv);filterInput?.addEventListener('input',filterTables);
+fetchDashboard("7d");

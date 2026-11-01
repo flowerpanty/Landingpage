@@ -13,6 +13,7 @@ const { createKakaoQuickCallbackHandler } = require("./lib/kakao-quick-callback.
 const { createKakaoQuickApiHandler } = require("./lib/kakao-quick-api.js");
 const { buildChristmasSearchAudit, unavailableAudit, errorStatus } = require("./lib/christmas-search-audit.js");
 const { createWishingTreeHandler } = require("./lib/wishing-tree.js");
+const { searchPeriod, safePage, previewAllowed, readPreview } = require("./lib/dashboard-support.js");
 
 const ROOT = process.cwd();
 const noticeServiceReady = import('./lib/notice-admin.mjs').then(({ createNoticeService }) => createNoticeService({ root: ROOT }));
@@ -634,7 +635,7 @@ function getDashboardConfig() {
 
   const missing = [];
 
-  if (!serviceAccount) {
+  if (!serviceAccount?.client_email || !serviceAccount?.private_key) {
     missing.push("GOOGLE_SERVICE_ACCOUNT_JSON 또는 GOOGLE_SERVICE_ACCOUNT_JSON_BASE64");
   }
 
@@ -688,6 +689,7 @@ function getDashboardRangeFromDays(days, preferredKey = "", preferredLabel = "")
   const safeDays = Math.min(MAX_DASHBOARD_DAYS, Math.max(1, Number.parseInt(days, 10) || 1));
   const isToday = safeDays === 1;
   const currentDateRange = getDateSpan(safeDays);
+  const searchDates = searchPeriod(safeDays);
   const previousDateRange = getDateSpan(safeDays, safeDays);
   const key = preferredKey || (isToday ? "today" : `${safeDays}d`);
   const label = preferredLabel || (isToday ? "오늘" : `${safeDays}일`);
@@ -711,8 +713,9 @@ function getDashboardRangeFromDays(days, preferredKey = "", preferredLabel = "")
         ? { startDate: "yesterday", endDate: "yesterday" }
         : { startDate: previousDateRange.startDate, endDate: previousDateRange.endDate }
     ],
-    searchConsoleDateRange: currentDateRange,
-    previousSearchConsoleDateRange: previousDateRange
+    searchConsoleDateRange: searchDates.current,
+    previousSearchConsoleDateRange: searchDates.previous,
+    searchTimeZone: searchDates.timeZone
   };
 }
 
@@ -742,7 +745,8 @@ function getDashboardRange(requestUrl) {
 function getSearchConsoleRequest(range, dateRange, options = {}) {
   return {
     ...dateRange,
-    ...(range.isPartial && !options.isPrevious ? { dataState: "all" } : {}),
+    type: "web",
+    dataState: "final",
     ...(options.dimensions ? { dimensions: options.dimensions } : {}),
     ...(options.rowLimit ? { rowLimit: options.rowLimit } : {})
   };
@@ -1600,7 +1604,7 @@ function mapSourceRows(report = {}, totalSessions = 0) {
 
 function mapLandingRows(report = {}) {
   return mapGaRows(report).map((row) => ({
-    page: row.dimensions.landingPagePlusQueryString || "/",
+    page: safePage(row.dimensions.landingPage || "/"),
     sessions: Number(row.metrics.sessions || 0),
     activeUsers: Number(row.metrics.activeUsers || 0),
     engagementRate: Number(row.metrics.engagementRate || 0)
@@ -1648,7 +1652,7 @@ function buildSeriesRows(sessionReport = {}, eventSeriesReport = {}, range) {
   const seriesMap = new Map();
 
   const ensurePoint = (key) => {
-    const safeKey = String(key || "");
+    const safeKey = range.granularity === "hour" ? String(key || "0").padStart(2, "0") : String(key || "");
     if (!seriesMap.has(safeKey)) {
       seriesMap.set(safeKey, {
         key: safeKey,
@@ -1668,6 +1672,11 @@ function buildSeriesRows(sessionReport = {}, eventSeriesReport = {}, range) {
     Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0")).forEach(ensurePoint);
   }
 
+  if (range.granularity === "day") {
+    for (let stamp = Date.parse(range.startDate + "T00:00:00Z"); stamp <= Date.parse(range.endDate + "T00:00:00Z"); stamp += DAY_MS) {
+      ensurePoint(new Date(stamp).toISOString().slice(0,10).replaceAll("-", ""));
+    }
+  }
   mapGaRows(sessionReport).forEach((row) => {
     const point = ensurePoint(row.dimensions[seriesDimension]);
     point.sessions += Number(row.metrics.sessions || 0);
@@ -1679,9 +1688,10 @@ function buildSeriesRows(sessionReport = {}, eventSeriesReport = {}, range) {
     const point = ensurePoint(row.dimensions[seriesDimension]);
     const count = Number(row.metrics.eventCount || 0);
 
-    if (eventName.startsWith("order_") || eventName === "store_shop_click") point.orderClicks += count;
-    if (eventName.startsWith("consult_")) point.consultClicks += count;
-    point.totalActionClicks += count;
+    const kind = TRACKED_DASHBOARD_EVENTS.find(event => event.name === eventName)?.type;
+    if (kind === "order") point.orderClicks += count;
+    if (kind === "consult") point.consultClicks += count;
+    point.totalActionClicks = point.orderClicks + point.consultClicks;
   });
 
   return [...seriesMap.values()].sort((a, b) => a.key.localeCompare(b.key));
@@ -1728,7 +1738,7 @@ function getSearchInsight(row = {}) {
 function mapSearchRows(report = {}, keyName) {
   return (report.rows || []).map((row) => {
     const item = {
-      [keyName]: row.keys?.[0] || "(not set)",
+      [keyName]: keyName === "page" ? safePage(row.keys?.[0] || "/") : row.keys?.[0] || "(not set)",
       clicks: Number(row.clicks || 0),
       impressions: Number(row.impressions || 0),
       ctr: Number(row.ctr || 0),
@@ -1744,7 +1754,7 @@ function mapSearchRows(report = {}, keyName) {
 
 function getSearchOpportunities(rows = []) {
   return rows
-    .filter((row) => row.impressions > 0)
+    .filter((row) => row.impressions >= 30 && (row.ctr < .02 || row.position > 10))
     .map((row) => ({
       ...row,
       opportunityScore: row.impressions * Math.max(0.01, 1 - row.ctr)
@@ -1771,7 +1781,7 @@ async function settleReports(requests) {
       try {
         return [key, { data: await request }];
       } catch (error) {
-        return [key, { error: error.message || "데이터 조회 실패" }];
+        return [key, { error: error.message || "데이터 조회 실패", status: error.status || 502 }];
       }
     })
   );
@@ -1796,9 +1806,12 @@ async function buildDashboardPayload(range, dashboardConfig) {
   const accessToken = await getGoogleAccessToken(dashboardConfig.serviceAccount);
   const seriesDimension = range.granularity === "hour" ? "hour" : "date";
   const eventFilter = getEventNameFilter();
+  const unavailable = name => Promise.reject(Object.assign(new Error(`${name} 연결 설정 필요`), { status: 503 }));
+  const gaReport = (...args) => dashboardConfig.propertyId ? fetchGaReport(...args) : unavailable("GA4");
+  const searchReport = (...args) => dashboardConfig.searchConsoleSiteUrl ? fetchSearchConsoleReport(...args) : unavailable("Search Console");
 
   const reports = await settleReports({
-    overview: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    overview: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
       metrics: [
         { name: "sessions" },
@@ -1807,7 +1820,7 @@ async function buildDashboardPayload(range, dashboardConfig) {
         { name: "engagementRate" }
       ]
     }),
-    previousOverview: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    previousOverview: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.previousGaDateRange,
       metrics: [
         { name: "sessions" },
@@ -1816,35 +1829,40 @@ async function buildDashboardPayload(range, dashboardConfig) {
         { name: "engagementRate" }
       ]
     }),
-    sources: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    sources: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
       dimensions: [{ name: "sessionSourceMedium" }, { name: "sessionPrimaryChannelGroup" }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: 16
     }),
-    landingPages: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    landingPages: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
-      dimensions: [{ name: "landingPagePlusQueryString" }],
+      dimensions: [{ name: "landingPage" }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "engagementRate" }],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: 12
     }),
-    naverLandingPages: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    naverOverview: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
-      dimensions: [{ name: "landingPagePlusQueryString" }],
+      metrics: [{ name: "sessions" }, { name: "activeUsers" }],
+      dimensionFilter: createDimensionFilter("sessionSourceMedium", "naver")
+    }),
+    naverLandingPages: gaReport(accessToken, dashboardConfig.propertyId, {
+      dateRanges: range.gaDateRange,
+      dimensions: [{ name: "landingPage" }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }, { name: "engagementRate" }],
       dimensionFilter: createDimensionFilter("sessionSourceMedium", "naver"),
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: 10
     }),
-    series: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    series: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
       dimensions: [{ name: seriesDimension }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }],
       orderBys: [{ dimension: { dimensionName: seriesDimension, orderType: "ALPHANUMERIC" } }]
     }),
-    events: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    events: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
       dimensions: [{ name: "eventName" }],
       metrics: [{ name: "eventCount" }],
@@ -1852,34 +1870,34 @@ async function buildDashboardPayload(range, dashboardConfig) {
       orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
       limit: TRACKED_DASHBOARD_EVENTS.length
     }),
-    previousEvents: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    previousEvents: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.previousGaDateRange,
       dimensions: [{ name: "eventName" }],
       metrics: [{ name: "eventCount" }],
       dimensionFilter: eventFilter,
       limit: TRACKED_DASHBOARD_EVENTS.length
     }),
-    eventSeries: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    eventSeries: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
       dimensions: [{ name: seriesDimension }, { name: "eventName" }],
       metrics: [{ name: "eventCount" }],
       dimensionFilter: eventFilter,
       orderBys: [{ dimension: { dimensionName: seriesDimension, orderType: "ALPHANUMERIC" } }],
-      limit: 500
+      limit: (range.granularity === "hour" ? 24 : range.days) * TRACKED_DASHBOARD_EVENTS.length
     }),
-    devices: fetchGaReport(accessToken, dashboardConfig.propertyId, {
+    devices: gaReport(accessToken, dashboardConfig.propertyId, {
       dateRanges: range.gaDateRange,
       dimensions: [{ name: "deviceCategory" }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       limit: 6
     }),
-    searchOverview: fetchSearchConsoleReport(
+    searchOverview: searchReport(
       accessToken,
       dashboardConfig.searchConsoleSiteUrl,
       getSearchConsoleRequest(range, range.searchConsoleDateRange, { rowLimit: 1 })
     ),
-    previousSearchOverview: fetchSearchConsoleReport(
+    previousSearchOverview: searchReport(
       accessToken,
       dashboardConfig.searchConsoleSiteUrl,
       getSearchConsoleRequest(range, range.previousSearchConsoleDateRange, {
@@ -1887,7 +1905,7 @@ async function buildDashboardPayload(range, dashboardConfig) {
         isPrevious: true
       })
     ),
-    queries: fetchSearchConsoleReport(
+    queries: searchReport(
       accessToken,
       dashboardConfig.searchConsoleSiteUrl,
       getSearchConsoleRequest(range, range.searchConsoleDateRange, {
@@ -1895,7 +1913,7 @@ async function buildDashboardPayload(range, dashboardConfig) {
         rowLimit: 20
       })
     ),
-    pages: fetchSearchConsoleReport(
+    pages: searchReport(
       accessToken,
       dashboardConfig.searchConsoleSiteUrl,
       getSearchConsoleRequest(range, range.searchConsoleDateRange, {
@@ -1934,8 +1952,8 @@ async function buildDashboardPayload(range, dashboardConfig) {
     .reduce((sum, event) => sum + event.count, 0);
   const totalActionClicks = orderClicks + consultClicks;
   const previousActionClicks = previousOrderClicks + previousConsultClicks;
-  const naverSessions = naverSources.reduce((sum, row) => sum + row.sessions, 0);
-  const naverActiveUsers = naverSources.reduce((sum, row) => sum + row.activeUsers, 0);
+  const naverSessions = getMetricValue(getReport(reports, "naverOverview"), 0);
+  const naverActiveUsers = getMetricValue(getReport(reports, "naverOverview"), 1);
   const reportErrors = getReportErrors(reports);
 
   const summary = {
@@ -1947,12 +1965,30 @@ async function buildDashboardPayload(range, dashboardConfig) {
     orderClicks,
     consultClicks,
     totalActionClicks,
-    conversionSignalRate: overview.sessions ? totalActionClicks / overview.sessions : 0,
+    conversionSignalRate: overview.sessions ? totalActionClicks / overview.sessions : null,
     naverSessions,
     naverActiveUsers
   };
 
+  // Unavailable is different from a successful report with zero rows.
+  const reportState = key => {
+    const result = reports[key];
+    return result.error ? { status: result.status === 503 ? "not_configured" : [401,403].includes(result.status) ? "access_denied" : "unavailable", message: result.error }
+      : { status: result.data.rows?.length ? "available" : "no_data", message: result.data.rows?.length ? "조회됨" : "이 기간에 보고된 행 없음" };
+  };
+  const availability = Object.fromEntries(Object.keys(reports).map(key => [key, reportState(key)]));
+  const nullIfFailed = (key, names) => { if (reports[key].error) names.forEach(name => { summary[name] = null; }); };
+  nullIfFailed("overview", ["sessions", "activeUsers", "engagedSessions", "engagementRate"]);
+  nullIfFailed("searchOverview", ["searchClicks", "searchImpressions", "searchCtr", "averagePosition"]);
+  nullIfFailed("events", ["orderClicks", "consultClicks", "totalActionClicks", "conversionSignalRate"]);
+  nullIfFailed("naverOverview", ["naverSessions", "naverActiveUsers"]);
+  if (reports.overview.error) summary.conversionSignalRate = null;
+  const delta = (key, current, previous) => reports[key].error || current === null ? null : getDelta(current, previous);
+
   return {
+    dataSource: { mode: "direct", label: "Google API 직접 연결" },
+    availability,
+    connections: { ga4: availability.overview, searchConsole: availability.searchOverview, naver: availability.naverOverview },
     generatedAt: new Date().toISOString(),
     range: {
       key: range.key,
@@ -1967,21 +2003,21 @@ async function buildDashboardPayload(range, dashboardConfig) {
     summary,
     delta: {
       comparisonLabel: range.comparisonLabel,
-      sessions: getDelta(summary.sessions, previousOverview.sessions),
-      activeUsers: getDelta(summary.activeUsers, previousOverview.activeUsers),
-      searchClicks: getDelta(summary.searchClicks, previousSearchOverview.clicks),
-      searchImpressions: getDelta(summary.searchImpressions, previousSearchOverview.impressions),
-      orderClicks: getDelta(orderClicks, previousOrderClicks),
-      consultClicks: getDelta(consultClicks, previousConsultClicks),
-      totalActionClicks: getDelta(totalActionClicks, previousActionClicks)
+      sessions: delta("previousOverview", summary.sessions, previousOverview.sessions),
+      activeUsers: delta("previousOverview", summary.activeUsers, previousOverview.activeUsers),
+      searchClicks: delta("previousSearchOverview", summary.searchClicks, previousSearchOverview.clicks),
+      searchImpressions: delta("previousSearchOverview", summary.searchImpressions, previousSearchOverview.impressions),
+      orderClicks: delta("previousEvents", summary.orderClicks, previousOrderClicks),
+      consultClicks: delta("previousEvents", summary.consultClicks, previousConsultClicks),
+      totalActionClicks: delta("previousEvents", summary.totalActionClicks, previousActionClicks)
     },
-    series,
+    series: reports.series.error ? [] : series.map(point => ({ ...point, ...(reports.eventSeries.error ? {totalActionClicks: null} : {}) })),
     channels,
     sources,
     landingPages,
     naver: {
-      sessions: naverSessions,
-      activeUsers: naverActiveUsers,
+      sessions: summary.naverSessions,
+      activeUsers: summary.naverActiveUsers,
       sources: naverSources,
       landingPages: naverLandingPages
     },
@@ -1991,11 +2027,15 @@ async function buildDashboardPayload(range, dashboardConfig) {
       activeUsers: Number(row.metrics.activeUsers || 0),
       share: summary.sessions ? Number(row.metrics.sessions || 0) / summary.sessions : 0
     })),
-    events,
+    events: reports.events.error ? [] : events,
     search: {
       siteUrl: dashboardConfig.searchConsoleSiteUrl,
-      isPartial: range.isPartial,
+      dateRange: range.searchConsoleDateRange,
+      timeZone: range.searchTimeZone,
+      dataState: "final",
+      isPartial: false,
       ...searchOverview,
+      ...(reports.searchOverview.error ? {clicks:null, impressions:null, ctr:null, position:null} : {}),
       queries,
       pages,
       opportunities: searchOpportunities,
@@ -2007,10 +2047,10 @@ async function buildDashboardPayload(range, dashboardConfig) {
     },
     errors: reportErrors,
     ga4: {
-      overview,
+      overview: Object.fromEntries(["sessions","activeUsers","engagedSessions","engagementRate"].map(key=>[key,summary[key]])),
       sources,
       landingPages,
-      daily: series
+      daily: (reports.series.error ? [] : series)
         .filter((point) => range.granularity === "day")
         .map((point) => ({
           date: point.key,
@@ -2018,8 +2058,8 @@ async function buildDashboardPayload(range, dashboardConfig) {
           activeUsers: point.activeUsers
         })),
       naver: {
-        sessions: naverSessions,
-        activeUsers: naverActiveUsers,
+        sessions: summary.naverSessions,
+        activeUsers: summary.naverActiveUsers,
         sources: naverSources,
         landingPages: naverLandingPages
       }
@@ -2071,10 +2111,20 @@ function sendDashboardReadError(res, error, payload) {
 }
 
 async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
-  if (dashboardConfig.missing.length) {
+  const dashboardRange = getDashboardRange(requestUrl);
+  if (previewAllowed(req, dashboardConfig)) {
+    try {
+      const payload = await readPublicDashboardReport(`preview:${dashboardRange.key}`, () => readPreview(`/api/dashboard/summary?range=${dashboardRange.key}`));
+      sendJson(res, 200, payload);
+    } catch {
+      sendJson(res, 502, { error: "dashboard_preview_unavailable", message: "운영 사이트 공개 성과를 읽지 못했습니다. 잠시 후 다시 조회해 주세요." });
+    }
+    return;
+  }
+  if (!dashboardConfig.serviceAccount?.client_email || !dashboardConfig.serviceAccount?.private_key || dashboardConfig.configError || (!dashboardConfig.propertyId && !dashboardConfig.searchConsoleSiteUrl)) {
     sendJson(res, 503, {
       error: "dashboard_not_configured",
-      message: "대시보드를 보려면 Google Analytics 4 와 Search Console 설정이 필요합니다.",
+      message: "Google 데이터 연결이 필요합니다. GA4 또는 Search Console 중 연결된 서비스부터 사용할 수 있습니다.",
       missing: dashboardConfig.missing,
       setup: {
         requiredEnv: [
@@ -2092,8 +2142,6 @@ async function handleDashboardSummary(req, res, requestUrl, dashboardConfig) {
     });
     return;
   }
-
-  const dashboardRange = getDashboardRange(requestUrl);
 
   try {
     const load = () => buildDashboardPayload(dashboardRange, dashboardConfig);
@@ -2113,6 +2161,14 @@ async function handleChristmasSearchAudit(req, res, requestUrl, config) {
   // No caller-supplied page/date/filter can turn this into a site-wide query endpoint.
   if ([...requestUrl.searchParams].length) {
     sendJson(res, 400, { error: "invalid_query", message: "이 분석은 크리스마스 canonical의 28일·90일 기간으로 고정됩니다." });
+    return;
+  }
+  if (previewAllowed(req, config)) {
+    try {
+      sendJson(res, 200, await readPublicDashboardReport("preview:christmas-search", () => readPreview("/api/dashboard/christmas-search")));
+    } catch {
+      sendJson(res, 502, unavailableAudit("upstream_unavailable"));
+    }
     return;
   }
   const missing = [];
