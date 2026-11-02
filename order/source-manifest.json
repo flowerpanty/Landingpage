@@ -4,7 +4,7 @@
   "importedAt": "2026-10-06",
   "sourceFiles": {
     "order.html": "db1d4156acc4cf545ae454117ac4f54eaa01fe60fef34c52d7d84e3108208dda",
-    "brookie.html": "d8724affd86ebaf74450936434eb5920cc336610ceae3bb4dd12a274a531df50",
+    "brookie.html": "b9575d3700c4a45ec34cf4713475bb74c037e237853f8b1bfabf55852b551d34",
     "cookies.html": "30108cc8b08854e71f8e3f826ef65eb03ca8729b813a6d840a9c2a293e671ff5",
     "lucky.html": "5b7420f852ae1c2d94a8188c053baa6d275fc93e6cc0c9afbb3a0bab276c4ca6",
     "cookie-flight.html": "c82ede53a11fc99bc1baa335e9fcee29682c9c20c5b6a610d32d50f5a07cb708",
@@ -24,7 +24,7 @@
   },
   "brookieImport": {
     "repository": "flowerpanty/ThingMattersReserve",
-    "commit": "e6ea23b1ad3d2c3acb25880888a0a0e14175ec7c",
+    "commit": "9f6158476e0a7567db81099598e633a9a4e5298e",
     "sourceFiles": {
       "order.css": "995f827dee1f1f630fbe23f15c3e291c66bd9a4641d088e9cef4cd9887585e7e",
       "order-confirmation.css": "ca649d9344b65e5ce42512b6d44570465f0b88233cd067d0890135ea004a11ec",
@@ -33,9 +33,9 @@
       "landing-quote.js": "7395b88324d685b8d6480e2d3d87df0f96381da5ce312d20a44a006941b5a881",
       "brookie-mobile.css": "77775daf528dc9c4a15b0008468f5f07c536bac5d7c1d0677b93142ea45589d6",
       "brookie-quote.js": "ed7c0840b72954c60eede9e14fbcd7b87ea34cd7718aafd512cfd2b5994a648e",
-      "brookie.html": "2bcfa22cd996fcba9def652ce53641391b3cb2cdd531753302670db749f406e7"
+      "brookie.html": "b9575d3700c4a45ec34cf4713475bb74c037e237853f8b1bfabf55852b551d34"
     },
-    "deployedHtmlSha256": "bcc02a8654958e885e4a05a10d4c4eff0be466c2d7fb846df1f71b4791709f29"
+    "deployedHtmlSha256": "eae6f652c7b02229f586e63828053017c0f124b5d0e19c4413080ea7815e9a68"
   },
   "orderImport": {
     "repository": "flowerpanty/ThingMattersReserve",
@@ -51,7 +51,7 @@
       "brookie-quote.js": "3f7467a2db4d7c42a6e68ec60279d90b78afe8eb56d62d26c452f4ae3b1aeb2e",
       "new-product-order.css": "6e19cbe3f1953dc6153482f0d749b39c7fc275e60c08d4d834a9c9d765bf97a2",
       "new-product-order.js": "6ba01d8ab9cc77ab636eb277e6def3defa5af1ddf6f8c0d6b674263072d88866",
-      "brookie.html": "d8724affd86ebaf74450936434eb5920cc336610ceae3bb4dd12a274a531df50",
+      "brookie.html": "b9575d3700c4a45ec34cf4713475bb74c037e237853f8b1bfabf55852b551d34",
       "cookies.html": "30108cc8b08854e71f8e3f826ef65eb03ca8729b813a6d840a9c2a293e671ff5",
       "lucky.html": "5b7420f852ae1c2d94a8188c053baa6d275fc93e6cc0c9afbb3a0bab276c4ca6",
       "cookie-flight.html": "c82ede53a11fc99bc1baa335e9fcee29682c9c20c5b6a610d32d50f5a07cb708",
@@ -70,7 +70,7 @@
       "brookie-quote.js": "3f7467a2db4d7c42a6e68ec60279d90b78afe8eb56d62d26c452f4ae3b1aeb2e",
       "new-product-order.css": "6e19cbe3f1953dc6153482f0d749b39c7fc275e60c08d4d834a9c9d765bf97a2",
       "new-product-order.js": "2070ec6df0a83ae75c4e1830cf81502fffb8c3e72034841d39429f55e7508154",
-      "brookie.html": "8fc36809883c436112c25b079426dd436e357df4cb6e8fca88a3e488be9b6b65",
+      "brookie.html": "eae6f652c7b02229f586e63828053017c0f124b5d0e19c4413080ea7815e9a68",
       "cookies.html": "15bebf287eccc240bcdd30e4cf3c131392c176c51c0ef5dad3bc65e5c2dcb6b4",
       "lucky.html": "24f86bac810dc3fe41a6459cfb0ac4f03618b9e7bc4fbb7e56c8f90dd61809bf",
       "cookie-flight.html": "9ecddd5f180f6653320ed776c7d1add5636493bd23c3a9823b7a66fd7964c45f",

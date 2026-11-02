@@ -2719,7 +2719,7 @@
               <span>이 조합 필요 개수</span>
               <span class="countBox">
                 <button class="plus qtyMinus" id="qtyMinus" type="button" aria-label="수량 줄이기">−</button>
-                <input id="qty" type="number" min="1" value="1" inputmode="numeric" aria-label="이 조합 필요 개수" />
+                <input id="qty" type="number" min="1" max="5000" value="1" inputmode="numeric" aria-label="이 조합 필요 개수" />
                 <button class="plus" id="qtyPlus" type="button" aria-label="수량 추가">+</button>
               </span>
             </label>
@@ -3019,6 +3019,7 @@
     const KAKAO_URL = "https://pf.kakao.com/_QdCaK/chat";
     const STORAGE_KEY = "nm-brookie-state-v1";
     const MIN_BROOKIE_QTY = 12;
+    const MAX_BROOKIE_QTY = 5000;
     const won = (value) => `${value.toLocaleString("ko-KR")}원`;
     const nameOf = (list, id) => (list.find((item) => item[0] === id) || [id, id])[1];
     const renderSrc = () => `/order/assets/public/renders/${state.character}_${state.paper}.webp`;
@@ -3108,7 +3109,7 @@
         heartText: clampHeartText(typeof combo.heartText === "string" ? combo.heartText : "", character),
         customPaperLine1: clampPaperText(typeof combo.customPaperLine1 === "string" ? combo.customPaperLine1 : ""),
         customPaperLine2: clampPaperText(typeof combo.customPaperLine2 === "string" ? combo.customPaperLine2 : ""),
-        qty: clampStep(combo.qty, 1, 999, 1)
+        qty: clampStep(combo.qty, 1, MAX_BROOKIE_QTY, 1)
       };
     }
 
@@ -3129,7 +3130,7 @@
         state.heartText = clampHeartText(typeof saved.heartText === "string" ? saved.heartText : "", state.character);
         state.customPaperLine1 = clampPaperText(typeof saved.customPaperLine1 === "string" ? saved.customPaperLine1 : "");
         state.customPaperLine2 = clampPaperText(typeof saved.customPaperLine2 === "string" ? saved.customPaperLine2 : "");
-        state.qty = clampStep(saved.qty, 1, 999, 1);
+        state.qty = clampStep(saved.qty, 1, MAX_BROOKIE_QTY, 1);
         state.date = typeof saved.date === "string" && saved.date >= minDate ? saved.date : minDate;
         state.customerName = typeof saved.customerName === "string" ? saved.customerName : "";
         state.customerPhone = typeof saved.customerPhone === "string" ? saved.customerPhone : "";
@@ -4302,14 +4303,14 @@ ${custom ? `${custom}\n` : ""}
       });
       $("qty").addEventListener("input", (event) => {
         activeBuilderStage = "quantity";
-        state.qty = Math.max(1, Math.min(999, parseInt(event.target.value || "1", 10) || 1));
+        state.qty = Math.max(1, Math.min(MAX_BROOKIE_QTY, parseInt(event.target.value || "1", 10) || 1));
         event.target.value = state.qty;
         renderComboPanel();
         updateSummary();
       });
       $("qtyPlus").addEventListener("click", () => {
         activeBuilderStage = "quantity";
-        state.qty = Math.min(999, state.qty + 1);
+        state.qty = Math.min(MAX_BROOKIE_QTY, state.qty + 1);
         $("qty").value = state.qty;
         renderComboPanel();
         updateSummary();
