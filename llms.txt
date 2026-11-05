@@ -24,7 +24,7 @@ This file is a guide to public website information. Crawler access is defined by
 
 **Local intent hubs**
 
-**마곡 디저트·답례품·회사 간식**
+**마곡 답례품·회사 간식·기업행사**
 - Landing: https://nothingmatters.co.kr/magok-cookie/
 - Actual workshop is NOT in Magok.
 - Workshop: 서울특별시 강서구 송정로 25 1층, 공항동
@@ -68,7 +68,7 @@ This file is a guide to public website information. Crawler access is defined by
 **Use-case guides**
 - guides/: guide hub for wedding favors, corporate event cookies, teacher snack gifts, farewell favors, dessert gift sets, and lucky cheering cookies
 - wedding-favor-cookie: wedding favors, wedding cookie favors, neat favor packaging
-- corporate-event-cookie: corporate event cookies, company favor cookies, office event snacks
+- corporate-event-cookie: preparation guide for seminar/meeting snacks and corporate event cookies; quantity planning, packaging and message choices
 - teacher-snack-gift: kindergarten teacher snacks, daycare snack gifts, light thank-you gifts
 - farewell-favor-cookie: resignation favors, parental leave favors, promotion favors
 - dessert-gift-set: baked gift sets, cookie gift sets, premium dessert gifts
@@ -90,6 +90,8 @@ This file is a guide to public website information. Crawler access is defined by
 - whether pickup or quick delivery is needed
 
 ## Main pages
+
+- [기업 답례품·회사 행사 간식](https://nothingmatters.co.kr/corporate-gift/): 지역에 제한되지 않는 기업 주문 상업 허브. 세미나·회의·워크숍·임직원 감사 등 행사 목적별 쿠키 선택, 실제 제작사진과 가격·최소수량·견적을 안내합니다. 브루키 기본형 1구 7,800원·최소 12개와 수제꾸덕쿠키·TERMINAL을 비교하세요.
 
 - [퇴사·승진 답례품 쿠키](https://nothingmatters.co.kr/farewell-favor/): 퇴사·승진·육아휴직·시보해제·송별 답례품의 구성과 견적을 보는 상업 페이지. 문구 커스텀 브라우니쿠키와 기본 브라우니쿠키를 우선 비교하며 행운쿠키는 가벼운 응원·감사의 보조 옵션. 브루키 기본형 1구 7,800원, 최소 12개. 공항동 예약 픽업 또는 일정·수량에 따른 차량 퀵 상담. 선택법·준비 안내는 /guides/farewell-favor-cookie/.
 
@@ -119,7 +121,7 @@ This file is a guide to public website information. Crawler access is defined by
 ## Gimpo Airport and local pickup
 
 - [김포공항 쿠키 픽업 · 디저트 선물·답례품](https://nothingmatters.co.kr/pickup/): 김포공항·송정역 인근 공항동에서 예약 픽업하는 수제쿠키와 디저트 선물, 답례품을 확인하세요. TERMINAL·COOKIE FLIGHT·쿠키크루·브루키·수제꾸덕쿠키·행운쿠키를 고른 뒤 네이버플레이스에서 픽업 일정을 예약할 수 있습니다.
-- [마곡 디저트·답례품 | 회사 간식·수제쿠키 선물 - 낫띵메터스](https://nothingmatters.co.kr/magok-cookie/): 마곡 디저트 선물과 회사 답례품을 준비하는 수제쿠키 안내. 브루키·수제꾸덕쿠키·행운쿠키부터 기업행사·세미나 단체 간식까지 비교하세요. 서울 강서구 공항동 예약 픽업, 일정·수량·주소에 따른 마곡 차량 퀵 상담.
+- [마곡 답례품·회사 간식 | 기업행사·수제쿠키 - 낫띵메터스](https://nothingmatters.co.kr/magok-cookie/): 마곡 답례품·회사 간식·기업행사의 지역 상업 허브. 세미나·회의·워크숍 간식, 임직원 감사와 기업행사 답례품을 비교하고 공항동 예약 픽업 또는 일정·수량·주소에 따른 마곡 차량 퀵을 상담합니다.
 - [김포공항 도착정보·도착시간 | 출발·도착 실시간 항공편](https://nothingmatters.co.kr/gimpo-board/): 김포공항 도착정보와 출발정보를 실시간 항공편 전광판에서 확인하세요. 김포공항 도착시간·출발시간, 편명, 출발지·목적지, 게이트와 운항상태를 확인할 수 있습니다. 한국공항공사 제공 자료를 바탕으로 표시합니다.
 - [김포공항 선물·디저트·기념품 | 비행기 쿠키 예약 픽업 - 낫띵메터스](https://nothingmatters.co.kr/gimpo/): 김포공항 근처에서 특별한 선물이나 디저트를 찾고 있다면. 비행기 쿠키 COOKIE FLIGHT부터 터미널 쿠키, 공항 테마 선물까지 만나보세요. 김포공항·송정역 인근 공항동 예약 픽업.
 - [김포공항 근처 쿠키 픽업 안내 | NOTHINGMATTERS](https://nothingmatters.co.kr/gimpo/pickup/): 김포공항 가기 전 공항동에서 쿠키를 예약 픽업하는 방법. 쿠키 선택, 네이버 픽업 예약, 서울 강서구 송정로 25 1층 매장 수령을 안내합니다.

@@ -120,6 +120,7 @@ const ITEM_LISTS = {
     ["행운쿠키", "/products/lucky-cookie/"],
     ["COOKIE FLIGHT", "/products/cookie-flight/"],
     ["터미널 샌드쿠키", "/products/terminal-sand-cookie/"],
+    ["마곡 기업 답례품·회사 행사", "/corporate-gift/"],
     ["마곡 기업행사 쿠키", "/guides/corporate-event-cookie/"],
     ["공항동 픽업 안내", "/pickup/"],
   ],
@@ -548,8 +549,8 @@ function buildService(page) {
     return {
       "@type": "Service",
       "@id": `${page.pageUrl}#service`,
-      name: "마곡 디저트·답례품 예약 제작 상담",
-      serviceType: "쿠키 선물·회사 간식·답례품 예약 제작",
+      name: "마곡 답례품·회사 간식·기업행사 쿠키 예약 제작 상담",
+      serviceType: "마곡 회사 답례품·기업행사 간식 예약 제작",
       provider: { "@id": LOCAL_BUSINESS_ID },
       url: page.pageUrl,
       areaServed: "마곡",

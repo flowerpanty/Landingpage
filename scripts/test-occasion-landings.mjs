@@ -49,6 +49,31 @@ for (const [slug, expectedItems] of pages) {
   assert.ok(primaryCtas.every((tag) => tag.includes('href="/order/brookie"')));
   if (slug === "corporate-gift") {
     assert.equal((heroAndFinal.match(/class="showroom-button showroom-button--hero-secondary" href="\/order"/g) || []).length, 2);
+    const title = '기업 답례품·회사 행사 간식 | 세미나·회의 쿠키 - 낫띵메터스';
+    assert.equal(html.match(/<title>([^<]+)<\/title>/)[1], title);
+    assert.equal(clean(html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)[1]), '기업 답례품·회사 행사 간식, 행사 목적에 맞춰 고르세요.');
+    const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
+    for (const name of ['og:title', 'twitter:title']) assert.ok(html.includes(`="${name}" content="${title}"`));
+    for (const name of ['og:description', 'twitter:description']) assert.ok(html.includes(`="${name}" content="${description}"`));
+    assert.equal(entry.lastmod, '2026-11-05');
+    assert.doesNotMatch(html, /로고쿠키|프린팅쿠키|포토쿠키/);
+    const choose = html.match(/<section[^>]*id="choose"[^>]*>([\s\S]*?)<\/section>/)[1];
+    assert.match(choose, /<h2[^>]*>기업행사 상황별로 어떤 쿠키가 맞을까요\?<\/h2>/);
+    const cards = [...choose.matchAll(/<article class="occasion-match">([\s\S]*?)<\/article>/g)].map(match => match[1]);
+    assert.equal(cards.length, 3);
+    assert.deepEqual(cards.map(card => clean(card.match(/<h3>([\s\S]*?)<\/h3>/)[1])), ['브루키', '수제꾸덕쿠키', 'TERMINAL 카라멜 샌드쿠키']);
+    for (const [index, purpose] of ['세미나·회의·워크숍', '팀 간식·여러 맛', '임직원·거래처 선물'].entries()) assert.ok(cards[index].includes(purpose));
+    assert.match(choose, /href="\/magok-cookie\/">마곡 답례품·회사 행사 안내 →/);
+    const receipt = html.match(/<section[^>]*id="receipt"[^>]*>([\s\S]*?)<\/section>/)[1];
+    assert.match(receipt, /href="\/magok-cookie\/">마곡 답례품·회사 행사 퀵 안내 →/);
+    const magokMain = read('magok-cookie/index.html').match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1];
+    assert.match(magokMain, /<a\b[^>]*href="\/corporate-gift\/"[^>]*>[^<]+<\/a>/);
+    for (const file of ['magok-cookie/index.html', 'guides/corporate-event-cookie/index.html']) {
+      const other = read(file);
+      assert.notEqual(other.match(/<title>([^<]+)<\/title>/)[1], title, `${file}: distinct search title`);
+      assert.notEqual(clean(other.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)[1]), clean(html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)[1]), `${file}: distinct H1`);
+    }
+    assert.ok(read('llms.txt').includes(`${SITE}/corporate-gift/`));
   } else {
     assert.equal((heroAndFinal.match(/class="showroom-button showroom-button--hero-secondary" href="#real-cases"/g) || []).length, 2);
   }
@@ -63,6 +88,10 @@ for (const [slug, expectedItems] of pages) {
   assert.deepEqual(service.provider, { "@id": `${SITE}/#localbusiness` });
   assert.deepEqual(service.areaServed, business.areaServed);
   assert.equal(service.url, `${SITE}${pathname}`);
+  if (slug === 'corporate-gift') {
+    assert.equal(service.name, '기업 답례품·회사 행사 간식·세미나 쿠키 예약 제작·주문 상담');
+    assert.equal(service.serviceType, '기업 답례품·회사 행사·세미나 간식 예약 제작');
+  }
   const collection = graph.find((node) => node["@type"] === "CollectionPage");
   assert.equal(collection.dateModified, entry.lastmod);
   assert.deepEqual(collection.mainEntity, [{ "@id": `${SITE}${pathname}#itemlist` }, { "@id": `${SITE}${pathname}#service` }]);
@@ -76,6 +105,7 @@ for (const [slug, expectedItems] of pages) {
   const faq = graph.find((node) => node["@type"] === "FAQPage");
   assert.deepEqual(faq.mainEntity.map((item) => [item.name, item.acceptedAnswer.text]), visibleFaq);
   assert.equal(visibleFaq.length, slug === "farewell-favor" ? 5 : slug === 'corporate-gift' ? 7 : 3);
+  if (slug === 'corporate-gift') assert.ok(visibleFaq.some(([question]) => question === '세미나·회의·워크숍·학교·기관 행사도 상담할 수 있나요?'));
 
   if (["corporate-gift", "wedding-favor", "farewell-favor"].includes(slug)) {
     assert.match(html, /data-occasion-conversion/);
@@ -156,4 +186,4 @@ assert.match(teacher, /선생님 간식 구성 고르기/);
 const teacherMatch = teacher.match(/<section[^>]*id="match"[^>]*>([\s\S]*?)<\/section>/)[1];
 assert.equal((teacherMatch.match(/<article class="nm-pick-card/g) || []).length, 3);
 for (const label of ["teacher-guide-order", "teacher-guide-kakao"]) assert.ok(teacher.includes(`data-analytics-label="${label}"`));
-console.log("occasion conversion: four commercial routes, preserved 7800 KRW/minimum 12, schema/FAQ parity, farewell product priority and reciprocal guide links, local/floating/sticky CTAs, teacher single floating bar, inbound links/sitemap/llms PASS");
+console.log("occasion conversion: four commercial routes, corporate event-purpose choices and distinct search intent, Magok reciprocal links, preserved 7800 KRW/minimum 12, schema/FAQ parity/dates, farewell product priority, local/floating/sticky CTAs, teacher single floating bar, inbound links/sitemap/llms PASS");
