@@ -5,7 +5,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-products.json'), 'utf8'));
 const { representative: socialImage, workshop: aboutPhoto } = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-media.json'), 'utf8'));
 const socialImageUrl = `https://nothingmatters.co.kr${socialImage.image}`;
-if (!fs.existsSync(path.join(root, socialImage.image)) || socialImage.width !== 1200 || socialImage.height !== 630) throw new Error('Invalid Christmas representative image');
+if (!fs.existsSync(path.join(root, socialImage.image)) || ![socialImage.width, socialImage.height].every(value => Number.isSafeInteger(value) && value > 0)) throw new Error('Invalid Christmas representative image');
 if (!aboutPhoto || !Number.isSafeInteger(aboutPhoto.width) || !Number.isSafeInteger(aboutPhoto.height) || aboutPhoto.width <= 0 || aboutPhoto.height <= 0 || !aboutPhoto.alt || !aboutPhoto.caption || ![aboutPhoto.image, aboutPhoto.fallback].every(image => image && fs.existsSync(path.join(root, image)))) throw new Error('Invalid Christmas workshop photo');
 const check = process.argv.includes('--check');
 const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));

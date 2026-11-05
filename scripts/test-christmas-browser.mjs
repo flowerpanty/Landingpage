@@ -207,7 +207,7 @@ try {
   async function assertStorefront(width){
     const image=page.locator('.xmas-about-media img'),source=page.locator('.xmas-about-media source');
     await image.scrollIntoViewIfNeeded();
-    await page.waitForFunction(photo=>{const i=document.querySelector('.xmas-about-media img');return i.complete&&i.naturalWidth===photo.width&&i.naturalHeight===photo.height&&new URL(i.currentSrc).pathname===photo.image;},workshopPhoto);
+    await page.waitForFunction(photo=>{const i=document.querySelector('.xmas-about-media img');return i.complete&&i.currentSrc&&i.naturalWidth===photo.width&&i.naturalHeight===photo.height&&new URL(i.currentSrc).pathname===photo.image;},workshopPhoto);
     await image.evaluate(async node=>{await node.decode();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
     const actual=await image.evaluate(node=>{const r=node.getBoundingClientRect();return {width:r.width,height:r.height,naturalWidth:node.naturalWidth,naturalHeight:node.naturalHeight,fit:getComputedStyle(node).objectFit,transform:getComputedStyle(node).transform,src:new URL(node.currentSrc).pathname};});
     assert.equal(actual.fit,'contain');assert.equal(actual.transform,'none');
@@ -222,11 +222,11 @@ try {
     if([390,1280].includes(width)){
       // Locally disable the WebP source to exercise the real JPEG fallback, without changing the application.
       await source.evaluate(node=>node.media='not all');
-      await page.waitForFunction(photo=>{const i=document.querySelector('.xmas-about-media img');return i.complete&&i.naturalWidth===photo.width&&new URL(i.currentSrc).pathname===photo.fallback;},workshopPhoto);
+      await page.waitForFunction(photo=>{const i=document.querySelector('.xmas-about-media img');return i.complete&&i.currentSrc&&i.naturalWidth===photo.width&&new URL(i.currentSrc).pathname===photo.fallback;},workshopPhoto);
       await image.evaluate(node=>node.decode());
       assert.ok(Math.abs((await image.boundingBox()).height-actual.height)<1,'fallback preserves the reserved photo area');
       await source.evaluate(node=>node.removeAttribute('media'));
-      await page.waitForFunction(photo=>new URL(document.querySelector('.xmas-about-media img').currentSrc).pathname===photo.image,workshopPhoto);
+      await page.waitForFunction(photo=>{const image=document.querySelector('.xmas-about-media img');return image.currentSrc&&new URL(image.currentSrc).pathname===photo.image;},workshopPhoto);
       await image.evaluate(node=>node.decode());
     }
     storefrontEvidence.push({viewport:width,...actual,jpegFallbackTested:[390,1280].includes(width)});
@@ -279,14 +279,15 @@ try {
     await assertBrand(width);
     assert.equal(await page.locator('h1').textContent(), '2026 크리스마스 쿠키 세트·선물');
     assert.ok(await page.locator('.xmas-brand-intro').isVisible(), 'brand introduction remains visible in HTML');
-    await page.waitForFunction(() => { const image = document.querySelector('#xmas-hero-image'); return image.complete && image.naturalWidth === 1200 && image.naturalHeight === 630; });
+    await page.waitForFunction(size => { const image = document.querySelector('#xmas-hero-image'); return image.complete && image.naturalWidth === size.width && image.naturalHeight === size.height; }, {width:thumbnail.width,height:thumbnail.height});
     const heroImage = page.locator('#xmas-hero-image');
     assert.ok(await heroImage.isVisible());
     assert.equal(await heroImage.getAttribute('src'), thumbnail.image);
     const heroRect = await heroImage.boundingBox();
-    assert.ok(heroRect.width <= thumbnail.width, 'hero stays within the original image resolution');
-    assert.ok(heroRect.y >= 0 && heroRect.y + heroRect.height < height, `hero in initial viewport ${width}`);
-    assert.ok(Math.abs(heroRect.width / heroRect.height - 1200 / 630) < 0.04, 'photo ratio preserved');
+    const frameRect = await page.locator('.xmas-hero-media').boundingBox();
+    assert.ok(heroRect.y >= 0, `full photograph starts below the header at ${width}`);
+    assert.ok(Math.abs(heroRect.width / heroRect.height - thumbnail.width / thumbnail.height) < .005, 'original full portrait ratio is preserved');
+    assert.ok(Math.abs(frameRect.height - heroRect.height - 4) < 1 && Math.abs(frameRect.width - heroRect.width - 4) < 1, 'the frame grows to the full photograph without clipping or letterboxing');
     for (const selector of ['meta[property="og:image"]', 'meta[name="twitter:image"]']) assert.equal(await page.locator(selector).getAttribute('content'), 'https://nothingmatters.co.kr' + thumbnail.image);
     assert.equal(await page.locator('#gift-guide li').count(), 4);
     for (const product of catalog.products) {
@@ -310,15 +311,19 @@ try {
       return {heroWidth:image.width,heroHeight:image.height,ctaTop:cta.top,ctaBottom:cta.bottom,bottom:innerWidth<960?document.querySelector('.xmas-sticky').getBoundingClientRect().top:innerHeight};
     });
     assert.ok(firstScreen.heroWidth>=Math.min(width*.85,1180), `image-first hero at ${width}: ${JSON.stringify(firstScreen)}`);
-    assert.ok(firstScreen.ctaTop>=0 && firstScreen.ctaBottom<=firstScreen.bottom, `hero selection link clears fixed CTA ${width}`);
+    await page.locator('#xmas-hero-order').evaluate(node=>node.scrollIntoView({block:'center',behavior:'instant'}));
+    const visibleCta=await page.evaluate(()=>({rect:document.querySelector('#xmas-hero-order').getBoundingClientRect().toJSON(),bottom:innerWidth<960?document.querySelector('.xmas-sticky').getBoundingClientRect().top:innerHeight}));
+    assert.ok(visibleCta.rect.top>=0 && visibleCta.rect.bottom<=visibleCta.bottom, `selection CTA remains reachable after scrolling the full photo at ${width}`);
+    await page.evaluate(()=>scrollTo(0,0));
     assert.equal(await page.locator('#xmas-hero-image').evaluate(node=>getComputedStyle(node).objectFit),'contain','hero shows the complete actual photograph');
     assert.ok(await page.locator('#about-nothingmatters .xmas-about-media img').isVisible());
     if (width === 320) {
       await page.setViewportSize({width:320,height:667});
+      await page.locator('#xmas-hero-order').evaluate(node=>node.scrollIntoView({block:'center',behavior:'instant'}));
       const shortScreen=await page.evaluate(()=>({ctaBottom:document.querySelector('#xmas-hero-order').getBoundingClientRect().bottom,bottom:document.querySelector('.xmas-sticky').getBoundingClientRect().top,overflow:document.documentElement.scrollWidth>innerWidth}));
-      assert.ok(shortScreen.ctaBottom<=shortScreen.bottom,'large hero still offers an unobscured route to selection on 320x667');
+      assert.ok(shortScreen.ctaBottom<=shortScreen.bottom,'full-height hero retains a reachable selection action on 320x667');
       assert.equal(shortScreen.overflow,false);firstScreen.shortViewport={viewport:'320x667',...shortScreen};
-      await page.screenshot({path:`${artifactDir}/320x667-first-screen.png`});await page.setViewportSize({width,height});
+      await page.screenshot({path:`${artifactDir}/320x667-first-screen.png`});await page.setViewportSize({width,height});await page.evaluate(()=>scrollTo(0,0));
     }
     await page.waitForFunction(() => window.__xmasVitals.lcp !== null);
     await pause(250);
@@ -531,9 +536,9 @@ try {
   assert.ok(requestedUrls.every(url => !url.includes('LOCAL MOCK') && !url.includes('010-0000-0000')));
   assert.deepEqual(errors, []); assert.deepEqual(missing, []);
   const evidence = {
-    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, large image-first product cards and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. A wide uncropped actual hero precedes the collection; price summary follows ordering and the photo-led brand introduction; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
+    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, large image-first product cards and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. A full-height uncropped actual photograph precedes the collection; price summary follows ordering and the photo-led brand introduction; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
     targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals, brandEvidence, storefrontEvidence,
-    seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, wide uncropped hero and direct order navigation in every initial viewport, full-width product photos with information below, analytics excludes query strings.' },
+    seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, full-height uncropped hero and reachable order navigation at every viewport, full-width product photos with information below, analytics excludes query strings.' },
     accessibility: { status: 'pass', evidence: 'Skip link, first invalid field focus, labelled 44px+ quantity/photo controls, gallery Tab trap, arrow keys, Escape and restored opener focus. Reduced motion and no runtime exceptions.' },
     responsive: { status: 'pass', evidence: 'All three panels tested at 320/390/430/768/1024/1280/1440, one visible panel, no overflow; desktop 2-column summary sticky every step; mobile bottom CTA hides while input focused; resize during step 2 retains data.' },
     contentStates: {

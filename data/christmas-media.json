@@ -1,13 +1,19 @@
 {
   "representative": {
-    "image": "/images/christmas/christmas-2026-gifts-1200x630.jpg",
-    "width": 1200,
-    "height": 630,
-    "alt": "브루키 2종 세트와 산타꾸러미 4종의 서로 다른 실물 상품 사진을 나란히 배치한 크리스마스 대표 이미지",
-    "background": "#fff9ec",
+    "image": "/images/christmas/christmas-2026-santa-bundle-full.jpg",
+    "width": 764,
+    "height": 1024,
+    "alt": "흰 배경에 산타·리스·눈사람·루돌프 쿠키 4개와 선물 상자가 모두 보이는 산타꾸러미 전체 실물 사진",
+    "background": "#ffffff",
     "sources": [
-      { "image": "/images/christmas/brookie-set.webp", "left": 130, "top": 12, "width": 454, "height": 606 },
-      { "image": "/images/christmas/santa-bundle.webp", "left": 616, "top": 12, "width": 454, "height": 606 }
+      {
+        "image": "/images/christmas/santa-bundle-clean.webp",
+        "left": 0,
+        "top": 0,
+        "width": 764,
+        "height": 1024,
+        "fit": "contain"
+      }
     ]
   },
   "workshop": {
