@@ -34,6 +34,9 @@ const sourceHtmlEntries = discoverSourceHtmlEntries();
 const registryEntries = new Map();
 const serverSource = fs.readFileSync(path.join(ROOT, "server.js"), "utf8");
 
+// Check this scoped feature before unrelated whole-site inventory assertions.
+assertHomeSeasonalFeature();
+
 for (const page of sitePages.pages || []) {
   registryEntries.set(normalizePathname(page.path), page);
 }
@@ -1069,12 +1072,51 @@ assert.deepEqual(
   "pickup visible FAQ and FAQPage should remain synchronized"
 );
 
+function assertHomeSeasonalFeature() {
+  const homeHtml = readHtml(filePathForPathname("/"));
+  assert.deepEqual(
+    [...homeHtml.matchAll(/<section\b([^>]*)>/g)].map((match) => match[1].match(/\bid="([^"]+)"/)?.[1] || ""),
+    ["mainpage-home", "seasonal-christmas", "our-cookies", "", "use-case-guide", "actual-cases", "", "journal", "official-notices", "local-pickup", "main-faq", "contact"],
+    "homepage should preserve all existing sections and their order"
+  );
+  assert.equal((homeHtml.match(/<h1\b/g) || []).length, 1, "seasonal feature must preserve the single homepage H1");
+  assert.equal(cleanText(getAttribute(homeHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), "귀여운 쿠키를 만듭니다.");
+  const homeSeasonal = homeHtml.match(/<section\b[^>]*\bid="seasonal-christmas"[^>]*>[\s\S]*?<\/section>/)?.[0] || "";
+  assert.match(homeSeasonal, /aria-labelledby="seasonal-christmas-title"/);
+  assert.match(homeSeasonal, /<h2 id="seasonal-christmas-title">/);
+  for (const intent of ["크리스마스 쿠키", "크리스마스 쿠키 세트", "크리스마스 선물", "기업행사", "단체주문"]) {
+    assert.ok(cleanText(homeSeasonal).includes(intent), `home seasonal should explain ${intent}`);
+  }
+  assert.match(homeSeasonal, /href="\/christmas\/">2026 크리스마스 쿠키 보러가기 →<\/a>/);
+  const christmasMedia = JSON.parse(fs.readFileSync(path.join(ROOT, "data/christmas-media.json"), "utf8")).representative;
+  const seasonalImage = homeSeasonal.match(/<img\b[^>]*>/)?.[0] || "";
+  for (const [attribute, value] of Object.entries({ src: christmasMedia.image, width: christmasMedia.width, height: christmasMedia.height, alt: christmasMedia.alt, loading: "lazy", decoding: "async" })) {
+    assert.equal(seasonalImage.match(new RegExp(`\\b${attribute}="([^"]*)"`))?.[1], String(value), `home seasonal image ${attribute} should match current media and loading policy`);
+  }
+  assert.equal((homeSeasonal.match(/<img\b/g) || []).length, 1);
+  assert.ok(fs.existsSync(path.join(ROOT, christmasMedia.image)));
+  assert.ok(homeSeasonal.indexOf('class="showroom-seasonal-media"') < homeSeasonal.indexOf('class="showroom-seasonal-copy"'), "seasonal photo should precede copy for mobile reading order");
+  const christmasLanding = readHtml(filePathForPathname("/christmas/"));
+  if (christmasLanding.includes('id="christmas-order"')) {
+    assert.match(homeSeasonal, /href="\/christmas\/#christmas-order">기업·단체 주문 확인 →<\/a>/);
+  } else {
+    assert.doesNotMatch(homeSeasonal, /href="\/christmas\/#christmas-order"/);
+  }
+  const homeProducts = homeHtml.match(/<section\b[^>]*\bid="our-cookies"[^>]*>[\s\S]*?<\/section>/)?.[0] || "";
+  assert.equal((homeProducts.match(/<a class="showroom-product-card\b/g) || []).length, 8, "seasonal feature must not add an OUR COOKIES card");
+  assert.doesNotMatch(homeProducts, /href="\/christmas\//);
+  assert.doesNotMatch(homeSeasonal, /<script\b|<[^>]+\son\w+\s*=/i, "seasonal feature must not introduce scripts or inline handlers");
+  assert.deepEqual([...homeHtml.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(match => match[1]), [
+    "https://www.googletagmanager.com/gtag/js?id=G-DR5XLDB042", "assets/gallery.js", "assets/site.js", "assets/journal.js", "assets/seo.js"
+  ], "homepage should reuse its existing scripts without adding JavaScript");
+  const seasonalCss = fs.readFileSync(path.join(ROOT, "assets/showroom-home.css"), "utf8");
+  assert.match(seasonalCss, /\.showroom-seasonal-media img\s*\{[^}]*object-fit:\s*contain/, "seasonal photo should retain the complete representative image");
+  assert.match(seasonalCss, /\.showroom-seasonal-actions\s*\{[^}]*display:\s*grid/, "seasonal CTAs should stack without fixed widths");
+  assert.match(seasonalCss, /@media \(max-width: 760px\)\s*\{\s*\.theme-showroom \.showroom-section\.showroom-seasonal\s*\{[^}]*\}\s*\.theme-showroom \.showroom-seasonal-media,\s*\.theme-showroom \.showroom-seasonal-copy\s*\{\s*grid-area:\s*auto;/, "mobile seasonal content should flow as photo then copy");
+  console.log("home seasonal: hero/seasonal/products order, current full photo, H1, visible CTAs, eight existing product cards, mobile structure and unchanged scripts PASS");
+}
+
 const homeHtml = readHtml(filePathForPathname("/"));
-assert.deepEqual(
-  [...homeHtml.matchAll(/<section\b([^>]*)>/g)].map((match) => match[1].match(/\bid="([^"]+)"/)?.[1] || ""),
-  ["mainpage-home", "our-cookies", "", "use-case-guide", "actual-cases", "", "journal", "official-notices", "local-pickup", "main-faq", "contact"],
-  "homepage should preserve all existing sections and their order"
-);
 const homeCases = homeHtml.match(/<section\b[^>]*\bid="actual-cases"[^>]*>([\s\S]*?)<\/section>/)?.[1] || "";
 assert.match(homeCases, /class="showroom-made-gallery" data-recent-gallery/, "home should preserve the dynamic gallery");
 assert.match(homeHtml, /data-open-made-overlay/, "home should preserve the archive trigger");
