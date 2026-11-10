@@ -352,6 +352,8 @@
   byId('xmas-confirmation-warning').innerHTML = window.NMOrderConfirmation.warningMarkup();
   byId('xmas-confirmation-status-slot').innerHTML = window.NMOrderConfirmation.statusMarkup('xmas-confirmation-status');
   const confirmation = byId('xmas-confirmation-status');
+  const kakaoCompletion = window.NMChristmasKakao.create(byId('xmas-kakao-completion'));
+  confirmation.querySelector('[data-confirm-kakao]').textContent = '카카오톡 상담 이어가기 →';
   const flow = window.NMEmailQuote.create({
     fileSlug: 'christmas-brookie',
     postOrder: async payload => window.NMOrderCore.postLandingOrder({ ...payload, idempotencyKey: await requestKey(payload) }),
@@ -378,18 +380,35 @@
       window.NMOrderConfirmation.showSaved(confirmation);
       window.NMQuote.renderPreview(byId('xmas-quote-preview'), record.data);
     },
-    navigateToKakao: () => window.NMOrderConfirmation.navigate(confirmation),
+    // Christmas orders wait for the persistent copy screen and an explicit click.
+    navigateToKakao: () => {},
   });
   window.NMEmailQuote.bindRetry('xmas-email-status', flow, orderPayload);
   confirmation.querySelector('[data-confirm-kakao]').addEventListener('click', () => {
-    if (!state.busy && flow.getSaved(orderPayload())) window.NMOrderConfirmation.navigate(confirmation);
+    if (!state.busy) kakaoCompletion.present(flow.getSaved(orderPayload()));
+  });
+  document.querySelectorAll('.xmas-product-consult, .xmas-summary-consult, .xmas-consult-actions a').forEach(link => {
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      if (state.busy) return;
+      if (!selectionValid()) {
+        error('xmas-selection-error', '상담할 상품과 수량을 먼저 선택해 주세요.');
+        goStep(1);
+        cards[0].querySelector('input').focus();
+      } else if (state.step === 3 && flow.getSaved(orderPayload())) {
+        kakaoCompletion.present(flow.getSaved(orderPayload()));
+      } else advance();
+    });
   });
   form.addEventListener('submit', async event => {
     event.preventDefault();
     if (state.step !== 3) { advance(); return; }
     if (!state.enabled || state.busy || !selectionValid() || !state.consent || !validateCustomer()) return;
     state.busy = true; error('xmas-submit-error', ''); render();
-    try { await flow.receive(orderPayload(), quoteData()); }
+    try {
+      const saved = await flow.receive(orderPayload(), quoteData());
+      if (saved) await kakaoCompletion.present(saved);
+    }
     catch (errorValue) {
       error('xmas-submit-error', errorValue.message || '주문 저장에 실패했어요. 다시 시도해 주세요.');
       await loadStatus();

@@ -27,7 +27,7 @@
     "kakao-quick:client:test": "node scripts/test-kakao-quick-client.mjs",
     "kakao-quick:auth": "node scripts/verify-kakao-quick-auth.mjs",
     "kakao-quick:admin:test": "node scripts/test-kakao-quick-admin.mjs",
-    "order:test": "node scripts/test-order-migration.mjs && node scripts/test-order-confirmation.mjs && node scripts/test-brookie-quote-flow.mjs && node scripts/test-landing-quote-flow.mjs && node scripts/test-christmas-order.mjs",
+    "order:test": "node scripts/test-order-migration.mjs && node scripts/test-order-confirmation.mjs && node scripts/test-brookie-quote-flow.mjs && node scripts/test-landing-quote-flow.mjs && node scripts/test-christmas-order.mjs && node scripts/test-christmas-kakao.mjs",
     "prestart": "npm run site:build",
     "start": "node server.js",
     "order:browser:test": "node scripts/test-order-browser.mjs",
