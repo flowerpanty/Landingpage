@@ -415,7 +415,7 @@
             "name": "온라인에서 바로 주문이 접수되나요?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다. 3 STEP에서 상품·수량·합계와 주문 정보를 확인한 뒤 최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 이메일을 입력하면 저장된 주문의 견적서도 보내드립니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다."
+              "text": "크리스마스 브루키 주문은 지금 접수할 수 있습니다. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다. 3 STEP에서 상품·수량·합계와 주문 정보를 확인한 뒤 최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 이메일을 입력하면 저장된 주문의 견적서도 보내드립니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다."
             }
           },
           {
@@ -481,7 +481,7 @@
         <li><button type="button" data-step-link="3" disabled><span>03</span><strong>확인 및 접수</strong><small>주문 내역 확인</small></button></li>
       </ol></nav>
       <div class="xmas-step-toolbar"><button id="xmas-back" type="button" hidden>← 이전 단계</button><p id="xmas-step-status" role="status" aria-live="polite">STEP 1 / 3 · 상품 선택</p></div>
-      <p class="xmas-notice" id="xmas-opening-message" role="status">크리스마스 브루키 주문은 12월 1일부터 가능합니다.</p>
+      <p class="xmas-notice" id="xmas-opening-message" role="status">지금 주문할 수 있어요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.</p>
       <div class="xmas-order-layout">
         <form id="xmas-order-form" action="/api/landing-orders" method="post" novalidate>
           <section id="christmas-products" data-order-step="1" aria-labelledby="products-title">
@@ -539,7 +539,7 @@
             <div id="xmas-confirmation-status-slot"></div>
             <div class="xmas-review-heading"><h3>수령 및 주문자 정보</h3><button type="button" data-edit-step="2">정보 수정</button></div>
             <dl id="xmas-review" class="xmas-review-details"></dl>
-            <div class="xmas-notice" id="xmas-availability" role="status">크리스마스 브루키 주문은 12월 1일부터 가능합니다.</div>
+            <div class="xmas-notice" id="xmas-availability" role="status">지금 주문할 수 있어요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.</div>
             <p class="xmas-fineprint">주문 요청 접수는 결제 완료나 제작 확정을 의미하지 않습니다. 제작 일정과 수령 방법은 상담에서 최종 확인합니다.</p>
             <div id="xmas-consent-row"><p class="xmas-fineprint" id="xmas-privacy-note">이름·휴대전화·이메일(선택)·수령 희망 정보·배송 주소·요청사항을 주문 접수와 견적 제공, 상담 목적으로 사용합니다.</p><label class="xmas-consent"><input id="xmas-consent" name="privacyConsent" type="checkbox" aria-describedby="xmas-privacy-note">개인정보 수집·이용에 동의합니다.</label></div>
             <div class="xmas-consult-actions"><button id="xmas-copy" class="xmas-button xmas-button-outline" type="button">상품 구성 복사</button><a class="xmas-button xmas-button-green" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-order-consult">카카오톡 주문 상담 ↗</a></div>
@@ -553,7 +553,7 @@
           <div id="xmas-selected" class="xmas-selected"><p>아직 선택한 상품이 없어요.</p></div>
           <dl class="xmas-totals"><div><dt>선택 수량</dt><dd id="xmas-total-count">0개</dd></div><div><dt>상품 합계</dt><dd><strong id="xmas-total-price">0원</strong></dd></div></dl>
           <p class="xmas-fineprint">상품 금액 기준입니다. 퀵 비용·가능 여부와 제작 일정은 상담 후 확인합니다.</p>
-          <button id="xmas-next" class="xmas-button" type="button" disabled>다음으로 넘어가기 →</button><button id="xmas-submit" class="xmas-button" type="submit" form="xmas-order-form" disabled hidden aria-describedby="xmas-availability">12월 1일부터 주문 가능</button>
+          <button id="xmas-next" class="xmas-button" type="button" disabled>다음으로 넘어가기 →</button><button id="xmas-submit" class="xmas-button" type="submit" form="xmas-order-form" disabled hidden aria-describedby="xmas-availability">견적서 받고 카카오톡에서 주문 확정하기 →</button>
           <a class="xmas-summary-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-summary">카카오톡 주문 상담 ↗</a>
           <p class="xmas-summary-note">예약 픽업 기본 · 최종 확정은 상담 후 안내</p>
         </aside>
@@ -587,7 +587,7 @@
     <section class="xmas-wrap xmas-section" id="ordering-guide" aria-labelledby="ordering-guide-title">
       <p class="xmas-eyebrow">BEFORE YOU ORDER</p><h2 id="ordering-guide-title">크리스마스 쿠키 주문, 이 순서로 준비하세요</h2>
       <p>상품과 수량을 먼저 정리하고, 희망 수령 일정을 카카오톡에서 상담해 주세요. 제작과 수령 가능 여부를 확인하는 과정이 필요합니다.</p>
-      <ol class="xmas-order-guide-list"><li><h3>상품과 희망 수량을 선택해 주세요</h3><p>위 3 STEP에서 실제 사진을 확대해 보고 상품별 수량과 합계를 확인하세요. 단품과 세트는 각각 별도 상품으로 계산하며, 선택하지 않은 상품은 합계에서 제외됩니다.</p></li><li><h3>픽업 날짜와 시간을 상담해 주세요</h3><p>서울 강서구 공항동 작업실의 예약 픽업을 기본으로 안내합니다. 수령 희망 날짜·시간과 픽업 또는 차량 퀵 희망 여부를 알려주세요. 입력한 일정은 상담에서 가능 여부를 확인한 뒤 확정합니다.</p></li><li><h3>크리스마스 전에 받으려면 언제 예약해야 하나요?</h3><p>주문 마감일과 제작 가능 일정은 카카오톡 상담으로 먼저 확인해 주세요. 희망 픽업 날짜·시간과 수량을 알려주시면 가능 여부를 안내합니다. 크리스마스 4종의 택배 가능 여부도 별도 확인이 필요하며, 다른 상품의 택배 조건을 적용하지 않습니다.</p></li><li><h3>카카오톡에서 최종 주문을 확정해 주세요</h3><p>크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다. 견적 확인 후 주문 요청을 저장하고, 이메일(선택)과 PNG 견적서를 받은 뒤 카카오톡에서 상품·수량·수령 일정을 최종 확인해 주세요. 예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.</p></li></ol>
+      <ol class="xmas-order-guide-list"><li><h3>상품과 희망 수량을 선택해 주세요</h3><p>위 3 STEP에서 실제 사진을 확대해 보고 상품별 수량과 합계를 확인하세요. 단품과 세트는 각각 별도 상품으로 계산하며, 선택하지 않은 상품은 합계에서 제외됩니다.</p></li><li><h3>픽업 날짜와 시간을 상담해 주세요</h3><p>서울 강서구 공항동 작업실의 예약 픽업을 기본으로 안내합니다. 수령 희망 날짜·시간과 픽업 또는 차량 퀵 희망 여부를 알려주세요. 입력한 일정은 상담에서 가능 여부를 확인한 뒤 확정합니다.</p></li><li><h3>크리스마스 전에 받으려면 언제 예약해야 하나요?</h3><p>주문 마감일과 제작 가능 일정은 카카오톡 상담으로 먼저 확인해 주세요. 희망 픽업 날짜·시간과 수량을 알려주시면 가능 여부를 안내합니다. 크리스마스 4종의 택배 가능 여부도 별도 확인이 필요하며, 다른 상품의 택배 조건을 적용하지 않습니다.</p></li><li><h3>카카오톡에서 최종 주문을 확정해 주세요</h3><p>크리스마스 브루키 주문은 지금 접수할 수 있습니다. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다. 견적 확인 후 주문 요청을 저장하고, 이메일(선택)과 PNG 견적서를 받은 뒤 카카오톡에서 상품·수량·수령 일정을 최종 확인해 주세요. 예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.</p></li></ol>
       <nav class="xmas-guide-links" aria-label="주문 상담과 픽업"><a href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-order-guide">카카오톡 최종 주문 상담 ↗</a><a href="/pickup/">예약 픽업 안내 ↗</a></nav>
     </section>
     <!-- christmas-shopping-guide:end -->
@@ -615,7 +615,7 @@
       <details><summary>크리스마스 쿠키는 언제까지 주문해야 하나요?</summary><p>주문 마감일과 제작 가능한 일정은 카카오톡 상담으로 확인해야 합니다. 재고·최소 주문량·픽업 가능 일정도 상담에서 안내하며 확정된 날짜나 수량을 이 페이지에서 약속하지 않습니다. 화면의 수령 희망일 입력은 예약 확정이 아닙니다.</p></details>
       <details><summary>크리스마스 쿠키를 택배로 받을 수 있나요?</summary><p>크리스마스 4종의 택배 가능 여부는 별도 상담으로 확인해야 합니다. 이 페이지는 예약 픽업을 기본으로 안내하며, 다른 상품의 스마트스토어 택배 주문 조건을 크리스마스 상품에 적용하지 않습니다. 배송료나 도착일도 확정해 안내하지 않습니다.</p></details>
       <details><summary>예약 없이 방문해도 구매할 수 있나요?</summary><p>예약 없이 방문하시면 바로 구매할 쿠키가 없습니다. 낫띵메터스는 예약 제작·예약 픽업 전용 작업실이므로 상품·수량·픽업 날짜와 시간을 카카오톡 상담으로 확정한 뒤 방문해 주세요.</p></details>
-      <details><summary>온라인에서 바로 주문이 접수되나요?</summary><p>크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다. 3 STEP에서 상품·수량·합계와 주문 정보를 확인한 뒤 최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 이메일을 입력하면 저장된 주문의 견적서도 보내드립니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다.</p></details>
+      <details><summary>온라인에서 바로 주문이 접수되나요?</summary><p>크리스마스 브루키 주문은 지금 접수할 수 있습니다. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다. 3 STEP에서 상품·수량·합계와 주문 정보를 확인한 뒤 최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 이메일을 입력하면 저장된 주문의 견적서도 보내드립니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다.</p></details>
       <details><summary>차량 퀵으로 받을 수 있나요?</summary><p>차량 퀵은 일정·수량·수령 지역에 따라 가능 여부와 비용을 확인해야 합니다. 마곡을 비롯한 서울 기업행사는 수령 희망 지역과 시간을 알려주세요. 서울 전역 당일 배송을 보장하는 서비스는 아닙니다.</p></details>
       <details><summary>입력한 개인정보는 어떻게 사용하나요?</summary><p>이름·휴대전화·이메일(선택)·수령 희망 정보·배송 주소·요청사항은 최종 견적 버튼을 누르면 통합 주문 시스템에 저장되어 견적 제공과 상담에 사용합니다. 개인정보는 URL이나 분석 이벤트에 포함하지 않으며, 상품 구성 복사에도 포함하지 않습니다. 주문 저장 후에는 카카오톡 상담을 위해 입력한 주문 정보가 복사되며, 복사 안내를 확인하고 직접 카카오톡에서 붙여넣을 수 있습니다.</p></details>
       <details><summary>개인 선물과 파티 간식은 어떻게 고르면 좋을까요?</summary><p>한 사람씩 나눠줄 선물은 곰돌이 브루키·트리 브루키 단품, 두 가지 모양을 함께 전할 선물은 브루키 2종 세트, 여러 디자인을 함께 전할 선물은 산타꾸러미 4종을 비교해 보세요. 파티 간식은 참석 인원과 개별 배포 또는 세트 선물 여부에 맞춰 상품별 수량을 정리하면 됩니다.</p></details>
@@ -644,6 +644,6 @@
   <script src="/order/assets/landing-quote.js?v=7395b88324d6" defer></script>
   <script src="/order/assets/order-email-quote.js?v=158b8d5e3211" defer></script>
   <script src="/christmas/christmas-kakao.js?v=20261110-copy" defer></script>
-  <script src="/christmas/christmas-order.js?v=20261110-copy" defer></script>
+  <script src="/christmas/christmas-order.js?v=20261110-receipt-date" defer></script>
 </body>
 </html>

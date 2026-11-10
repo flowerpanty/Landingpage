@@ -70,7 +70,7 @@ assert.match(clean(comparisonCards[2][0]),/손잡이 포장 실물 사진/);
 assert.match(clean(comparisonCards[3][0]),/선물 상자/);
 assert.match(clean(comparison),/별도 포장 요청은 가능 여부와 비용을 상담/);
 assert.equal((orderGuide.match(/<li>/g)||[]).length,4);
-for(const text of ['희망 수량','날짜와 시간','주문 마감일','택배 가능 여부','2026년 12월 1일부터 가능합니다','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','카카오톡'])assert.ok(clean(orderGuide).includes(text));
+for(const text of ['희망 수량','날짜와 시간','주문 마감일','택배 가능 여부','수령 희망일은 2026년 12월 1일부터 선택 가능합니다','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','카카오톡'])assert.ok(clean(orderGuide).includes(text));
 assert.doesNotMatch(choice+comparison+orderGuide,/아이싱|레시피|DIY|무료\s*배송|재고\s*\d|\d+%\s*할인/);
 assert.doesNotMatch(choice+comparison+orderGuide,/href="#/,'guidance must not insert fragment-history entries into the order flow');
 const visibleMain=clean(html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1].replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''));
@@ -153,7 +153,7 @@ for(const p of catalog.products)assert.ok(faqs[0][1].includes(`${p.name} ${p.pri
 for(const p of catalog.products.slice(2))assert.ok(faqs[1][1].includes(p.composition));
 assert.match(faqs.find(f=>f[0].includes('언제까지'))[1],/^주문 마감일과 제작 가능한 일정은 카카오톡 상담으로 확인해야 합니다\./);
 assert.match(faqs.find(f=>f[0].includes('택배'))[1],/^크리스마스 4종의 택배 가능 여부는 별도 상담으로 확인해야 합니다\./);
-assert.match(faqs.find(f=>f[0].includes('온라인'))[1],/^크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다/);
+assert.match(faqs.find(f=>f[0].includes('온라인'))[1],/^크리스마스 브루키 주문은 지금 접수할 수 있습니다/);
 const entry=JSON.parse(read('data/site-pages.json')).pages.find(p=>p.path==='/christmas/');
 assert.equal(entry.occasionLanding.productCatalog,'christmas');
 assert.match(entry.lastmod,/^\d{4}-\d{2}-\d{2}$/);assert.match(catalog.updatedAt,/^\d{4}-\d{2}-\d{2}$/);
@@ -182,3 +182,6 @@ assert.doesNotMatch(js,/sessionStorage\.setItem\([^)]*(?:customer|payload|canoni
 for(const hour of ['10','11','12','13','14','15','16','17'])assert.ok(html.includes(`value="${hour}:00"`));
 assert.ok(html.includes('placeholder="example@email.com"'));assert.ok(js.includes("source: 'christmasBrookie'"));
 console.log('Christmas landing PASS: preserved gift/set metadata, image-first hero and large photo cards, catalog prices and visible photo captions, static photo-led brand introduction, 18 natural purchase intents, 13 matching FAQs, focused inbound links and schema dates');
+
+assert.ok(html.includes('min="2026-12-01"'));
+assert.doesNotMatch(html+js,/12월 1일부터 주문 가능|크리스마스 브루키 주문은 (?:2026년 )?12월 1일부터 가능합니다/);

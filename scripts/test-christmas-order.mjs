@@ -16,7 +16,7 @@ const body={source:'christmas',catalogVersion:catalog.version,items,customerName
 assert.equal(validateChristmasOrder(body).totalPrice,58000);
 for(const patch of [{customerName:''},{customerPhone:'123'},{deliveryDate:'2026-02-30'},{deliveryDate:'2026-13-01'},{pickupTime:'25:00'},{deliveryMethod:'delivery'},{catalogVersion:'old'},{privacyConsent:false},{idempotencyKey:''},{idempotencyKey:'-'.repeat(36)}])assert.throws(()=>validateChristmasOrder({...body,...patch}));
 let forwards=0;
-const statusFixture={...christmasOrderStatus(),source:'christmasBrookie',minimumDeliveryDate:'2026-12-01'};
+const statusFixture={...christmasOrderStatus(),source:'christmasBrookie',enabled:true,minimumDeliveryDate:'2026-12-01',message:'지금 주문할 수 있어요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.'};
 const handler=createOrderApiHandler({fetchImpl:async(url)=>{if(url.endsWith('/api/christmas-order-status'))return new Response(JSON.stringify(statusFixture),{headers:{'Content-Type':'application/json'}});forwards++;throw new Error('Should never forward legacy Christmas orders');}});
 const server=http.createServer(handler);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const base=`http://127.0.0.1:${server.address().port}`;

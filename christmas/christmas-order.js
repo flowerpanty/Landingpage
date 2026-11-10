@@ -108,7 +108,7 @@
   function actionLabel() {
     if (state.busy) return '접수 확인 중…';
     if (state.step < 3) return '다음으로 넘어가기 →';
-    return state.enabled ? window.NMOrderConfirmation.ctaLabel(false) : '12월 1일부터 주문 가능';
+    return state.enabled ? window.NMOrderConfirmation.ctaLabel(false) : '접수 가능 여부 확인 중…';
   }
   function render() {
     const { items, total, count } = selection();
@@ -423,11 +423,11 @@
       state.minimumDate = /^\d{4}-\d{2}-\d{2}$/.test(status.minimumDeliveryDate) && status.minimumDeliveryDate >= '2026-12-01' ? status.minimumDeliveryDate : '2026-12-01';
       state.unavailableDates = Array.isArray(status.unavailableDates) ? status.unavailableDates : [];
       byId('xmas-date').min = state.minimumDate;
-      byId('xmas-availability').textContent = status.message || '크리스마스 브루키 주문은 12월 1일부터 가능합니다.';
+      byId('xmas-availability').textContent = status.message || '지금 주문할 수 있어요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.';
       byId('xmas-opening-message').textContent = byId('xmas-availability').textContent;
     } catch {
       state.enabled = false;
-      byId('xmas-availability').textContent = '크리스마스 브루키 주문은 12월 1일부터 가능합니다. 접수 가능 여부를 확인하지 못했어요. 잠시 후 다시 시도해주세요.';
+      byId('xmas-availability').textContent = '접수 가능 여부를 확인하지 못했어요. 잠시 후 다시 시도해주세요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.';
       byId('xmas-opening-message').textContent = byId('xmas-availability').textContent;
     } finally { clearTimeout(timer); render(); }
   }
