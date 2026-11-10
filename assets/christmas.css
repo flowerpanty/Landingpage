@@ -169,7 +169,7 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-full { grid-column: 1 / -1; }
 .xmas-fields > label { display: flex; flex-wrap: wrap; align-content: start; gap: 7px; font-size: 13px; font-weight: 700; min-width: 0; }
 .xmas-fields label > span, legend > span { color: var(--muted); font-weight: 400; font-size: 11px; }
-.xmas-fields input:not([type=radio]), .xmas-fields textarea { width: 100%; flex-basis: 100%; min-width: 0; min-height: 48px; padding: 11px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); font-size: 16px; appearance: none; scroll-margin-block: 24px; }
+.xmas-fields input:not([type=radio]), .xmas-fields textarea, .xmas-fields select { width: 100%; flex-basis: 100%; min-width: 0; min-height: 48px; padding: 11px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); font-size: 16px; appearance: none; scroll-margin-block: 24px; }
 .xmas-fields textarea { resize: vertical; }
 .xmas-fields fieldset { min-width: 0; border: 0; margin: 0; padding: 0; }
 .xmas-fields legend { margin-bottom: 10px; font-size: 13px; font-weight: 700; }
@@ -353,3 +353,19 @@ body.xmas-gallery-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+
+/* Reuse the shared quote and email components within the Christmas layout. */
+#xmas-quote-preview { margin-top: 20px; min-width: 0; }
+#xmas-quote-preview .nm-quote-document { max-width: 100%; }
+#xmas-email-guide { flex-basis: 100%; }
+
+#xmas-quote-preview .nm-quote-title { margin: 0; padding: 18px 12px; background: var(--ink); color: var(--paper); text-align: center; font-size: 18px; }
+#xmas-quote-preview .nm-quote-info { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 8px 12px; padding: 12px; margin: 0; font-size: 13px; }
+#xmas-quote-preview dd { margin: 0; min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+#xmas-quote-preview .nm-quote-document { border: 1px solid var(--line); background: var(--paper); overflow: hidden; }
+#xmas-quote-preview .nm-quote-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
+#xmas-quote-preview th, #xmas-quote-preview td { padding: 9px 5px; border: 1px solid var(--line); overflow-wrap: anywhere; vertical-align: top; }
+#xmas-quote-preview th:first-child { width: 37%; }
+#xmas-quote-preview th:nth-child(2) { width: 13%; }
+#xmas-quote-preview .nm-quote-total { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 14px; background: var(--yellow); font-weight: 700; }
+#xmas-quote-preview h3, #xmas-quote-preview .nm-quote-request, #xmas-quote-preview .nm-quote-footer { padding: 12px; margin: 0; font-size: 12px; overflow-wrap: anywhere; white-space: pre-wrap; }

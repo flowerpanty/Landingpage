@@ -7,7 +7,9 @@
   const cards = [...document.querySelectorAll('.xmas-product[data-sku]')];
   const dialog = byId('xmas-gallery');
   const won = value => `${value.toLocaleString('ko-KR')}원`;
-  const fields = { deliveryDate: 'xmas-date', pickupTime: 'xmas-time', customerName: 'xmas-name', customerPhone: 'xmas-phone', request: 'xmas-request' };
+  const fields = { deliveryDate: 'xmas-date', pickupTime: 'xmas-time', customerName: 'xmas-name', customerPhone: 'xmas-phone', customerEmail: 'xmas-email', deliveryAddress: 'xmas-address', request: 'xmas-request' };
+  const pickupTimes = ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+  const requestKeys = new Map();
   const stepNames = ['상품 선택', '수령 정보', '확인 및 접수'];
   const stepTitles = ['products-title', 'details-title', 'review-title'];
   // One model for both layouts; history contains only the step and gallery SKU.
@@ -17,11 +19,10 @@
     invalid: new Set(),
     customer: Object.fromEntries(Object.entries(fields).map(([key, id]) => [key, byId(id).value])),
     method: 'pickup', consent: false, enabled: false, busy: false,
-    saved: false, uncertain: false, idempotencyKey: null,
-    gallery: null
+    saved: false,
+    minimumDate: '2026-12-01', unavailableDates: [], gallery: null
   };
   let galleryOpener, galleryClosing = false;
-  const locked = () => state.saved || state.uncertain;
   const error = (id, message) => {
     const node = byId(id);
     node.textContent = message;
@@ -44,10 +45,12 @@
     const info = customer();
     const date = /^\d{4}-\d{2}-\d{2}$/.test(info.deliveryDate) ? new Date(`${info.deliveryDate}T00:00:00Z`) : null;
     return [
-      ['xmas-date', !!date && Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === info.deliveryDate, '수령 희망 날짜를 입력해 주세요.'],
-      ['xmas-time', /^([01]\d|2[0-3]):[0-5]\d$/.test(info.pickupTime), '수령 희망 시간을 입력해 주세요.'],
+      ['xmas-date', !!date && Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === info.deliveryDate && info.deliveryDate >= state.minimumDate && !state.unavailableDates.includes(info.deliveryDate), '수령 희망 날짜를 입력해 주세요.'],
+      ['xmas-time', pickupTimes.includes(info.pickupTime), '수령 희망 시간을 입력해 주세요.'],
       ['xmas-name', !!info.customerName && info.customerName.length <= 80, '주문자 이름을 입력해 주세요.'],
-      ['xmas-phone', /^010[-\s]?\d{4}[-\s]?\d{4}$/.test(info.customerPhone), '010으로 시작하는 휴대전화 번호를 입력해 주세요.']
+      ['xmas-phone', /^010[-\s]?\d{4}[-\s]?\d{4}$/.test(info.customerPhone), '010으로 시작하는 휴대전화 번호를 입력해 주세요.'],
+      ['xmas-email', !info.customerEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.customerEmail), '올바른 이메일 주소를 입력해 주세요.'],
+      ['xmas-address', info.deliveryMethod !== 'quick' || !!info.deliveryAddress, '퀵 배송 주소를 입력해 주세요.']
     ];
   }
   function validateCustomer() {
@@ -89,8 +92,11 @@
       ['수령 방식', info.deliveryMethod === 'pickup' ? '예약 픽업' : '차량 퀵 희망 · 가능 여부와 비용 상담 필요'],
       ['수령 희망', `${info.deliveryDate} ${info.pickupTime}`],
       ['주문자', info.customerName], ['휴대전화', info.customerPhone],
+      ...(info.customerEmail ? [['이메일', info.customerEmail]] : []),
+      ...(info.deliveryMethod === 'quick' ? [['배송 주소', info.deliveryAddress]] : []),
       ['요청사항', info.request || '없음']
     ];
+    window.NMQuote.renderPreview(byId('xmas-quote-preview'), flow.getSaved(orderPayload())?.data || quoteData());
     const target = byId('xmas-review');
     target.replaceChildren();
     for (const [label, value] of lines) {
@@ -101,11 +107,8 @@
   }
   function actionLabel() {
     if (state.busy) return '접수 확인 중…';
-    if (state.saved) return '주문 요청 접수됨';
-    if (state.uncertain) return '접수 여부 상담 필요';
-    if (state.step === 1) return '수령 정보 입력 →';
-    if (state.step === 2) return '주문 내역 확인 →';
-    return state.enabled ? '주문 요청 신청하기' : '온라인 신청 준비 중';
+    if (state.step < 3) return '다음으로 넘어가기 →';
+    return state.enabled ? window.NMOrderConfirmation.ctaLabel(false) : '12월 1일부터 주문 가능';
   }
   function render() {
     const { items, total, count } = selection();
@@ -113,12 +116,12 @@
     document.querySelectorAll('[data-order-step]').forEach(panel => { panel.hidden = Number(panel.dataset.orderStep) !== state.step; });
     document.querySelectorAll('[data-step-link]').forEach(button => {
       const step = Number(button.dataset.stepLink);
-      button.disabled = state.busy || locked() || (step > 1 && !ready) || (step === 3 && validationErrors().some(([, valid]) => !valid));
+      button.disabled = state.busy || (step > 1 && !ready) || (step === 3 && validationErrors().some(([, valid]) => !valid));
       if (step === state.step) button.setAttribute('aria-current', 'step');
       else button.removeAttribute('aria-current');
     });
     byId('xmas-back').hidden = state.step === 1;
-    byId('xmas-back').disabled = state.busy || locked();
+    byId('xmas-back').disabled = state.busy;
     byId('xmas-step-status').textContent = `STEP ${state.step} / 3 · ${stepNames[state.step - 1]}`;
     renderLines(byId('xmas-selected'), items);
     byId('xmas-total-count').textContent = `${count}개`;
@@ -127,33 +130,35 @@
     byId('xmas-sticky-count').textContent = `STEP ${state.step} / 3 · 선물 ${count}개`;
     byId('xmas-live-total').textContent = `선택 수량 ${count}개, 상품 합계 ${won(total)}`;
     if (state.step === 3) renderReview(items, total);
-    const actionDisabled = !ready || state.busy || locked() || (state.step === 3 && (!state.enabled || !state.consent));
+    const actionDisabled = !ready || state.busy || (state.step === 3 && (!state.enabled || !state.consent));
     byId('xmas-next').hidden = state.step === 3;
     byId('xmas-submit').hidden = state.step !== 3;
     for (const id of ['xmas-next', 'xmas-submit', 'xmas-sticky-next']) {
       byId(id).textContent = actionLabel();
       byId(id).disabled = actionDisabled;
     }
-    byId('xmas-consent-row').hidden = !state.enabled;
-    form.querySelectorAll('input, textarea, [data-edit-step]').forEach(node => { node.disabled = state.busy || locked(); });
+    byId('xmas-consent-row').hidden = false;
+    byId('xmas-address-field').hidden = state.method !== 'quick';
+    byId('xmas-address').required = state.method === 'quick';
+    form.querySelectorAll('input, textarea, select, [data-edit-step]').forEach(node => { node.disabled = state.busy; });
     for (const card of cards) {
       const quantity = state.quantities.get(card.dataset.sku);
       card.classList.toggle('is-selected', quantity > 0);
-      card.querySelector('[data-delta="-1"]').disabled = state.busy || locked() || quantity === 0;
-      card.querySelector('[data-delta="1"]').disabled = state.busy || locked();
+      card.querySelector('[data-delta="-1"]').disabled = state.busy || quantity === 0;
+      card.querySelector('[data-delta="1"]').disabled = state.busy;
       card.querySelector('[data-gallery]').disabled = false;
       card.querySelector('[data-line-total]').textContent = won(products.get(card.dataset.sku).price * quantity);
     }
     byId('xmas-copy').disabled = !ready || state.busy;
   }
   function invalidate() {
-    state.idempotencyKey = null;
+    state.saved = false;
     error('xmas-submit-error', '');
     byId('xmas-copy-status').textContent = '';
     byId('xmas-copy-fallback')?.remove();
   }
   function changeQuantity(card, value) {
-    if (state.busy || locked()) return;
+    if (state.busy) return;
     invalidate();
     const sku = card.dataset.sku, field = card.querySelector('input');
     const quantity = Number(value), price = products.get(sku).price;
@@ -174,7 +179,7 @@
     return { nmChristmasStep: step, ...extra };
   }
   function goStep(target, { mode = 'push', focus = true } = {}) {
-    if (state.busy || locked()) return;
+    if (state.busy) return;
     let next = Math.max(1, Math.min(3, target));
     if (next > 1 && !selectionValid()) next = 1;
     const invalidCustomer = next === 3 && validationErrors().some(([, valid]) => !valid);
@@ -192,7 +197,7 @@
     if (target > 1 && next === 1 && state.invalid.size) cards.find(card => state.invalid.has(card.dataset.sku))?.querySelector('input').focus();
   }
   function advance() {
-    if (state.busy || locked() || !selectionValid()) return;
+    if (state.busy || !selectionValid()) return;
     if (state.step === 3) { form.requestSubmit(); return; }
     if (state.step === 2 && !validateCustomer()) return;
     goStep(state.step + 1);
@@ -306,7 +311,7 @@
   });
   history.replaceState(historyData(1), '');
   window.addEventListener('popstate', event => {
-    if (state.busy || locked()) { history.replaceState(historyData(state.step), '', `#step-${state.step}`); return; }
+    if (state.busy) { history.replaceState(historyData(state.step), '', `#step-${state.step}`); return; }
     const galleryWasOpen = dialog.open;
     if (event.state?.nmChristmasGallery) {
       goStep(event.state.nmChristmasStep || 1, { mode: 'none', focus: false });
@@ -318,51 +323,99 @@
       if (state.step !== requested) history.replaceState(historyData(state.step), '', `#step-${state.step}`);
     }
   });
-  // Capability and server gate stay closed until Railway supports all four SKUs.
+  function orderPayload() {
+    return { source: 'christmasBrookie', catalogVersion: catalog.version, items: selection().items,
+      ...customer(), deliveryAddress: state.method === 'quick' ? customer().deliveryAddress : '', privacyConsent: true };
+  }
+  function quoteData() {
+    const info = customer();
+    return { documentTitle: 'nothingmatters 크리스마스 브루키 견적서', ...info,
+      deliveryAddress: state.method === 'quick' ? info.deliveryAddress : '', pricingPending: false,
+      items: selection().items.map(item => { const p = products.get(item.sku); return {
+        name: p.name, quantity: item.quantity, unitPrice: p.price, amount: item.quantity * p.price, unitLabel: '개',
+      }; }), totalPrice: selection().total, details: [] };
+  }
+  async function requestKey(payload) {
+    const canonical = JSON.stringify(payload);
+    if (requestKeys.has(canonical)) return requestKeys.get(canonical);
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+    const hash = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+    const storageKey = `nm-christmas-request-${hash}`;
+    let key;
+    try { key = sessionStorage.getItem(storageKey); } catch (_) { /* Private browsing. */ }
+    if (!/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(key || '')) key = crypto.randomUUID();
+    requestKeys.set(canonical, key);
+    // Store only an opaque key under a digest, never customer data or email capabilities.
+    try { sessionStorage.setItem(storageKey, key); } catch (_) { /* Keep the in-memory key. */ }
+    return key;
+  }
+  byId('xmas-confirmation-warning').innerHTML = window.NMOrderConfirmation.warningMarkup();
+  byId('xmas-confirmation-status-slot').innerHTML = window.NMOrderConfirmation.statusMarkup('xmas-confirmation-status');
+  const confirmation = byId('xmas-confirmation-status');
+  const flow = window.NMEmailQuote.create({
+    fileSlug: 'christmas-brookie',
+    postOrder: async payload => window.NMOrderCore.postLandingOrder({ ...payload, idempotencyKey: await requestKey(payload) }),
+    postEmail: window.NMEmailQuote.postEmail,
+    onEmail: window.NMEmailQuote.status('xmas-email-status'),
+    createImage: data => window.NMQuote.createImage(data),
+    provideImage: (...args) => window.NMQuote.provideImage(...args),
+    fromSaved: (result, draft) => {
+      const saved = result.orderItems;
+      const expected = selection().items;
+      if (result.success !== true || !Array.isArray(saved) || saved.length !== expected.length || saved.some(item =>
+          item.options?.landingSource !== 'christmasBrookie' || !Number.isSafeInteger(item.quantity) || item.quantity < 1 ||
+          !Number.isSafeInteger(item.price) || item.price < 1 || typeof item.name !== 'string' ||
+          expected.filter(e => e.sku === item.options.sku && e.quantity === item.quantity).length !== 1) ||
+          new Set(saved.map(item => item.options.sku)).size !== saved.length) throw new Error('저장된 상품 구성을 확인하지 못했어요.');
+      const total = saved.reduce((sum, item) => sum + item.quantity * item.price, 0);
+      if (!Number.isSafeInteger(total) || total !== result.totalPrice) throw new Error('저장된 견적 금액을 확인하지 못했어요.');
+      return { ...draft, totalPrice: total, items: saved.map(item => ({
+        name: item.name, quantity: item.quantity, unitPrice: item.price, amount: item.quantity * item.price, unitLabel: item.options.unitLabel || '개',
+      })) };
+    },
+    onSaved: record => {
+      state.saved = true;
+      window.NMOrderConfirmation.showSaved(confirmation);
+      window.NMQuote.renderPreview(byId('xmas-quote-preview'), record.data);
+    },
+    navigateToKakao: () => window.NMOrderConfirmation.navigate(confirmation),
+  });
+  window.NMEmailQuote.bindRetry('xmas-email-status', flow, orderPayload);
+  confirmation.querySelector('[data-confirm-kakao]').addEventListener('click', () => {
+    if (!state.busy && flow.getSaved(orderPayload())) window.NMOrderConfirmation.navigate(confirmation);
+  });
   form.addEventListener('submit', async event => {
     event.preventDefault();
     if (state.step !== 3) { advance(); return; }
-    if (!state.enabled || state.busy || locked() || !selectionValid() || !state.consent || !validateCustomer()) return;
-    const { items, total } = selection();
-    state.idempotencyKey ||= crypto.randomUUID();
-    const payload = { source: 'christmas', catalogVersion: catalog.version, items, ...customer(), privacyConsent: true, idempotencyKey: state.idempotencyKey };
+    if (!state.enabled || state.busy || !selectionValid() || !state.consent || !validateCustomer()) return;
     state.busy = true; error('xmas-submit-error', ''); render();
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
-    try {
-      const response = await fetch('/api/landing-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: controller.signal });
-      const result = await response.json().catch(() => null);
-      if (!response.ok) {
-        if (result?.code === 'CHRISTMAS_ORDERS_UNAVAILABLE') { state.enabled = false; byId('xmas-availability').textContent = result.message; }
-        else if (response.status >= 500) state.uncertain = true;
-        throw new Error('주문 요청이 저장되지 않았어요. 입력 내용을 확인하거나 카카오톡으로 상담해 주세요.');
-      }
-      const matched = Array.isArray(result?.orderItems) && result.orderItems.length === items.length && items.every(item => result.orderItems.filter(line => line.sku === item.sku && line.quantity === item.quantity && line.price === products.get(item.sku).price).length === 1);
-      if (result?.success !== true || typeof result.orderId !== 'string' || !result.orderId || result.totalPrice !== total || !matched) {
-        state.uncertain = true;
-        throw new Error('저장된 상품 구성과 금액을 확인하지 못했어요.');
-      }
-      state.saved = true;
-      byId('xmas-success').textContent = '주문 요청 접수 · 선택한 상품 구성과 금액이 저장되었습니다. 카카오톡 상담으로 최종 주문을 확정해 주세요. 결제 완료나 제작 확정 상태는 아닙니다.';
-      byId('xmas-success').hidden = false;
-      byId('xmas-success').focus();
-    } catch (errorValue) {
-      if (errorValue.name === 'AbortError' || errorValue instanceof TypeError) state.uncertain = true;
-      error('xmas-submit-error', state.uncertain ? '주문 저장 결과를 확인하지 못했어요. 다시 제출하지 말고 카카오톡으로 접수 여부를 확인해 주세요.' : errorValue.message);
-    } finally { clearTimeout(timeout); state.busy = false; render(); }
+    try { await flow.receive(orderPayload(), quoteData()); }
+    catch (errorValue) {
+      error('xmas-submit-error', errorValue.message || '주문 저장에 실패했어요. 다시 시도해 주세요.');
+      await loadStatus();
+    } finally { state.busy = false; render(); }
   });
   async function loadStatus() {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 6000);
     try {
       const response = await fetch('/api/christmas-order-status', { cache: 'no-store', signal: controller.signal });
       const status = await response.json();
-      state.enabled = response.ok && status.enabled === true && status.catalogVersion === catalog.version;
-      if (state.enabled) byId('xmas-availability').textContent = '주문 요청을 저장한 뒤 카카오톡 상담으로 최종 주문을 확정합니다.';
-    } catch { state.enabled = false; byId('xmas-availability').textContent = '온라인 접수 가능 여부를 확인하지 못했어요. 카카오톡으로 상담해 주세요.'; }
-    finally { clearTimeout(timer); render(); }
+      state.enabled = response.ok && status.source === 'christmasBrookie' && status.enabled === true && status.catalogVersion === catalog.version;
+      state.minimumDate = /^\d{4}-\d{2}-\d{2}$/.test(status.minimumDeliveryDate) && status.minimumDeliveryDate >= '2026-12-01' ? status.minimumDeliveryDate : '2026-12-01';
+      state.unavailableDates = Array.isArray(status.unavailableDates) ? status.unavailableDates : [];
+      byId('xmas-date').min = state.minimumDate;
+      byId('xmas-availability').textContent = status.message || '크리스마스 브루키 주문은 12월 1일부터 가능합니다.';
+      byId('xmas-opening-message').textContent = byId('xmas-availability').textContent;
+    } catch {
+      state.enabled = false;
+      byId('xmas-availability').textContent = '크리스마스 브루키 주문은 12월 1일부터 가능합니다. 접수 가능 여부를 확인하지 못했어요. 잠시 후 다시 시도해주세요.';
+      byId('xmas-opening-message').textContent = byId('xmas-availability').textContent;
+    } finally { clearTimeout(timer); render(); }
   }
+  window.setInterval?.(loadStatus, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadStatus(); });
   function keyboardState() {
-    const editing = document.activeElement?.matches('input:not([type=radio]):not([type=checkbox]), textarea');
+    const editing = document.activeElement?.matches('input:not([type=radio]):not([type=checkbox]), textarea, select');
     const keyboard = window.visualViewport && window.visualViewport.height < window.innerHeight * .75;
     document.body.classList.toggle('xmas-input-active', !!editing || !!keyboard);
   }

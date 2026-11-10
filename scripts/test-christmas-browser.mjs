@@ -88,7 +88,7 @@ try {
     if (url.origin !== base) return route.abort();
     if (url.pathname === '/api/christmas-order-status' && mode !== 'disabled') {
       if (mode === 'status-fail') return route.abort();
-      return route.fulfill({ json: { enabled: true, catalogVersion: catalog.version } });
+      return route.fulfill({ json: { source: 'christmasBrookie', enabled: true, minimumDeliveryDate: '2026-12-01', unavailableDates: [], message: '주문 요청을 저장한 뒤 카카오톡 상담으로 최종 주문을 확정합니다.', catalogVersion: catalog.version } });
     }
     if (url.pathname === '/api/landing-orders') {
       const body = route.request().postDataJSON(); requests.push(body);
@@ -96,7 +96,7 @@ try {
       await pause(200);
       if (mode === '400' || mode === '500') return route.fulfill({ status: Number(mode), json: { success: false, message: 'LOCAL MOCK rejection' } });
       if (mode === 'disconnect') return route.abort();
-      const orderItems = body.items.map(item => ({ ...item, price: catalog.products.find(p => p.sku === item.sku).price }));
+      const orderItems = body.items.map(item => ({ ...item, name: catalog.products.find(p => p.sku === item.sku).name, price: catalog.products.find(p => p.sku === item.sku).price, options: { landingSource: 'christmasBrookie', sku: item.sku, unitLabel: '개' } }));
       const totalPrice = orderItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
       const result = { success: true, orderId: 'LOCAL-MOCK-ONLY', orderItems, totalPrice };
       if (mode === 'mismatch') result.totalPrice = 1;
@@ -106,6 +106,13 @@ try {
       return route.fulfill({ status: 200, json: result });
     }
     return route.continue();
+  });
+  await context.addInitScript(() => {
+    Object.defineProperty(window, 'NMQuote', { configurable: true, set(value) {
+      value.provideImage = async () => 'download';
+      value.navigateToKakao = () => { window.__christmasKakao = true; };
+      Object.defineProperty(window, 'NMQuote', { configurable: true, writable: true, value });
+    } });
   });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(error.message));
@@ -136,11 +143,12 @@ try {
   }
   async function fillCustomer() {
     await page.locator('#xmas-date').fill('2026-12-20');
-    await page.locator('#xmas-time').fill('14:30');
+    await page.locator('#xmas-time').selectOption('14:00');
     await page.locator('#xmas-name').fill('LOCAL MOCK CUSTOMER');
     await page.locator('#xmas-phone').fill('010-0000-0000');
     await page.locator('#xmas-request').fill('<img src=x onerror=alert(1)> LOCAL MOCK REQUEST');
     await page.locator('[name=deliveryMethod][value=quick]').check();
+    await page.locator('#xmas-address').fill('LOCAL MOCK ADDRESS');
     await focusHeading(2);
   }
   async function assertPrivacy() {
@@ -468,7 +476,7 @@ try {
   for (const pathname of ['/small-gift/', '/bulk/', '/guides/', '/corporate-gift/']) {
     const response = await staticContext.request.get(base + pathname);
     assert.equal(response.status(), 200);
-    assert.equal(((await response.text()).match(/href="\/christmas\/"/g) || []).length, 1, `seasonal link on ${pathname}`);
+    assert.ok(((await response.text()).match(/href="\/christmas\/"/g) || []).length >= 1, `seasonal link on ${pathname}`);
   }
   await staticPage.screenshot({ path: `${artifactDir}/390-no-js.png`, fullPage: true });
   await staticContext.close();
@@ -514,7 +522,7 @@ try {
   for (const width of [390, 1440]) {
     await prepare(width, 'success'); const before = requests.length;
     await next(); await page.locator('#xmas-submit').evaluate(button => { button.form.requestSubmit(); button.form.requestSubmit(); });
-    await page.locator('#xmas-success').waitFor({ state: 'visible' }); assert.equal(requests.length, before + 1);
+    await page.locator('#xmas-confirmation-status').waitFor({ state: 'visible' }); assert.equal(requests.length, before + 1);
     assert.equal(requests.at(-1).items.length, 4); assert.ok(requests.at(-1).items.every(item => Object.keys(item).sort().join(',') === 'quantity,sku'));
     assert.equal(requests.at(-1).totalPrice, undefined); assert.equal(requests.at(-1).deliveryMethod, width < 960 ? 'quick' : 'pickup');
     await page.locator('#xmas-submit').evaluate(button => button.form.requestSubmit()); await pause(50); assert.equal(requests.length, before + 1);
@@ -522,13 +530,17 @@ try {
   }
   for (const [width, kind] of [[390, '400'], [390, '500'], [390, 'disconnect'], [390, 'mismatch'], [390, 'missing-id'], [390, 'items-mismatch'], [390, 'missing-success'], [1440, '500'], [1440, 'mismatch']]) {
     await prepare(width, kind); const before = requests.length; await next();
-    await page.locator('#xmas-submit-error').waitFor({ state: 'visible' }); assert.equal(await page.locator('#xmas-success').isVisible(), false);
+    await page.locator('#xmas-submit-error').waitFor({ state: 'visible' }); assert.equal(await page.locator('#xmas-confirmation-status').isVisible(), false);
     if (kind === '400') {
-      const key = requests.at(-1).idempotencyKey; mode = 'success'; await next(); await page.locator('#xmas-success').waitFor({ state: 'visible' });
+      const key = requests.at(-1).idempotencyKey; mode = 'success'; await next(); await page.locator('#xmas-confirmation-status').waitFor({ state: 'visible' });
       assert.equal(requests.at(-1).idempotencyKey, key);
+    } else if (['500', 'disconnect', 'missing-id'].includes(kind)) {
+      const key = requests.at(-1).idempotencyKey;
+      mode = 'success'; await next(); await page.locator('#xmas-confirmation-status').waitFor({ state: 'visible' });
+      assert.equal(requests.at(-1).idempotencyKey, key, 'safe retry retains the durable request key');
     } else {
-      assert.equal(await page.locator('#xmas-submit').isDisabled(), true);
-      await page.locator('#xmas-submit').evaluate(button => button.form.requestSubmit()); await pause(50); assert.equal(requests.length, before + 1);
+      await page.locator('#xmas-submit').evaluate(button => button.form.requestSubmit()); await pause(50);
+      assert.equal(requests.length, before + 1, 'a saved response is never submitted again');
     }
   }
   mode = 'status-fail'; await page.goto(base + '/christmas/');

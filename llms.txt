@@ -154,7 +154,7 @@ This file is a guide to public website information. Crawler access is defined by
 - Pickup guide: https://nothingmatters.co.kr/pickup/ / Magok event guide: https://nothingmatters.co.kr/magok-cookie/
 - Group consultation: share quantities, event/receipt dates, budget, product selection, packaging requests and preferred pickup or vehicle courier. Courier availability and cost require confirmation; no citywide same-day delivery promise.
 - The set is an independent SKU; never automatically combine or convert single items.
-- Online submission is unavailable pending Railway support. Consult via https://pf.kakao.com/_QdCaK/chat; final orders are confirmed in Kakao consultation. A request is not payment or production confirmation.
+- Online order requests open on 2026-12-01 00:00 Asia/Seoul, enforced by the integrated order server. Source: christmasBrookie. Save the request, optionally email its saved quote, provide the PNG, then consult via https://pf.kakao.com/_QdCaK/chat; final orders are confirmed in Kakao consultation. A request is not payment or production confirmation.
 - Christmas shipping eligibility, stock, minimum quantities, delivery fees, deadlines and available pickup dates must be confirmed by consultation. Other products' Smartstore shipping conditions do not apply to this collection. Prices above are product totals only.
 
 ## Official channels

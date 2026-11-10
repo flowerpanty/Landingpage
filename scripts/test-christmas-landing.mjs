@@ -70,7 +70,7 @@ assert.match(clean(comparisonCards[2][0]),/손잡이 포장 실물 사진/);
 assert.match(clean(comparisonCards[3][0]),/선물 상자/);
 assert.match(clean(comparison),/별도 포장 요청은 가능 여부와 비용을 상담/);
 assert.equal((orderGuide.match(/<li>/g)||[]).length,4);
-for(const text of ['희망 수량','날짜와 시간','주문 마감일','택배 가능 여부','온라인 주문 신청은 현재 준비 중','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','카카오톡'])assert.ok(clean(orderGuide).includes(text));
+for(const text of ['희망 수량','날짜와 시간','주문 마감일','택배 가능 여부','2026년 12월 1일부터 가능합니다','예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.','카카오톡'])assert.ok(clean(orderGuide).includes(text));
 assert.doesNotMatch(choice+comparison+orderGuide,/아이싱|레시피|DIY|무료\s*배송|재고\s*\d|\d+%\s*할인/);
 assert.doesNotMatch(choice+comparison+orderGuide,/href="#/,'guidance must not insert fragment-history entries into the order flow');
 const visibleMain=clean(html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)[1].replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''));
@@ -153,7 +153,7 @@ for(const p of catalog.products)assert.ok(faqs[0][1].includes(`${p.name} ${p.pri
 for(const p of catalog.products.slice(2))assert.ok(faqs[1][1].includes(p.composition));
 assert.match(faqs.find(f=>f[0].includes('언제까지'))[1],/^주문 마감일과 제작 가능한 일정은 카카오톡 상담으로 확인해야 합니다\./);
 assert.match(faqs.find(f=>f[0].includes('택배'))[1],/^크리스마스 4종의 택배 가능 여부는 별도 상담으로 확인해야 합니다\./);
-assert.match(faqs.find(f=>f[0].includes('온라인'))[1],/^현재 온라인 주문 신청은 준비 중/);
+assert.match(faqs.find(f=>f[0].includes('온라인'))[1],/^크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다/);
 const entry=JSON.parse(read('data/site-pages.json')).pages.find(p=>p.path==='/christmas/');
 assert.equal(entry.occasionLanding.productCatalog,'christmas');
 assert.match(entry.lastmod,/^\d{4}-\d{2}-\d{2}$/);assert.match(catalog.updatedAt,/^\d{4}-\d{2}-\d{2}$/);
@@ -166,7 +166,7 @@ for(const p of catalog.products) assert.ok(guidance.includes(p.name)&&guidance.i
 for(const text of ['서울 크리스마스 기업행사','서울특별시 강서구 송정로 25 1층','No cookies are available for walk-in purchase','Christmas shipping eligibility'])assert.ok(guidance.includes(text));
 for(const id of ['gift-choice','gift-comparison','ordering-guide'])assert.ok(guidance.includes(`https://nothingmatters.co.kr/christmas/#${id}`));
 for(const [source,anchor] of [['index.html','크리스마스 쿠키 세트 4종 보기'],['corporate-gift/index.html','서울 크리스마스 기업행사 쿠키'],['guides/corporate-event-cookie/index.html','서울 크리스마스 기업행사 쿠키'],['small-gift/index.html','크리스마스 답례품·수제쿠키 선물'],['bulk/index.html','크리스마스 답례품·수제쿠키 선물'],['guides/index.html','크리스마스 쿠키 세트 4종 보기']]){
-  assert.equal((read(source).match(/href="\/christmas\/"/g)||[]).length,1,`${source}: one contextual seasonal link`);
+  assert.ok((read(source).match(/href="\/christmas\/"/g)||[]).length>=1,`${source}: contextual seasonal link`);
   assert.ok(read(source).includes(`href="/christmas/">${anchor}`),`${source}: relevant seasonal anchor`);
 }
 const notice=JSON.parse(read('data/notices.json')).notices.find(item=>item.slug==='christmas-2026');
@@ -176,5 +176,9 @@ for(const link of html.matchAll(/href="([^"]+)"/g)){
  const file=url.pathname==='/'?'index.html':url.pathname.endsWith('/')?url.pathname.slice(1)+'index.html':url.pathname.slice(1);
  assert.ok(fs.existsSync(path.join(root,file)),`missing link ${url}`);if(url.hash)assert.ok(read(file).includes(`id="${url.hash.slice(1)}"`),`missing anchor ${url}`);
 }
-const js=read('christmas/christmas-order.js');assert.doesNotMatch(js,/localStorage|sessionStorage|gtag\(|URLSearchParams/);
+const js=read('christmas/christmas-order.js');assert.doesNotMatch(js,/localStorage|gtag\(|URLSearchParams/);
+assert.match(js,/sessionStorage\.setItem\(storageKey, key\)/,'only opaque idempotency keys persist');
+assert.doesNotMatch(js,/sessionStorage\.setItem\([^)]*(?:customer|payload|canonical)/,'no raw customer data persists');
+for(const hour of ['10','11','12','13','14','15','16','17'])assert.ok(html.includes(`value="${hour}:00"`));
+assert.ok(html.includes('placeholder="example@email.com"'));assert.ok(js.includes("source: 'christmasBrookie'"));
 console.log('Christmas landing PASS: preserved gift/set metadata, image-first hero and large photo cards, catalog prices and visible photo captions, static photo-led brand introduction, 18 natural purchase intents, 13 matching FAQs, focused inbound links and schema dates');

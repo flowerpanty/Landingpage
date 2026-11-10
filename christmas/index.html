@@ -33,7 +33,7 @@
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="/assets/christmas.css?v=20261105-full-photo">
+  <link rel="stylesheet" href="/assets/christmas.css?v=20261110-order">
   <script type="application/ld+json" data-nm-schema="static">
   {
     "@context": "https://schema.org",
@@ -415,7 +415,7 @@
             "name": "온라인에서 바로 주문이 접수되나요?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "현재 온라인 주문 신청은 준비 중이며 카카오톡으로 주문을 상담하고 최종 확정합니다. 3 STEP에서 상품·수량·합계와 수령 희망 정보를 검토할 수 있지만 화면 확인만으로 접수되지는 않습니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다."
+              "text": "크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다. 3 STEP에서 상품·수량·합계와 주문 정보를 확인한 뒤 최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 이메일을 입력하면 저장된 주문의 견적서도 보내드립니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다."
             }
           },
           {
@@ -431,7 +431,7 @@
             "name": "입력한 개인정보는 어떻게 사용하나요?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "현재 입력 정보는 화면에서 주문 내용을 검토하는 데만 사용하며 URL이나 분석 이벤트에 포함하지 않습니다. 상품 구성 복사에는 개인정보가 포함되지 않으며, 카카오톡 상담에서 필요한 정보를 직접 전달할 수 있습니다."
+              "text": "이름·휴대전화·이메일(선택)·수령 희망 정보·배송 주소·요청사항은 최종 견적 버튼을 누르면 통합 주문 시스템에 저장되어 견적 제공과 상담에 사용합니다. 개인정보는 URL이나 분석 이벤트에 포함하지 않으며, 상품 구성 복사에도 포함하지 않습니다."
             }
           },
           {
@@ -455,6 +455,7 @@
     ]
   }
   </script>
+  <link rel="stylesheet" href="/order/assets/order-confirmation.css?v=cf9f255d554c">
 </head>
 <body class="christmas-page" data-disable-kakao-float>
   <a data-nm-skip-link class="nm-skip-link" href="#main-content">본문으로 건너뛰기</a>
@@ -480,6 +481,7 @@
         <li><button type="button" data-step-link="3" disabled><span>03</span><strong>확인 및 접수</strong><small>주문 내역 확인</small></button></li>
       </ol></nav>
       <div class="xmas-step-toolbar"><button id="xmas-back" type="button" hidden>← 이전 단계</button><p id="xmas-step-status" role="status" aria-live="polite">STEP 1 / 3 · 상품 선택</p></div>
+      <p class="xmas-notice" id="xmas-opening-message" role="status">크리스마스 브루키 주문은 12월 1일부터 가능합니다.</p>
       <div class="xmas-order-layout">
         <form id="xmas-order-form" action="/api/landing-orders" method="post" novalidate>
           <section id="christmas-products" data-order-step="1" aria-labelledby="products-title">
@@ -515,25 +517,31 @@
           <section id="order-details" data-order-step="2" aria-labelledby="details-title" hidden>
             <div class="xmas-section-heading"><h2 id="details-title" tabindex="-1">언제, 어떻게 받을까요?</h2><p>희망 일정이며 가능 여부는 상담 후 안내합니다.</p></div>
             <div class="xmas-fields">
-              <fieldset class="xmas-full"><legend>수령 방식 <span>(필수)</span></legend><div class="xmas-methods"><label><input type="radio" name="deliveryMethod" value="pickup" checked>예약 픽업<small>서울 강서구 송정로 25 1층</small></label><label><input type="radio" name="deliveryMethod" value="quick">차량 퀵 희망<small>가능 여부·비용 상담 필요</small></label></div></fieldset>
-              <label for="xmas-date">수령 희망 날짜 <span>(필수)</span><input id="xmas-date" name="deliveryDate" type="date" required aria-describedby="xmas-date-error"><small class="xmas-error" id="xmas-date-error" hidden></small></label>
-              <label for="xmas-time">수령 희망 시간 <span>(필수)</span><input id="xmas-time" name="pickupTime" type="time" required aria-describedby="xmas-time-error"><small class="xmas-error" id="xmas-time-error" hidden></small></label>
+              <fieldset class="xmas-full"><legend>수령 방식 <span>(필수)</span></legend><div class="xmas-methods"><label><input type="radio" name="deliveryMethod" value="pickup" checked>매장 픽업<small>서울 강서구 송정로 25 1층</small></label><label><input type="radio" name="deliveryMethod" value="quick">퀵 배송<small>가능 여부·비용 상담 필요</small></label></div></fieldset>
+              <label for="xmas-date">수령 희망 날짜 <span>(필수)</span><input id="xmas-date" name="deliveryDate" type="date" min="2026-12-01" required aria-describedby="xmas-date-error"><small class="xmas-error" id="xmas-date-error" hidden></small></label>
+              <label for="xmas-time">수령 희망 시간 <span>(필수)</span><select id="xmas-time" name="pickupTime" required aria-describedby="xmas-time-error"><option value="">시간을 선택해 주세요</option><option value="10:00">오전 10시</option><option value="11:00">오전 11시</option><option value="12:00">오후 12시</option><option value="13:00">오후 1시</option><option value="14:00">오후 2시</option><option value="15:00">오후 3시</option><option value="16:00">오후 4시</option><option value="17:00">오후 5시</option></select><small class="xmas-error" id="xmas-time-error" hidden></small></label>
               <label for="xmas-name">주문자 이름 <span>(필수)</span><input id="xmas-name" name="customerName" autocomplete="name" maxlength="80" required aria-describedby="xmas-name-error"><small class="xmas-error" id="xmas-name-error" hidden></small></label>
               <label for="xmas-phone">휴대전화 <span>(필수)</span><input id="xmas-phone" name="customerPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="15" required aria-describedby="xmas-phone-error"><small class="xmas-error" id="xmas-phone-error" hidden></small></label>
+              <label class="xmas-full" for="xmas-email">이메일 <span>(선택)</span><input id="xmas-email" name="customerEmail" type="email" autocomplete="email" maxlength="254" placeholder="example@email.com" aria-describedby="xmas-email-guide xmas-email-error"><small class="order-email-guide" id="xmas-email-guide">✉ 견적서를 이메일로도 받아보세요! 이메일을 입력하면 견적서를 바로 보내드려요.</small><small class="xmas-error" id="xmas-email-error" hidden></small></label>
+              <label class="xmas-full" id="xmas-address-field" for="xmas-address" hidden>배송 주소 <span>(퀵 배송 필수)</span><input id="xmas-address" name="deliveryAddress" autocomplete="street-address" maxlength="500" aria-describedby="xmas-address-error"><small class="xmas-error" id="xmas-address-error" hidden></small></label>
               <label class="xmas-full" for="xmas-request">요청사항 <span>(선택)</span><textarea id="xmas-request" name="request" rows="3" maxlength="1000" placeholder="사용 목적, 포장 요청, 차량 퀵 희망 지역 등을 남겨주세요."></textarea></label>
             </div>
-            <p class="xmas-fineprint">이 페이지는 입력 정보를 별도로 저장하지 않습니다. 수령 희망 날짜와 시간만으로 예약이 확정되지는 않습니다.</p>
+            <p class="xmas-fineprint">최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 수령 희망 날짜와 시간만으로 예약이 확정되지는 않습니다.</p>
           </section>
           <section id="order-review" data-order-step="3" aria-labelledby="review-title" hidden>
             <div class="xmas-section-heading"><h2 id="review-title" tabindex="-1">주문 내용을 확인해 주세요</h2><p>접수 후 최종 주문 확정은 카카오톡 상담으로 안내합니다.</p></div>
             <div class="xmas-review-heading"><h3>선택한 상품</h3><button type="button" data-edit-step="1">상품 수정</button></div>
             <div id="xmas-review-items" class="xmas-selected"></div>
             <div class="xmas-review-total"><span>상품 합계</span><strong id="xmas-review-total">0원</strong></div>
+            <div id="xmas-quote-preview"></div>
+            <div id="xmas-confirmation-warning"></div>
+            <div id="xmas-email-status" class="order-email-status" hidden><p data-email-message role="status" aria-live="polite"></p><button type="button" data-email-retry hidden>이메일 다시 보내기</button></div>
+            <div id="xmas-confirmation-status-slot"></div>
             <div class="xmas-review-heading"><h3>수령 및 주문자 정보</h3><button type="button" data-edit-step="2">정보 수정</button></div>
             <dl id="xmas-review" class="xmas-review-details"></dl>
-            <div class="xmas-notice" id="xmas-availability" role="status">온라인 주문 신청을 준비 중입니다. 선택한 구성은 카카오톡으로 상담해 주세요.</div>
+            <div class="xmas-notice" id="xmas-availability" role="status">크리스마스 브루키 주문은 12월 1일부터 가능합니다.</div>
             <p class="xmas-fineprint">주문 요청 접수는 결제 완료나 제작 확정을 의미하지 않습니다. 제작 일정과 수령 방법은 상담에서 최종 확인합니다.</p>
-            <div id="xmas-consent-row" hidden><p class="xmas-fineprint" id="xmas-privacy-note">이름·휴대전화·수령 희망 정보·요청사항을 주문 접수와 상담 목적으로 사용합니다.</p><label class="xmas-consent"><input id="xmas-consent" name="privacyConsent" type="checkbox" aria-describedby="xmas-privacy-note">개인정보 수집·이용에 동의합니다.</label></div>
+            <div id="xmas-consent-row"><p class="xmas-fineprint" id="xmas-privacy-note">이름·휴대전화·이메일(선택)·수령 희망 정보·배송 주소·요청사항을 주문 접수와 견적 제공, 상담 목적으로 사용합니다.</p><label class="xmas-consent"><input id="xmas-consent" name="privacyConsent" type="checkbox" aria-describedby="xmas-privacy-note">개인정보 수집·이용에 동의합니다.</label></div>
             <div class="xmas-consult-actions"><button id="xmas-copy" class="xmas-button xmas-button-outline" type="button">상품 구성 복사</button><a class="xmas-button xmas-button-green" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-order-consult">카카오톡 주문 상담 ↗</a></div>
             <p class="xmas-fineprint">복사에는 상품·수량·상품 합계만 포함됩니다. 개인정보는 상담창에서 직접 알려주세요.</p>
             <p class="xmas-error" id="xmas-submit-error" role="alert" hidden></p><p id="xmas-copy-status" role="status"></p>
@@ -545,7 +553,7 @@
           <div id="xmas-selected" class="xmas-selected"><p>아직 선택한 상품이 없어요.</p></div>
           <dl class="xmas-totals"><div><dt>선택 수량</dt><dd id="xmas-total-count">0개</dd></div><div><dt>상품 합계</dt><dd><strong id="xmas-total-price">0원</strong></dd></div></dl>
           <p class="xmas-fineprint">상품 금액 기준입니다. 퀵 비용·가능 여부와 제작 일정은 상담 후 확인합니다.</p>
-          <button id="xmas-next" class="xmas-button" type="button" disabled>수령 정보 입력 →</button><button id="xmas-submit" class="xmas-button" type="submit" form="xmas-order-form" disabled hidden aria-describedby="xmas-availability">온라인 주문 신청 준비 중</button>
+          <button id="xmas-next" class="xmas-button" type="button" disabled>다음으로 넘어가기 →</button><button id="xmas-submit" class="xmas-button" type="submit" form="xmas-order-form" disabled hidden aria-describedby="xmas-availability">12월 1일부터 주문 가능</button>
           <a class="xmas-summary-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-summary">카카오톡 주문 상담 ↗</a>
           <p class="xmas-summary-note">예약 픽업 기본 · 최종 확정은 상담 후 안내</p>
         </aside>
@@ -579,7 +587,7 @@
     <section class="xmas-wrap xmas-section" id="ordering-guide" aria-labelledby="ordering-guide-title">
       <p class="xmas-eyebrow">BEFORE YOU ORDER</p><h2 id="ordering-guide-title">크리스마스 쿠키 주문, 이 순서로 준비하세요</h2>
       <p>상품과 수량을 먼저 정리하고, 희망 수령 일정을 카카오톡에서 상담해 주세요. 제작과 수령 가능 여부를 확인하는 과정이 필요합니다.</p>
-      <ol class="xmas-order-guide-list"><li><h3>상품과 희망 수량을 선택해 주세요</h3><p>위 3 STEP에서 실제 사진을 확대해 보고 상품별 수량과 합계를 확인하세요. 단품과 세트는 각각 별도 상품으로 계산하며, 선택하지 않은 상품은 합계에서 제외됩니다.</p></li><li><h3>픽업 날짜와 시간을 상담해 주세요</h3><p>서울 강서구 공항동 작업실의 예약 픽업을 기본으로 안내합니다. 수령 희망 날짜·시간과 픽업 또는 차량 퀵 희망 여부를 알려주세요. 입력한 일정은 상담에서 가능 여부를 확인한 뒤 확정합니다.</p></li><li><h3>크리스마스 전에 받으려면 언제 예약해야 하나요?</h3><p>주문 마감일과 제작 가능 일정은 카카오톡 상담으로 먼저 확인해 주세요. 희망 픽업 날짜·시간과 수량을 알려주시면 가능 여부를 안내합니다. 크리스마스 4종의 택배 가능 여부도 별도 확인이 필요하며, 다른 상품의 택배 조건을 적용하지 않습니다.</p></li><li><h3>카카오톡에서 최종 주문을 확정해 주세요</h3><p>온라인 주문 신청은 현재 준비 중입니다. 화면에서 검토한 상품 구성을 복사해 카카오톡으로 상담하고, 상품·수량·수령 일정을 최종 확인해 주세요. 예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.</p></li></ol>
+      <ol class="xmas-order-guide-list"><li><h3>상품과 희망 수량을 선택해 주세요</h3><p>위 3 STEP에서 실제 사진을 확대해 보고 상품별 수량과 합계를 확인하세요. 단품과 세트는 각각 별도 상품으로 계산하며, 선택하지 않은 상품은 합계에서 제외됩니다.</p></li><li><h3>픽업 날짜와 시간을 상담해 주세요</h3><p>서울 강서구 공항동 작업실의 예약 픽업을 기본으로 안내합니다. 수령 희망 날짜·시간과 픽업 또는 차량 퀵 희망 여부를 알려주세요. 입력한 일정은 상담에서 가능 여부를 확인한 뒤 확정합니다.</p></li><li><h3>크리스마스 전에 받으려면 언제 예약해야 하나요?</h3><p>주문 마감일과 제작 가능 일정은 카카오톡 상담으로 먼저 확인해 주세요. 희망 픽업 날짜·시간과 수량을 알려주시면 가능 여부를 안내합니다. 크리스마스 4종의 택배 가능 여부도 별도 확인이 필요하며, 다른 상품의 택배 조건을 적용하지 않습니다.</p></li><li><h3>카카오톡에서 최종 주문을 확정해 주세요</h3><p>크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다. 견적 확인 후 주문 요청을 저장하고, 이메일(선택)과 PNG 견적서를 받은 뒤 카카오톡에서 상품·수량·수령 일정을 최종 확인해 주세요. 예약 없이 방문하시면 바로 구매할 쿠키가 없습니다.</p></li></ol>
       <nav class="xmas-guide-links" aria-label="주문 상담과 픽업"><a href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-order-guide">카카오톡 최종 주문 상담 ↗</a><a href="/pickup/">예약 픽업 안내 ↗</a></nav>
     </section>
     <!-- christmas-shopping-guide:end -->
@@ -607,20 +615,24 @@
       <details><summary>크리스마스 쿠키는 언제까지 주문해야 하나요?</summary><p>주문 마감일과 제작 가능한 일정은 카카오톡 상담으로 확인해야 합니다. 재고·최소 주문량·픽업 가능 일정도 상담에서 안내하며 확정된 날짜나 수량을 이 페이지에서 약속하지 않습니다. 화면의 수령 희망일 입력은 예약 확정이 아닙니다.</p></details>
       <details><summary>크리스마스 쿠키를 택배로 받을 수 있나요?</summary><p>크리스마스 4종의 택배 가능 여부는 별도 상담으로 확인해야 합니다. 이 페이지는 예약 픽업을 기본으로 안내하며, 다른 상품의 스마트스토어 택배 주문 조건을 크리스마스 상품에 적용하지 않습니다. 배송료나 도착일도 확정해 안내하지 않습니다.</p></details>
       <details><summary>예약 없이 방문해도 구매할 수 있나요?</summary><p>예약 없이 방문하시면 바로 구매할 쿠키가 없습니다. 낫띵메터스는 예약 제작·예약 픽업 전용 작업실이므로 상품·수량·픽업 날짜와 시간을 카카오톡 상담으로 확정한 뒤 방문해 주세요.</p></details>
-      <details><summary>온라인에서 바로 주문이 접수되나요?</summary><p>현재 온라인 주문 신청은 준비 중이며 카카오톡으로 주문을 상담하고 최종 확정합니다. 3 STEP에서 상품·수량·합계와 수령 희망 정보를 검토할 수 있지만 화면 확인만으로 접수되지는 않습니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다.</p></details>
+      <details><summary>온라인에서 바로 주문이 접수되나요?</summary><p>크리스마스 브루키 주문은 2026년 12월 1일부터 가능합니다. 3 STEP에서 상품·수량·합계와 주문 정보를 확인한 뒤 최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 이메일을 입력하면 저장된 주문의 견적서도 보내드립니다. 주문 요청 접수도 결제 완료나 제작 확정을 의미하지 않습니다.</p></details>
       <details><summary>차량 퀵으로 받을 수 있나요?</summary><p>차량 퀵은 일정·수량·수령 지역에 따라 가능 여부와 비용을 확인해야 합니다. 마곡을 비롯한 서울 기업행사는 수령 희망 지역과 시간을 알려주세요. 서울 전역 당일 배송을 보장하는 서비스는 아닙니다.</p></details>
-      <details><summary>입력한 개인정보는 어떻게 사용하나요?</summary><p>현재 입력 정보는 화면에서 주문 내용을 검토하는 데만 사용하며 URL이나 분석 이벤트에 포함하지 않습니다. 상품 구성 복사에는 개인정보가 포함되지 않으며, 카카오톡 상담에서 필요한 정보를 직접 전달할 수 있습니다.</p></details>
+      <details><summary>입력한 개인정보는 어떻게 사용하나요?</summary><p>이름·휴대전화·이메일(선택)·수령 희망 정보·배송 주소·요청사항은 최종 견적 버튼을 누르면 통합 주문 시스템에 저장되어 견적 제공과 상담에 사용합니다. 개인정보는 URL이나 분석 이벤트에 포함하지 않으며, 상품 구성 복사에도 포함하지 않습니다.</p></details>
       <details><summary>개인 선물과 파티 간식은 어떻게 고르면 좋을까요?</summary><p>한 사람씩 나눠줄 선물은 곰돌이 브루키·트리 브루키 단품, 두 가지 모양을 함께 전할 선물은 브루키 2종 세트, 여러 디자인을 함께 전할 선물은 산타꾸러미 4종을 비교해 보세요. 파티 간식은 참석 인원과 개별 배포 또는 세트 선물 여부에 맞춰 상품별 수량을 정리하면 됩니다.</p></details>
       <details><summary>크리스마스 쿠키 포장은 어떻게 확인하나요?</summary><p>상품 카드의 상세 사진과 촬영 설명에서 포장 모습을 확인할 수 있습니다. 브루키 단품의 개별 포장, 2종 세트를 함께 담은 포장, 산타꾸러미 선물 상자 사진을 참고해 주세요. 사진에 함께 촬영된 다른 상품이나 소품은 판매 구성과 구분하며, 별도 포장 요청의 가능 여부와 비용은 상담으로 확인합니다.</p></details>
       <!-- christmas-faq:end -->
     </section>
   </main>
   <footer class="xmas-footer"><div class="xmas-wrap"><a class="xmas-brand" href="/">NOTHINGMATTERS</a><p>서울특별시 강서구 송정로 25 1층 · 사전 예약 제작·예약 픽업<br><a href="tel:01028667976">010-2866-7976</a> · <a href="mailto:eddiefactory@naver.com">eddiefactory@naver.com</a></p><nav aria-label="공식 채널"><a href="/">공식 홈페이지 ↗</a><a href="https://instagram.com/nothingmatters_c" target="_blank" rel="noopener noreferrer">Instagram @nothingmatters_c ↗</a></nav><nav aria-label="도움말"><a href="/pickup/">픽업 안내</a><a href="/contact/">문의</a><a href="/guides/cookie-storage/">보관 가이드</a><a href="/bulk/">답례품 안내</a><a data-notice-link href="/notice/" style="display:inline-flex;align-items:center;min-height:44px">공지사항</a></nav><small>Made with love, given with warmth.</small></div></footer>
-  <aside class="xmas-sticky" aria-label="주문 합계 및 다음 단계"><div><span id="xmas-sticky-count">선택한 선물 0개</span><strong id="xmas-sticky-total">0원</strong></div><button class="xmas-button" id="xmas-sticky-next" type="button" disabled>수령 정보 입력 →</button></aside>
+  <aside class="xmas-sticky" aria-label="주문 합계 및 다음 단계"><div><span id="xmas-sticky-count">선택한 선물 0개</span><strong id="xmas-sticky-total">0원</strong></div><button class="xmas-button" id="xmas-sticky-next" type="button" disabled>다음으로 넘어가기 →</button></aside>
   <dialog id="xmas-gallery" aria-labelledby="xmas-gallery-title">
     <div class="xmas-gallery-shell"><header class="xmas-gallery-header"><div><h2 id="xmas-gallery-title">상품 상세 사진</h2><p id="xmas-gallery-count" aria-live="polite"></p></div><button type="button" id="xmas-gallery-close" aria-label="상세 사진 닫기">닫기 ×</button></header><figure class="xmas-gallery-photo"><img id="xmas-gallery-image" alt="" width="1" height="1" decoding="async"><p id="xmas-gallery-loading" role="status" hidden>사진을 불러오는 중…</p><figcaption id="xmas-gallery-caption"></figcaption></figure><div class="xmas-gallery-controls"><button type="button" id="xmas-gallery-prev" aria-label="이전 사진">←</button><div id="xmas-gallery-thumbnails" aria-label="상세 사진 선택"></div><button type="button" id="xmas-gallery-next" aria-label="다음 사진">→</button></div></div>
   </dialog>
   <script id="xmas-catalog" type="application/json">{"version":"christmas-2026-v1","updatedAt":"2026-10-21","products":[{"sku":"christmas-bear-brookie","name":"곰돌이 브루키","price":8500,"composition":"곰돌이 브루키 1개","image":"/images/christmas/bear-brookie.webp","width":798,"height":1024,"alt":"트리와 곰돌이 브루키 실물 사진, 오른쪽이 곰돌이 브루키","caption":"사진 오른쪽의 곰돌이 브루키입니다.","sourceImage":"images/brookie_bear_main.jpg","gallery":[{"image":"/images/christmas/brookie-detail-1.webp","width":768,"height":1024,"alt":"가운데 곰돌이와 양옆 트리 브루키 실물 상세 사진","caption":"가운데가 곰돌이 브루키입니다. 단품은 곰돌이 1개 구성입니다."},{"image":"/images/christmas/brookie-detail-2.webp","width":767,"height":1024,"alt":"개별 포장된 곰돌이와 트리 브루키 실물 사진","caption":"양옆이 곰돌이 브루키입니다. 여러 상품을 함께 촬영한 사진입니다."}]},{"sku":"christmas-tree-brookie","name":"트리 브루키","price":9500,"composition":"트리 브루키 1개","image":"/images/christmas/tree-brookie.webp","width":768,"height":1024,"alt":"크리스마스 트리 장식의 브루키 개별 포장 실물 사진","caption":"사진은 트리 브루키 2개를 함께 촬영했습니다.","sourceImage":"images/brookie_tree_main.jpg","gallery":[{"image":"/images/christmas/brookie-detail-1.webp","width":768,"height":1024,"alt":"곰돌이 브루키 양옆의 트리 브루키 실물 상세 사진","caption":"양옆이 트리 브루키입니다. 단품은 트리 1개 구성입니다."},{"image":"/images/christmas/brookie-detail-2.webp","width":767,"height":1024,"alt":"가운데 트리 브루키의 개별 포장 실물 사진","caption":"가운데가 트리 브루키입니다. 여러 상품을 함께 촬영한 사진입니다."}]},{"sku":"christmas-brookie-set","name":"브루키 2종 세트","price":17000,"composition":"곰돌이 브루키 1개 + 트리 브루키 1개","image":"/images/christmas/brookie-set.webp","width":768,"height":1024,"alt":"곰돌이와 트리 브루키가 함께 담긴 브루키 2종 세트 실물 사진","caption":"곰돌이와 트리, 두 가지를 한 세트로.","sourceImage":"images/brookie_set_1.jpg","gallery":[{"image":"/images/christmas/brookie-set-detail.webp","width":768,"height":1024,"alt":"곰돌이와 트리 브루키 2종 세트 포장 상세 사진","caption":"곰돌이 브루키와 트리 브루키 각 1개가 담긴 세트입니다."}]},{"sku":"christmas-santa-bundle","name":"산타꾸러미 4종","price":23000,"composition":"루돌프초코 · 버터산타 · 말차리스 · 로투스노우맨 각 1개","image":"/images/christmas/santa-bundle.webp","width":764,"height":1024,"alt":"루돌프, 산타, 리스, 눈사람 쿠키로 구성된 산타꾸러미 4종 실물 사진","caption":"네 가지 크리스마스 쿠키를 담았어요.","sourceImage":"images/santa_package_main.jpg","gallery":[{"image":"/images/christmas/santa-bundle-detail-1.webp","width":1024,"height":867,"alt":"산타꾸러미 네 가지 쿠키와 상자 실물 상세 사진","caption":"루돌프초코·버터산타·말차리스·로투스노우맨 각 1개 구성입니다."},{"image":"/images/christmas/santa-bundle-detail-2.webp","width":768,"height":1024,"alt":"트리 그림이 있는 산타꾸러미 선물 상자 실물 사진","caption":"산타꾸러미 포장 참고 사진입니다. 세부 포장 요청은 상담에서 확인해 주세요."}]}]}</script>
-  <script src="/christmas/christmas-order.js?v=20261021-steps" defer></script>
+  <script src="/order/assets/order-core.js?v=d981c0333e61" defer></script>
+  <script src="/order/assets/order-confirmation.js?v=22ff27c72ffd" defer></script>
+  <script src="/order/assets/landing-quote.js?v=7395b88324d6" defer></script>
+  <script src="/order/assets/order-email-quote.js?v=158b8d5e3211" defer></script>
+  <script src="/christmas/christmas-order.js?v=20261110-integrated" defer></script>
 </body>
 </html>

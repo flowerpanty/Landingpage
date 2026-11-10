@@ -16,12 +16,13 @@ const body={source:'christmas',catalogVersion:catalog.version,items,customerName
 assert.equal(validateChristmasOrder(body).totalPrice,58000);
 for(const patch of [{customerName:''},{customerPhone:'123'},{deliveryDate:'2026-02-30'},{deliveryDate:'2026-13-01'},{pickupTime:'25:00'},{deliveryMethod:'delivery'},{catalogVersion:'old'},{privacyConsent:false},{idempotencyKey:''},{idempotencyKey:'-'.repeat(36)}])assert.throws(()=>validateChristmasOrder({...body,...patch}));
 let forwards=0;
-const handler=createOrderApiHandler({fetchImpl:async()=>{forwards++;throw new Error('Should never forward unavailable Christmas orders');}});
+const statusFixture={...christmasOrderStatus(),source:'christmasBrookie',minimumDeliveryDate:'2026-12-01'};
+const handler=createOrderApiHandler({fetchImpl:async(url)=>{if(url.endsWith('/api/christmas-order-status'))return new Response(JSON.stringify(statusFixture),{headers:{'Content-Type':'application/json'}});forwards++;throw new Error('Should never forward legacy Christmas orders');}});
 const server=http.createServer(handler);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const base=`http://127.0.0.1:${server.address().port}`;
 const post=payload=>fetch(`${base}/api/landing-orders`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
 try{
- const status=await fetch(base+'/api/christmas-order-status');assert.equal(status.status,200);assert.equal(status.headers.get('cache-control'),'no-store');assert.deepEqual(await status.json(),christmasOrderStatus());
+ const status=await fetch(base+'/api/christmas-order-status');assert.equal(status.status,200);assert.equal(status.headers.get('cache-control'),'no-store');assert.deepEqual(await status.json(),statusFixture);
  const responses=await Promise.all([post(body),post(body)]);for(const response of responses){assert.equal(response.status,503);assert.equal((await response.json()).success,false);}
  assert.equal((await post({...body,items:[]})).status,400);assert.equal(forwards,0);
  console.log('Christmas order: server SKU repricing, set independence, invalid input, capability closed, duplicate requests not forwarded, no production writes PASS');
