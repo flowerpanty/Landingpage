@@ -367,7 +367,7 @@ try {
     await page.locator('[data-step-link="1"]').click();
     assert.equal(await page.evaluate(() => history.length), historyLength, 'current step does not create duplicate history');
     await openAndTestGallery(width);
-    await qty(0, '1'); await qty(1, '1'); assert.equal(await page.locator('#xmas-total-price').textContent(), '17,500원');
+    await qty(0, '1'); await qty(1, '1'); assert.equal(await page.locator('#xmas-total-price').textContent(), '18,000원');
     await qty(0, '0'); await qty(1, '0'); await qty(2, '1'); assert.equal(await page.locator('#xmas-total-price').textContent(), '17,000원');
     await qty(2, '-1'); assert.equal(await page.locator('#xmas-sticky-next').isDisabled(), true);
     await qty(2, '0.5'); assert.equal(await page.locator('#xmas-sticky-next').isDisabled(), true);
@@ -506,7 +506,7 @@ try {
     await focusHeading(1); await next(); await step(2); await fillCustomer();
     if (width >= 960) await page.locator('[name=deliveryMethod][value=pickup]').check();
     await next(); await step(3);
-    assert.equal(await page.locator('#xmas-review-total').textContent(), '57,500원');
+    assert.equal(await page.locator('#xmas-review-total').textContent(), '58,000원');
     assert.equal(await page.locator('#xmas-submit').isDisabled(), true, 'consent required');
     await page.locator('#xmas-consent').check(); await focusHeading(3);
   }

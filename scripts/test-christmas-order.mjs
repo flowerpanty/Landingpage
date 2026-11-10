@@ -6,14 +6,14 @@ const {calculateChristmasOrder:calculate,validateChristmasOrder,christmasOrderSt
 const {createOrderApiHandler}=require('../lib/order-api.js');
 const catalog=require('../data/christmas-products.json');
 const items=catalog.products.map(p=>({sku:p.sku,quantity:1,price:1}));
-assert.equal(calculate(items).totalPrice,57500);
-assert.equal(calculate(items.slice(0,2)).totalPrice,17500);
+assert.equal(calculate(items).totalPrice,58000);
+assert.equal(calculate(items.slice(0,2)).totalPrice,18000);
 assert.equal(calculate([items[2]]).totalPrice,17000);
 assert.deepEqual(calculate([items[2]]).orderItems.map(p=>[p.sku,p.quantity]),[['christmas-brookie-set',1]]);
 for(const value of [0,-1,0.5,NaN,Infinity,'1',null,Number.MAX_SAFE_INTEGER]) assert.throws(()=>calculate([{sku:items[0].sku,quantity:value}]));
 for(const bad of [[],null,[{sku:'unknown',quantity:1}],[items[0],items[0]]]) assert.throws(()=>calculate(bad));
 const body={source:'christmas',catalogVersion:catalog.version,items,customerName:'LOCAL MOCK ONLY',customerPhone:'010-0000-0000',deliveryDate:'2026-12-20',pickupTime:'14:30',deliveryMethod:'pickup',request:'',privacyConsent:true,idempotencyKey:'12345678-1234-1234-1234-123456789012',totalPrice:1};
-assert.equal(validateChristmasOrder(body).totalPrice,57500);
+assert.equal(validateChristmasOrder(body).totalPrice,58000);
 for(const patch of [{customerName:''},{customerPhone:'123'},{deliveryDate:'2026-02-30'},{deliveryDate:'2026-13-01'},{pickupTime:'25:00'},{deliveryMethod:'delivery'},{catalogVersion:'old'},{privacyConsent:false},{idempotencyKey:''},{idempotencyKey:'-'.repeat(36)}])assert.throws(()=>validateChristmasOrder({...body,...patch}));
 let forwards=0;
 const handler=createOrderApiHandler({fetchImpl:async()=>{forwards++;throw new Error('Should never forward unavailable Christmas orders');}});
