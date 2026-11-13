@@ -1076,8 +1076,8 @@ function assertHomeSeasonalFeature() {
   const homeHtml = readHtml(filePathForPathname("/"));
   assert.deepEqual(
     [...homeHtml.matchAll(/<section\b([^>]*)>/g)].map((match) => match[1].match(/\bid="([^"]+)"/)?.[1] || ""),
-    ["mainpage-home", "seasonal-christmas", "our-cookies", "", "use-case-guide", "actual-cases", "", "journal", "official-notices", "local-pickup", "main-faq", "contact"],
-    "homepage should preserve all existing sections and their order"
+    ["mainpage-home", "seasonal-christmas", "our-cookies", "actual-cases", "", "use-case-guide", "journal", "official-notices", "local-pickup", "main-faq", "contact"],
+    "homepage should place production cases directly after products, followed by the occasion guide"
   );
   assert.equal((homeHtml.match(/<h1\b/g) || []).length, 1, "seasonal feature must preserve the single homepage H1");
   assert.equal(cleanText(getAttribute(homeHtml, /<h1[^>]*>([\s\S]*?)<\/h1>/i)), "귀여운 쿠키를 만듭니다.");
@@ -1107,7 +1107,7 @@ function assertHomeSeasonalFeature() {
   assert.doesNotMatch(homeProducts, /href="\/christmas\//);
   assert.doesNotMatch(homeSeasonal, /<script\b|<[^>]+\son\w+\s*=/i, "seasonal feature must not introduce scripts or inline handlers");
   assert.deepEqual([...homeHtml.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(match => match[1]), [
-    "https://www.googletagmanager.com/gtag/js?id=G-DR5XLDB042", "assets/gallery.js", "assets/site.js", "assets/journal.js", "assets/seo.js"
+    "https://www.googletagmanager.com/gtag/js?id=G-DR5XLDB042", "assets/gallery.js?v=20261113-grid", "assets/site.js", "assets/journal.js", "assets/seo.js"
   ], "homepage should reuse its existing scripts without adding JavaScript");
   const seasonalCss = fs.readFileSync(path.join(ROOT, "assets/showroom-home.css"), "utf8");
   assert.match(seasonalCss, /\.showroom-seasonal-media img\s*\{[^}]*object-fit:\s*contain/, "seasonal photo should retain the complete representative image");

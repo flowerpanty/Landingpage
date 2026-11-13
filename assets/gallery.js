@@ -50,6 +50,11 @@ const madeArchiveItems = [
     src: "/images/made/made-cookie-moment.jpg",
     alt: "메시지를 더해 제작한 브라우니 선물",
     size: "square"
+  },
+  {
+    src: "/images/firstbirthday-new-01.jpg",
+    alt: "이름 문구를 더한 곰 캐릭터 브루키와 생일 선물 포장",
+    size: "square"
   }
 ];
 
@@ -65,6 +70,7 @@ const madeArchiveItems = [
 
   const validSizes = new Set(["square", "tall", "wide", "large"]);
   const uploadedSizes = ["large", "tall", "wide", "square"];
+  const homePreviewLimit = 9;
   let lastTrigger = null;
   let overlayOpen = false;
   let overlayHistoryEntryActive = false;
@@ -165,7 +171,7 @@ const madeArchiveItems = [
   const renderHomeSkeleton = () => {
     if (!homeGallery) return;
     const fragment = document.createDocumentFragment();
-    Array.from({ length: 4 }, (_, index) => {
+    Array.from({ length: homePreviewLimit }, (_, index) => {
       const skeleton = document.createElement("span");
       skeleton.className = "showroom-made-skeleton";
       skeleton.style.setProperty("--made-index", String(index));
@@ -319,8 +325,8 @@ const madeArchiveItems = [
 
   getUploadedItems().then(({ items: uploadedItems }) => {
     const visibleArchiveItems = uploadedItems.length
-      ? uploadedItems.slice(0, 5)
-      : madeArchiveItems.slice(0, 5);
+      ? uploadedItems.slice(0, homePreviewLimit)
+      : madeArchiveItems.slice(0, homePreviewLimit);
     const overlayItems = uploadedItems.length ? uploadedItems : madeArchiveItems;
     renderHomeArchive(visibleArchiveItems);
     renderLivePreviews(visibleArchiveItems, uploadedItems.length ? "uploaded" : "fallback");
