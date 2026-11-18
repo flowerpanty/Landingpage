@@ -7,40 +7,34 @@
       "name": "곰돌이 브루키",
       "price": 8500,
       "composition": "곰돌이 브루키 1개",
-      "image": "/images/christmas/bear-brookie.webp",
-      "width": 798,
+      "image": "/images/christmas/bear-brookie-christmas-package.webp",
+      "width": 768,
       "height": 1024,
-      "alt": "트리와 곰돌이 브루키 실물 사진, 오른쪽이 곰돌이 브루키",
-      "caption": "사진 오른쪽의 곰돌이 브루키입니다.",
-      "sourceImage": "images/brookie_bear_main.jpg",
+      "alt": "빨간 산타 모자와 목도리를 두른 곰돌이 브루키 1개를 투명 손잡이 상자에 담은 실물 포장 사진",
+      "caption": "곰돌이 브루키 1개를 담은 포장 실물 사진입니다.",
+      "sourceImage": "images/christmas/bear-brookie-christmas-package.jpg",
       "gallery": [
         {
-          "image": "/images/christmas/brookie-detail-1.webp",
+          "image": "/images/christmas/bear-brookie-package-detail.webp",
           "width": 768,
           "height": 1024,
-          "alt": "가운데 곰돌이와 양옆 트리 브루키 실물 상세 사진",
-          "caption": "가운데가 곰돌이 브루키입니다. 단품은 곰돌이 1개 구성입니다."
-        },
-        {
-          "image": "/images/christmas/brookie-detail-2.webp",
-          "width": 767,
-          "height": 1024,
-          "alt": "개별 포장된 곰돌이와 트리 브루키 실물 사진",
-          "caption": "양옆이 곰돌이 브루키입니다. 여러 상품을 함께 촬영한 사진입니다."
+          "alt": "크리스마스 트리 아래 개별 투명 손잡이 상자에 담긴 트리·곰돌이 브루키 실물 사진, 오른쪽이 곰돌이 브루키",
+          "caption": "사진 오른쪽이 곰돌이 브루키입니다. 단품은 곰돌이 1개 구성이며, 왼쪽 트리 브루키는 별도 상품입니다."
         }
-      ]
+      ],
+      "includeThumbnailInGallery": false
     },
     {
       "sku": "christmas-tree-brookie",
       "name": "트리 브루키",
       "price": 9500,
       "composition": "트리 브루키 1개",
-      "image": "/images/christmas/tree-brookie.webp",
+      "image": "/images/christmas/tree-brookie-christmas-package.webp",
       "width": 768,
       "height": 1024,
-      "alt": "크리스마스 트리 장식의 브루키 개별 포장 실물 사진",
-      "caption": "사진은 트리 브루키 2개를 함께 촬영했습니다.",
-      "sourceImage": "images/brookie_tree_main.jpg",
+      "alt": "산타 모자를 쓴 트리 장식과 Santa is coming 표지가 있는 트리 브루키 1개를 투명 손잡이 상자에 담은 실물 포장 사진",
+      "caption": "트리 브루키 1개를 담은 포장 실물 사진입니다.",
+      "sourceImage": "images/christmas/tree-brookie-christmas-package.jpg",
       "gallery": [
         {
           "image": "/images/christmas/brookie-detail-1.webp",
@@ -63,21 +57,22 @@
       "name": "브루키 2종 세트",
       "price": 17000,
       "composition": "곰돌이 브루키 1개 + 트리 브루키 1개",
-      "image": "/images/christmas/brookie-set.webp",
-      "width": 768,
-      "height": 1024,
-      "alt": "곰돌이와 트리 브루키가 함께 담긴 브루키 2종 세트 실물 사진",
+      "image": "/images/christmas/brookie-set-christmas-package.webp",
+      "width": 360,
+      "height": 640,
+      "alt": "크리스마스 트리 앞에서 손잡이 투명 상자에 담긴 곰돌이·트리 브루키 2종 세트 실물 포장 사진",
       "caption": "곰돌이와 트리, 두 가지를 한 세트로.",
-      "sourceImage": "images/brookie_set_1.jpg",
+      "sourceImage": "images/christmas/brookie-set-christmas-package.jpg",
       "gallery": [
         {
-          "image": "/images/christmas/brookie-set-detail.webp",
+          "image": "/images/christmas/brookie-set-package-detail.webp",
           "width": 768,
           "height": 1024,
-          "alt": "곰돌이와 트리 브루키 2종 세트 포장 상세 사진",
-          "caption": "곰돌이 브루키와 트리 브루키 각 1개가 담긴 세트입니다."
+          "alt": "야외에서 촬영한 손잡이 투명 상자의 곰돌이·트리 브루키 2종 세트 포장 상세 사진",
+          "caption": "곰돌이 브루키와 트리 브루키 각 1개가 담긴 세트의 포장 참고 사진입니다."
         }
-      ]
+      ],
+      "includeThumbnailInGallery": false
     },
     {
       "sku": "christmas-santa-bundle",

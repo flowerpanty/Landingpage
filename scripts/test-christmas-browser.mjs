@@ -186,9 +186,14 @@ try {
       assert.ok(Math.abs(dimensions.width - width) <= 1);
       assert.ok(Math.abs(dimensions.height - page.viewportSize().height) <= 1);
     } else assert.ok(dimensions.width >= 800 && dimensions.width < width);
-    assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 3');
-    await page.keyboard.press('ArrowRight'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 2 / 3');
-    await page.locator('#xmas-gallery-thumbnails button').nth(2).click(); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 3 / 3');
+    assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1');
+    assert.equal(await page.locator('#xmas-gallery-thumbnails button').count(), 1, 'bear gallery contains only the newly attached detail photo');
+    assert.equal(await page.locator('#xmas-gallery-image').getAttribute('src'), '/images/christmas/bear-brookie-package-detail.webp');
+    assert.equal(await page.locator('#xmas-gallery-thumbnails img').getAttribute('src'), '/images/christmas/bear-brookie-package-detail.webp');
+    assert.match(await page.locator('#xmas-gallery-caption').textContent(), /오른쪽.*곰돌이.*트리 브루키는 별도 상품/);
+    await page.keyboard.press('ArrowRight'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1');
+    await page.keyboard.press('ArrowLeft'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1');
+    await page.locator('#xmas-gallery-thumbnails button').first().click();
     await page.waitForFunction(() => { const image = document.querySelector('#xmas-gallery-image'); return image.complete && image.naturalWidth > 0; });
     for (let index = 0; index < 9; index++) {
       await page.keyboard.press('Tab');
@@ -202,7 +207,24 @@ try {
     if (width === 390 || width === 1440) {
       for (let productIndex = 1; productIndex < catalog.products.length; productIndex++) {
         await page.locator('[data-gallery]').nth(productIndex).click();
-        const photos = [catalog.products[productIndex], ...catalog.products[productIndex].gallery];
+        const product = catalog.products[productIndex];
+        const photos = product.includeThumbnailInGallery === false ? product.gallery : [product, ...product.gallery];
+        assert.equal(await page.locator('#xmas-gallery-thumbnails button').count(), photos.length);
+        if (photos.length > 1) {
+          await page.keyboard.press('ArrowRight');
+          assert.equal(await page.locator('#xmas-gallery-count').textContent(), `사진 2 / ${photos.length}`);
+          await page.keyboard.press('ArrowLeft');
+          assert.equal(await page.locator('#xmas-gallery-count').textContent(), `사진 1 / ${photos.length}`);
+        }
+        if (product.sku === 'christmas-brookie-set') {
+          assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1');
+          assert.equal(await page.locator('#xmas-gallery-image').getAttribute('src'), '/images/christmas/brookie-set-package-detail.webp');
+          assert.equal(await page.locator('#xmas-gallery-thumbnails img').getAttribute('src'), '/images/christmas/brookie-set-package-detail.webp');
+          await page.keyboard.press('ArrowRight');
+          assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1', 'no old photos or card thumbnail appear on navigation');
+          await page.waitForFunction(() => { const image = document.querySelector('#xmas-gallery-image'); return image.complete && image.naturalWidth === 768 && image.naturalHeight === 1024; });
+          await page.screenshot({ path: `${artifactDir}/${width}-brookie-set-single-detail.png` });
+        }
         for (let photoIndex = 0; photoIndex < photos.length; photoIndex++) {
           await page.locator('#xmas-gallery-thumbnails button').nth(photoIndex).click();
           await page.waitForFunction(() => { const image = document.querySelector('#xmas-gallery-image'); return image.complete && image.naturalWidth > 0; });
@@ -356,7 +378,11 @@ try {
     assert.equal(await page.locator('.xmas-products').evaluate(node=>getComputedStyle(node).gridTemplateColumns.split(' ').length),width<960?1:2);
     for(const item of photoLayout){
       assert.equal(item.fit,'contain');assert.ok(item.image.width>=item.card.width*.95,'photo occupies the full card width');
-      assert.ok(Math.min(item.image.width/item.natural[0],item.image.height/item.natural[1])<=1,'contained poster/photo is not enlarged beyond its original dimensions');
+      if (item.sku === 'christmas-brookie-set') {
+        // The supplied photo is only 360x640; keep the actual asset dimensions and full frame.
+        assert.deepEqual(item.natural, [360, 640]);
+        assert.ok(Math.abs(item.image.width/item.image.height - 9/16)<.001, 'set photo retains its complete portrait ratio');
+      } else assert.ok(Math.min(item.image.width/item.natural[0],item.image.height/item.natural[1])<=1,'contained poster/photo is not enlarged beyond its original dimensions');
       assert.ok(item.image.width>=(width<640?width*.8:width<960?500:240),`large product image at ${width}: ${JSON.stringify(item)}`);
       assert.ok(item.image.height>item.card.height*.5,'real photo dominates the product card');
       assert.ok(item.info.y>=item.figure.bottom && item.counter.y>=item.info.bottom,'name, price and quantity controls follow the photo');

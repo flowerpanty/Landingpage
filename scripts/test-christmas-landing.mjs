@@ -44,6 +44,18 @@ assert.match(html,/G-DR5XLDB042/);
 assert.match(html,/data-nm-skip-link/);assert.match(html,/data-nm-accessibility/);
 const expected=[['christmas-bear-brookie','곰돌이 브루키',8500],['christmas-tree-brookie','트리 브루키',9500],['christmas-brookie-set','브루키 2종 세트',17000],['christmas-santa-bundle','산타꾸러미 4종',23000]];
 assert.deepEqual(catalog.products.map(p=>[p.sku,p.name,p.price]),expected);
+const bearProduct = catalog.products.find(product => product.sku === 'christmas-bear-brookie');
+assert.equal(bearProduct.image, '/images/christmas/bear-brookie-christmas-package.webp', 'keep the previously selected bear card thumbnail');
+assert.equal(bearProduct.includeThumbnailInGallery, false);
+assert.equal(bearProduct.gallery.length, 1, 'bear gallery contains only the newly attached photo');
+assert.equal(bearProduct.gallery[0].image, '/images/christmas/bear-brookie-package-detail.webp');
+assert.match(bearProduct.gallery[0].caption, /오른쪽.*곰돌이.*트리 브루키는 별도 상품/);
+const setProduct = catalog.products.find(product => product.sku === 'christmas-brookie-set');
+assert.equal(setProduct.image, '/images/christmas/brookie-set-christmas-package.webp', 'keep the previously selected card thumbnail');
+assert.equal(setProduct.includeThumbnailInGallery, false, 'card thumbnail is excluded from the set detail gallery');
+assert.equal(setProduct.gallery.length, 1, 'set detail gallery contains only the newly attached photo');
+assert.equal(setProduct.gallery[0].image, '/images/christmas/brookie-set-package-detail.webp');
+assert.deepEqual([setProduct.gallery[0].width, setProduct.gallery[0].height], [768, 1024]);
 assert.deepEqual(JSON.parse(html.match(/<script id="xmas-catalog" type="application\/json">([\s\S]*?)<\/script>/)[1]),catalog);
 assert.deepEqual([...html.matchAll(/<article class="xmas-product" id="([^"]+)"/g)].map(m=>m[1]),catalog.products.map(p=>p.sku));
 for(const p of catalog.products){
@@ -82,7 +94,7 @@ for(const [index,card] of comparisonCards.entries()){
   const p=catalog.products[index], text=clean(card[0]);
   for(const value of [p.name,p.composition,`${p.price.toLocaleString('ko-KR')}원`,'포장 사진','선물 용도'])assert.ok(text.includes(value),`${p.sku}: ${value}`);
 }
-assert.match(clean(comparisonCards[1][0]),/2개를 함께 촬영.*단품 구성은 1개/);
+assert.match(clean(comparisonCards[1][0]),/트리 브루키 1개.*투명 손잡이 상자/);
 assert.match(clean(comparisonCards[2][0]),/손잡이 포장 실물 사진/);
 assert.match(clean(comparisonCards[3][0]),/선물 상자/);
 assert.match(clean(comparison),/별도 포장 요청은 가능 여부와 비용을 상담/);

@@ -241,7 +241,8 @@
     }
   });
   function galleryImages(product) {
-    return [product, ...(product.gallery || [])];
+    const details = product.gallery || [];
+    return product.includeThumbnailInGallery === false && details.length ? details : [product, ...details];
   }
   function renderGallery() {
     const { sku, index } = state.gallery;
