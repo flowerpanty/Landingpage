@@ -16,6 +16,13 @@
       }
     ]
   },
+  "productVideos": {
+    "christmas-santa-bundle": {
+      "src": "/images/christmas/santa-bundle-preview.mp4",
+      "width": 540,
+      "height": 960
+    }
+  },
   "workshop": {
     "image": "/images/christmas/nothingmatters-workshop-exterior.webp",
     "fallback": "/images/christmas/nothingmatters-workshop-exterior.jpg",

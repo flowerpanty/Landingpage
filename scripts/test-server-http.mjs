@@ -149,6 +149,22 @@ try {
   assert.equal(head.headers["content-length"], asset.headers["content-length"]);
   assert.equal(head.body.length, 0);
 
+  const previewPath = '/images/christmas/santa-bundle-preview.mp4';
+  const preview = await request(server.baseUrl, previewPath);
+  assert.equal(preview.status, 200);
+  assert.equal(preview.headers['content-type'], 'video/mp4');
+  assert.equal(preview.headers['accept-ranges'], 'bytes');
+  assert.deepEqual(preview.body, fs.readFileSync(path.join(ROOT, previewPath)));
+  const previewRange = await request(server.baseUrl, previewPath, { headers: { Range: 'bytes=0-255' } });
+  assert.equal(previewRange.status, 206);
+  assert.equal(previewRange.headers['content-type'], 'video/mp4');
+  assert.equal(previewRange.headers['content-range'], `bytes 0-255/${preview.body.length}`);
+  assert.deepEqual(previewRange.body, preview.body.subarray(0, 256));
+  const previewHead = await request(server.baseUrl, previewPath, { method: 'HEAD' });
+  assert.equal(previewHead.status, 200);
+  assert.equal(Number(previewHead.headers['content-length']), preview.body.length);
+  assert.equal(previewHead.body.length, 0);
+
   const feed = await request(server.baseUrl, "/feed.xml");
   assert.equal(feed.status, 200, "RSS feed should be publicly available");
   assert.match(feed.headers["content-type"], /application\/xml/, "RSS feed should use an XML content type");

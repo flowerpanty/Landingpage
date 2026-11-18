@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { setTimeout as pause } from 'node:timers/promises';
 import { brandFonts, routeBrandFont, checkBrandFonts } from './notice-browser-support.mjs';
+import { checkProductVideo } from './christmas-video-browser-support.mjs';
 const require = createRequire(import.meta.url);
 let playwright;
 try { playwright = require('playwright'); }
@@ -135,10 +136,12 @@ try {
     assert.equal(await link.getAttribute('target'), '_blank');
     assert.equal(await link.getAttribute('rel'), 'noopener noreferrer');
     const box = await link.boundingBox(); assert.ok(box.height >= 44 && box.width >= 44);
-    const opened = page.waitForEvent('popup'); await link.click();
-    const popup = await opened; await popup.waitForLoadState('domcontentloaded');
-    assert.equal(popup.url(), 'https://pf.kakao.com/_QdCaK/chat', 'consultation has no quantity or private URL parameters');
-    assert.match(await popup.title(), /LOCAL MOCK/); await popup.close();
+    // The integrated flow now gathers receipt details before the explicit Kakao handoff.
+    const before = requests.length;
+    await link.click(); await step(2);
+    assert.equal(requests.length, before, 'consultation first gathers details without saving or opening Kakao');
+    await assertPrivacy();
+    await page.locator('#xmas-back').click();
     await step(1);
   }
   async function fillCustomer() {
@@ -353,7 +356,7 @@ try {
     assert.equal(await page.locator('.xmas-products').evaluate(node=>getComputedStyle(node).gridTemplateColumns.split(' ').length),width<960?1:2);
     for(const item of photoLayout){
       assert.equal(item.fit,'contain');assert.ok(item.image.width>=item.card.width*.95,'photo occupies the full card width');
-      assert.ok(item.image.width<=item.natural[0] && item.image.height<=item.natural[1],'no unnecessary product photo enlargement');
+      assert.ok(Math.min(item.image.width/item.natural[0],item.image.height/item.natural[1])<=1,'contained poster/photo is not enlarged beyond its original dimensions');
       assert.ok(item.image.width>=(width<640?width*.8:width<960?500:240),`large product image at ${width}: ${JSON.stringify(item)}`);
       assert.ok(item.image.height>item.card.height*.5,'real photo dominates the product card');
       assert.ok(item.info.y>=item.figure.bottom && item.counter.y>=item.info.bottom,'name, price and quantity controls follow the photo');
@@ -547,7 +550,9 @@ try {
   await page.waitForFunction(() => document.querySelector('#xmas-availability').textContent.includes('확인하지 못했어요'));
   assert.ok(requestedUrls.every(url => !url.includes('LOCAL MOCK') && !url.includes('010-0000-0000')));
   assert.deepEqual(errors, []); assert.deepEqual(missing, []);
+  const videoEvidence = await checkProductVideo({ browser, base, fonts, artifactDir });
   const evidence = {
+    videoEvidence,
     contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, large image-first product cards and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. A full-height uncropped actual photograph precedes the collection; price summary follows ordering and the photo-led brand introduction; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
     targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals, brandEvidence, storefrontEvidence,
     seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, full-height uncropped hero and reachable order navigation at every viewport, full-width product photos with information below, analytics excludes query strings.' },

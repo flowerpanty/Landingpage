@@ -104,7 +104,7 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-product-heading p { font-size: 12px; }
 .xmas-product-consult { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-height: 44px; padding: 7px 10px; border: 2px solid var(--ink); border-radius: 999px; color: var(--ink); font-size: 12px; font-weight: 700; text-decoration: none; }
 .xmas-product-consult:hover { background: var(--yellow); }
-.xmas-products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }
+.xmas-products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 28px 24px; }
 .xmas-product { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto auto; gap: 16px; padding-bottom: 20px; background: var(--paper); border: 2px solid var(--ink); border-radius: 24px; }
 .xmas-product figure { min-width: 0; }
 .xmas-photo-button { display: block; padding: 0; width: 100%; background: #fff0bf; color: var(--ink); border: 0; border-bottom: 1px solid var(--ink); border-radius: 21px 21px 0 0; position: relative; overflow: hidden; }
@@ -112,6 +112,14 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-product:nth-child(3) .xmas-photo-button { background: #ffe2bd; }
 .xmas-product:nth-child(4) .xmas-photo-button { background: #ffe6e5; }
 .xmas-photo-button img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: contain; }
+.xmas-product figure { position: relative; }
+.xmas-video-thumbnail { display: block; position: relative; aspect-ratio: 9 / 16; background: var(--paper); }
+.xmas-video-thumbnail img, .xmas-video-thumbnail video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
+.xmas-video-thumbnail video { opacity: 0; pointer-events: none; }
+.xmas-video-thumbnail[data-playing] video { opacity: 1; }
+.xmas-video-thumbnail[data-playing] img { opacity: 0; }
+.xmas-video-toggle { position: absolute; top: 12px; right: 12px; min-width: 88px; min-height: 44px; padding: 8px 12px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); color: var(--ink); font-size: 12px; font-weight: 700; }
+.xmas-video-toggle:hover { background: var(--yellow); }
 .xmas-photo-caption { padding: 12px 20px 0; color: var(--muted); font-size: 12px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
 .xmas-photo-label { position: relative; display: flex; justify-content: center; align-items: center; gap: 4px; min-height: 44px; padding: 8px 3px; background: var(--yellow); color: var(--ink); font-size: 12px; line-height: 1.2; white-space: nowrap; transition: background-color .16s ease; }
 .xmas-photo-label strong { font-weight: 900; letter-spacing: -.04em; }
