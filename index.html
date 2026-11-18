@@ -33,7 +33,7 @@
   <link rel="icon" type="image/svg+xml" href="images/nm-bear-mark.svg">
   <link rel="stylesheet" href="assets/site.css">
   <link rel="stylesheet" href="assets/showroom.css">
-  <link rel="stylesheet" href="assets/showroom-home.css?v=20261113-home-flow">
+  <link rel="stylesheet" href="assets/showroom-home.css?v=20261118-christmas-video">
   <script type="application/ld+json" data-nm-schema="static">
   {
     "@context": "https://schema.org",
@@ -183,7 +183,7 @@
           "@type": "ImageObject",
           "url": "https://nothingmatters.co.kr/images/og-rotate-01.png"
         },
-        "dateModified": "2026-10-30",
+        "dateModified": "2026-11-18",
         "about": {
           "@id": "https://nothingmatters.co.kr/#localbusiness"
         },
@@ -378,9 +378,15 @@
 
       <section class="showroom-section showroom-seasonal" id="seasonal-christmas" aria-labelledby="seasonal-christmas-title">
         <div class="showroom-wrap showroom-seasonal-frame" data-reveal>
+          <!-- christmas-home-media:start -->
           <figure class="showroom-seasonal-media">
-            <img src="/images/christmas/christmas-2026-santa-bundle-full.jpg" width="764" height="1024" alt="흰 배경에 산타·리스·눈사람·루돌프 쿠키 4개와 선물 상자가 모두 보이는 산타꾸러미 전체 실물 사진" loading="lazy" decoding="async">
+            <div class="showroom-seasonal-preview" data-product-video="산타꾸러미 4종">
+              <img src="/images/christmas/christmas-2026-santa-bundle-full.jpg" width="764" height="1024" alt="흰 배경에 산타·리스·눈사람·루돌프 쿠키 4개와 선물 상자가 모두 보이는 산타꾸러미 전체 실물 사진" loading="lazy" decoding="async">
+              <video id="home-christmas-video" data-src="/images/christmas/santa-bundle-preview.mp4" poster="/images/christmas/christmas-2026-santa-bundle-full.jpg" width="540" height="960" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+              <button type="button" class="xmas-video-toggle" aria-controls="home-christmas-video" aria-label="산타꾸러미 4종 영상 재생" hidden>영상 재생</button>
+            </div>
           </figure>
+          <!-- christmas-home-media:end -->
           <div class="showroom-seasonal-copy">
             <p class="showroom-eyebrow">HOLIDAY 2026</p>
             <h2 id="seasonal-christmas-title">크리스마스 쿠키,<br>올해도 준비했어요.</h2>
@@ -793,5 +799,6 @@
   <script src="assets/site.js"></script>
   <script src="assets/journal.js"></script>
   <script src="assets/seo.js"></script>
+  <script src="/christmas/christmas-video.js?v=20261118" defer></script>
 </body>
 </html>

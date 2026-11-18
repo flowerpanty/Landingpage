@@ -36,6 +36,7 @@
     "christmas:build": "node scripts/build-christmas.mjs",
     "christmas:check": "node scripts/build-christmas.mjs --check",
     "christmas:browser:test": "node scripts/test-christmas-browser.mjs",
+    "home:christmas:browser:test": "node scripts/test-home-christmas-video.mjs",
     "museum:test": "node scripts/test-national-aviation-museum.mjs",
     "museum:browser:test": "node scripts/test-national-aviation-museum-browser.mjs",
     "notices:build": "node scripts/build-notices.mjs",

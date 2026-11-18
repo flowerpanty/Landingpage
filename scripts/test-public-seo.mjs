@@ -1094,6 +1094,12 @@ function assertHomeSeasonalFeature() {
     assert.equal(seasonalImage.match(new RegExp(`\\b${attribute}="([^"]*)"`))?.[1], String(value), `home seasonal image ${attribute} should match current media and loading policy`);
   }
   assert.equal((homeSeasonal.match(/<img\b/g) || []).length, 1);
+  const preview = JSON.parse(fs.readFileSync(path.join(ROOT, "data/christmas-media.json"), "utf8")).productVideos['christmas-santa-bundle'];
+  const video = homeSeasonal.match(/<video\b[^>]*>/)?.[0] || '';
+  assert.equal((homeSeasonal.match(/<video\b/g) || []).length, 1);
+  for (const attribute of [`data-src="${preview.src}"`, `width="${preview.width}"`, `height="${preview.height}"`, 'muted', 'loop', 'playsinline', 'preload="none"']) assert.ok(video.includes(attribute));
+  assert.doesNotMatch(video, /\ssrc=/, 'homepage reuses the lazy video, without an eager download');
+  assert.match(homeSeasonal, /<button type="button" class="xmas-video-toggle"[^>]*aria-controls="home-christmas-video"[^>]*hidden/);
   assert.ok(fs.existsSync(path.join(ROOT, christmasMedia.image)));
   assert.ok(homeSeasonal.indexOf('class="showroom-seasonal-media"') < homeSeasonal.indexOf('class="showroom-seasonal-copy"'), "seasonal photo should precede copy for mobile reading order");
   const christmasLanding = readHtml(filePathForPathname("/christmas/"));
@@ -1107,13 +1113,13 @@ function assertHomeSeasonalFeature() {
   assert.doesNotMatch(homeProducts, /href="\/christmas\//);
   assert.doesNotMatch(homeSeasonal, /<script\b|<[^>]+\son\w+\s*=/i, "seasonal feature must not introduce scripts or inline handlers");
   assert.deepEqual([...homeHtml.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(match => match[1]), [
-    "https://www.googletagmanager.com/gtag/js?id=G-DR5XLDB042", "assets/gallery.js?v=20261113-grid", "assets/site.js", "assets/journal.js", "assets/seo.js"
-  ], "homepage should reuse its existing scripts without adding JavaScript");
+    "https://www.googletagmanager.com/gtag/js?id=G-DR5XLDB042", "assets/gallery.js?v=20261113-grid", "assets/site.js", "assets/journal.js", "assets/seo.js", "/christmas/christmas-video.js?v=20261118"
+  ], "homepage preserves existing scripts and reuses the small native Christmas video player");
   const seasonalCss = fs.readFileSync(path.join(ROOT, "assets/showroom-home.css"), "utf8");
   assert.match(seasonalCss, /\.showroom-seasonal-media img\s*\{[^}]*object-fit:\s*contain/, "seasonal photo should retain the complete representative image");
   assert.match(seasonalCss, /\.showroom-seasonal-actions\s*\{[^}]*display:\s*grid/, "seasonal CTAs should stack without fixed widths");
   assert.match(seasonalCss, /@media \(max-width: 760px\)\s*\{\s*\.theme-showroom \.showroom-section\.showroom-seasonal\s*\{[^}]*\}\s*\.theme-showroom \.showroom-seasonal-media,\s*\.theme-showroom \.showroom-seasonal-copy\s*\{\s*grid-area:\s*auto;/, "mobile seasonal content should flow as photo then copy");
-  console.log("home seasonal: hero/seasonal/products order, current full photo, H1, visible CTAs, eight existing product cards, mobile structure and unchanged scripts PASS");
+  console.log("home seasonal: hero/seasonal/products order, current full photo fallback, shared lazy silent video, H1, visible CTAs, eight existing product cards and mobile structure PASS");
 }
 
 const homeHtml = readHtml(filePathForPathname("/"));

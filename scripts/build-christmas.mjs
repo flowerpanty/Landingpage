@@ -38,6 +38,16 @@ const bear = bySku.get('christmas-bear-brookie');
 const tree = bySku.get('christmas-tree-brookie');
 const set = bySku.get('christmas-brookie-set');
 const bundle = bySku.get('christmas-santa-bundle');
+const bundleVideo = productVideos[bundle.sku];
+if (bundleVideo) update('index.html', html => html.replace(/<!-- christmas-home-media:start -->[\s\S]*?<!-- christmas-home-media:end -->/, `<!-- christmas-home-media:start -->
+          <figure class="showroom-seasonal-media">
+            <div class="showroom-seasonal-preview" data-product-video="${escape(bundle.name)}">
+              <img src="${escape(socialImage.image)}" width="${socialImage.width}" height="${socialImage.height}" alt="${escape(socialImage.alt)}" loading="lazy" decoding="async">
+              <video id="home-christmas-video" data-src="${escape(bundleVideo.src)}" poster="${escape(socialImage.image)}" width="${bundleVideo.width}" height="${bundleVideo.height}" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+              <button type="button" class="xmas-video-toggle" aria-controls="home-christmas-video" aria-label="${escape(bundle.name)} 영상 재생" hidden>영상 재생</button>
+            </div>
+          </figure>
+          <!-- christmas-home-media:end -->`));
 const title = '2026 크리스마스 쿠키 세트·수제쿠키 선물 | 낫띵메터스';
 const description = `2026 크리스마스 수제쿠키 선물세트 4종. ${catalog.products.map(p => `${p.name} ${won(p.price)}`).join(', ')}. 서울 강서구 예약 픽업과 기업행사·어린이집 단체주문 상담을 안내합니다.`;
 const heading = '2026 크리스마스 쿠키 세트·선물';
