@@ -256,8 +256,8 @@ body.xmas-gallery-open { overflow: hidden; }
 .xmas-gallery-photo figcaption { text-align: center; font-size: 12px; line-height: 1.6; color: var(--muted); }
 .xmas-gallery-controls { display: flex; align-items: center; justify-content: center; gap: 16px; }
 .xmas-gallery-controls > button { min-width: 44px; min-height: 48px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 4px; font-size: 20px; }
-#xmas-gallery-thumbnails { display: flex; justify-content: center; gap: 8px; }
-#xmas-gallery-thumbnails button { padding: 2px; width: 48px; height: 52px; background: transparent; border: 2px solid transparent; border-radius: 3px; }
+#xmas-gallery-thumbnails { display: flex; flex-wrap: wrap; min-width: 0; justify-content: center; gap: 8px; }
+#xmas-gallery-thumbnails button { flex: 0 0 48px; padding: 2px; width: 48px; height: 52px; background: transparent; border: 2px solid transparent; border-radius: 3px; }
 #xmas-gallery-thumbnails [aria-current=true] { border-color: var(--ink); }
 #xmas-gallery-thumbnails img { width: 100%; height: 100%; object-fit: contain; display: block; }
 @media (min-width: 960px) and (max-width: 1199px) {

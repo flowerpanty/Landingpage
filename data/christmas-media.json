@@ -19,6 +19,11 @@
     ]
   },
   "productVideos": {
+    "christmas-brookie-set": {
+      "src": "/images/christmas/brookie-set-preview.mp4",
+      "width": 540,
+      "height": 960
+    },
     "christmas-santa-bundle": {
       "src": "/images/christmas/santa-bundle-preview.mp4",
       "width": 540,

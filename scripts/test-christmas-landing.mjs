@@ -47,9 +47,20 @@ assert.deepEqual(catalog.products.map(p=>[p.sku,p.name,p.price]),expected);
 const bearProduct = catalog.products.find(product => product.sku === 'christmas-bear-brookie');
 assert.equal(bearProduct.image, '/images/christmas/bear-brookie-christmas-package.webp', 'keep the previously selected bear card thumbnail');
 assert.equal(bearProduct.includeThumbnailInGallery, false);
-assert.equal(bearProduct.gallery.length, 1, 'bear gallery contains only the newly attached photo');
-assert.equal(bearProduct.gallery[0].image, '/images/christmas/bear-brookie-package-detail.webp');
+assert.deepEqual(bearProduct.gallery.map(photo => [photo.image, photo.width, photo.height]), [
+  ['/images/christmas/bear-brookie-package-detail.webp', 768, 1024],
+  ['/images/christmas/bear-brookie-detail-outdoor.webp', 960, 1440],
+  ['/images/christmas/bear-brookie-detail-package.webp', 360, 540],
+  ['/images/christmas/bear-brookie-detail-hand.webp', 360, 540],
+  ['/images/christmas/bear-brookie-detail-tree-pair.webp', 360, 540]
+], 'retain the existing bear detail photo and append all four uploads without enlarging them');
+for (const photo of bearProduct.gallery) {
+  assert.ok(fs.existsSync(path.join(root, photo.image)));
+  assert.ok(fs.statSync(path.join(root, photo.image)).size < 200 * 1024);
+  assert.ok(photo.alt && photo.caption);
+}
 assert.match(bearProduct.gallery[0].caption, /오른쪽.*곰돌이.*트리 브루키는 별도 상품/);
+assert.match(bearProduct.gallery[4].caption, /오른쪽.*곰돌이.*트리 브루키는 별도 상품/);
 const setProduct = catalog.products.find(product => product.sku === 'christmas-brookie-set');
 assert.equal(setProduct.image, '/images/christmas/brookie-set-christmas-package.webp', 'keep the previously selected card thumbnail');
 assert.equal(setProduct.includeThumbnailInGallery, false, 'card thumbnail is excluded from the set detail gallery');
@@ -67,20 +78,23 @@ for(const p of catalog.products){
   assert.ok(fs.statSync(path.join(root,p.image)).size<200*1024);assert.ok(card.includes('data-delta="-1"'));assert.ok(card.includes('data-delta="1"'));
 }
 const { productVideos } = JSON.parse(read('data/christmas-media.json'));
-assert.deepEqual(Object.keys(productVideos), ['christmas-santa-bundle'], 'only Santa bundle uses a video thumbnail');
-const preview = productVideos['christmas-santa-bundle'];
-const previewBytes = fs.readFileSync(path.join(root, preview.src));
-assert.ok(previewBytes.length < 512 * 1024, 'short silent preview stays under 512KB');
-assert.equal(previewBytes.toString('ascii', 4, 8), 'ftyp');
-assert.ok(previewBytes.indexOf('moov') < previewBytes.indexOf('mdat'), 'fast-start MP4 metadata precedes video data');
-assert.ok(previewBytes.includes(Buffer.from('vide')) && !previewBytes.includes(Buffer.from('soun')), 'video-only export has no audio track');
-assert.ok(!previewBytes.includes(Buffer.from('com.apple.quicktime')), 'source capture metadata is stripped');
-const santaCard = html.match(/<article class="xmas-product" id="christmas-santa-bundle"[\s\S]*?<\/article>/)[0];
-assert.equal((html.match(/<video\b/g) || []).length, 1);
-const previewTag = santaCard.match(/<video\b[^>]*>/)[0];
-for (const attribute of [`data-src="${preview.src}"`, 'width="540"', 'height="960"', 'muted', 'loop', 'playsinline', 'preload="none"', 'aria-hidden="true"']) assert.ok(previewTag.includes(attribute));
-assert.doesNotMatch(previewTag, /\ssrc=/, 'video is only fetched when visible and motion/data preferences allow it');
-assert.match(santaCard, /<\/button><button type="button" class="xmas-video-toggle"[^>]*hidden/,'pause control is a separate button, never nested in the gallery button');
+assert.deepEqual(Object.keys(productVideos), ['christmas-brookie-set', 'christmas-santa-bundle'], 'only the two products with uploaded footage use video thumbnails');
+assert.equal(productVideos['christmas-brookie-set'].src, '/images/christmas/brookie-set-preview.mp4');
+assert.equal(productVideos['christmas-santa-bundle'].src, '/images/christmas/santa-bundle-preview.mp4');
+assert.equal((html.match(/<video\b/g) || []).length, 2);
+for (const [sku, preview] of Object.entries(productVideos)) {
+  const previewBytes = fs.readFileSync(path.join(root, preview.src));
+  assert.ok(previewBytes.length < 512 * 1024, 'short silent preview stays under 512KB');
+  assert.equal(previewBytes.toString('ascii', 4, 8), 'ftyp');
+  assert.ok(previewBytes.indexOf('moov') < previewBytes.indexOf('mdat'), 'fast-start MP4 metadata precedes video data');
+  assert.ok(previewBytes.includes(Buffer.from('vide')) && !previewBytes.includes(Buffer.from('soun')), 'video-only export has no audio track');
+  assert.ok(!previewBytes.includes(Buffer.from('com.apple.quicktime')), 'source capture metadata is stripped');
+  const card = html.match(new RegExp(`<article class="xmas-product" id="${sku}"[\\s\\S]*?</article>`))[0];
+  const previewTag = card.match(/<video\b[^>]*>/)[0];
+  for (const attribute of [`data-src="${preview.src}"`, 'width="540"', 'height="960"', 'muted', 'loop', 'playsinline', 'preload="none"', 'aria-hidden="true"']) assert.ok(previewTag.includes(attribute));
+  assert.doesNotMatch(previewTag, /\ssrc=/, 'video is only fetched when visible and motion/data preferences allow it');
+  assert.match(card, /<\/button><button type="button" class="xmas-video-toggle"[^>]*hidden/,'pause control is a separate button, never nested in the gallery button');
+}
 assert.match(html, /<script src="\/christmas\/christmas-video\.js\?[^\"]+" defer><\/script>/);
 assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','christmas-products','order-details','order-review','about-nothingmatters','gift-guide','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
 const section=id=>html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)<\\/section>`))[1];

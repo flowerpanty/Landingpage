@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { routeBrandFont } from './notice-browser-support.mjs';
 
-export async function checkProductVideo({ browser, base, fonts, artifactDir, home = false }) {
-  const evidence = [], selector = home ? '#home-christmas-video' : '#christmas-santa-bundle-video';
+export async function checkProductVideo({ browser, base, fonts, artifactDir, home = false, sku = 'christmas-santa-bundle', durationRange = [3, 3.5] }) {
+  const { productVideos } = JSON.parse(fs.readFileSync('data/christmas-media.json', 'utf8'));
+  const preview = productVideos[sku];
+  const evidence = [], selector = home ? '#home-christmas-video' : `#${sku}-video`;
+  const containerSelector = home ? '#seasonal-christmas' : `#${sku}`;
   async function setup({ width = 390, motion = 'no-preference', saveData = false, failure = false, blocked = false, javaScriptEnabled = true } = {}) {
     const context = await browser.newContext({ viewport: { width, height: home ? 500 : 900 }, reducedMotion: motion, javaScriptEnabled });
     if (saveData) await context.addInitScript(() => Object.defineProperty(navigator, 'connection', { value: { saveData: true, addEventListener() {} } }));
@@ -12,7 +16,7 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
       const url = new URL(route.request().url());
       if (await routeBrandFont(route, fonts)) return;
       if (url.origin !== base) return route.abort();
-      if (url.pathname.endsWith('santa-bundle-preview.mp4')) {
+      if (url.pathname === preview.src) {
         requests.push(url.pathname);
         if (failure) return route.fulfill({ status: 404, body: '' });
       }
@@ -25,7 +29,8 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
       if (home) await page.waitForFunction(() => !document.querySelector('.xmas-video-toggle').hidden);
       else await page.waitForFunction(() => !document.querySelector('[data-delta="1"]').disabled);
     }
-    return { context, page, requests, errors, video: page.locator(selector), thumbnail: page.locator('[data-product-video]'), toggle: page.locator('.xmas-video-toggle') };
+    const container = page.locator(containerSelector);
+    return { context, page, requests, errors, video: page.locator(selector), thumbnail: container.locator('[data-product-video]'), toggle: container.locator('.xmas-video-toggle') };
   }
   const playing = page => page.waitForFunction(selector => {
     const video = document.querySelector(selector);
@@ -36,6 +41,14 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
     const fixture = await setup({ width });
     const { context, page, video, thumbnail, toggle, requests, errors } = fixture;
     try {
+      if (width === 390) {
+        const response = await context.request.get(base + preview.src);
+        assert.equal(response.status(), 200);
+        assert.equal(response.headers()['content-type'], 'video/mp4');
+        const range = await context.request.get(base + preview.src, { headers: { Range: 'bytes=0-63' } });
+        assert.equal(range.status(), 206, 'video supports partial downloads');
+        assert.equal((await range.body()).length, 64);
+      }
       assert.equal(await video.getAttribute('src'), null);
       assert.deepEqual(requests, [], 'no video request before scrolling to the product');
       if (home) await page.setViewportSize({ width, height: 900 });
@@ -46,11 +59,11 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
         const overflow = home ? [...node.closest('section').querySelectorAll('*')].some(item => { const box = item.getBoundingClientRect(); return box.width && (box.left < -1 || box.right > innerWidth + 1); }) : document.documentElement.scrollWidth > innerWidth;
         return { muted: node.muted, loop: node.loop, inline: node.playsInline, width: node.videoWidth, height: node.videoHeight, fit: getComputedStyle(node).objectFit, ratio: rect.width / rect.height, duration: node.duration, overflow };
       }, home);
-      assert.deepEqual([media.width, media.height], [540, 960]);
+      assert.deepEqual([media.width, media.height], [preview.width, preview.height]);
       assert.ok(media.muted && media.loop && media.inline && !media.overflow);
       assert.equal(media.fit, 'contain');
       assert.ok(Math.abs(media.ratio - 9 / 16) < .001, 'full uncropped portrait video');
-      assert.ok(media.duration > 3 && media.duration < 3.5);
+      assert.ok(media.duration > durationRange[0] && media.duration < durationRange[1]);
       const button = await toggle.boundingBox();
       assert.ok(button.width >= 43.9 && button.height >= 43.9, `44px video control at ${width}: ${JSON.stringify(button)}`);
       await toggle.click(); await paused(page);
@@ -58,12 +71,13 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
       await thumbnail.scrollIntoViewIfNeeded();
       assert.equal(await video.evaluate(node => node.paused), true, 'user pause survives scrolling away and back');
       await toggle.focus(); await page.keyboard.press('Space'); await playing(page);
-      if (width === 390 || width === 1440) await page.locator(home ? '#seasonal-christmas' : '#christmas-santa-bundle').screenshot({ path: `${artifactDir}/${width}-santa-video.png`, animations: 'disabled' });
+      if (width === 390 || width === 1440) await page.locator(containerSelector).screenshot({ path: `${artifactDir}/${width}-${home ? 'santa' : sku.replace('christmas-', '')}-video.png`, animations: 'disabled' });
       if (!home) {
-        await page.locator('[data-gallery="christmas-santa-bundle"]').click();
+        const productName = await thumbnail.getAttribute('data-product-video');
+        await page.locator(`[data-gallery="${sku}"]`).click();
         await page.waitForFunction(() => document.querySelector('#xmas-gallery').open);
         await paused(page);
-        assert.equal(await page.locator('#xmas-gallery-title').textContent(), '산타꾸러미 4종');
+        assert.equal(await page.locator('#xmas-gallery-title').textContent(), productName);
         await page.keyboard.press('Escape');
         await page.waitForFunction(() => !document.querySelector('#xmas-gallery').open);
         await thumbnail.scrollIntoViewIfNeeded(); await playing(page);
@@ -80,7 +94,7 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
           await page.waitForURL(base + '/christmas/' + (width === 390 ? '' : '#christmas-order'));
         }
       }
-      evidence.push({ width, ...media, visibleAutoplay: true, userPause: true, ...(home ? { christmasLinksPreserved: true } : { galleryPreserved: true }), offscreenPause: true });
+      evidence.push({ sku, width, ...media, visibleAutoplay: true, userPause: true, ...(home ? { christmasLinksPreserved: true } : { galleryPreserved: true }), offscreenPause: true });
     } finally { await context.close(); }
   }
   for (const preference of ['reduce', 'save-data']) {

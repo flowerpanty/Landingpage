@@ -186,13 +186,15 @@ try {
       assert.ok(Math.abs(dimensions.width - width) <= 1);
       assert.ok(Math.abs(dimensions.height - page.viewportSize().height) <= 1);
     } else assert.ok(dimensions.width >= 800 && dimensions.width < width);
-    assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1');
-    assert.equal(await page.locator('#xmas-gallery-thumbnails button').count(), 1, 'bear gallery contains only the newly attached detail photo');
+    assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 5');
+    assert.equal(await page.locator('#xmas-gallery-thumbnails button').count(), 5, 'existing bear photo plus four new detail photos');
     assert.equal(await page.locator('#xmas-gallery-image').getAttribute('src'), '/images/christmas/bear-brookie-package-detail.webp');
-    assert.equal(await page.locator('#xmas-gallery-thumbnails img').getAttribute('src'), '/images/christmas/bear-brookie-package-detail.webp');
+    assert.equal(await page.locator('#xmas-gallery-thumbnails img').first().getAttribute('src'), '/images/christmas/bear-brookie-package-detail.webp');
     assert.match(await page.locator('#xmas-gallery-caption').textContent(), /오른쪽.*곰돌이.*트리 브루키는 별도 상품/);
-    await page.keyboard.press('ArrowRight'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1');
-    await page.keyboard.press('ArrowLeft'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 1');
+    await page.keyboard.press('ArrowRight'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 2 / 5');
+    await page.keyboard.press('ArrowLeft'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 5');
+    await page.keyboard.press('ArrowLeft'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 5 / 5', 'previous wraps to the last added photo');
+    await page.keyboard.press('ArrowRight'); assert.equal(await page.locator('#xmas-gallery-count').textContent(), '사진 1 / 5');
     await page.locator('#xmas-gallery-thumbnails button').first().click();
     await page.waitForFunction(() => { const image = document.querySelector('#xmas-gallery-image'); return image.complete && image.naturalWidth > 0; });
     for (let index = 0; index < 9; index++) {
@@ -204,8 +206,8 @@ try {
     await page.waitForFunction(() => document.activeElement?.getAttribute('data-gallery') === 'christmas-bear-brookie');
     assert.equal(await page.locator(':focus').getAttribute('data-gallery'), catalog.products[0].sku);
     await opener.click(); await page.goBack(); await page.locator('#xmas-gallery').waitFor({ state: 'hidden' }); await step(1);
-    if (width === 390 || width === 1440) {
-      for (let productIndex = 1; productIndex < catalog.products.length; productIndex++) {
+    if ([320, 390, 430, 1440].includes(width)) {
+      for (let productIndex = 0; productIndex < catalog.products.length; productIndex++) {
         await page.locator('[data-gallery]').nth(productIndex).click();
         const product = catalog.products[productIndex];
         const photos = product.includeThumbnailInGallery === false ? product.gallery : [product, ...product.gallery];
@@ -227,8 +229,19 @@ try {
         }
         for (let photoIndex = 0; photoIndex < photos.length; photoIndex++) {
           await page.locator('#xmas-gallery-thumbnails button').nth(photoIndex).click();
-          await page.waitForFunction(() => { const image = document.querySelector('#xmas-gallery-image'); return image.complete && image.naturalWidth > 0; });
+          await page.waitForFunction(photo => {
+            const image = document.querySelector('#xmas-gallery-image');
+            return image.complete && image.currentSrc && new URL(image.currentSrc).pathname === photo.image && image.naturalWidth === photo.width && image.naturalHeight === photo.height;
+          }, photos[photoIndex]);
           assert.ok((await page.locator('#xmas-gallery-image').getAttribute('src')).endsWith(photos[photoIndex].image));
+          if (['christmas-bear-brookie', 'christmas-santa-bundle'].includes(product.sku)) {
+            assert.equal(await page.locator('#xmas-gallery-image').evaluate(image => getComputedStyle(image).objectFit), 'contain');
+            assert.ok(await page.locator('#xmas-gallery-thumbnails button').nth(photoIndex).evaluate(button => {
+              const box = button.getBoundingClientRect();
+              return box.width >= 44 && box.height >= 44 && box.left >= 0 && box.right <= innerWidth && box.top >= 0 && box.bottom <= innerHeight;
+            }), 'all gallery photo controls retain 44px touch areas and remain inside the viewport');
+            if ((width === 390 || width === 1440) && photoIndex > 0) await page.screenshot({ path: `${artifactDir}/${width}-${product.sku.replace('christmas-', '')}-detail-${photoIndex}.png` });
+          }
         }
         await page.locator('#xmas-gallery-close').focus(); await page.keyboard.press('Shift+Tab');
         assert.equal(await page.locator(':focus').getAttribute('id'), 'xmas-gallery-next');
@@ -577,8 +590,10 @@ try {
   assert.ok(requestedUrls.every(url => !url.includes('LOCAL MOCK') && !url.includes('010-0000-0000')));
   assert.deepEqual(errors, []); assert.deepEqual(missing, []);
   const videoEvidence = await checkProductVideo({ browser, base, fonts, artifactDir });
+  const setVideoEvidence = await checkProductVideo({ browser, base, fonts, artifactDir, sku: 'christmas-brookie-set', durationRange: [2, 2.2] });
   const evidence = {
     videoEvidence,
+    setVideoEvidence,
     contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, large image-first product cards and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. A full-height uncropped actual photograph precedes the collection; price summary follows ordering and the photo-led brand introduction; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
     targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals, brandEvidence, storefrontEvidence,
     seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, full-height uncropped hero and reachable order navigation at every viewport, full-width product photos with information below, analytics excludes query strings.' },
