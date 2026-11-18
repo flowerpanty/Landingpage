@@ -18,11 +18,11 @@ if (image.sources.length !== 1 || source.crop || source.fit !== 'contain' || sou
 }
 const input = sharp(path.join(root, source.image.slice(1)));
 const original = await input.metadata();
-if (original.width !== image.width || original.height !== image.height || source.width !== image.width || source.height !== image.height) {
-  throw new Error('Use the original photo dimensions and let the page frame grow');
+if (original.width !== source.width || original.height !== source.height || original.width < image.width || original.height < image.height || original.width * image.height !== original.height * image.width) {
+  throw new Error('Keep the complete original photo ratio; only proportional downscaling is allowed');
 }
 const output = path.join(root, image.image.slice(1));
-await input.jpeg({ quality: 86, chromaSubsampling: '4:4:4', mozjpeg: true }).toFile(output);
+await input.resize({ width: image.width, height: image.height, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: image.quality ?? 86, chromaSubsampling: image.chromaSubsampling ?? '4:4:4', mozjpeg: true }).toFile(output);
 const metadata = await sharp(output).metadata();
 if (metadata.format !== 'jpeg' || metadata.width !== image.width || metadata.height !== image.height) throw new Error('Invalid Christmas photo');
 console.log(`Christmas photo: ${image.image} / ${metadata.width}x${metadata.height} JPEG / ${fs.statSync(output).size} bytes / complete photo, no crop or padding`);

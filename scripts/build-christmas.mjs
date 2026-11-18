@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-products.json'), 'utf8'));
-const { representative: socialImage, workshop: aboutPhoto, productVideos = {} } = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-media.json'), 'utf8'));
+const { representative: socialImage, homePoster = socialImage, workshop: aboutPhoto, productVideos = {} } = JSON.parse(fs.readFileSync(path.join(root, 'data/christmas-media.json'), 'utf8'));
 const socialImageUrl = `https://nothingmatters.co.kr${socialImage.image}`;
 if (!fs.existsSync(path.join(root, socialImage.image)) || ![socialImage.width, socialImage.height].every(value => Number.isSafeInteger(value) && value > 0)) throw new Error('Invalid Christmas representative image');
 if (!aboutPhoto || !Number.isSafeInteger(aboutPhoto.width) || !Number.isSafeInteger(aboutPhoto.height) || aboutPhoto.width <= 0 || aboutPhoto.height <= 0 || !aboutPhoto.alt || !aboutPhoto.caption || ![aboutPhoto.image, aboutPhoto.fallback].every(image => image && fs.existsSync(path.join(root, image)))) throw new Error('Invalid Christmas workshop photo');
@@ -42,8 +42,8 @@ const bundleVideo = productVideos[bundle.sku];
 if (bundleVideo) update('index.html', html => html.replace(/<!-- christmas-home-media:start -->[\s\S]*?<!-- christmas-home-media:end -->/, `<!-- christmas-home-media:start -->
           <figure class="showroom-seasonal-media">
             <div class="showroom-seasonal-preview" data-product-video="${escape(bundle.name)}">
-              <img src="${escape(socialImage.image)}" width="${socialImage.width}" height="${socialImage.height}" alt="${escape(socialImage.alt)}" loading="lazy" decoding="async">
-              <video id="home-christmas-video" data-src="${escape(bundleVideo.src)}" poster="${escape(socialImage.image)}" width="${bundleVideo.width}" height="${bundleVideo.height}" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+              <img src="${escape(homePoster.image)}" width="${homePoster.width}" height="${homePoster.height}" alt="${escape(homePoster.alt)}" loading="lazy" decoding="async">
+              <video id="home-christmas-video" data-src="${escape(bundleVideo.src)}" poster="${escape(homePoster.image)}" width="${bundleVideo.width}" height="${bundleVideo.height}" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
               <button type="button" class="xmas-video-toggle" aria-controls="home-christmas-video" aria-label="${escape(bundle.name)} 영상 재생" hidden>영상 재생</button>
             </div>
           </figure>

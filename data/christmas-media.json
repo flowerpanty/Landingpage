@@ -1,17 +1,19 @@
 {
   "representative": {
-    "image": "/images/christmas/christmas-2026-santa-bundle-full.jpg",
-    "width": 764,
-    "height": 1024,
-    "alt": "흰 배경에 산타·리스·눈사람·루돌프 쿠키 4개와 선물 상자가 모두 보이는 산타꾸러미 전체 실물 사진",
+    "image": "/images/christmas/christmas-2026-cookie-gifts-cover.jpg",
+    "width": 1200,
+    "height": 1500,
+    "alt": "산타·눈사람·리스·루돌프 쿠키 4종과 빨간 크리스마스 선물 상자, 손그림 장식이 함께 보이는 낫띵메터스 실물 상품 사진",
     "background": "#ffffff",
+    "quality": 82,
+    "chromaSubsampling": "4:2:0",
     "sources": [
       {
-        "image": "/images/christmas/santa-bundle-clean.webp",
+        "image": "/images/christmas/christmas-2026-cookie-gifts-source.webp",
         "left": 0,
         "top": 0,
-        "width": 764,
-        "height": 1024,
+        "width": 1492,
+        "height": 1865,
         "fit": "contain"
       }
     ]
@@ -30,5 +32,11 @@
     "height": 748,
     "alt": "노란 COOKIE 간판과 NOTHING MATTERS 유리창 로고, 쿠키 캐릭터가 보이는 낫띵메터스 실제 매장 외관",
     "caption": "NOTHINGMATTERS / 낫띵메터스 · 서울 공항동 작업실"
+  },
+  "homePoster": {
+    "image": "/images/christmas/christmas-2026-santa-bundle-full.jpg",
+    "width": 764,
+    "height": 1024,
+    "alt": "흰 배경에 산타·리스·눈사람·루돌프 쿠키 4개와 선물 상자가 모두 보이는 산타꾸러미 전체 실물 사진"
   }
 }

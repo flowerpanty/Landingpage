@@ -1088,7 +1088,8 @@ function assertHomeSeasonalFeature() {
     assert.ok(cleanText(homeSeasonal).includes(intent), `home seasonal should explain ${intent}`);
   }
   assert.match(homeSeasonal, /href="\/christmas\/">2026 크리스마스 쿠키 보러가기 →<\/a>/);
-  const christmasMedia = JSON.parse(fs.readFileSync(path.join(ROOT, "data/christmas-media.json"), "utf8")).representative;
+  const media = JSON.parse(fs.readFileSync(path.join(ROOT, "data/christmas-media.json"), "utf8"));
+  const christmasMedia = media.homePoster || media.representative;
   const seasonalImage = homeSeasonal.match(/<img\b[^>]*>/)?.[0] || "";
   for (const [attribute, value] of Object.entries({ src: christmasMedia.image, width: christmasMedia.width, height: christmasMedia.height, alt: christmasMedia.alt, loading: "lazy", decoding: "async" })) {
     assert.equal(seasonalImage.match(new RegExp(`\\b${attribute}="([^"]*)"`))?.[1], String(value), `home seasonal image ${attribute} should match current media and loading policy`);
