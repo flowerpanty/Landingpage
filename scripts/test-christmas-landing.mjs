@@ -102,7 +102,8 @@ const custom = section('christmas-custom');
 const customPhotos = JSON.parse(read('data/christmas-media.json')).customTopper;
 assert.ok(html.indexOf('id="christmas-custom"') > html.indexOf('</form>') && html.indexOf('id="christmas-custom"') < html.indexOf('id="about-nothingmatters"'), 'custom consultation follows the complete order flow and precedes ABOUT');
 for (const text of ['CUSTOM YOUR CHRISTMAS', '당신만의 크리스마스를 만들어보세요!', '크리스마스 커스텀 쿠키·토퍼 주문제작', '크리스마스 쿠키 주문제작', '크리스마스 쿠키 토퍼', '크리스마스 맞춤 선물', '기업행사 커스텀 쿠키', '크리스마스 단체 답례품', '크리스마스 메시지', '개인 이름', '기업행사 및 감사 문구', '어린이집·유치원 단체 선물', '추가 비용·최소 주문 수량·제작 기간·적용 가능 상품', '회사 로고나 특수 디자인 토퍼는 제작 가능 범위를 먼저 확인', '위 상품 가격과 합계에 포함되지 않습니다.']) assert.ok(clean(custom).includes(text), `custom consultation: ${text}`);
-assert.equal((custom.match(/<img\b/g) || []).length, 4);
+assert.equal((custom.match(/<img\b/g) || []).length, 6);
+assert.ok(clean(custom).includes('포장 상자 하단 문구 변경'));
 assert.ok(custom.indexOf('<img') < custom.indexOf('<h2'), 'large real photos precede the detailed consultation copy');
 for (const photo of customPhotos) {
   assert.ok(fs.statSync(path.join(root, photo.image)).size < 200 * 1024);
@@ -202,7 +203,7 @@ assert.deepEqual(list.itemListElement.map(n=>[n.item.description,n.item.image,n.
 assert.doesNotMatch(JSON.stringify(list),/availability|shippingDetails|priceValidUntil|inventoryLevel|hasMerchantReturnPolicy/);
 const faqs=[...html.matchAll(/<details><summary>([^<]+)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)].map(m=>[clean(m[1]),clean(m[2])]);
 assert.equal(faqs.length,14);assert.equal(new Set(faqs.map(f=>f[0])).size,faqs.length);
-assert.deepEqual(faqs.find(faq => faq[0] === '크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?'), ['크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?', '네. 커스텀 토퍼를 이용한 크리스마스 쿠키 선물을 상담할 수 있습니다. 희망 문구와 디자인, 상품, 수량, 수령일을 알려주세요. 적용 가능 여부와 추가 비용은 상담 후 확정합니다.']);
+assert.deepEqual(faqs.find(faq => faq[0] === '크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?'), ['크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?', '네. 커스텀 토퍼를 이용한 크리스마스 쿠키 선물을 상담할 수 있습니다. 포장 상자 하단 문구 변경도 함께 상담할 수 있습니다. 희망 문구와 디자인, 상품, 수량, 수령일을 알려주세요. 적용 가능 여부와 추가 비용은 상담 후 확정합니다.']);
 for(const question of ['개인 선물과 파티 간식은 어떻게 고르면 좋을까요?','크리스마스 쿠키 포장은 어떻게 확인하나요?'])assert.ok(faqs.some(f=>f[0]===question));
 for(const question of ['크리스마스 쿠키 세트에는 어떤 상품이 있나요?','브루키 2종 세트와 산타꾸러미는 어떻게 다른가요?','서울에서 크리스마스 쿠키 선물을 픽업할 수 있나요?','서울 크리스마스 기업행사 단체 주문도 가능한가요?','어린이집·유치원 크리스마스 간식으로 준비할 수 있나요?','크리스마스 쿠키는 언제까지 주문해야 하나요?','크리스마스 쿠키를 택배로 받을 수 있나요?','예약 없이 방문해도 구매할 수 있나요?'])assert.ok(faqs.some(f=>f[0]===question),question);
 assert.deepEqual(graph.find(n=>n['@type']==='FAQPage').mainEntity.map(n=>[n.name,n.acceptedAnswer.text]),faqs);

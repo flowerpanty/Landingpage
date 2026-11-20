@@ -36,28 +36,42 @@
       "width": 768,
       "height": 1024,
       "alt": "행사 문구를 담은 빨간 포장과 작은 토퍼를 적용한 크리스마스 곰돌이 브루키 실물 제작 사진",
-      "caption": "기업행사 커스텀 쿠키, 행사 문구를 담은 포장과 토퍼"
+      "caption": "기업행사 커스텀 쿠키"
     },
     {
       "image": "/images/christmas/custom-topper-event-package.webp",
       "width": 768,
       "height": 1024,
       "alt": "투명 손잡이 상자에 행사 문구와 토퍼를 더한 크리스마스 곰돌이 브루키 실물 사진",
-      "caption": "크리스마스 맞춤 선물을 위한 문구와 토퍼 실물 사진"
+      "caption": "크리스마스 맞춤 선물"
     },
     {
       "image": "/images/christmas/custom-topper-name-lineup.webp",
       "width": 360,
       "height": 480,
       "alt": "이름 토퍼를 더한 곰돌이 브루키와 여러 개의 크리스마스 브루키 제작 사진",
-      "caption": "크리스마스 단체 답례품, 이름 토퍼를 더한 브루키"
+      "caption": "크리스마스 단체 답례품"
     },
     {
       "image": "/images/christmas/custom-topper-name-detail.webp",
       "width": 360,
       "height": 480,
       "alt": "개인 이름이 적힌 작은 토퍼를 꽂은 크리스마스 곰돌이 브루키 실물 상세 사진",
-      "caption": "크리스마스 쿠키 토퍼에 담은 한 사람의 이름"
+      "caption": "크리스마스 쿠키 토퍼"
+    },
+    {
+      "image": "/images/christmas/custom-topper-names-group.webp",
+      "width": 1080,
+      "height": 1440,
+      "alt": "개인별 이름이 적힌 장식 토퍼를 더한 크리스마스 곰돌이 브루키 단체 제작 사진",
+      "caption": "이름을 담은 단체 선물"
+    },
+    {
+      "image": "/images/christmas/custom-topper-bottom-message.webp",
+      "width": 768,
+      "height": 1024,
+      "alt": "포장 상자 하단에 기업 문구를 넣은 트리 브루키와 곰돌이 브루키의 실제 커스텀 포장 사진",
+      "caption": "포장 상자 하단 문구도 변경 가능"
     }
   ],
   "workshop": {

@@ -7,7 +7,7 @@ const { representative: socialImage, homePoster = socialImage, workshop: aboutPh
 const socialImageUrl = `https://nothingmatters.co.kr${socialImage.image}`;
 if (!fs.existsSync(path.join(root, socialImage.image)) || ![socialImage.width, socialImage.height].every(value => Number.isSafeInteger(value) && value > 0)) throw new Error('Invalid Christmas representative image');
 if (!aboutPhoto || !Number.isSafeInteger(aboutPhoto.width) || !Number.isSafeInteger(aboutPhoto.height) || aboutPhoto.width <= 0 || aboutPhoto.height <= 0 || !aboutPhoto.alt || !aboutPhoto.caption || ![aboutPhoto.image, aboutPhoto.fallback].every(image => image && fs.existsSync(path.join(root, image)))) throw new Error('Invalid Christmas workshop photo');
-if (!Array.isArray(customTopper) || customTopper.length !== 4 || customTopper.some(photo => !/^\/images\/christmas\/custom-topper-[a-z-]+\.webp$/.test(photo.image) || !fs.existsSync(path.join(root, photo.image)) || ![photo.width, photo.height].every(value => Number.isSafeInteger(value) && value > 0) || !photo.alt || !photo.caption)) throw new Error('Invalid Christmas custom topper photos');
+if (!Array.isArray(customTopper) || customTopper.length !== 6 || customTopper.some(photo => !/^\/images\/christmas\/custom-topper-[a-z-]+\.webp$/.test(photo.image) || !fs.existsSync(path.join(root, photo.image)) || ![photo.width, photo.height].every(value => Number.isSafeInteger(value) && value > 0) || !photo.alt || !photo.caption)) throw new Error('Invalid Christmas custom topper photos');
 const check = process.argv.includes('--check');
 const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const won = value => `${value.toLocaleString('ko-KR')}원`;
@@ -61,8 +61,8 @@ const customSection = `
         <header class="xmas-custom-heading"><p class="xmas-custom-display" lang="en">CUSTOM YOUR CHRISTMAS</p><p class="xmas-custom-copy">당신만의 크리스마스를 만들어보세요!</p></header>
         <div class="xmas-custom-photos">${customTopper.map(photo => `<figure class="xmas-custom-shot"><a href="${photo.image}" target="_blank" rel="noopener noreferrer" aria-label="${escape(photo.caption)} 사진 크게 보기 (새 창)"><img src="${photo.image}" width="${photo.width}" height="${photo.height}" alt="${escape(photo.alt)}" loading="lazy" decoding="async"></a><figcaption>${escape(photo.caption)}<span aria-hidden="true">↗</span></figcaption></figure>`).join('')}</div>
         <div class="xmas-custom-consult">
-          <div class="xmas-custom-intro"><p class="xmas-eyebrow">A LITTLE MESSAGE, A SPECIAL GIFT</p><h2 id="christmas-custom-title">크리스마스 커스텀 쿠키·토퍼 주문제작</h2><p>크리스마스 쿠키에 나만의 메시지를 더해보세요. 커스텀 토퍼를 이용해 개인 선물부터 기업행사, 어린이집·유치원 단체 선물까지 특별한 크리스마스를 준비할 수 있어요.</p></div>
-          <div class="xmas-custom-details"><h3>어떤 마음을 담아볼까요?</h3><ul class="xmas-custom-purposes"><li>크리스마스 메시지</li><li>개인 이름</li><li>기업행사 및 감사 문구</li><li>어린이집·유치원 단체 선물</li></ul><p>크리스마스 쿠키 주문제작은 희망 문구·디자인·상품·수량·수령일을 정리해 상담해 주세요.</p><a id="xmas-custom-consult" class="xmas-button xmas-custom-cta" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-custom-topper">커스텀 토퍼 제작 상담 →</a><p class="xmas-custom-terms">토퍼 추가 비용·최소 주문 수량·제작 기간·적용 가능 상품은 별도 상담으로 안내합니다. 회사 로고나 특수 디자인 토퍼는 제작 가능 범위를 먼저 확인해 주세요. 커스텀은 별도 상담 서비스이며, 위 상품 가격과 합계에 포함되지 않습니다.</p></div>
+          <div class="xmas-custom-intro"><p class="xmas-eyebrow">A LITTLE MESSAGE, A SPECIAL GIFT</p><h2 id="christmas-custom-title">크리스마스 커스텀 쿠키·토퍼 주문제작</h2><p>크리스마스 쿠키에 나만의 메시지를 더해보세요. 커스텀 토퍼와 포장 상자 하단 문구를 바꿔 개인 선물부터 기업행사, 어린이집·유치원 단체 선물까지 특별하게 준비할 수 있어요.</p></div>
+          <div class="xmas-custom-details"><h3>어떤 마음을 담아볼까요?</h3><ul class="xmas-custom-purposes"><li>크리스마스 메시지</li><li>개인 이름</li><li>기업행사 및 감사 문구</li><li>포장 상자 하단 문구 변경</li><li>어린이집·유치원 단체 선물</li></ul><p>크리스마스 쿠키 주문제작은 희망 문구·디자인·상품·수량·수령일을 정리해 상담해 주세요. 토퍼와 포장 상자 하단에 넣을 문구를 함께 알려주시면 됩니다.</p><a id="xmas-custom-consult" class="xmas-button xmas-custom-cta" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-custom-topper">토퍼·하단 문구 제작 상담 →</a><p class="xmas-custom-terms">토퍼와 포장 문구 변경의 추가 비용·최소 주문 수량·제작 기간·적용 가능 상품은 별도 상담으로 안내합니다. 회사 로고나 특수 디자인 토퍼는 제작 가능 범위를 먼저 확인해 주세요. 커스텀은 별도 상담 서비스이며, 위 상품 가격과 합계에 포함되지 않습니다.</p></div>
         </div>
       </div>
     </section>`;
@@ -119,7 +119,7 @@ const faqs = [
   ['입력한 개인정보는 어떻게 사용하나요?', '이름·휴대전화·이메일(선택)·수령 희망 정보·배송 주소·요청사항은 최종 견적 버튼을 누르면 통합 주문 시스템에 저장되어 견적 제공과 상담에 사용합니다. 개인정보는 URL이나 분석 이벤트에 포함하지 않으며, 상품 구성 복사에도 포함하지 않습니다. 주문 저장 후에는 카카오톡 상담을 위해 입력한 주문 정보가 복사되며, 복사 안내를 확인하고 직접 카카오톡에서 붙여넣을 수 있습니다.'],
   ['개인 선물과 파티 간식은 어떻게 고르면 좋을까요?', `한 사람씩 나눠줄 선물은 ${bear.name}·${tree.name} 단품, 두 가지 모양을 함께 전할 선물은 ${set.name}, 여러 디자인을 함께 전할 선물은 ${bundle.name}을 비교해 보세요. 파티 간식은 참석 인원과 개별 배포 또는 세트 선물 여부에 맞춰 상품별 수량을 정리하면 됩니다.`],
   ['크리스마스 쿠키 포장은 어떻게 확인하나요?', '상품 카드의 상세 사진과 촬영 설명에서 포장 모습을 확인할 수 있습니다. 브루키 단품의 개별 포장, 2종 세트를 함께 담은 포장, 산타꾸러미 선물 상자 사진을 참고해 주세요. 사진에 함께 촬영된 다른 상품이나 소품은 판매 구성과 구분하며, 별도 포장 요청의 가능 여부와 비용은 상담으로 확인합니다.'],
-  ['크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?', '네. 커스텀 토퍼를 이용한 크리스마스 쿠키 선물을 상담할 수 있습니다. 희망 문구와 디자인, 상품, 수량, 수령일을 알려주세요. 적용 가능 여부와 추가 비용은 상담 후 확정합니다.']
+  ['크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?', '네. 커스텀 토퍼를 이용한 크리스마스 쿠키 선물을 상담할 수 있습니다. 포장 상자 하단 문구 변경도 함께 상담할 수 있습니다. 희망 문구와 디자인, 상품, 수량, 수령일을 알려주세요. 적용 가능 여부와 추가 비용은 상담 후 확정합니다.']
 ];
 update('christmas/index.html', html => html
   .replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`)

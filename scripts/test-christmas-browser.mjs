@@ -253,10 +253,11 @@ try {
   async function assertCustomSection(width) {
     const section = page.locator('#christmas-custom');
     assert.equal(await section.locator('h2').textContent(), '크리스마스 커스텀 쿠키·토퍼 주문제작');
-    assert.equal(await section.locator('img').count(), 4);
+    assert.equal(await section.locator('img').count(), 6);
+    assert.ok((await section.textContent()).includes('포장 상자 하단 문구 변경'));
     assert.equal(await section.locator('input,select,textarea,[data-sku],[data-gallery]').count(), 0);
     const columns = await section.locator('.xmas-custom-photos').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length);
-    assert.equal(columns, width < 640 ? 1 : 2);
+    assert.equal(columns, 2);
     for (const [index, photo] of customPhotos.entries()) {
       const image = section.locator('img').nth(index);
       await image.scrollIntoViewIfNeeded();
@@ -266,7 +267,9 @@ try {
       assert.deepEqual(rendered.natural, [photo.width, photo.height]);
       assert.equal(rendered.fit, 'contain');
       assert.ok(Math.abs(rendered.width / rendered.height - photo.width / photo.height) < .001);
-      assert.ok(rendered.width >= (width < 640 ? width * .85 : 280), 'real custom topper photos use the available card width');
+      const card = await image.locator('..').locator('..').boundingBox();
+      assert.ok(rendered.width >= card.width * .95, 'real custom topper photos use the available card width');
+      assert.ok(card.x >= 0 && card.x + card.width <= width, 'both photo columns fit the viewport');
     }
     const button = section.locator('#xmas-custom-consult');
     assert.equal(await button.getAttribute('href'), 'https://pf.kakao.com/_QdCaK/chat');
@@ -558,7 +561,7 @@ try {
     assert.equal(await comparison.locator('.xmas-comparison-price').textContent(), `${product.price.toLocaleString('ko-KR')}원`);
   }
   assert.equal(await staticPage.locator('#faq details').count(), 14);
-  assert.equal(await staticPage.locator('#christmas-custom img').count(), 4);
+  assert.equal(await staticPage.locator('#christmas-custom img').count(), 6);
   assert.equal(await staticPage.locator('#xmas-custom-consult').getAttribute('href'), 'https://pf.kakao.com/_QdCaK/chat');
   const staticFaqs = await staticPage.locator('#faq details').evaluateAll(nodes => nodes.map(node => [node.querySelector('summary').textContent.trim(), node.querySelector('p').textContent.trim()]));
   const structuredFaqs = await staticPage.locator('[data-nm-schema]').textContent();

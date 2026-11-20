@@ -305,10 +305,10 @@ body.xmas-gallery-open { overflow: hidden; }
 @media (max-width: 639px) {
   .xmas-custom { margin-top: 28px; padding-block: 32px; }
   .xmas-custom-heading { margin-bottom: 22px; }
-  .xmas-custom-photos, .xmas-custom-consult { grid-template-columns: 1fr; gap: 22px; }
-  .xmas-custom-shot { border-radius: 20px; }
-  .xmas-custom-shot figcaption { padding: 12px 14px; font-size: 12px; }
-  .xmas-custom-consult { margin-top: 28px; }
+  .xmas-custom-photos { gap: 12px; }
+  .xmas-custom-shot { border-radius: 16px; }
+  .xmas-custom-shot figcaption { gap: 6px; padding: 10px 8px; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+  .xmas-custom-consult { grid-template-columns: 1fr; gap: 22px; margin-top: 28px; }
   .xmas-custom-cta { width: 100%; }
   .xmas-wrap { width: calc(100% - 32px); }
   .xmas-header { flex-wrap: wrap; justify-content: center; gap: 0; padding-block: 0; }
