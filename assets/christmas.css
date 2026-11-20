@@ -202,6 +202,27 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-consent input { width: 21px; height: 21px; margin: 0; accent-color: var(--ink); flex-shrink: 0; }
 .xmas-consult-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
 .xmas-copy-fallback { width: 100%; min-height: 100px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); background: var(--paper); font-size: 14px; }
+.xmas-custom { margin-top: 48px; padding-block: 56px; border-block: 2px solid var(--ink); background: var(--yellow); }
+.xmas-custom-heading { margin-bottom: 28px; }
+.xmas-custom-display { max-width: 1100px; font: 900 clamp(36px, 6.6vw, 82px)/1 "PretendardDisplay", "SeoulNotice", sans-serif; letter-spacing: -.06em; word-spacing: .12em; text-wrap: balance; }
+.xmas-custom-copy { margin-top: 14px; font-size: clamp(21px, 2.5vw, 32px); font-weight: 900; letter-spacing: -.04em; }
+.xmas-custom-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.xmas-custom-shot { min-width: 0; border: 2px solid var(--ink); border-radius: 24px; overflow: hidden; background: var(--paper); box-shadow: 4px 4px 0 rgb(23 21 18 / 14%); }
+.xmas-custom-shot a { display: block; }
+.xmas-custom-shot a:focus-visible { outline-offset: -6px; }
+.xmas-custom-shot img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: contain; }
+.xmas-custom-shot figcaption { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; font-size: 13px; line-height: 1.6; word-break: keep-all; }
+.xmas-custom-shot figcaption span { flex-shrink: 0; }
+.xmas-custom-consult { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; margin-top: 36px; }
+.xmas-custom-intro, .xmas-custom-details { min-width: 0; }
+.xmas-custom-intro .xmas-eyebrow { color: var(--green); }
+.xmas-custom-intro h2 { font-size: clamp(24px, 2.7vw, 34px); word-break: keep-all; text-wrap: balance; }
+.xmas-custom-intro > p:last-child, .xmas-custom-details > p { margin-top: 14px; font-size: 15px; }
+.xmas-custom-purposes { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 14px 0 0; padding: 0; }
+.xmas-custom-purposes li { padding: 7px 12px; border: 1px solid var(--ink); border-radius: 999px; background: var(--cream); font-size: 13px; line-height: 1.6; }
+.xmas-custom-cta { margin-top: 20px; background: var(--ink); color: var(--paper); }
+.xmas-custom-cta:not(:disabled):hover { background: var(--green); }
+.xmas-custom-details > .xmas-custom-terms { font-size: 12px; line-height: 1.8; }
 .xmas-section { padding-block: 36px; border-top: 1px solid var(--line); }
 .xmas-section > p:not(.xmas-eyebrow) { font-size: 13px; margin-top: 12px; }
 .xmas-advice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 36px; margin-top: 24px; }
@@ -282,6 +303,13 @@ body.xmas-gallery-open { overflow: hidden; }
   #xmas-gallery { inset: 0; width: 100%; height: 100dvh; margin: 0; border-radius: 0; }
 }
 @media (max-width: 639px) {
+  .xmas-custom { margin-top: 28px; padding-block: 32px; }
+  .xmas-custom-heading { margin-bottom: 22px; }
+  .xmas-custom-photos, .xmas-custom-consult { grid-template-columns: 1fr; gap: 22px; }
+  .xmas-custom-shot { border-radius: 20px; }
+  .xmas-custom-shot figcaption { padding: 12px 14px; font-size: 12px; }
+  .xmas-custom-consult { margin-top: 28px; }
+  .xmas-custom-cta { width: 100%; }
   .xmas-wrap { width: calc(100% - 32px); }
   .xmas-header { flex-wrap: wrap; justify-content: center; gap: 0; padding-block: 0; }
   .xmas-brand { font-size: 19px; gap: 8px; }

@@ -96,8 +96,21 @@ for (const [sku, preview] of Object.entries(productVideos)) {
   assert.match(card, /<\/button><button type="button" class="xmas-video-toggle"[^>]*hidden/,'pause control is a separate button, never nested in the gallery button');
 }
 assert.match(html, /<script src="\/christmas\/christmas-video\.js\?[^\"]+" defer><\/script>/);
-assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','christmas-products','order-details','order-review','about-nothingmatters','gift-guide','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
+assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','christmas-products','order-details','order-review','christmas-custom','about-nothingmatters','gift-guide','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
 const section=id=>html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)<\\/section>`))[1];
+const custom = section('christmas-custom');
+const customPhotos = JSON.parse(read('data/christmas-media.json')).customTopper;
+assert.ok(html.indexOf('id="christmas-custom"') > html.indexOf('</form>') && html.indexOf('id="christmas-custom"') < html.indexOf('id="about-nothingmatters"'), 'custom consultation follows the complete order flow and precedes ABOUT');
+for (const text of ['CUSTOM YOUR CHRISTMAS', '당신만의 크리스마스를 만들어보세요!', '크리스마스 커스텀 쿠키·토퍼 주문제작', '크리스마스 쿠키 주문제작', '크리스마스 쿠키 토퍼', '크리스마스 맞춤 선물', '기업행사 커스텀 쿠키', '크리스마스 단체 답례품', '크리스마스 메시지', '개인 이름', '기업행사 및 감사 문구', '어린이집·유치원 단체 선물', '추가 비용·최소 주문 수량·제작 기간·적용 가능 상품', '회사 로고나 특수 디자인 토퍼는 제작 가능 범위를 먼저 확인', '위 상품 가격과 합계에 포함되지 않습니다.']) assert.ok(clean(custom).includes(text), `custom consultation: ${text}`);
+assert.equal((custom.match(/<img\b/g) || []).length, 4);
+assert.ok(custom.indexOf('<img') < custom.indexOf('<h2'), 'large real photos precede the detailed consultation copy');
+for (const photo of customPhotos) {
+  assert.ok(fs.statSync(path.join(root, photo.image)).size < 200 * 1024);
+  const image = [...custom.matchAll(/<img\b[^>]*>/g)].map(match => match[0]).find(tag => tag.includes(`src="${photo.image}"`));
+  for (const [name, value] of Object.entries({ width: photo.width, height: photo.height, alt: photo.alt, loading: 'lazy', decoding: 'async' })) assert.ok(image.includes(`${name}="${value}"`));
+}
+assert.match(custom, /id="xmas-custom-consult"[^>]*href="https:\/\/pf\.kakao\.com\/_QdCaK\/chat"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+assert.doesNotMatch(custom, /<(?:form|input|select|textarea)\b|data-(?:sku|delta|gallery|order-step)|20,000|토퍼 포함 가격/);
 const choice=section('gift-choice'), comparison=section('gift-comparison'), orderGuide=section('ordering-guide');
 for(const id of ['gift-choice','gift-comparison','ordering-guide'])assert.ok(html.indexOf(`id="${id}"`)>html.indexOf('id="order-review"'),'long guidance follows the order flow');
 assert.equal((choice.match(/<article>/g)||[]).length,4);
@@ -188,7 +201,8 @@ assert.deepEqual(list.itemListElement.map(n=>[n.item.sku,n.item.name,n.item.offe
 assert.deepEqual(list.itemListElement.map(n=>[n.item.description,n.item.image,n.item.offers.priceCurrency]),catalog.products.map(p=>[p.composition,`https://nothingmatters.co.kr${p.image}`,'KRW']));
 assert.doesNotMatch(JSON.stringify(list),/availability|shippingDetails|priceValidUntil|inventoryLevel|hasMerchantReturnPolicy/);
 const faqs=[...html.matchAll(/<details><summary>([^<]+)<\/summary><p>([\s\S]*?)<\/p><\/details>/g)].map(m=>[clean(m[1]),clean(m[2])]);
-assert.equal(faqs.length,13);assert.equal(new Set(faqs.map(f=>f[0])).size,faqs.length);
+assert.equal(faqs.length,14);assert.equal(new Set(faqs.map(f=>f[0])).size,faqs.length);
+assert.deepEqual(faqs.find(faq => faq[0] === '크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?'), ['크리스마스 쿠키에 커스텀 토퍼를 추가할 수 있나요?', '네. 커스텀 토퍼를 이용한 크리스마스 쿠키 선물을 상담할 수 있습니다. 희망 문구와 디자인, 상품, 수량, 수령일을 알려주세요. 적용 가능 여부와 추가 비용은 상담 후 확정합니다.']);
 for(const question of ['개인 선물과 파티 간식은 어떻게 고르면 좋을까요?','크리스마스 쿠키 포장은 어떻게 확인하나요?'])assert.ok(faqs.some(f=>f[0]===question));
 for(const question of ['크리스마스 쿠키 세트에는 어떤 상품이 있나요?','브루키 2종 세트와 산타꾸러미는 어떻게 다른가요?','서울에서 크리스마스 쿠키 선물을 픽업할 수 있나요?','서울 크리스마스 기업행사 단체 주문도 가능한가요?','어린이집·유치원 크리스마스 간식으로 준비할 수 있나요?','크리스마스 쿠키는 언제까지 주문해야 하나요?','크리스마스 쿠키를 택배로 받을 수 있나요?','예약 없이 방문해도 구매할 수 있나요?'])assert.ok(faqs.some(f=>f[0]===question),question);
 assert.deepEqual(graph.find(n=>n['@type']==='FAQPage').mainEntity.map(n=>[n.name,n.acceptedAnswer.text]),faqs);
@@ -224,7 +238,7 @@ assert.match(js,/sessionStorage\.setItem\(storageKey, key\)/,'only opaque idempo
 assert.doesNotMatch(js,/sessionStorage\.setItem\([^)]*(?:customer|payload|canonical)/,'no raw customer data persists');
 for(const hour of ['10','11','12','13','14','15','16','17'])assert.ok(html.includes(`value="${hour}:00"`));
 assert.ok(html.includes('placeholder="example@email.com"'));assert.ok(js.includes("source: 'christmasBrookie'"));
-console.log('Christmas landing PASS: preserved gift/set metadata, image-first hero and large photo cards, catalog prices and visible photo captions, static photo-led brand introduction, 18 natural purchase intents, 13 matching FAQs, focused inbound links and schema dates');
+console.log('Christmas landing PASS: preserved gift/set metadata, image-first hero and large photo cards, catalog prices and visible photo captions, static photo-led brand introduction, 18 natural purchase intents, 14 matching FAQs, focused inbound links and schema dates');
 
 assert.ok(html.includes('min="2026-12-01"'));
 assert.doesNotMatch(html+js,/12월 1일부터 주문 가능|크리스마스 브루키 주문은 (?:2026년 )?12월 1일부터 가능합니다/);

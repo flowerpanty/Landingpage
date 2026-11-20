@@ -13,7 +13,7 @@ let playwright;
 try { playwright = require('playwright'); }
 catch { playwright = require(process.env.PLAYWRIGHT_MODULE_PATH || path.join(os.homedir(), '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright')); }
 const catalog = JSON.parse(fs.readFileSync('data/christmas-products.json', 'utf8'));
-const { representative: thumbnail, workshop: workshopPhoto } = JSON.parse(fs.readFileSync('data/christmas-media.json', 'utf8'));
+const { representative: thumbnail, workshop: workshopPhoto, customTopper: customPhotos } = JSON.parse(fs.readFileSync('data/christmas-media.json', 'utf8'));
 const probe = http.createServer();
 await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
 const port = probe.address().port;
@@ -249,7 +249,58 @@ try {
       }
     }
   }
-  const renderedEvidence = [], brandEvidence = [], storefrontEvidence = [];
+  const renderedEvidence = [], brandEvidence = [], storefrontEvidence = [], customEvidence = [];
+  async function assertCustomSection(width) {
+    const section = page.locator('#christmas-custom');
+    assert.equal(await section.locator('h2').textContent(), '크리스마스 커스텀 쿠키·토퍼 주문제작');
+    assert.equal(await section.locator('img').count(), 4);
+    assert.equal(await section.locator('input,select,textarea,[data-sku],[data-gallery]').count(), 0);
+    const columns = await section.locator('.xmas-custom-photos').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length);
+    assert.equal(columns, width < 640 ? 1 : 2);
+    for (const [index, photo] of customPhotos.entries()) {
+      const image = section.locator('img').nth(index);
+      await image.scrollIntoViewIfNeeded();
+      await image.evaluate(node => node.decode());
+      assert.equal(await image.getAttribute('src'), photo.image);
+      const rendered = await image.evaluate(node => ({ width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height, natural: [node.naturalWidth, node.naturalHeight], fit: getComputedStyle(node).objectFit }));
+      assert.deepEqual(rendered.natural, [photo.width, photo.height]);
+      assert.equal(rendered.fit, 'contain');
+      assert.ok(Math.abs(rendered.width / rendered.height - photo.width / photo.height) < .001);
+      assert.ok(rendered.width >= (width < 640 ? width * .85 : 280), 'real custom topper photos use the available card width');
+    }
+    const button = section.locator('#xmas-custom-consult');
+    assert.equal(await button.getAttribute('href'), 'https://pf.kakao.com/_QdCaK/chat');
+    assert.equal(await button.getAttribute('target'), '_blank');
+    assert.equal(await button.getAttribute('rel'), 'noopener noreferrer');
+    await button.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await button.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.locator(':focus').getAttribute('id'), 'xmas-custom-consult');
+    const bounds = await button.boundingBox();
+    const safeBottom = await page.evaluate(() => innerWidth < 960 ? document.querySelector('.xmas-sticky').getBoundingClientRect().top : innerHeight);
+    assert.ok(bounds.height >= 44 && bounds.width >= 44 && bounds.y >= 0 && bounds.y + bounds.height <= safeBottom, 'custom CTA is keyboard reachable above the mobile order bar');
+    assert.ok(await button.evaluate(node => getComputedStyle(node).outlineStyle !== 'none'));
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    if ([390, 1440].includes(width)) {
+      const before = await page.locator('.xmas-product input').evaluateAll(inputs => inputs.map(input => input.value));
+      const total = await page.locator('#xmas-total-price').textContent();
+      const requestCount = requests.length;
+      const opened = page.waitForEvent('popup');
+      await page.keyboard.press('Enter');
+      const popup = await opened;
+      await popup.waitForLoadState('domcontentloaded');
+      assert.equal(popup.url(), 'https://pf.kakao.com/_QdCaK/chat');
+      assert.equal(await popup.evaluate(() => window.opener), null);
+      await popup.close();
+      assert.equal(requests.length, requestCount, 'custom consultation never submits a product order');
+      assert.deepEqual(await page.locator('.xmas-product input').evaluateAll(inputs => inputs.map(input => input.value)), before);
+      assert.equal(await page.locator('#xmas-total-price').textContent(), total);
+      await page.screenshot({ path: `${artifactDir}/${width}-custom-consult.png` });
+      await section.screenshot({ path: `${artifactDir}/${width}-custom-topper.png` });
+    }
+    customEvidence.push({ width, photos: customPhotos.length, columns, uncropped: true, consultationSeparateFromOrder: true });
+  }
   async function assertStorefront(width){
     const image=page.locator('.xmas-about-media img'),source=page.locator('.xmas-about-media source');
     await image.scrollIntoViewIfNeeded();
@@ -294,7 +345,7 @@ try {
     const contrast = await page.evaluate(() => {
       const luminance = color => color.match(/[\d.]+/g).slice(0,3).map(Number).map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((v,n,i)=>v+n*[.2126,.7152,.0722][i],0);
       const ratio = (a,b) => {const [lo,hi]=[luminance(a),luminance(b)].sort((x,y)=>x-y);return (hi+.05)/(lo+.05);};
-      return ['.xmas-header-consult','#xmas-next','.xmas-button-green','.xmas-brand-intro','.xmas-photo-label','#xmas-name'].map(selector=>{
+      return ['.xmas-header-consult','#xmas-next','.xmas-button-green','.xmas-brand-intro','.xmas-photo-label','#xmas-name','#xmas-custom-consult','#christmas-custom h2','.xmas-custom-terms'].map(selector=>{
         const node=document.querySelector(selector),style=getComputedStyle(node);
         let background=style.backgroundColor, ancestor=node;
         while (background==='rgba(0, 0, 0, 0)' && ancestor.parentElement) {ancestor=ancestor.parentElement;background=getComputedStyle(ancestor).backgroundColor;}
@@ -468,6 +519,7 @@ try {
       await page.locator('#xmas-copy').click(); assert.equal(await page.evaluate(() => window.__copied), copy);
     }
     await assertStorefront(width);
+    await assertCustomSection(width);
     for (const id of ['about-nothingmatters', 'gift-choice', 'gift-comparison', 'ordering-guide', 'group-orders']) {
       await page.locator(`#${id}`).scrollIntoViewIfNeeded();
       await step(3);
@@ -496,7 +548,7 @@ try {
     const card = staticPage.locator(`[data-sku="${product.sku}"]`);
     assert.ok((await card.textContent()).includes(`${product.price.toLocaleString('ko-KR')}원`));
   }
-  for (const id of ['about-nothingmatters', 'gift-guide', 'gift-choice', 'gift-comparison', 'ordering-guide', 'seoul-pickup']) {
+  for (const id of ['christmas-custom', 'about-nothingmatters', 'gift-guide', 'gift-choice', 'gift-comparison', 'ordering-guide', 'seoul-pickup']) {
     assert.ok(await staticPage.locator(`#${id}`).isVisible(), `static purchase guidance: ${id}`);
   }
   assert.equal(await staticPage.locator('#gift-choice article').count(), 4);
@@ -505,7 +557,9 @@ try {
     assert.equal(await comparison.locator('[data-compare-composition]').textContent(), product.composition);
     assert.equal(await comparison.locator('.xmas-comparison-price').textContent(), `${product.price.toLocaleString('ko-KR')}원`);
   }
-  assert.equal(await staticPage.locator('#faq details').count(), 13);
+  assert.equal(await staticPage.locator('#faq details').count(), 14);
+  assert.equal(await staticPage.locator('#christmas-custom img').count(), 4);
+  assert.equal(await staticPage.locator('#xmas-custom-consult').getAttribute('href'), 'https://pf.kakao.com/_QdCaK/chat');
   const staticFaqs = await staticPage.locator('#faq details').evaluateAll(nodes => nodes.map(node => [node.querySelector('summary').textContent.trim(), node.querySelector('p').textContent.trim()]));
   const structuredFaqs = await staticPage.locator('[data-nm-schema]').textContent();
   assert.deepEqual(JSON.parse(structuredFaqs)['@graph'].find(node => node['@type'] === 'FAQPage').mainEntity.map(node => [node.name, node.acceptedAnswer.text]), staticFaqs);
@@ -594,9 +648,9 @@ try {
   const evidence = {
     videoEvidence,
     setVideoEvidence,
-    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, large image-first product cards and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. A full-height uncropped actual photograph precedes the collection; price summary follows ordering and the photo-led brand introduction; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 13 FAQs follow the workflow and work without JavaScript.',
-    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals, brandEvidence, storefrontEvidence,
-    seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 13 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, full-height uncropped hero and reachable order navigation at every viewport, full-width product photos with information below, analytics excludes query strings.' },
+    contract: 'One responsive three-step Christmas ordering flow: shared quantities/customer/validation/API, large image-first product cards and gallery; desktop two columns and sticky summary in every step, mobile full-screen gallery and keyboard-safe fixed total/next. Existing catalog, consent and disabled live backend preserved. A full-height uncropped actual photograph precedes the collection; price summary follows ordering and the photo-led brand introduction; recipient advice, four catalog comparisons, order guidance, Seoul/group facts and 14 FAQs follow the workflow and work without JavaScript.',
+    targetViewports: renderedEvidence.map(item => item.viewport), renderedEvidence, imageResponses, crawlerResponses, labVitals, brandEvidence, storefrontEvidence, customEvidence,
+    seo: { status: 'pass', evidence: 'Static recipient advice, catalog price/composition/packaging comparison, order guide and 14 FAQs work with JavaScript disabled; exact visible/JSON-LD FAQ parity, local guide links return 200, keyboard FAQ controls preserve selection, full-height uncropped hero and reachable order navigation at every viewport, full-width product photos with information below, analytics excludes query strings.' },
     accessibility: { status: 'pass', evidence: 'Skip link, first invalid field focus, labelled 44px+ quantity/photo controls, gallery Tab trap, arrow keys, Escape and restored opener focus. Reduced motion and no runtime exceptions.' },
     responsive: { status: 'pass', evidence: 'All three panels tested at 320/390/430/768/1024/1280/1440, one visible panel, no overflow; desktop 2-column summary sticky every step; mobile bottom CTA hides while input focused; resize during step 2 retains data.' },
     contentStates: {
@@ -609,5 +663,5 @@ try {
     }
   };
   fs.writeFileSync(`${artifactDir}/evidence.json`, JSON.stringify(evidence, null, 2) + '\n');
-  console.log('Christmas 3-step browser PASS: seven widths, loaded homepage brand fonts, header touch areas, text/input contrast, exact home/Instagram navigation, static ABOUT; unchanged order/gallery/calculation/privacy flow, 13 FAQs, Kakao consultation, Googlebot/Yeti HTML 200, image-first hero and large uncropped product cards. Local LCP/CLS observations saved; no production writes.');
+  console.log('Christmas 3-step browser PASS: seven widths, loaded homepage brand fonts, header touch areas, text/input contrast, exact home/Instagram navigation, static ABOUT; unchanged order/gallery/calculation/privacy flow, 14 FAQs, Kakao consultation, Googlebot/Yeti HTML 200, image-first hero and large uncropped product cards. Local LCP/CLS observations saved; no production writes.');
 } finally { await browser?.close(); server.kill('SIGTERM'); }
