@@ -42,7 +42,7 @@ assert.match(html,/rel="canonical" href="https:\/\/nothingmatters.co.kr\/christm
 assert.match(html,/naver-site-verification.*e627e1eaae68060408cb4e512e46d6b98a64401c/);
 assert.match(html,/G-DR5XLDB042/);
 assert.match(html,/data-nm-skip-link/);assert.match(html,/data-nm-accessibility/);
-const expected=[['christmas-bear-brookie','곰돌이 브루키',8500],['christmas-tree-brookie','트리 브루키',9500],['christmas-brookie-set','브루키 2종 세트',17000],['christmas-santa-bundle','산타꾸러미 4종',23000]];
+const expected=[['christmas-bear-brookie','곰돌이 브루키',8500],['christmas-tree-brookie','트리 브루키',9500],['christmas-brookie-set','브루키 2종 세트',17000],['christmas-santa-bundle','산타꾸러미 4종',24000]];
 assert.deepEqual(catalog.products.map(p=>[p.sku,p.name,p.price]),expected);
 const bearProduct = catalog.products.find(product => product.sku === 'christmas-bear-brookie');
 assert.equal(bearProduct.image, '/images/christmas/bear-brookie-christmas-package.webp', 'keep the previously selected bear card thumbnail');

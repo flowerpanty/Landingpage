@@ -476,7 +476,7 @@ try {
     await qty(2, '-1'); assert.equal(await page.locator('#xmas-sticky-next').isDisabled(), true);
     await qty(2, '0.5'); assert.equal(await page.locator('#xmas-sticky-next').isDisabled(), true);
     await qty(2, '1'); await qty(0, '1'); await qty(3, '1'); await focusHeading(1);
-    assert.equal(await page.locator('#xmas-total-price').textContent(), '48,500원');
+    assert.equal(await page.locator('#xmas-total-price').textContent(), '49,500원');
     assert.ok(!(await page.locator('#xmas-selected').textContent()).includes('트리 브루키 ×'));
     const touch = await page.locator('.xmas-counter button,.xmas-counter input,.xmas-photo-button').evaluateAll(nodes => nodes.map(node => { const r = node.getBoundingClientRect(); return { w: r.width, h: r.height }; }));
     assert.ok(touch.every(r => r.w >= 44 && r.h >= 44), `touch targets ${width}: ${JSON.stringify(touch)}`);
@@ -499,7 +499,7 @@ try {
     await page.locator('#xmas-back').click(); await step(1); assert.equal(await page.locator('.xmas-product input').nth(2).inputValue(), '1');
     await next(); await step(2); assert.equal(await page.locator('#xmas-phone').inputValue(), '010-0000-0000');
     await next(); await step(3);
-    assert.equal(await page.locator('#xmas-review-total').textContent(), '48,500원');
+    assert.equal(await page.locator('#xmas-review-total').textContent(), '49,500원');
     assert.ok((await page.locator('#xmas-review').textContent()).includes('LOCAL MOCK CUSTOMER'));
     assert.equal(await page.locator('#xmas-review img').count(), 0);
     assert.equal(await page.locator('#xmas-submit').isDisabled(), true);
@@ -512,12 +512,12 @@ try {
       assert.equal(await page.locator('.xmas-product input').first().inputValue(), '2');
       await assertPrivacy();
     }
-    await next(); await step(2); await next(); await step(3); assert.equal(await page.locator('#xmas-review-total').textContent(), '57,000원');
+    await next(); await step(2); await next(); await step(3); assert.equal(await page.locator('#xmas-review-total').textContent(), '58,000원');
     await page.locator('#xmas-submit').evaluate(button => button.form.requestSubmit()); assert.equal(requests.length, 0, 'real capability blocks saves');
     if (width === 390) {
       await page.evaluate(() => Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: async () => { throw new Error('Mock denied'); } }));
       await page.locator('#xmas-copy').click(); const copy = await page.locator('#xmas-copy-fallback').inputValue();
-      assert.ok(copy.includes('57,000원') && !copy.includes('LOCAL MOCK') && !copy.includes('010-0000-0000'));
+      assert.ok(copy.includes('58,000원') && !copy.includes('LOCAL MOCK') && !copy.includes('010-0000-0000'));
       await page.evaluate(() => Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: async value => { window.__copied = value; } }));
       await page.locator('#xmas-copy').click(); assert.equal(await page.evaluate(() => window.__copied), copy);
     }
@@ -526,7 +526,7 @@ try {
     for (const id of ['about-nothingmatters', 'gift-choice', 'gift-comparison', 'ordering-guide', 'group-orders']) {
       await page.locator(`#${id}`).scrollIntoViewIfNeeded();
       await step(3);
-      assert.equal(await page.locator('#xmas-review-total').textContent(), '57,000원', 'reading guidance preserves the reviewed order');
+      assert.equal(await page.locator('#xmas-review-total').textContent(), '58,000원', 'reading guidance preserves the reviewed order');
       assert.equal(await page.locator('#xmas-phone').inputValue(), '010-0000-0000');
     }
     if ([320, 390, 1440].includes(width)) {
@@ -613,7 +613,7 @@ try {
     await focusHeading(1); await next(); await step(2); await fillCustomer();
     if (width >= 960) await page.locator('[name=deliveryMethod][value=pickup]').check();
     await next(); await step(3);
-    assert.equal(await page.locator('#xmas-review-total').textContent(), '58,000원');
+    assert.equal(await page.locator('#xmas-review-total').textContent(), '59,000원');
     assert.equal(await page.locator('#xmas-submit').isDisabled(), true, 'consent required');
     await page.locator('#xmas-consent').check(); await focusHeading(3);
   }

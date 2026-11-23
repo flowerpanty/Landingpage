@@ -1,6 +1,6 @@
 {
   "version": "christmas-2026-v1",
-  "updatedAt": "2026-10-21",
+  "updatedAt": "2026-11-24",
   "products": [
     {
       "sku": "christmas-bear-brookie",
@@ -119,7 +119,7 @@
     {
       "sku": "christmas-santa-bundle",
       "name": "산타꾸러미 4종",
-      "price": 23000,
+      "price": 24000,
       "composition": "루돌프초코 · 버터산타 · 말차리스 · 로투스노우맨 각 1개",
       "image": "/images/christmas/santa-bundle.webp",
       "width": 764,
