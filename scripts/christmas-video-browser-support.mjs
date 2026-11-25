@@ -66,6 +66,12 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
       assert.ok(media.duration > durationRange[0] && media.duration < durationRange[1]);
       const button = await toggle.boundingBox();
       assert.ok(button.width >= 43.9 && button.height >= 43.9, `44px video control at ${width}: ${JSON.stringify(button)}`);
+      if (width === 390) {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await paused(page);
+        await page.emulateMedia({ reducedMotion: 'no-preference' });
+        await playing(page);
+      }
       await toggle.click(); await paused(page);
       await page.locator(home ? '#mainpage-home' : '#hero').scrollIntoViewIfNeeded();
       await thumbnail.scrollIntoViewIfNeeded();
@@ -105,12 +111,6 @@ export async function checkProductVideo({ browser, base, fonts, artifactDir, hom
       assert.deepEqual(requests, [], `${preference}: no video downloads or autoplay`);
       assert.equal(await video.getAttribute('src'), null);
       await toggle.click(); await playing(page);
-      if (preference === 'reduce') {
-        await page.emulateMedia({ reducedMotion: 'no-preference' });
-        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-        await page.emulateMedia({ reducedMotion: 'reduce' });
-        await paused(page);
-      }
       evidence.push({ preference, noAutomaticDownload: true, explicitPlay: true });
     } finally { await context.close(); }
   }

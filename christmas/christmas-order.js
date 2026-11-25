@@ -10,7 +10,7 @@
   const fields = { deliveryDate: 'xmas-date', pickupTime: 'xmas-time', customerName: 'xmas-name', customerPhone: 'xmas-phone', customerEmail: 'xmas-email', deliveryAddress: 'xmas-address', request: 'xmas-request' };
   const pickupTimes = ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
   const requestKeys = new Map();
-  const stepNames = ['상품 선택', '수령 정보', '확인 및 접수'];
+  const stepNames = ['상품 선택', '수령 정보', '주문 확인'];
   const stepTitles = ['products-title', 'details-title', 'review-title'];
   // One model for both layouts; history contains only the step and gallery SKU.
   const state = {
@@ -107,8 +107,9 @@
   }
   function actionLabel() {
     if (state.busy) return '접수 확인 중…';
-    if (state.step < 3) return '다음으로 넘어가기 →';
-    return state.enabled ? window.NMOrderConfirmation.ctaLabel(false) : '접수 가능 여부 확인 중…';
+    if (state.step === 1) return '수령 방법 선택 →';
+    if (state.step === 2) return '주문 내역 확인 →';
+    return window.NMOrderConfirmation.ctaLabel(false);
   }
   function render() {
     const { items, total, count } = selection();
@@ -130,9 +131,16 @@
     byId('xmas-sticky-count').textContent = `STEP ${state.step} / 3 · 선물 ${count}개`;
     byId('xmas-live-total').textContent = `선택 수량 ${count}개, 상품 합계 ${won(total)}`;
     if (state.step === 3) renderReview(items, total);
-    const actionDisabled = !ready || state.busy || (state.step === 3 && (!state.enabled || !state.consent));
-    byId('xmas-next').hidden = state.step === 3;
-    byId('xmas-submit').hidden = state.step !== 3;
+    const reviewing = state.step === 3;
+    const chooseProducts = state.step === 1 && count === 0 && state.invalid.size === 0;
+    const consultInstead = reviewing && !state.enabled && !state.busy;
+    const actionDisabled = !ready || state.busy || (reviewing && (!state.enabled || !state.consent));
+    byId('xmas-next').hidden = reviewing;
+    byId('xmas-submit').hidden = !reviewing || consultInstead;
+    byId('xmas-sticky-pick').hidden = !chooseProducts;
+    byId('xmas-sticky-next').hidden = chooseProducts || consultInstead;
+    byId('xmas-sticky-consult').hidden = !consultInstead;
+    document.querySelector('.xmas-summary-consult').classList.toggle('xmas-button', consultInstead);
     for (const id of ['xmas-next', 'xmas-submit', 'xmas-sticky-next']) {
       byId(id).textContent = actionLabel();
       byId(id).disabled = actionDisabled;
@@ -216,6 +224,11 @@
   byId('xmas-consent').addEventListener('change', event => { state.consent = event.target.checked; render(); });
   byId('xmas-next').addEventListener('click', advance);
   byId('xmas-sticky-next').addEventListener('click', advance);
+  byId('xmas-website-order').addEventListener('click', event => {
+    if (state.step === 1) return;
+    event.preventDefault();
+    goStep(1);
+  });
   document.querySelectorAll('[data-step-link], [data-edit-step]').forEach(button => button.addEventListener('click', () => goStep(Number(button.dataset.stepLink || button.dataset.editStep))));
   byId('xmas-back').addEventListener('click', () => {
     if (history.state?.previousStep === state.step - 1) history.back();
@@ -388,16 +401,18 @@
   confirmation.querySelector('[data-confirm-kakao]').addEventListener('click', () => {
     if (!state.busy) kakaoCompletion.present(flow.getSaved(orderPayload()));
   });
-  document.querySelectorAll('.xmas-product-consult, .xmas-summary-consult, .xmas-consult-actions a').forEach(link => {
+  document.querySelectorAll('.xmas-product-consult, .xmas-summary-consult, .xmas-consult-actions a, #xmas-sticky-consult').forEach(link => {
     link.addEventListener('click', event => {
+      const saved = state.step === 3 ? flow.getSaved(orderPayload()) : null;
+      if (state.step === 3 && !state.enabled && !state.busy && !saved) return;
       event.preventDefault();
       if (state.busy) return;
       if (!selectionValid()) {
         error('xmas-selection-error', '상담할 상품과 수량을 먼저 선택해 주세요.');
         goStep(1);
         cards[0].querySelector('input').focus();
-      } else if (state.step === 3 && flow.getSaved(orderPayload())) {
-        kakaoCompletion.present(flow.getSaved(orderPayload()));
+      } else if (saved) {
+        kakaoCompletion.present(saved);
       } else advance();
     });
   });
@@ -424,7 +439,7 @@
       state.minimumDate = /^\d{4}-\d{2}-\d{2}$/.test(status.minimumDeliveryDate) && status.minimumDeliveryDate >= '2026-12-01' ? status.minimumDeliveryDate : '2026-12-01';
       state.unavailableDates = Array.isArray(status.unavailableDates) ? status.unavailableDates : [];
       byId('xmas-date').min = state.minimumDate;
-      byId('xmas-availability').textContent = status.message || '지금 주문할 수 있어요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.';
+      byId('xmas-availability').textContent = status.message || (state.enabled ? '지금 홈페이지에서 주문을 접수할 수 있어요.' : '카카오톡에서 주문을 상담해 주세요.');
       byId('xmas-opening-message').textContent = byId('xmas-availability').textContent;
     } catch {
       state.enabled = false;

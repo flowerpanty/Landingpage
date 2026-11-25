@@ -96,7 +96,7 @@ for (const [sku, preview] of Object.entries(productVideos)) {
   assert.match(card, /<\/button><button type="button" class="xmas-video-toggle"[^>]*hidden/,'pause control is a separate button, never nested in the gallery button');
 }
 assert.match(html, /<script src="\/christmas\/christmas-video\.js\?[^\"]+" defer><\/script>/);
-assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','christmas-products','order-details','order-review','christmas-custom','about-nothingmatters','gift-guide','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
+assert.deepEqual([...html.matchAll(/<section[^>]*id="([^"]+)"/g)].map(m=>m[1]),['hero','christmas-order-paths','christmas-products','order-details','order-review','christmas-custom','about-nothingmatters','gift-guide','gift-choice','gift-comparison','ordering-guide','seoul-pickup','group-orders','faq']);
 const section=id=>html.match(new RegExp(`<section[^>]*id="${id}"[^>]*>([\\s\\S]*?)<\\/section>`))[1];
 const custom = section('christmas-custom');
 const customPhotos = JSON.parse(read('data/christmas-media.json')).customTopper;
@@ -144,7 +144,7 @@ assert.equal(lead,'낫띵메터스는 서울 강서구 공항동에서 귀여운
 assert.ok(lead.length<150,'brand introduction stays concise');
 assert.ok(section('hero').includes('작은 쿠키에 담은, 커다란 크리스마스.'));
 assert.ok(section('hero').indexOf('id="xmas-hero-image"')<section('hero').indexOf('<h1'),'photograph precedes the short hero copy');
-assert.match(section('hero'),/id="xmas-hero-order"[^>]*href="#christmas-order"/);
+assert.match(section('hero'),/id="xmas-hero-order"[^>]*href="#christmas-order-paths"/);
 assert.ok(!section('hero').includes(lead),'long brand paragraph follows ordering');
 const about=section('about-nothingmatters');
 assert.ok(html.indexOf('id="about-nothingmatters"')>html.indexOf('</form>') && html.indexOf('id="about-nothingmatters"')<html.indexOf('id="gift-choice"'),'brand introduction follows the order flow');

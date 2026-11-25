@@ -33,7 +33,7 @@
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 </style>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="/assets/christmas.css?v=20261120-custom-grid">
+  <link rel="stylesheet" href="/assets/christmas.css?v=20261126-order-paths">
   <script type="application/ld+json" data-nm-schema="static">
   {
     "@context": "https://schema.org",
@@ -183,7 +183,7 @@
           "@type": "ImageObject",
           "url": "https://nothingmatters.co.kr/images/christmas/christmas-2026-cookie-gifts-cover.jpg"
         },
-        "dateModified": "2026-11-24",
+        "dateModified": "2026-11-26",
         "breadcrumb": {
           "@id": "https://nothingmatters.co.kr/christmas/#breadcrumb"
         },
@@ -480,20 +480,41 @@
       <!-- christmas-hero-image:start -->
       <figure class="xmas-hero-media"><img id="xmas-hero-image" src="/images/christmas/christmas-2026-cookie-gifts-cover.jpg" alt="산타·눈사람·리스·루돌프 쿠키 4종과 빨간 크리스마스 선물 상자, 손그림 장식이 함께 보이는 낫띵메터스 실물 상품 사진" width="1200" height="1500" loading="eager" fetchpriority="high" decoding="async"></figure>
       <!-- christmas-hero-image:end -->
-      <div class="xmas-hero-copy"><div><p class="xmas-eyebrow">NOTHINGMATTERS · HOLIDAY 2026</p><h1 id="christmas-title">2026 크리스마스 쿠키 세트·선물</h1><p class="xmas-brand-copy">작은 쿠키에 담은, 커다란 크리스마스.</p></div><a id="xmas-hero-order" class="xmas-button" href="#christmas-order">쿠키 선택·주문 안내 ↓</a></div>
+      <div class="xmas-hero-copy"><div><p class="xmas-eyebrow">NOTHINGMATTERS · HOLIDAY 2026</p><h1 id="christmas-title">2026 크리스마스 쿠키 세트·선물</h1><p class="xmas-brand-copy">작은 쿠키에 담은, 커다란 크리스마스.</p></div><a id="xmas-hero-order" class="xmas-button" href="#christmas-order-paths">주문 방법 보기 ↓</a></div>
+    </section>
+    <section class="xmas-wrap xmas-order-paths" id="christmas-order-paths" aria-labelledby="xmas-order-paths-title">
+      <p class="xmas-eyebrow" lang="en">CHOOSE YOUR ORDER</p>
+      <h2 id="xmas-order-paths-title">크리스마스 선물, 어떻게 주문할까요?</h2>
+      <div class="xmas-order-path-grid">
+        <div class="xmas-order-path xmas-order-path-naver">
+          <h3>네이버 픽업예약</h3>
+          <p>공항동 작업실에서 직접 수령하시는 분</p>
+          <div class="xmas-naver-order-links">
+            <a href="https://booking.naver.com/booking/17/bizes/1742214/items/8263767" target="_blank" rel="noopener noreferrer">브루키 예약 ↗</a>
+            <a href="https://booking.naver.com/booking/17/bizes/1742214/items/8258295" target="_blank" rel="noopener noreferrer">산타꾸러미 예약 ↗</a>
+          </div>
+          <p class="xmas-order-path-note">홈페이지에서 선택한 수량은 네이버로 전달되지 않아요. 네이버에서 수량과 가격을 확인해 주세요.</p>
+        </div>
+        <a class="xmas-order-path xmas-order-path-site" id="xmas-website-order" href="#christmas-order">
+          <h3>홈페이지에서 주문하기 <span aria-hidden="true">↓</span></h3>
+          <p>예약 픽업 · 차량 퀵 · 단체주문 · 커스텀 토퍼</p>
+          <p class="xmas-order-path-note">STEP 01 상품 선택으로 이동</p>
+        </a>
+      </div>
+      <p class="xmas-fineprint">차량 퀵과 커스텀 제작은 별도 상담이 필요해요.</p>
     </section>
     <div class="xmas-wrap xmas-order-shell" id="christmas-order">
       <nav class="xmas-steps" aria-label="주문 단계"><ol>
-        <li><button type="button" data-step-link="1" aria-current="step"><span>01</span><strong>상품 선택</strong><small>상품과 상세 사진</small></button></li>
-        <li><button type="button" data-step-link="2" disabled><span>02</span><strong>수령 정보</strong><small>날짜와 주문자</small></button></li>
-        <li><button type="button" data-step-link="3" disabled><span>03</span><strong>확인 및 접수</strong><small>주문 내역 확인</small></button></li>
+        <li><button type="button" data-step-link="1" aria-current="step"><span>01</span><strong>상품 선택</strong></button></li>
+        <li><button type="button" data-step-link="2" disabled><span>02</span><strong>수령 정보</strong></button></li>
+        <li><button type="button" data-step-link="3" disabled><span>03</span><strong>주문 확인</strong></button></li>
       </ol></nav>
       <div class="xmas-step-toolbar"><button id="xmas-back" type="button" hidden>← 이전 단계</button><p id="xmas-step-status" role="status" aria-live="polite">STEP 1 / 3 · 상품 선택</p></div>
-      <p class="xmas-notice" id="xmas-opening-message" role="status">지금 주문할 수 있어요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.</p>
+      <p class="xmas-notice" id="xmas-opening-message" role="status">수령 희망일은 2026년 12월 1일부터 선택 가능합니다.</p>
       <div class="xmas-order-layout">
         <form id="xmas-order-form" action="/api/landing-orders" method="post" novalidate>
           <section id="christmas-products" data-order-step="1" aria-labelledby="products-title">
-            <div class="xmas-section-heading xmas-product-heading"><div><h2 id="products-title" tabindex="-1">크리스마스 쿠키 4종</h2><p>사진을 누르면 포장과 상세 모습을 더 크게 볼 수 있어요.</p></div><a class="xmas-product-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-products-consult">카카오톡 주문 상담 ↗</a></div>
+            <div class="xmas-section-heading xmas-product-heading"><div><h2 id="products-title" tabindex="-1">어떤 쿠키를 선물할까요?</h2><p>크리스마스 쿠키 4종. 사진을 누르면 포장과 상세 모습을 더 크게 볼 수 있어요.</p></div><a class="xmas-product-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-products-consult">카카오톡 주문 상담 ↗</a></div>
             <noscript><p class="xmas-notice">수량 선택과 단계 이동에는 자바스크립트가 필요합니다. 상품과 가격을 확인한 뒤 <a href="https://pf.kakao.com/_QdCaK/chat">카카오톡으로 상담해 주세요.</a></p></noscript>
             <!-- christmas-products:start -->
       <div class="xmas-products">
@@ -523,9 +544,9 @@
             <p class="xmas-fineprint">단품과 크리스마스 쿠키 세트는 각각 선택한 수량으로 계산합니다. 사진 속 촬영 소품은 구성에 포함되지 않습니다.</p>
           </section>
           <section id="order-details" data-order-step="2" aria-labelledby="details-title" hidden>
-            <div class="xmas-section-heading"><h2 id="details-title" tabindex="-1">언제, 어떻게 받을까요?</h2><p>희망 일정이며 가능 여부는 상담 후 안내합니다.</p></div>
+            <div class="xmas-section-heading"><h2 id="details-title" tabindex="-1">언제, 어떻게 받아보실래요?</h2><p>희망 일정을 입력해 주세요. 가능한 날짜와 시간은 상담에서 확인해요.</p></div>
             <div class="xmas-fields">
-              <fieldset class="xmas-full"><legend>수령 방식 <span>(필수)</span></legend><div class="xmas-methods"><label><input type="radio" name="deliveryMethod" value="pickup" checked>예약 픽업<small>서울 강서구 송정로 25 1층</small></label><label><input type="radio" name="deliveryMethod" value="quick">퀵 배송<small>가능 여부·비용 상담 필요</small></label></div></fieldset>
+              <fieldset class="xmas-full"><legend>수령 방식 <span>(필수)</span></legend><div class="xmas-methods"><label><input type="radio" name="deliveryMethod" value="pickup" checked>예약 픽업<small>공항동 작업실에서 직접 수령 · 서울 강서구 송정로 25 1층</small></label><label><input type="radio" name="deliveryMethod" value="quick">차량 퀵<small>희망 주소로 수령 · 가능 여부와 비용은 별도 상담</small></label></div></fieldset>
               <label for="xmas-date">수령 희망 날짜 <span>(필수)</span><input id="xmas-date" name="deliveryDate" type="date" min="2026-12-01" required aria-describedby="xmas-date-error"><small class="xmas-error" id="xmas-date-error" hidden></small></label>
               <label for="xmas-time">수령 희망 시간 <span>(필수)</span><select id="xmas-time" name="pickupTime" required aria-describedby="xmas-time-error"><option value="">시간을 선택해 주세요</option><option value="10:00">오전 10시</option><option value="11:00">오전 11시</option><option value="12:00">오후 12시</option><option value="13:00">오후 1시</option><option value="14:00">오후 2시</option><option value="15:00">오후 3시</option><option value="16:00">오후 4시</option><option value="17:00">오후 5시</option></select><small class="xmas-error" id="xmas-time-error" hidden></small></label>
               <label for="xmas-name">주문자 이름 <span>(필수)</span><input id="xmas-name" name="customerName" autocomplete="name" maxlength="80" required aria-describedby="xmas-name-error"><small class="xmas-error" id="xmas-name-error" hidden></small></label>
@@ -537,7 +558,7 @@
             <p class="xmas-fineprint">최종 견적 버튼을 누르면 주문 요청이 저장됩니다. 수령 희망 날짜와 시간만으로 예약이 확정되지는 않습니다.</p>
           </section>
           <section id="order-review" data-order-step="3" aria-labelledby="review-title" hidden>
-            <div class="xmas-section-heading"><h2 id="review-title" tabindex="-1">주문 내용을 확인해 주세요</h2><p>접수 후 최종 주문 확정은 카카오톡 상담으로 안내합니다.</p></div>
+            <div class="xmas-section-heading"><h2 id="review-title" tabindex="-1">주문 내역을 확인해 주세요.</h2><p>접수 후 최종 주문 확정은 카카오톡 상담으로 안내합니다.</p></div>
             <div class="xmas-review-heading"><h3>선택한 상품</h3><button type="button" data-edit-step="1">상품 수정</button></div>
             <div id="xmas-review-items" class="xmas-selected"></div>
             <div class="xmas-review-total"><span>상품 합계</span><strong id="xmas-review-total">0원</strong></div>
@@ -547,7 +568,7 @@
             <div id="xmas-confirmation-status-slot"></div>
             <div class="xmas-review-heading"><h3>수령 및 주문자 정보</h3><button type="button" data-edit-step="2">정보 수정</button></div>
             <dl id="xmas-review" class="xmas-review-details"></dl>
-            <div class="xmas-notice" id="xmas-availability" role="status">지금 주문할 수 있어요. 수령 희망일은 2026년 12월 1일부터 선택 가능합니다.</div>
+            <div class="xmas-notice" id="xmas-availability" role="status">홈페이지 주문 가능 여부를 확인하고 있어요.</div>
             <p class="xmas-fineprint">주문 요청 접수는 결제 완료나 제작 확정을 의미하지 않습니다. 제작 일정과 수령 방법은 상담에서 최종 확인합니다.</p>
             <div id="xmas-consent-row"><p class="xmas-fineprint" id="xmas-privacy-note">이름·휴대전화·이메일(선택)·수령 희망 정보·배송 주소·요청사항을 주문 접수와 견적 제공, 상담 목적으로 사용합니다.</p><label class="xmas-consent"><input id="xmas-consent" name="privacyConsent" type="checkbox" aria-describedby="xmas-privacy-note">개인정보 수집·이용에 동의합니다.</label></div>
             <div class="xmas-consult-actions"><button id="xmas-copy" class="xmas-button xmas-button-outline" type="button">상품 구성 복사</button><a class="xmas-button xmas-button-green" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-order-consult">카카오톡 주문 상담 ↗</a></div>
@@ -561,7 +582,7 @@
           <div id="xmas-selected" class="xmas-selected"><p>아직 선택한 상품이 없어요.</p></div>
           <dl class="xmas-totals"><div><dt>선택 수량</dt><dd id="xmas-total-count">0개</dd></div><div><dt>상품 합계</dt><dd><strong id="xmas-total-price">0원</strong></dd></div></dl>
           <p class="xmas-fineprint">상품 금액 기준입니다. 퀵 비용·가능 여부와 제작 일정은 상담 후 확인합니다.</p>
-          <button id="xmas-next" class="xmas-button" type="button" disabled>다음으로 넘어가기 →</button><button id="xmas-submit" class="xmas-button" type="submit" form="xmas-order-form" disabled hidden aria-describedby="xmas-availability">견적서 받고 카카오톡에서 주문 확정하기 →</button>
+          <button id="xmas-next" class="xmas-button" type="button" disabled>수령 방법 선택 →</button><button id="xmas-submit" class="xmas-button" type="submit" form="xmas-order-form" disabled hidden aria-describedby="xmas-availability">견적서 받고 카카오톡에서 주문 확정하기 →</button>
           <a class="xmas-summary-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-summary">카카오톡 주문 상담 ↗</a>
           <p class="xmas-summary-note">예약 픽업 기본 · 최종 확정은 상담 후 안내</p>
         </aside>
@@ -645,7 +666,12 @@
     </section>
   </main>
   <footer class="xmas-footer"><div class="xmas-wrap"><a class="xmas-brand" href="/">NOTHINGMATTERS</a><p>서울특별시 강서구 송정로 25 1층 · 사전 예약 제작·예약 픽업<br><a href="tel:01028667976">010-2866-7976</a> · <a href="mailto:eddiefactory@naver.com">eddiefactory@naver.com</a></p><nav aria-label="공식 채널"><a href="/">공식 홈페이지 ↗</a><a href="https://instagram.com/nothingmatters_c" target="_blank" rel="noopener noreferrer">Instagram @nothingmatters_c ↗</a></nav><nav aria-label="도움말"><a href="/pickup/">픽업 안내</a><a href="/contact/">문의</a><a href="/guides/cookie-storage/">보관 가이드</a><a href="/bulk/">답례품 안내</a><a data-notice-link href="/notice/" style="display:inline-flex;align-items:center;min-height:44px">공지사항</a></nav><small>Made with love, given with warmth.</small></div></footer>
-  <aside class="xmas-sticky" aria-label="주문 합계 및 다음 단계"><div><span id="xmas-sticky-count">선택한 선물 0개</span><strong id="xmas-sticky-total">0원</strong></div><button class="xmas-button" id="xmas-sticky-next" type="button" disabled>다음으로 넘어가기 →</button></aside>
+  <aside class="xmas-sticky" aria-label="주문 합계 및 다음 단계">
+    <div><span id="xmas-sticky-count">선택한 선물 0개</span><strong id="xmas-sticky-total">0원</strong></div>
+    <a class="xmas-button" id="xmas-sticky-pick" href="#christmas-order">크리스마스 쿠키 고르기 ↓</a>
+    <button class="xmas-button" id="xmas-sticky-next" type="button" disabled hidden>수령 방법 선택 →</button>
+    <a class="xmas-button" id="xmas-sticky-consult" href="https://pf.kakao.com/_QdCaK/chat" target="_blank" rel="noopener noreferrer" data-analytics-event="consult_click" data-analytics-label="christmas-sticky" hidden>카카오톡 주문 상담 ↗</a>
+  </aside>
   <dialog id="xmas-kakao-completion" class="xmas-kakao-completion" aria-labelledby="xmas-kakao-title" aria-describedby="xmas-kakao-hint">
     <header class="xmas-kakao-header"><span>카카오톡 주문 상담</span><button type="button" data-kakao-close aria-label="복사 안내 닫기">닫기 ×</button></header>
     <div role="status" aria-live="polite"><h2 id="xmas-kakao-title" data-kakao-title tabindex="-1"></h2><p id="xmas-kakao-hint" data-kakao-hint></p></div>
@@ -665,7 +691,7 @@
   <script src="/order/assets/landing-quote.js?v=7395b88324d6" defer></script>
   <script src="/order/assets/order-email-quote.js?v=158b8d5e3211" defer></script>
   <script src="/christmas/christmas-kakao.js?v=20261110-copy" defer></script>
-  <script src="/christmas/christmas-order.js?v=20261118-set-gallery" defer></script>
+  <script src="/christmas/christmas-order.js?v=20261126-order-paths" defer></script>
   <script src="/christmas/christmas-video.js?v=20261118" defer></script>
 </body>
 </html>

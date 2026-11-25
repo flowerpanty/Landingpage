@@ -172,7 +172,7 @@ try {
       assert.equal(await page.locator('.xmas-sticky').isVisible(), false);
     } else {
       assert.equal(await sidebar.isVisible(), false);
-      assert.ok(await page.locator('#xmas-sticky-next').isVisible());
+      assert.equal(await page.locator('.xmas-sticky .xmas-button:visible').count(), 1);
       const rect = await page.locator('.xmas-sticky').boundingBox();
       assert.ok(Math.abs(rect.y + rect.height - page.viewportSize().height) <= 1);
     }
@@ -434,7 +434,18 @@ try {
       await page.keyboard.press('Tab'); assert.equal(await page.locator(':focus').getAttribute('data-nm-skip-link'), '');
       await page.keyboard.press('Enter'); assert.equal(await page.locator(':focus').getAttribute('id'), 'main-content');
     }
+    assert.equal(await page.locator('dialog[open]').count(), 0, 'the page opens without a modal');
+    const paths = await page.locator('.xmas-order-path').evaluateAll(cards => cards.map(card => card.getBoundingClientRect().toJSON()));
+    if (width < 640) assert.ok(paths[1].top >= paths[0].bottom, 'order choices stack on phones');
+    else assert.ok(paths[1].left >= paths[0].right && paths[1].top === paths[0].top, 'order choices sit side by side');
     assert.equal(await page.locator('#xmas-sticky-next').isDisabled(), true);
+    if (width < 960) {
+      assert.equal(await page.locator('#xmas-sticky-pick').textContent(), '크리스마스 쿠키 고르기 ↓');
+      await page.locator('#xmas-sticky-pick').click();
+      await step(1);
+      assert.ok(page.url().endsWith('#christmas-order'));
+      await page.goBack();
+    }
     await page.locator('.xmas-product img').evaluateAll(images => images.forEach(image => { image.loading = 'eager'; }));
     await page.waitForFunction(() => [...document.querySelectorAll('.xmas-product img')].every(image => image.complete && image.naturalWidth > 0));
     const photoLayout=await page.locator('.xmas-product').evaluateAll(cards=>cards.map(card=>{
@@ -442,7 +453,11 @@ try {
       const image=card.querySelector('figure img');
       return {sku:card.dataset.sku,card:rect(card),image:rect(image),figure:rect(card.querySelector('figure')),info:rect(card.querySelector('.xmas-product-info')),counter:rect(card.querySelector('.xmas-counter')),fit:getComputedStyle(image).objectFit,natural:[image.naturalWidth,image.naturalHeight],caption:rect(card.querySelector('figcaption'))};
     }));
-    assert.equal(await page.locator('.xmas-products').evaluate(node=>getComputedStyle(node).gridTemplateColumns.split(' ').length),width<960?1:2);
+    const [bearCard, treeCard, setCard, santaCard] = photoLayout.map(item => item.card);
+    assert.equal(bearCard.y, treeCard.y, 'single products share the first row');
+    assert.equal(setCard.y, santaCard.y, 'sets share the second row');
+    assert.ok(setCard.y >= Math.max(bearCard.bottom, treeCard.bottom), 'sets appear below the single products');
+    assert.ok(bearCard.x + bearCard.width <= treeCard.x && setCard.x + setCard.width <= santaCard.x, 'paired cards fit side by side');
     for(const item of photoLayout){
       assert.equal(item.fit,'contain');assert.ok(item.image.width>=item.card.width*.95,'photo occupies the full card width');
       if (item.sku === 'christmas-brookie-set') {
@@ -450,20 +465,22 @@ try {
         assert.deepEqual(item.natural, [360, 640]);
         assert.ok(Math.abs(item.image.width/item.image.height - 9/16)<.001, 'set photo retains its complete portrait ratio');
       } else assert.ok(Math.min(item.image.width/item.natural[0],item.image.height/item.natural[1])<=1,'contained poster/photo is not enlarged beyond its original dimensions');
-      assert.ok(item.image.width>=(width<640?width*.8:width<960?500:240),`large product image at ${width}: ${JSON.stringify(item)}`);
-      assert.ok(item.image.height>item.card.height*.5,'real photo dominates the product card');
+      assert.ok(item.card.x >= 0 && item.card.x + item.card.width <= width, `product card fits the viewport at ${width}`);
       assert.ok(item.info.y>=item.figure.bottom && item.counter.y>=item.info.bottom,'name, price and quantity controls follow the photo');
       assert.ok(item.caption.height>=16,'actual composition caption is visible');
     }
     firstScreen.photoLayout=photoLayout;
-    await page.locator('#xmas-hero-order').click();await step(1);
-    assert.ok(await page.locator('#christmas-order').evaluate(node=>Math.abs(node.getBoundingClientRect().top-20)<3),'hero anchor reaches the order collection');
+    await page.locator('#xmas-website-order').click();await step(1);
+    assert.ok(await page.locator('#christmas-order').evaluate(node=>Math.abs(node.getBoundingClientRect().top-20)<3),'website order choice reaches the order collection');
     await page.goBack();await step(1);await page.evaluate(()=>scrollTo(0,0));
     let clickedTotal=0;
     for(const product of catalog.products){
       await page.locator(`[data-sku="${product.sku}"] [data-delta="1"]`).click();clickedTotal+=product.price;
       assert.equal(await page.locator('#xmas-total-price').textContent(),clickedTotal.toLocaleString('ko-KR')+'원','large-card plus buttons retain the shared total');
-      if(width<960)assert.ok(await page.locator('.xmas-sticky').isVisible(),'pointer quantity changes keep the mobile next action available');
+      if(width<960){
+        assert.ok(await page.locator('#xmas-sticky-next').isVisible(),'pointer quantity changes keep the mobile next action available');
+        assert.equal(await page.locator('#xmas-sticky-next').textContent(), '수령 방법 선택 →');
+      }
     }
     for(const product of catalog.products)await page.locator(`[data-sku="${product.sku}"] [data-delta="-1"]`).click();
     assert.equal(await page.locator('#xmas-total-price').textContent(),'0원');
@@ -485,6 +502,7 @@ try {
     await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: `${artifactDir}/${width}-hero.png` });
     await page.locator('#christmas-order').evaluate(node=>node.scrollIntoView({block:'start'}));await page.screenshot({ path: `${artifactDir}/${width}-step-1.png` });
     await next(); await step(2); assert.equal(await page.locator(':focus').getAttribute('id'), 'details-title');
+    assert.equal(await page.locator(width < 960 ? '#xmas-sticky-next' : '#xmas-next').textContent(), '주문 내역 확인 →');
     await next(); assert.equal(await page.locator(':focus').getAttribute('id'), 'xmas-date');
     await fillCustomer();
     if (width < 960) {
@@ -503,6 +521,19 @@ try {
     assert.ok((await page.locator('#xmas-review').textContent()).includes('LOCAL MOCK CUSTOMER'));
     assert.equal(await page.locator('#xmas-review img').count(), 0);
     assert.equal(await page.locator('#xmas-submit').isDisabled(), true);
+    const fallback = page.locator(width < 960 ? '#xmas-sticky-consult' : '.xmas-summary-consult');
+    assert.ok(await fallback.isVisible(), 'consultation is available when website orders are closed');
+    if ([390, 1440].includes(width)) {
+      const before = requests.length;
+      const opened = page.waitForEvent('popup');
+      await fallback.click();
+      const popup = await opened;
+      await popup.waitForLoadState('domcontentloaded');
+      assert.equal(popup.url(), 'https://pf.kakao.com/_QdCaK/chat');
+      await popup.close();
+      assert.equal(requests.length, before, 'consultation does not submit an order');
+      await step(3);
+    }
     await assertLayout(width, 3); await assertPrivacy(); await page.screenshot({ path: `${artifactDir}/${width}-step-3.png` });
     await page.goBack(); await step(2); await page.goForward(); await step(3);
     await page.locator('[data-edit-step="1"]').click(); await step(1); await qty(0, '2'); await focusHeading(1);
@@ -541,6 +572,12 @@ try {
   await staticContext.route('**/*', async route => {if(await routeBrandFont(route,fonts))return;return new URL(route.request().url()).origin === base ? route.continue() : route.abort();});
   const staticPage = await staticContext.newPage();
   await staticPage.goto(base + '/christmas/');
+  const bookingLinks = await staticPage.locator('.xmas-naver-order-links a').evaluateAll(links => links.map(link => [link.href, link.target, link.rel]));
+  assert.deepEqual(bookingLinks, [
+    ['https://booking.naver.com/booking/17/bizes/1742214/items/8263767', '_blank', 'noopener noreferrer'],
+    ['https://booking.naver.com/booking/17/bizes/1742214/items/8258295', '_blank', 'noopener noreferrer'],
+  ]);
+  assert.equal(await staticPage.locator('.xmas-sticky a[href*="naver.com"]').count(), 0);
   assert.ok(await staticPage.locator('#gift-guide').isVisible());
   assert.ok(await staticPage.locator('.xmas-product-consult').isVisible());
   assert.ok(await staticPage.locator('#xmas-hero-image').isVisible());
@@ -551,7 +588,7 @@ try {
     const card = staticPage.locator(`[data-sku="${product.sku}"]`);
     assert.ok((await card.textContent()).includes(`${product.price.toLocaleString('ko-KR')}원`));
   }
-  for (const id of ['christmas-custom', 'about-nothingmatters', 'gift-guide', 'gift-choice', 'gift-comparison', 'ordering-guide', 'seoul-pickup']) {
+  for (const id of ['christmas-order-paths', 'christmas-custom', 'about-nothingmatters', 'gift-guide', 'gift-choice', 'gift-comparison', 'ordering-guide', 'seoul-pickup']) {
     assert.ok(await staticPage.locator(`#${id}`).isVisible(), `static purchase guidance: ${id}`);
   }
   assert.equal(await staticPage.locator('#gift-choice article').count(), 4);
