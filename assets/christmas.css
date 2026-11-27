@@ -92,6 +92,8 @@ section, .xmas-order-shell { scroll-margin-top: 20px; }
 .xmas-order-path .xmas-order-path-note { margin-top: 10px; font-size: 12px; }
 .xmas-order-path-naver { background: #03c75a; }
 .xmas-order-path-site { background: var(--yellow); }
+.xmas-website-order-options { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.xmas-website-order-options li { display: grid; place-items: center; min-width: 0; min-height: 38px; padding: 5px 9px; border: 1px solid var(--ink); border-radius: 8px; background: var(--paper); color: var(--ink); font-size: 15px; font-weight: 900; line-height: 1.4; text-align: center; word-break: keep-all; overflow-wrap: anywhere; }
 .xmas-naver-order-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .xmas-naver-order-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 10px; border: 1px solid var(--ink); border-radius: 999px; background: var(--paper); font-size: 13px; font-weight: 700; text-decoration: none; }
 a.xmas-order-path:hover h3, .xmas-naver-order-links a:hover { text-decoration: underline; }
@@ -342,6 +344,8 @@ body.xmas-gallery-open { overflow: hidden; }
   .xmas-order-paths { padding: 16px; margin-bottom: 24px; }
   .xmas-order-path-grid { grid-template-columns: 1fr; gap: 12px; }
   .xmas-order-path { padding: 14px; }
+  .xmas-website-order-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .xmas-website-order-options li { padding-inline: 4px; }
   .xmas-steps button > span { font-size: 14px; }
   .xmas-steps strong { font-size: 12px; }
   .xmas-step-toolbar { min-height: 38px; padding-block: 0; }
